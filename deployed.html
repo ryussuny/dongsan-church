@@ -2,8 +2,6 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>동산교회</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -114,7 +112,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--c);color:var(--td);m
 <div id="notif" style="position:fixed;top:10px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--n);color:var(--w);padding:8px 16px;border-radius:8px;font-size:11px;border-bottom:2px solid var(--g);transition:transform .3s;z-index:999;max-width:90%"></div>
 
 <script>
-// error handler removed
+window.onerror=function(m,u,l){var d=document.createElement("div");d.style.cssText="position:fixed;top:0;left:0;right:0;padding:16px;background:red;color:white;z-index:99999;font-size:14px";d.textContent="Error: "+m+" (line "+l+")";document.body.prepend(d)};
 var P='dongsan_';
 function SG(k,d){try{return JSON.parse(localStorage.getItem(P+k))||d}catch{return d}}
 function SS(k,v){localStorage.setItem(P+k,JSON.stringify(v))}
@@ -129,7 +127,7 @@ var BOOKS=[{"name": "창세기", "chapters": 50, "testament": "OT"}, {"name": "�
 
 
 // Load Bible externally
-var _s=document.createElement("script");_s.src="dongsan_bible.js?v=1776421564";_s.onload=function(){if(typeof BIBLE_DATA!=="undefined")BIBLE=BIBLE_DATA};document.head.appendChild(_s);
+var _s=document.createElement("script");_s.src="dongsan_bible.js";_s.onload=function(){if(typeof BIBLE_DATA!=="undefined")BIBLE=BIBLE_DATA};document.head.appendChild(_s);
 
 function renderWord(){
   const today=new Date().toISOString().slice(0,10);
@@ -227,3 +225,4 @@ document.getElementById('liName').onkeydown=function(e){if(e.key==='Enter')DL()}
 </script>
 </body>
 </html>
+x
