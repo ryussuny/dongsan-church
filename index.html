@@ -213,80 +213,7 @@ function SG(k,d){try{return JSON.parse(localStorage.getItem(P+k))||d}catch(e){re
 function SS(k,v){localStorage.setItem(P+k,JSON.stringify(v))}
 function N(m){const e=document.getElementById('notif');e.textContent=m;e.style.transform='translateX(-50%) translateY(0)';setTimeout(()=>e.style.transform='translateX(-50%) translateY(-80px)',2000)}
 
-// ── LOGIN SYSTEM ──
-function checkLogin() {
-  var user = SG('userName', '');
-  if (user) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('userBadge').style.display = 'flex';
-    document.getElementById('userAvatar').textContent = user.charAt(0);
-    document.getElementById('userName').textContent = user;
-    return true;
-  }
-  document.getElementById('loginScreen').style.display = 'flex';
-  return false;
-}
 
-function doLogin() {
-  var name = document.getElementById('loginName').value.trim();
-  if (!name) { N('이름을 입력하세요'); return; }
-  if (name.length < 2) { N('이름을 정확히 입력하세요'); return; }
-  SS('userName', name);
-  SS('loginTime', new Date().toISOString());
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('userBadge').style.display = 'flex';
-  document.getElementById('userAvatar').textContent = name.charAt(0);
-  document.getElementById('userName').textContent = name;
-  N(name + '님 환영합니다! &#128591;');
-  renderWord();
-}
-
-function guestLogin() {
-  SS('userName', '게스트');
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('userBadge').style.display = 'flex';
-  document.getElementById('userAvatar').textContent = 'G';
-  document.getElementById('userName').textContent = '게스트';
-  renderWord();
-}
-
-function showProfile() {
-  var name = SG('userName', '');
-  var att = SG('myAttendance', {});
-  var medit = SG('myMeditHistory', []);
-  var attCount = Object.keys(att).length;
-  var popup = document.createElement('div');
-  popup.id = 'profilePopup';
-  popup.style.cssText = 'position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px';
-  popup.onclick = function(e) { if (e.target === popup) popup.remove(); };
-  var card = document.createElement('div');
-  card.style.cssText = 'background:white;border-radius:16px;padding:28px;width:100%;max-width:340px;text-align:center';
-  card.innerHTML = '<div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gd));color:white;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin:0 auto 12px">' + name.charAt(0) + '</div>' +
-    '<div style="font-size:18px;font-weight:700;color:var(--n)">' + name + '</div>' +
-    '<div style="font-size:11px;color:var(--tl);margin-top:4px">동산감리교회 성도</div>' +
-    '<div style="margin:16px 0;display:flex;gap:8px;justify-content:center">' +
-    '<div style="flex:1;padding:10px;background:var(--c);border-radius:8px"><div style="font-size:18px;font-weight:700;color:var(--n)">' + attCount + '</div><div style="font-size:10px;color:var(--tl)">출석일</div></div>' +
-    '<div style="flex:1;padding:10px;background:var(--c);border-radius:8px"><div style="font-size:18px;font-weight:700;color:var(--n)">' + medit.length + '</div><div style="font-size:10px;color:var(--tl)">묵상</div></div></div>';
-  var logoutBtn = document.createElement('button');
-  logoutBtn.textContent = '로그아웃';
-  logoutBtn.style.cssText = 'width:100%;padding:12px;border:1px solid var(--b);border-radius:10px;background:white;color:var(--tm);font-size:13px;cursor:pointer;margin-top:8px';
-  logoutBtn.onclick = function() { SS('userName',''); location.reload(); };
-  var closeBtn = document.createElement('button');
-  closeBtn.textContent = '닫기';
-  closeBtn.style.cssText = 'width:100%;padding:12px;border:none;border-radius:10px;background:var(--n);color:white;font-size:13px;cursor:pointer;margin-top:6px';
-  closeBtn.onclick = function() { popup.remove(); };
-  card.appendChild(logoutBtn);
-  card.appendChild(closeBtn);
-  popup.appendChild(card);
-  document.body.appendChild(popup);
-}
-
-// Enter key for login
-document.addEventListener('DOMContentLoaded', function() {
-  var loginInput = document.getElementById('loginName');
-  if (loginInput) loginInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
-  checkLogin();
-});
 
 
 function go(p,b){document.querySelectorAll('.pg').forEach(e=>e.classList.remove('a'));document.getElementById('pg-'+p).classList.add('a');document.querySelectorAll('.nb').forEach(x=>x.classList.remove('a'));if(b)b.classList.add('a');if(p==='word')renderWord();if(p==='bible'){renderSer();initReader();renderPlan()}if(p==='more'){renderBul();renderAttLog();renderMeditFull()}}
@@ -531,8 +458,79 @@ function showHymn() {
 function prevHymn() { if (currentHymn > 1) { document.getElementById('hymnNum').value = currentHymn - 1; showHymn(); } }
 function nextHymn() { if (currentHymn < 645) { document.getElementById('hymnNum').value = currentHymn + 1; showHymn(); } }
 
-if(checkLogin()) renderWord();
+// ══════════════════════════════
+// APP INIT & LOGIN
+// ══════════════════════════════
+function initApp() {
+  var user = SG('userName', '');
+  var ls = document.getElementById('loginScreen');
+  var ub = document.getElementById('userBadge');
+  var ua = document.getElementById('userAvatar');
+  var un = document.getElementById('userName');
+  
+  if (user && user.length > 0) {
+    // Already logged in
+    if (ls) ls.style.display = 'none';
+    if (ub) ub.style.display = 'flex';
+    if (ua) ua.textContent = user[0];
+    if (un) un.textContent = user;
+    renderWord();
+  } else {
+    // Show login
+    if (ls) ls.style.display = 'flex';
+  }
+}
+
+function doLogin() {
+  var inp = document.getElementById('loginName');
+  if (!inp) return;
+  var name = inp.value.trim();
+  if (!name || name.length < 2) {
+    N('이름을 입력하세요 (2자 이상)');
+    return;
+  }
+  SS('userName', name);
+  
+  var ls = document.getElementById('loginScreen');
+  var ub = document.getElementById('userBadge');
+  var ua = document.getElementById('userAvatar');
+  var un = document.getElementById('userName');
+  
+  if (ls) ls.style.display = 'none';
+  if (ub) ub.style.display = 'flex';
+  if (ua) ua.textContent = name[0];
+  if (un) un.textContent = name;
+  
+  N(name + '님 환영합니다!');
+  renderWord();
+}
+
+function guestLogin() {
+  SS('userName', '게스트');
+  var ls = document.getElementById('loginScreen');
+  if (ls) ls.style.display = 'none';
+  var ub = document.getElementById('userBadge');
+  if (ub) ub.style.display = 'flex';
+  var ua = document.getElementById('userAvatar');
+  if (ua) ua.textContent = 'G';
+  var un = document.getElementById('userName');
+  if (un) un.textContent = '게스트';
+  renderWord();
+}
+
+// Enter key on login input
+document.addEventListener('DOMContentLoaded', function() {
+  var li = document.getElementById('loginName');
+  if (li) {
+    li.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') doLogin();
+    });
+  }
+  initApp();
+});
+
+
+initApp();
 </script>
 </body>
 </html>
-<!-- fix 1776414671 -->
