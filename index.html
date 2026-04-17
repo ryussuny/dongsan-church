@@ -538,10 +538,7 @@ function nextHymn() { if (currentHymn < 645) { document.getElementById('hymnNum'
 // ══════════════════════════════
 // APP INIT & LOGIN
 // ══════════════════════════════
-
-function showProfile() {
-  var name = SG('userName', '');
-  var att = SG('myAttendance', {});
+);
   var medit = SG('myMeditHistory', []);
   var ac = Object.keys(att).length;
   var mc = medit.length;
@@ -576,18 +573,11 @@ function showProfile() {
 
 
 // Enter key on login input
-document.addEventListener('DOMContentLoaded', function() {
-  var li = document.getElementById('loginName');
-  if (li) {
-    li.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') doLogin();
-    });
-  }
-  initApp();
-});
+// DOMContentLoaded removed (handled by login script)
 
 
-try{renderWord()}catch(e){}
+// Init app after data loaded
+try { renderWord(); } catch(e) { console.log("Init error:", e); }
 </script>
 </body>
 </html>
