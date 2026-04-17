@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>동산교회</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi64+Z7IKw6rWQ7ZqMIiwic2hvcnRfbmFtZSI6IuuPmeyCsOq1kO2ajCIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjRkFGN0YwIiwidGhlbWVfY29sb3IiOiIjMUEyMzQwIn0=">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1A2340">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A84C;--gold-light:#E8D5A0;--gold-dark:#8B6914;--navy:#1A2340;--navy-light:#2E3D70;--cream:#FAF7F0;--cream-dark:#F0EAD6;--white:#FFF;--text-dark:#1A1A2E;--text-mid:#4A4A6A;--text-light:#8888AA;--success:#2D7D46;--border:rgba(201,168,76,0.25)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh;max-width:480px;margin:0 auto;position:relative;padding-bottom:70px}
+
+/* Header */
+.app-header{background:var(--navy);color:var(--white);padding:16px 20px;text-align:center;position:sticky;top:0;z-index:50}
+.app-header .cross{color:var(--gold);font-size:16px;margin-bottom:2px}
+.app-header h1{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:700}
+.app-header p{font-size:10px;color:var(--gold-light);opacity:.7;margin-top:2px}
+
+/* Bottom Nav */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:50;padding:6px 0 env(safe-area-inset-bottom)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer;border:none;background:none;font-family:'Noto Sans KR',sans-serif;color:var(--text-light);font-size:9px;transition:color .15s}
+.nav-btn.active{color:var(--gold-dark)}
+.nav-btn .ico{font-size:20px}
+
+/* Pages */
+.m-page{display:none;padding:16px 20px}.m-page.active{display:block}
+
+/* Cards */
+.m-card{background:var(--white);border-radius:12px;border:1px solid var(--border);padding:16px;margin-bottom:12px}
+.m-section{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px}
+
+/* Daily Word Card */
+.word-card{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%);border-radius:14px;padding:24px 20px;color:var(--white);margin-bottom:16px;text-align:center}
+.word-card .date{font-size:11px;color:var(--gold-light);margin-bottom:8px}
+.word-card .passage{font-family:'Noto Serif KR',serif;font-size:18px;font-weight:700;margin-bottom:4px}
+.word-card .title{font-size:13px;color:var(--gold-light)}
+.word-card .theme{font-size:10px;color:rgba(255,255,255,0.5);margin-top:4px}
+
+/* Schedule item */
+.sched-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.sched-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.sched-info{flex:1}.sched-title{font-size:13px;font-weight:600}.sched-sub{font-size:11px;color:var(--text-light)}
+
+/* Prayer item */
+.pray-item{display:flex;gap:10px;padding:12px;background:var(--cream);border-radius:10px;margin-bottom:8px}
+.pray-icon{font-size:20px;flex-shrink:0}.pray-title{font-size:13px;font-weight:600;color:var(--navy)}.pray-text{font-size:11px;color:var(--text-mid);line-height:1.5;margin-top:2px}
+
+/* AI Chat */
+.ai-chat-header{display:flex;align-items:center;gap:10px;padding:12px;background:var(--white);border-radius:10px;margin-bottom:12px;border:1px solid var(--border)}
+.ai-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ai-name{font-size:14px;font-weight:700;color:var(--navy)}.ai-role{font-size:11px;color:var(--text-light)}
+
+.pastor-selector{display:flex;gap:6px;overflow-x:auto;padding:4px 0;margin-bottom:12px;-webkit-overflow-scrolling:touch}
+.pastor-chip{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;border-radius:10px;background:var(--white);border:1px solid var(--border);cursor:pointer;font-size:10px;min-width:60px;transition:all .15s}
+.pastor-chip.active{border-color:var(--gold);background:#FFFBF0}
+.pastor-chip .p-icon{font-size:18px}
+
+.m-messages{background:var(--white);border-radius:12px;border:1px solid var(--border);height:360px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.m-msg{display:flex;gap:6px;max-width:85%}.m-msg.user{align-self:flex-end;flex-direction:row-reverse}
+.m-msg-bubble{padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.6}
+.m-msg.bot .m-msg-bubble{background:var(--cream);border:1px solid var(--border);border-radius:4px 14px 14px 14px}
+.m-msg.user .m-msg-bubble{background:var(--navy);color:var(--white);border-radius:14px 4px 14px 14px}
+.m-msg-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+
+.m-input-row{display:flex;gap:6px}.m-input-row input{flex:1;padding:10px 14px;border-radius:22px;border:1px solid var(--border);background:var(--white);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none}
+.m-input-row input:focus{border-color:var(--gold)}
+.m-send{padding:10px 18px;border-radius:22px;background:var(--navy);color:var(--white);border:none;font-size:13px;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+
+/* Sermon list */
+.sermon-item{padding:10px 0;border-bottom:1px solid var(--border)}
+.sermon-date{font-size:10px;color:var(--text-light)}.sermon-title{font-size:13px;font-weight:600;color:var(--navy)}.sermon-scripture{font-size:11px;color:var(--gold-dark)}
+.sermon-type{display:inline-block;font-size:9px;padding:2px 6px;border-radius:8px;background:var(--cream);color:var(--text-mid);border:1px solid var(--border)}
+
+/* Progress bar */
+.m-progress{background:var(--cream-dark);border-radius:8px;height:6px;overflow:hidden;margin-top:4px}
+.m-progress-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--gold-dark),var(--gold))}
+
+/* Info card */
+.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-label{color:var(--text-light)}.info-value{font-weight:600;color:var(--navy)}
+
+/* Reading plan */
+.plan-item{display:flex;gap:8px;padding:8px;border-radius:8px;margin-bottom:4px;font-size:12px}
+.plan-item.today{background:#FFFBF0;border-left:3px solid var(--gold)}
+.plan-date{color:var(--text-light);width:50px;flex-shrink:0}.plan-passage{font-weight:600;color:var(--navy)}.plan-title{color:var(--text-mid)}
+
+.typing-dots{display:flex;gap:3px}.typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:bounce 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+.notif{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--navy);color:var(--white);padding:10px 20px;border-radius:10px;font-size:12px;border-bottom:3px solid var(--gold);transition:transform .3s;z-index:999;max-width:90%}
+.notif.show{transform:translateX(-50%) translateY(0)}
+
+/* Quick actions */
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.quick-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px;background:var(--white);border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .15s}
+.quick-item:active{transform:scale(.95)}.quick-item .q-icon{font-size:22px}.quick-item .q-label{font-size:10px;color:var(--text-mid);font-weight:500}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="cross">&#10013;</div>
+  <h1>동산교회</h1>
+  <p>기독교대한감리회 &middot; 태백</p>
+</div>
+
+<!-- HOME -->
+<div class="m-page active" id="m-home">
+  <div id="homeWordCard"></div>
+  <div class="quick-grid">
+    <div class="quick-item" onclick="mShowPage('word')"><div class="q-icon">&#128214;</div><div class="q-label">오늘의 말씀</div></div>
+    <div class="quick-item" onclick="mShowPage('schedule')"><div class="q-icon">&#128197;</div><div class="q-label">교회 일정</div></div>
+    <div class="quick-item" onclick="mShowPage('prayer')"><div class="q-icon">&#128591;</div><div class="q-label">기도제목</div></div>
+    <div class="quick-item" onclick="mShowPage('chat')"><div class="q-icon">&#128172;</div><div class="q-label">AI 상담</div></div>
+  </div>
+  <div class="m-card">
+    <div class="m-section">이번 주 일정</div>
+    <div id="homeSchedule"></div>
+  </div>
+  <div class="m-card">
+    <div class="m-section">교회 소식</div>
+    <div id="homeNews" style="font-size:13px;color:var(--text-mid);line-height:1.8"></div>
+  </div>
+</div>
+
+<!-- DAILY WORD -->
+<div class="m-page" id="m-word">
+  <div id="wordDetail"></div>
+  <div class="m-card">
+    <div class="m-section">4월 성경 읽기 일정</div>
+    <div id="wordPlan"></div>
+  </div>
+</div>
+
+<!-- SCHEDULE -->
+<div class="m-page" id="m-schedule">
+  <div class="m-section">주간 일정</div>
+  <div id="scheduleList"></div>
+</div>
+
+<!-- PRAYER -->
+<div class="m-page" id="m-prayer">
+  <div class="m-section">기도제목</div>
+  <div id="prayerCards"></div>
+  <div class="m-card" style="margin-top:16px">
+    <div class="m-section">나의 기도</div>
+    <textarea id="myPrayer" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:13px;font-family:'Noto Sans KR',sans-serif;min-height:100px;background:var(--cream);outline:none;resize:none" placeholder="오늘의 기도를 적어보세요..."></textarea>
+    <button onclick="savePrayer()" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:var(--navy);color:var(--white);border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif">기도 저장하기</button>
+    <div id="myPrayerHistory" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- AI CHAT -->
+<div class="m-page" id="m-chat">
+  <div class="m-section">AI 상담</div>
+  <div class="pastor-selector" id="mPastorSelector"></div>
+  <div id="mChatHeader" style="display:none"></div>
+  <div class="m-messages" id="mMessages">
+    <div style="text-align:center;color:var(--text-light);padding:60px 0"><div style="font-size:36px;margin-bottom:8px">&#9962;</div><div style="font-size:13px">부목사님을 선택하세요</div></div>
+  </div>
+  <div class="m-input-row">
+    <input type="text" id="mChatInput" placeholder="질문을 입력하세요...">
+    <button class="m-send" onclick="mSendMsg()">전송</button>
+  </div>
+</div>
+
+<!-- SERMONS -->
+<div class="m-page" id="m-sermons">
+  <div class="m-section">설교 모음</div>
+  <input id="mSermonSearch" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--white);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-bottom:12px" placeholder="설교 검색..." oninput="mRenderSermons()">
+  <div id="mSermonList"></div>
+  <div id="mSermonMore" style="text-align:center;margin-top:12px"></div>
+</div>
+
+<!-- INFO -->
+<div class="m-page" id="m-info">
+  <!-- Hero Card -->
+  <div style="background:linear-gradient(135deg,var(--navy),var(--navy-light));color:white;padding:24px 20px;border-radius:14px;text-align:center;margin-bottom:12px">
+    <div style="font-size:32px;color:var(--gold)">&#10013;</div>
+    <div style="font-family:'Noto Serif KR',serif;font-size:18px;font-weight:700;margin-top:4px">동산감리교회</div>
+    <div style="font-size:10px;color:var(--gold-light);opacity:0.85">Dongsan Methodist Church</div>
+    <div style="font-size:11px;color:var(--gold-light);margin-top:10px;font-style:italic">"물 댄 동산 같은 교회"</div>
+    <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:4px">이사야 58:11</div>
+  </div>
+
+  <!-- 담임목사 인사말 -->
+  <div class="m-card">
+    <div class="m-section">💌 담임목사 인사말</div>
+    <div id="mGreetingPreview" style="font-size:12px;line-height:1.8;color:var(--text-mid);max-height:120px;overflow:hidden;position:relative"></div>
+    <button onclick="showGreetingFull()" style="width:100%;margin-top:10px;padding:8px;background:var(--cream);border:1px solid var(--gold);border-radius:8px;color:var(--gold-dark);font-size:12px;font-weight:600;cursor:pointer">전체 보기</button>
+  </div>
+
+  <!-- 비전 -->
+  <div class="m-card" style="background:linear-gradient(135deg,#FFF8E7,#FFFBF0);border:1px solid var(--gold);text-align:center">
+    <div style="font-size:10px;color:var(--gold-dark);margin-bottom:4px">교회 비전</div>
+    <div style="font-family:'Noto Serif KR',serif;font-size:15px;font-weight:700;color:var(--navy);line-height:1.5">물 댄 동산 같은 교회<br>예수 그리스도 안에서 성장하는 공동체</div>
+  </div>
+
+  <!-- 핵심가치 -->
+  <div class="m-card">
+    <div class="m-section">💎 5대 핵심가치</div>
+    <div id="mCoreValues"></div>
+  </div>
+
+  <!-- 예배 시간 -->
+  <div class="m-card">
+    <div class="m-section">⛪ 예배 시간</div>
+    <div id="mWorshipTimes"></div>
+  </div>
+
+  <!-- 연혁 -->
+  <div class="m-card">
+    <div class="m-section">📜 교회 연혁</div>
+    <div id="mHistory"></div>
+  </div>
+
+  <!-- 오시는 길 -->
+  <div class="m-card">
+    <div class="m-section">📍 오시는 길</div>
+    <div style="padding:12px;background:var(--cream);border-radius:8px;margin-bottom:10px">
+      <div style="font-size:10px;color:var(--text-light)">주소</div>
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-top:4px">강원도 태백시 계산4길 25</div>
+    </div>
+    <iframe id="mMap" style="width:100%;height:200px;border:none;border-radius:8px"></iframe>
+  </div>
+
+  <!-- 태백 복음화 -->
+  <div class="m-card">
+    <div class="m-section">🗺️ 태백 복음화 현황</div>
+    <div id="mEvangelism"></div>
+  </div>
+
+  <!-- Settings -->
+  <div class="m-card">
+    <div class="m-section">⚙️ 설정</div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:11px;font-weight:600;color:var(--navy);display:block;margin-bottom:4px">API Key (AI 상담용)</label>
+      <div style="display:flex;gap:6px"><input id="mApiKey" type="password" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-size:12px;outline:none" placeholder="sk-ant-..."><button onclick="mSaveApiKey()" style="padding:8px 14px;border-radius:8px;background:var(--navy);color:var(--white);border:none;font-size:12px;cursor:pointer">저장</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="mShowPage('home',this)"><span class="ico">&#127968;</span>홈</button>
+  <button class="nav-btn" onclick="mShowPage('word',this)"><span class="ico">&#128214;</span>말씀</button>
+  <button class="nav-btn" onclick="mShowPage('chat',this)"><span class="ico">&#128172;</span>상담</button>
+  <button class="nav-btn" onclick="mShowPage('sermons',this)"><span class="ico">&#127925;</span>설교</button>
+  <button class="nav-btn" onclick="mShowPage('info',this)"><span class="ico">&#9962;</span>교회</button>
+</nav>
+
+<div class="notif" id="mNotif"></div>
+
+<script>
+const STORE_PREFIX='dongsan_';
+const S={get(k,d){try{const v=localStorage.getItem(STORE_PREFIX+k);return v?JSON.parse(v):d}catch{return d}},set(k,v){localStorage.setItem(STORE_PREFIX+k,JSON.stringify(v))}};
+
+const CHURCH_INFO = {"name": "기독교대한감리회 동산감리교회", "short_name": "동산교회", "english": "Dongsan Methodist Church", "address": "강원도 태백시 계산4길 25", "business_no": "222-82-73206", "denomination": "기독교대한감리회 동부연회 태백지방", "founded": "1981년 (창립 45주년: 2026년)", "phone": "033-552-XXXX", "homepage": "https://www.dongsan1970.org", "logo": "✞", "vision": "물 댄 동산 같은 교회, 예수 그리스도 안에서 성장하는 공동체", "verse": "여호와께서 너를 항상 인도하여 메마른 곳에서도 네 영혼을 만족하게 하시며 네 뼈를 견고하게 하시리니 너는 물 댄 동산 같겠고 물이 끊어지지 아니하는 샘 같을 것이라 (이사야 58:11)", "mission": ["예배의 동산 — 영과 진리로 예배하는 공동체", "말씀의 동산 — 성경을 배우고 순종하는 공동체", "기도의 동산 — 깨어 기도하는 공동체", "교제의 동산 — 서로 사랑하며 세우는 공동체", "선교의 동산 — 태백과 세계를 품는 공동체"], "core_values": [{"title": "예배 (Worship)", "desc": "영과 진리로 하나님께 드리는 예배를 최우선으로 합니다", "icon": "⛪"}, {"title": "말씀 (Word)", "desc": "성경 말씀을 사랑하고 순종하며 살아갑니다", "icon": "📖"}, {"title": "기도 (Prayer)", "desc": "쉬지 않고 기도하며 하나님의 뜻을 구합니다", "icon": "🙏"}, {"title": "교제 (Fellowship)", "desc": "서로 사랑하며 격려하는 공동체를 이룹니다", "icon": "🤝"}, {"title": "선교 (Mission)", "desc": "태백 지역과 세계를 향한 복음 전파에 힘씁니다", "icon": "🌍"}], "pastor_greeting": "샬롬! 주님의 은혜와 평강이 함께하시기를 기도합니다.\n\n동산감리교회 홈페이지를 방문해 주신 모든 분들을 진심으로 환영합니다.\n\n우리 교회는 1981년 태백 땅에 세워진 이후, 45년 동안 하나님의 말씀 위에서 물 댄 동산 같은 교회(이사야 58:11)로 성장해왔습니다. 태백 지역 주민들과 함께 울고 웃으며, 복음의 씨앗을 심고 영혼을 살리는 사역을 감당해왔습니다.\n\n우리 교회는 다음 세 가지를 중요하게 여깁니다.\n\n첫째, 예수 그리스도가 중심이 되는 예배입니다.\n영과 진리로 예배하며, 말씀과 기도로 하나님을 만나는 시간을 가장 귀하게 여깁니다.\n\n둘째, 서로 사랑하는 공동체입니다.\n\"서로 사랑하라\"는 주님의 새 계명을 따라, 구역과 속회로 서로를 돌보며, 기쁨도 슬픔도 함께 나누는 가족 공동체를 이루어 갑니다.\n\n셋째, 태백을 향한 복음의 열정입니다.\n태백시 37,000여 명의 영혼을 품고, 상장동부터 철암동까지 모든 지역에 복음이 전해지기를 간절히 기도하며 사역하고 있습니다.\n\n이 홈페이지를 통해 우리 교회의 예배와 사역을 살펴보시고, 언제든지 편하게 찾아와 주십시오. 아직 주님을 영접하지 못하신 분도, 상처받으신 분도, 기도가 필요하신 분도—그 누구든지 환영합니다. 주님의 사랑 안에서 함께 걸어갑시다.\n\n\"물 댄 동산 같겠고 물이 끊어지지 아니하는 샘 같을 것이라\" (이사야 58:11)\n\n동산감리교회 담임목사 배상 🙏", "worship_times": [{"name": "주일 1부예배", "time": "일요일 오전 9:00", "place": "본당", "note": ""}, {"name": "주일 2부예배", "time": "일요일 오전 11:00", "place": "본당", "note": "주일 대예배"}, {"name": "주일 오후예배", "time": "일요일 오후 1:30", "place": "본당", "note": "성경 강해"}, {"name": "청년예배", "time": "일요일 오후 2:00", "place": "교육관", "note": "청년·대학부"}, {"name": "주일학교", "time": "일요일 오전 9:30", "place": "교육관", "note": "아동·청소년부"}, {"name": "수요예배", "time": "수요일 저녁 7:30", "place": "본당", "note": ""}, {"name": "금요기도회", "time": "금요일 저녁 9:00", "place": "본당", "note": "통성기도"}, {"name": "새벽기도회", "time": "화-토 새벽 5:30", "place": "본당", "note": "월요일 휴무"}], "history": [{"year": "1981", "event": "태백 황지동에 동산감리교회 창립"}, {"year": "1990", "event": "현재 위치 (계산4길 25) 성전 건축"}, {"year": "2000", "event": "교육관 증축, 주일학교 부흥"}, {"year": "2010", "event": "창립 30주년 기념 감사주일"}, {"year": "2020", "event": "코로나19 시기 온라인 예배 시행"}, {"year": "2021", "event": "창립 40주년 감사예배"}, {"year": "2024", "event": "창립 43주년 감사주일 / 물 댄 동산 비전 선포"}, {"year": "2025", "event": "창립 44주년, 교회 시스템 현대화"}, {"year": "2026", "event": "창립 45주년 — 새로운 도약의 해"}], "departments": [{"name": "남선교회", "desc": "남성 성도들의 신앙 교제와 봉사"}, {"name": "여선교회", "desc": "여성 성도들의 신앙 교제와 선교"}, {"name": "청년부", "desc": "2030 세대 예배와 양육"}, {"name": "교회학교", "desc": "아동부·청소년부 신앙 교육"}, {"name": "찬양대", "desc": "주일예배 찬양 사역"}, {"name": "속회 / 구역", "desc": "소그룹 예배와 나눔 (7구역)"}]};
+
+const PASTORS=[
+  {name:"김요한",role:"예배·찬양",icon:"\uD83C\uDFB5",bg:"#EEEDFE",sys:"당신은 동산교회 예배·찬양 담당 부목사 김요한입니다. 따뜻하고 감성적. 교인이 질문하면 한국어로 친절하게 답하세요. 3-5문장으로 간결하게."},
+  {name:"이다윗",role:"전도·선교",icon:"\uD83D\uDCE2",bg:"#E1F5EE",sys:"당신은 동산교회 전도·선교 담당 부목사 이다윗입니다. 열정적. 교인의 전도·선교 질문에 한국어로 답하세요."},
+  {name:"박루디아",role:"여성·가정",icon:"\uD83C\uDFE0",bg:"#FBEAF0",sys:"당신은 동산교회 여성·가정 담당 부목사 박루디아입니다. 섬세하고 공감적. 가정·육아 관련 질문에 한국어로 답하세요."},
+  {name:"최디모데",role:"청년·대학부",icon:"\u26A1",bg:"#E6F1FB",sys:"당신은 동산교회 청년부 담당 부목사 최디모데입니다. 유머있고 트렌디. 청년들의 질문에 한국어로 답하세요."},
+  {name:"정나오미",role:"아동·교육",icon:"\uD83C\uDF1F",bg:"#EAF3DE",sys:"당신은 동산교회 아동부 담당 부목사 정나오미입니다. 밝고 에너지 넘침. 교육 관련 질문에 한국어로 답하세요."},
+  {name:"한바울",role:"심방·돌봄",icon:"\uD83D\uDE4F",bg:"#F1EFE8",sys:"당신은 동산교회 심방 담당 부목사 한바울입니다. 따뜻하고 진중. 돌봄·위로 관련 질문에 한국어로 답하세요."},
+  {name:"오스데반",role:"소그룹·구역",icon:"\uD83D\uDD17",bg:"#FAEEDA",sys:"당신은 동산교회 구역 담당 부목사 오스데반입니다. 체계적. 소그룹 관련 질문에 한국어로 답하세요."},
+  {name:"임갈렙",role:"지역봉사",icon:"\uD83C\uDF0D",bg:"#E6F1FB",sys:"당신은 동산교회 지역봉사 담당 부목사 임갈렙입니다. 봉사 관련 질문에 한국어로 답하세요."},
+  {name:"신요셉",role:"제자훈련",icon:"\uD83D\uDCD6",bg:"#EEEDFE",sys:"당신은 동산교회 교육 담당 부목사 신요셉입니다. 학구적. 성경공부·제자훈련 관련 질문에 한국어로 답하세요."},
+  {name:"문에스더",role:"행정·기획",icon:"\uD83D\uDCCB",bg:"#FBEAF0",sys:"당신은 동산교회 행정 담당 부목사 문에스더입니다. 교회 행정 관련 질문에 한국어로 답하세요."}
+];
+
+const READING_PLAN={"2026-04-06":{passage:"사무엘상 6:1-9",title:"돌려보내는 블레셋",theme:"하나님 앞에 서는 법"},"2026-04-07":{passage:"사무엘상 6:10-18",title:"하나님이 이루시는 길",theme:"하나님 앞에 서는 법"},"2026-04-08":{passage:"사무엘상 6:19-7:2",title:"기쁨 이후에 필요한 것",theme:"하나님 앞에 서는 법"},"2026-04-09":{passage:"사무엘상 7:3-6",title:"돌이킴",theme:"하나님 앞에 서는 법"},"2026-04-10":{passage:"사무엘상 7:7-11",title:"하나님이 싸우실 때",theme:"하나님 앞에 서는 법"},"2026-04-11":{passage:"사무엘상 7:12-14",title:"에벤에셀",theme:"하나님 앞에 서는 법"},"2026-04-12":{passage:"사무엘상 7:15-17",title:"사무엘의 삶",theme:"하나님 앞에 서는 법"},"2026-04-13":{passage:"사무엘상 8:1-9",title:"왕을 요구하다",theme:"하나님 대신 사람을 선택할 때"},"2026-04-14":{passage:"사무엘상 8:10-18",title:"왕의 대가",theme:"하나님 대신 사람을 선택할 때"},"2026-04-15":{passage:"사무엘상 8:19-22",title:"끝까지 고집하다",theme:"하나님 대신 사람을 선택할 때"},"2026-04-16":{passage:"사무엘상 9:1-10",title:"하나님의 준비",theme:"하나님 대신 사람을 선택할 때"},"2026-04-17":{passage:"사무엘상 9:11-21",title:"하나님이 보신 사람",theme:"하나님 대신 사람을 선택할 때"},"2026-04-18":{passage:"사무엘상 9:22-27",title:"부르심의 시작",theme:"하나님 대신 사람을 선택할 때"},"2026-04-19":{passage:"사무엘상 10:1-8",title:"기름 부음",theme:"하나님 대신 사람을 선택할 때"},"2026-04-20":{passage:"사무엘상 10:9-16",title:"변화된 마음",theme:"시작은 좋았지만"},"2026-04-21":{passage:"사무엘상 10:17-27",title:"사람들 앞에 서다",theme:"시작은 좋았지만"},"2026-04-22":{passage:"사무엘상 11:1-7",title:"하나님의 영이 임할 때",theme:"시작은 좋았지만"},"2026-04-23":{passage:"사무엘상 11:8-15",title:"첫 승리",theme:"시작은 좋았지만"},"2026-04-24":{passage:"사무엘상 12:1-5",title:"사무엘의 고백",theme:"시작은 좋았지만"},"2026-04-25":{passage:"사무엘상 12:6-15",title:"기억해야 할 하나님",theme:"시작은 좋았지만"},"2026-04-26":{passage:"사무엘상 12:16-25",title:"돌이키라",theme:"시작은 좋았지만"},"2026-04-27":{passage:"사무엘상 13:1-7",title:"두려움이 시작될 때",theme:"무너지는 시작"},"2026-04-28":{passage:"사무엘상 13:8-14",title:"기다리지 못한 왕",theme:"무너지는 시작"},"2026-04-29":{passage:"사무엘상 13:15-23",title:"무너진 기반",theme:"무너지는 시작"},"2026-04-30":{passage:"사무엘상 14:1-7",title:"믿음으로 나아가는 사람",theme:"무너지는 시작"}};
+
+const DEFAULT_EVENTS=[
+  {day:"일요일",time:"09:00",title:"주일 1부예배",manager:"담임목사",color:"gold"},
+  {day:"일요일",time:"11:00",title:"주일 2부예배",manager:"담임목사",color:"gold"},
+  {day:"일요일",time:"14:00",title:"청년예배",manager:"최디모데 부목사",color:"green"},
+  {day:"화요일",time:"10:00",title:"예배기획 회의",manager:"김요한 부목사",color:"gold"},
+  {day:"수요일",time:"19:30",title:"수요예배",manager:"담임목사",color:"gold"},
+  {day:"목요일",time:"14:00",title:"노방전도",manager:"이다윗 부목사",color:"green"},
+  {day:"금요일",time:"21:00",title:"금요기도회",manager:"담임목사",color:"purple"},
+  {day:"토요일",time:"05:30",title:"새벽기도",manager:"",color:"green"}
+];
+const DEFAULT_AREAS=[
+  {name:"상장동",population:11350,rate:65},{name:"황지동",population:7000,rate:72},{name:"황연동",population:5286,rate:38},
+  {name:"삼수동",population:4591,rate:45},{name:"문곡소도동",population:3276,rate:31},{name:"장성동",population:3030,rate:58},
+  {name:"구문소동",population:2087,rate:28},{name:"철암동",population:1673,rate:22}
+];
+const DEFAULT_PRAYERS=[
+  {icon:"\u26EA",title:"태백 전 지역 복음화",text:"태백시 모든 가정이 복음을 듣고 하나님 앞에 나아오도록",date:"연간"},
+  {icon:"\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66",title:"새가족 정착",text:"등록한 가정이 교회 공동체에 뿌리내리도록",date:"이번 달"},
+  {icon:"\uD83C\uDFE5",title:"병중에 있는 성도들",text:"입원 중인 성도들의 쾌유와 회복을 위해",date:"긴급"},
+  {icon:"\uD83C\uDF31",title:"청년 신앙성장",text:"청년부가 말씀과 기도로 깊이 성장하도록",date:"핵심"}
+];
+
+// Nav
+function mShowPage(id, btn){
+  document.querySelectorAll('.m-page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('m-'+id).classList.add('active');
+  if(btn){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+  else{const map={home:0,word:1,chat:2,sermons:3,info:4};const navBtns=document.querySelectorAll('.nav-btn');const idx=map[id];if(idx!==undefined&&navBtns[idx])navBtns.forEach(b=>b.classList.remove('active')),navBtns[idx].classList.add('active')}
+}
+function mNotif(msg){const el=document.getElementById('mNotif');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500)}
+
+// HOME
+function renderHome(){
+  const today=new Date().toISOString().slice(0,10);const info=READING_PLAN[today];
+  document.getElementById('homeWordCard').innerHTML=info?
+    `<div class="word-card" onclick="mShowPage('word')"><div class="date">${today}</div><div class="passage">${info.passage}</div><div class="title">${info.title}</div><div class="theme">${info.theme}</div></div>`:
+    `<div class="word-card"><div class="date">${today}</div><div class="passage">오늘의 말씀</div></div>`;
+
+  const events=S.get('events',DEFAULT_EVENTS);
+  const dayNames=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  const todayDay=dayNames[new Date().getDay()];
+  const dotColors={gold:'#C9A84C',green:'#2D7D46',purple:'#7B1FA2'};
+  document.getElementById('homeSchedule').innerHTML=events.slice(0,5).map(e=>
+    `<div class="sched-item"><div class="sched-dot" style="background:${dotColors[e.color]||'#ccc'}"></div><div class="sched-info"><div class="sched-title">${e.title}</div><div class="sched-sub">${e.day} ${e.time}${e.manager?' · '+e.manager:''}</div></div></div>`).join('');
+
+  document.getElementById('homeNews').innerHTML=`
+    <p>&#128227; 이번 주 수요예배는 특별 찬양 예배로 진행됩니다.</p>
+    <p style="margin-top:8px">&#128214; 4월 성경읽기: 사무엘상 - "${info?info.theme:''}"</p>
+    <p style="margin-top:8px">&#128591; 매일 새벽 5:30 새벽기도에 함께해주세요.</p>`;
+}
+
+// DAILY WORD
+function renderWord(){
+  const today=new Date().toISOString().slice(0,10);const info=READING_PLAN[today];
+  if(info){
+    document.getElementById('wordDetail').innerHTML=`
+      <div class="word-card"><div class="date">${today}</div><div class="passage">${info.passage}</div><div class="title">${info.title}</div><div class="theme">${info.theme}</div></div>
+      <div class="m-card"><p style="font-size:13px;color:var(--text-mid);line-height:1.8;text-align:center">말씀을 천천히 읽어보세요.<br>오늘 하루도 하나님의 말씀 위에 서서 걸어갑시다.</p></div>`;
+  }
+  const entries=Object.entries(READING_PLAN).sort(([a],[b])=>a.localeCompare(b));
+  document.getElementById('wordPlan').innerHTML=entries.map(([d,i])=>
+    `<div class="plan-item ${d===today?'today':''}"><div class="plan-date">${d.slice(5)}</div><div><span class="plan-passage">${i.passage}</span> <span class="plan-title">${i.title}</span></div></div>`).join('');
+}
+
+// SCHEDULE
+function renderSchedule(){
+  const events=S.get('events',DEFAULT_EVENTS);const days=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  const dotColors={gold:'#C9A84C',green:'#2D7D46',purple:'#7B1FA2'};
+  let html='';
+  days.forEach(day=>{
+    const dayEvts=events.filter(e=>e.day===day).sort((a,b)=>a.time.localeCompare(b.time));
+    if(!dayEvts.length)return;
+    html+=`<div class="m-card"><div style="font-size:12px;font-weight:700;color:var(--gold-dark);margin-bottom:8px">${day}</div>`;
+    dayEvts.forEach(e=>{html+=`<div class="sched-item"><div class="sched-dot" style="background:${dotColors[e.color]||'#ccc'}"></div><div class="sched-info"><div class="sched-title">${e.title}</div><div class="sched-sub">${e.time}${e.manager?' · '+e.manager:''}</div></div></div>`});
+    html+='</div>'});
+  document.getElementById('scheduleList').innerHTML=html;
+}
+
+// PRAYER
+function renderPrayer(){
+  const prayers=S.get('prayers',DEFAULT_PRAYERS);
+  document.getElementById('prayerCards').innerHTML=prayers.map(p=>
+    `<div class="pray-item"><div class="pray-icon">${p.icon||'\uD83D\uDE4F'}</div><div><div class="pray-title">${p.title}</div><div class="pray-text">${p.text}</div></div></div>`).join('');
+  const myPrayers=S.get('myPrayers',[]);
+  document.getElementById('myPrayerHistory').innerHTML=myPrayers.slice(-5).reverse().map(p=>
+    `<div style="padding:8px;background:var(--cream);border-radius:8px;margin-bottom:6px;font-size:12px"><div style="font-size:10px;color:var(--text-light)">${p.date}</div><div style="color:var(--text-mid);margin-top:2px">${p.text.slice(0,100)}${p.text.length>100?'...':''}</div></div>`).join('');
+}
+function savePrayer(){
+  const text=document.getElementById('myPrayer').value.trim();if(!text)return;
+  const prayers=S.get('myPrayers',[]);prayers.push({date:new Date().toISOString().slice(0,10),text});S.set('myPrayers',prayers);
+  document.getElementById('myPrayer').value='';renderPrayer();mNotif('기도가 저장되었습니다');}
+
+// AI CHAT
+let mCurrentPastor=null,mChatHistory=[],mBusy=false;
+
+function buildPastorSelector(){
+  document.getElementById('mPastorSelector').innerHTML=PASTORS.map((p,i)=>
+    `<div class="pastor-chip" id="mpc-${i}" onclick="mSelectPastor(${i})"><div class="p-icon">${p.icon}</div><div>${p.name}</div></div>`).join('');
+}
+
+function mSelectPastor(i){
+  mCurrentPastor=PASTORS[i];mChatHistory=[];
+  document.querySelectorAll('.pastor-chip').forEach(c=>c.classList.remove('active'));
+  document.getElementById('mpc-'+i).classList.add('active');
+  document.getElementById('mChatHeader').style.display='flex';
+  document.getElementById('mChatHeader').innerHTML=`<div class="ai-chat-header"><div class="ai-avatar" style="background:${mCurrentPastor.bg}">${mCurrentPastor.icon}</div><div><div class="ai-name">${mCurrentPastor.name} 부목사</div><div class="ai-role">${mCurrentPastor.role}</div></div></div>`;
+  const box=document.getElementById('mMessages');box.innerHTML='';
+  mAddMsg('bot',`안녕하세요! ${mCurrentPastor.name} 부목사입니다. ${mCurrentPastor.role} 관련해서 무엇이든 물어보세요.`);
+}
+
+function mAddMsg(role,text){
+  const box=document.getElementById('mMessages');const d=document.createElement('div');d.className='m-msg '+role;
+  if(role==='bot'&&mCurrentPastor){d.innerHTML=`<div class="m-msg-icon" style="background:${mCurrentPastor.bg}">${mCurrentPastor.icon}</div><div class="m-msg-bubble">${text.replace(/\n/g,'<br>')}</div>`}
+  else{d.innerHTML=`<div class="m-msg-bubble">${text}</div>`}
+  box.appendChild(d);box.scrollTop=box.scrollHeight}
+
+async function mSendMsg(){
+  if(!mCurrentPastor||mBusy)return;const inp=document.getElementById('mChatInput');const text=inp.value.trim();if(!text)return;
+  inp.value='';mBusy=true;mAddMsg('user',text);mChatHistory.push({role:'user',content:text});
+  // typing
+  const box=document.getElementById('mMessages');const td=document.createElement('div');td.className='m-msg bot';td.id='mtyping';
+  td.innerHTML=`<div class="m-msg-icon" style="background:${mCurrentPastor.bg}">${mCurrentPastor.icon}</div><div class="m-msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+  box.appendChild(td);box.scrollTop=box.scrollHeight;
+
+  const key=S.get('apiKey','');
+  if(!key){document.getElementById('mtyping')?.remove();mAddMsg('bot','API Key가 필요합니다. 교회 안내 > 설정에서 입력해주세요.');mBusy=false;return}
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:mCurrentPastor.sys,messages:mChatHistory})});
+    const data=await res.json();const reply=data.content?.[0]?.text||'잠시 후 다시 시도해주세요.';
+    mChatHistory.push({role:'assistant',content:reply});document.getElementById('mtyping')?.remove();mAddMsg('bot',reply);
+  }catch(e){document.getElementById('mtyping')?.remove();mAddMsg('bot','연결 오류입니다.')}
+  mBusy=false}
+
+document.addEventListener('DOMContentLoaded',()=>{document.getElementById('mChatInput').addEventListener('keydown',e=>{if(e.key==='Enter')mSendMsg()})});
+
+// SERMONS
+let mSermonPage=0;
+function mRenderSermons(){
+  const sermons=S.get('sermons',[]);const search=(document.getElementById('mSermonSearch').value||'').toLowerCase();
+  const filtered=sermons.filter(s=>!search||s.title.toLowerCase().includes(search)||(s.scripture||'').toLowerCase().includes(search)||(s.type||'').toLowerCase().includes(search)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const show=filtered.slice(0,30*(mSermonPage+1));
+  document.getElementById('mSermonList').innerHTML=show.length?show.map(s=>
+    `<div class="sermon-item"><div class="sermon-date">${s.date||''}</div><div class="sermon-title">${s.title||'(제목없음)'}</div><div class="sermon-scripture">${s.scripture||''}</div> <span class="sermon-type">${s.type||''}</span></div>`).join(''):'<div style="text-align:center;color:var(--text-light);padding:40px">설교가 없습니다.<br>목회 시스템에서 설교를 등록해주세요.</div>';
+  document.getElementById('mSermonMore').innerHTML=show.length<filtered.length?`<button onclick="mSermonPage++;mRenderSermons()" style="padding:8px 20px;border-radius:10px;background:var(--cream);border:1px solid var(--border);font-size:12px;cursor:pointer">더보기 (${filtered.length-show.length}편)</button>`:'';}
+
+// INFO - Full church info
+function renderInfo(){
+  // Greeting preview
+  const gPrev = document.getElementById('mGreetingPreview');
+  if (gPrev) gPrev.innerHTML = CHURCH_INFO.pastor_greeting.slice(0, 150) + '...';
+
+  // Core values
+  const cvEl = document.getElementById('mCoreValues');
+  if (cvEl) cvEl.innerHTML = CHURCH_INFO.core_values.map(c =>
+    `<div style="display:flex;align-items:center;gap:10px;padding:10px;border-left:3px solid var(--gold);background:var(--cream);border-radius:6px;margin-bottom:6px">
+      <div style="font-size:22px">${c.icon}</div>
+      <div><div style="font-size:13px;font-weight:700;color:var(--navy)">${c.title}</div>
+        <div style="font-size:11px;color:var(--text-mid);line-height:1.5">${c.desc}</div></div></div>`).join('');
+
+  // Worship times
+  const wtEl = document.getElementById('mWorshipTimes');
+  if (wtEl) wtEl.innerHTML = CHURCH_INFO.worship_times.map(w =>
+    `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <div><div style="font-weight:700;color:var(--navy)">${w.name}</div><div style="font-size:10px;color:var(--text-light)">${w.place}${w.note?' · '+w.note:''}</div></div>
+      <div style="font-weight:600;color:var(--gold-dark);text-align:right">${w.time}</div></div>`).join('');
+
+  // History
+  const hEl = document.getElementById('mHistory');
+  if (hEl) hEl.innerHTML = CHURCH_INFO.history.map(h =>
+    `<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <div style="font-weight:700;color:var(--gold-dark);width:45px;flex-shrink:0">${h.year}</div>
+      <div style="color:var(--text-dark)">${h.event}</div></div>`).join('');
+
+  // Map
+  const mapEl = document.getElementById('mMap');
+  if (mapEl) mapEl.src = `https://maps.google.com/maps?q=${encodeURIComponent(CHURCH_INFO.address)}&output=embed`;
+
+  // Evangelism
+  const areas=S.get('areas',DEFAULT_AREAS);
+  document.getElementById('mEvangelism').innerHTML=areas.map(a=>
+    `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px"><span style="font-weight:600">${a.name}</span><span style="color:var(--gold-dark)">${a.rate}%</span></div>
+      <div class="m-progress"><div class="m-progress-fill" style="width:${a.rate}%"></div></div>
+      <div style="font-size:10px;color:var(--text-light);margin-top:2px">인구 ${a.population.toLocaleString()}명</div></div>`).join('');
+  document.getElementById('mApiKey').value=S.get('apiKey','');
+}
+
+function showGreetingFull(){
+  alert(CHURCH_INFO.pastor_greeting);
+}
+function mSaveApiKey(){S.set('apiKey',document.getElementById('mApiKey').value.trim());mNotif('API Key 저장됨')}
+
+// AUTO-SET API KEY
+if (!S.get('apiKey')) S.set('apiKey', "");
+
+// INIT
+renderHome();renderWord();renderSchedule();renderPrayer();buildPastorSelector();mRenderSermons();renderInfo();
+</script>
+</body>
+</html>

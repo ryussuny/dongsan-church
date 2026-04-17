@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>동산교회 관리자</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1A2340">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi64+Z7IKw6rWQ7ZqMIOq0gOumrOyekCIsInNob3J0X25hbWUiOiLqtIDrpqzsnpAiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzFBMjM0MCIsInRoZW1lX2NvbG9yIjoiIzFBMjM0MCJ9">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A84C;--gold-light:#E8D5A0;--gold-dark:#8B6914;--navy:#1A2340;--navy-light:#2E3D70;--cream:#FAF7F0;--white:#FFF;--text-dark:#1A1A2E;--text-mid:#4A4A6A;--text-light:#8888AA;--success:#2D7D46;--danger:#C0392B;--border:rgba(201,168,76,0.25)}
+*{box-sizing:border-box;margin:0;padding:0}html{font-size:15px}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:65px}
+.header{background:var(--navy);color:var(--white);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.header h1{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:700}
+.header .badge{font-size:9px;padding:2px 8px;border-radius:10px;background:rgba(201,168,76,0.2);color:var(--gold-light)}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:50;padding:4px 0 env(safe-area-inset-bottom)}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 0;cursor:pointer;border:none;background:none;font-family:'Noto Sans KR',sans-serif;color:var(--text-light);font-size:9px}.nb.active{color:var(--gold-dark)}.nb .ni{font-size:18px}
+.pg{display:none;padding:12px 16px}.pg.active{display:block}
+.cd{background:var(--white);border-radius:10px;border:1px solid var(--border);padding:14px;margin-bottom:10px}
+.st{font-family:'Noto Serif KR',serif;font-size:14px;font-weight:700;color:var(--navy);margin-bottom:10px}
+.btn{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif;border:none;display:inline-flex;align-items:center;gap:4px}
+.btn-g{background:var(--gold);color:var(--white)}.btn-n{background:var(--navy);color:var(--white)}.btn-o{background:var(--white);border:1px solid var(--border);color:var(--text-mid)}
+.inp{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--cream);font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none}
+.inp:focus{border-color:var(--gold)}
+.stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+.stat-box{background:var(--white);border-radius:8px;border:1px solid var(--border);padding:10px;text-align:center}
+.stat-box .v{font-size:22px;font-weight:700;color:var(--navy);font-family:'Noto Serif KR',serif}.stat-box .l{font-size:9px;color:var(--text-light)}
+.list-item{padding:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.list-item .name{font-size:13px;font-weight:600;color:var(--navy)}.list-item .sub{font-size:10px;color:var(--text-light)}
+.progress{background:var(--cream);border-radius:6px;height:5px;overflow:hidden;margin-top:3px}.progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--gold-dark),var(--gold))}
+.chip{display:inline-block;font-size:9px;padding:2px 6px;border-radius:8px;font-weight:600}
+.notif{position:fixed;top:10px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--navy);color:var(--white);padding:8px 16px;border-radius:8px;font-size:11px;border-bottom:2px solid var(--gold);transition:transform .3s;z-index:999;max-width:90%}.notif.show{transform:translateX(-50%) translateY(0)}
+.msg-bubble{padding:8px 12px;border-radius:14px;font-size:12px;line-height:1.6;max-width:80%}
+.msg-bot{background:var(--cream);border:1px solid var(--border);border-radius:4px 14px 14px 14px;align-self:flex-start}
+.msg-user{background:var(--navy);color:var(--white);border-radius:14px 4px 14px 14px;align-self:flex-end}
+.typing span{width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block;animation:bounce 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.pastor-chip{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px;border-radius:8px;background:var(--white);border:1px solid var(--border);min-width:58px;cursor:pointer;font-size:9px}
+.pastor-chip.active{border-color:var(--gold);background:#FFFBF0}
+.pastor-chip .pi{font-size:20px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div><div style="color:var(--gold);font-size:12px">&#10013;</div><h1>동산교회 관리자</h1></div>
+  <div style="display:flex;gap:6px;align-items:center">
+    <span id="clock" style="font-size:11px;color:var(--gold-light)"></span>
+    <span class="badge">ADMIN</span>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="pg active" id="pg-home">
+  <div id="adminStats" class="stat-row"></div>
+  <div id="adminAlerts" class="cd"></div>
+  <div class="cd"><div class="st">빠른 실행</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+      <div onclick="go('chat')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">💬</div><div style="font-size:9px;color:var(--text-mid)">AI 상담</div></div>
+      <div onclick="go('members')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">👥</div><div style="font-size:9px;color:var(--text-mid)">교인관리</div></div>
+      <div onclick="go('word')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">📖</div><div style="font-size:9px;color:var(--text-mid)">오늘말씀</div></div>
+      <div onclick="go('bulletin')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">📰</div><div style="font-size:9px;color:var(--text-mid)">주보</div></div>
+      <div onclick="go('meeting')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">🎤</div><div style="font-size:9px;color:var(--text-mid)">부목사회의</div></div>
+      <div onclick="go('attendance')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">✅</div><div style="font-size:9px;color:var(--text-mid)">출석부</div></div>
+      <div onclick="go('visit')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">🏠</div><div style="font-size:9px;color:var(--text-mid)">심방</div></div>
+      <div onclick="go('settings')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">⚙️</div><div style="font-size:9px;color:var(--text-mid)">설정</div></div>
+    </div>
+  </div>
+  <div class="cd"><div class="st">이번 주 사역</div><div id="adminEvents"></div></div>
+  <div class="cd"><div class="st">태백 복음화</div><div id="adminEvangelism"></div></div>
+</div>
+
+<!-- MEMBERS -->
+<div class="pg" id="pg-members">
+  <div style="display:flex;gap:6px;margin-bottom:10px"><input id="mSearch" class="inp" placeholder="교인 검색..." style="flex:1" oninput="renderAdminMembers()"><button class="btn btn-n" onclick="addMemberMobile()">+등록</button></div>
+  <div id="memberZoneChips" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px"></div>
+  <div id="adminMemberList"></div>
+</div>
+
+<!-- CHAT -->
+<div class="pg" id="pg-chat">
+  <div style="display:flex;gap:4px;overflow-x:auto;padding:4px 0;margin-bottom:10px" id="adminPastorChips"></div>
+  <div id="adminChatBox" style="background:var(--white);border-radius:10px;border:1px solid var(--border);height:380px;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+  <div style="display:flex;gap:6px"><input id="adminChatInput" class="inp" placeholder="질문..." style="flex:1"><button class="btn btn-n" onclick="adminSend()">전송</button></div>
+</div>
+
+<!-- WORD -->
+<div class="pg" id="pg-word">
+  <div id="adminWordCard" style="background:linear-gradient(135deg,var(--navy),var(--navy-light));color:white;padding:20px;border-radius:12px;text-align:center;margin-bottom:12px"></div>
+  <div class="cd"><div id="adminWordContent" style="font-size:12px;line-height:1.8;white-space:pre-wrap;max-height:400px;overflow-y:auto"></div></div>
+  <div style="display:flex;gap:6px;margin-top:8px">
+    <button class="btn btn-g" onclick="genWord()" style="flex:1">AI 생성</button>
+    <button class="btn btn-n" onclick="sendWordKakao()" style="flex:1">💬 카톡</button>
+    <button class="btn btn-o" onclick="copyWord()">복사</button>
+  </div>
+</div>
+
+<!-- BULLETIN -->
+<div class="pg" id="pg-bulletin">
+  <div class="cd">
+    <div class="st">이번 주 주보</div>
+    <button class="btn btn-g" onclick="genBulletin()" style="width:100%;margin-bottom:8px">AI 주보 생성</button>
+    <div id="adminBulletin" style="font-size:11px;line-height:1.7;white-space:pre-wrap;max-height:500px;overflow-y:auto;padding:10px;background:var(--cream);border-radius:8px"></div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button class="btn btn-n" onclick="sendBulKakao()" style="flex:1">💬 카톡</button>
+      <button class="btn btn-o" onclick="copyBul()" style="flex:1">복사</button>
+    </div>
+  </div>
+</div>
+
+<!-- MEETING -->
+<div class="pg" id="pg-meeting">
+  <div class="cd">
+    <div class="st">🎤 부목사 자동 회의</div>
+    <p style="font-size:11px;color:var(--text-mid);margin-bottom:10px">10명의 부목사가 발언하고 담임목사님께 보고합니다</p>
+    <button class="btn btn-g" onclick="runMeeting()" style="width:100%">자동 회의 시작</button>
+    <div id="adminMeetingLog" style="margin-top:10px;font-size:11px;line-height:1.7;white-space:pre-wrap;max-height:500px;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- ATTENDANCE -->
+<div class="pg" id="pg-attendance">
+  <div class="cd">
+    <div class="st">출석 기록</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <input type="date" id="attD" class="inp" style="flex:1">
+      <select id="attS" class="inp" style="width:130px"><option>주일 1부예배</option><option>주일 2부예배</option><option>수요예배</option><option>금요기도회</option></select>
+      <input type="number" id="attC" class="inp" placeholder="인원" style="width:70px">
+      <button class="btn btn-n" onclick="saveAtt()">저장</button>
+    </div>
+  </div>
+  <div class="cd"><div class="st">출석 추이</div><div id="adminAttChart"></div></div>
+  <div class="cd"><div class="st">최근 기록</div><div id="adminAttList"></div></div>
+</div>
+
+<!-- VISIT -->
+<div class="pg" id="pg-visit">
+  <div class="cd">
+    <div class="st">심방 기록</div>
+    <input type="date" id="vDate" class="inp" style="margin-bottom:6px">
+    <input id="vTarget" class="inp" placeholder="대상자" style="margin-bottom:6px">
+    <select id="vType" class="inp" style="margin-bottom:6px"><option>가정심방</option><option>병원심방</option><option>신규심방</option><option>위로심방</option></select>
+    <textarea id="vNote" class="inp" placeholder="내용..." style="min-height:60px;margin-bottom:6px"></textarea>
+    <button class="btn btn-n" onclick="saveVisit()" style="width:100%">저장</button>
+  </div>
+  <div class="cd"><div class="st">심방 기록</div><div id="adminVisitList"></div></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="pg" id="pg-settings">
+  <div class="cd">
+    <div class="st">API Key</div>
+    <div style="display:flex;gap:6px"><input id="adminApiKey" type="password" class="inp" placeholder="sk-ant-..." style="flex:1"><button class="btn btn-n" onclick="S.set('apiKey',document.getElementById('adminApiKey').value.trim());notify('저장됨')">저장</button></div>
+  </div>
+  <div class="cd">
+    <div class="st">데이터</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <button class="btn btn-o" onclick="exportAll()">전체 백업 다운로드</button>
+      <button class="btn btn-o" onclick="location.reload()">새로고침</button>
+      <div style="font-size:10px;color:var(--text-light);margin-top:4px" id="adminDataStats"></div>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nb active" onclick="go('home',this)"><span class="ni">🏠</span>홈</button>
+  <button class="nb" onclick="go('members',this)"><span class="ni">👥</span>교인</button>
+  <button class="nb" onclick="go('chat',this)"><span class="ni">💬</span>상담</button>
+  <button class="nb" onclick="go('word',this)"><span class="ni">📖</span>말씀</button>
+  <button class="nb" onclick="go('settings',this)"><span class="ni">⚙️</span>더보기</button>
+</nav>
+
+<div class="notif" id="notif"></div>
+
+<script>
+const P='dongsan_';
+const S={get(k,d){try{const v=localStorage.getItem(P+k);return v?JSON.parse(v):d}catch{return d}},set(k,v){localStorage.setItem(P+k,JSON.stringify(v))}};
+const BRIDGE='http://localhost:5555';
+
+const PASTORS=[
+  {n:"김요한",r:"예배·찬양",i:"🎵",bg:"#EEEDFE",s:"당신은 동산교회 예배·찬양 담당 부목사 김요한입니다. 한국어로 간결하게 답하세요."},
+  {n:"이다윗",r:"전도·선교",i:"📢",bg:"#E1F5EE",s:"당신은 동산교회 전도·선교 담당 부목사 이다윗입니다. 한국어로 답하세요."},
+  {n:"박루디아",r:"여성·가정",i:"🏠",bg:"#FBEAF0",s:"당신은 동산교회 여성·가정 담당 부목사 박루디아입니다. 한국어로 답하세요."},
+  {n:"최디모데",r:"청년부",i:"⚡",bg:"#E6F1FB",s:"당신은 동산교회 청년부 담당 부목사 최디모데입니다. 한국어로 답하세요."},
+  {n:"정나오미",r:"아동·교육",i:"🌟",bg:"#EAF3DE",s:"당신은 동산교회 아동부 담당 부목사 정나오미입니다. 한국어로 답하세요."},
+  {n:"한바울",r:"심방·돌봄",i:"🙏",bg:"#F1EFE8",s:"당신은 동산교회 심방 담당 부목사 한바울입니다. 한국어로 답하세요."},
+  {n:"오스데반",r:"소그룹",i:"🔗",bg:"#FAEEDA",s:"당신은 동산교회 구역 담당 부목사 오스데반입니다. 한국어로 답하세요."},
+  {n:"임갈렙",r:"지역봉사",i:"🌍",bg:"#E6F1FB",s:"당신은 동산교회 지역봉사 담당 부목사 임갈렙입니다. 한국어로 답하세요."},
+  {n:"신요셉",r:"제자훈련",i:"📖",bg:"#EEEDFE",s:"당신은 동산교회 교육 담당 부목사 신요셉입니다. 한국어로 답하세요."},
+  {n:"문에스더",r:"행정·기획",i:"📋",bg:"#FBEAF0",s:"당신은 동산교회 행정 담당 부목사 문에스더입니다. 한국어로 답하세요."}
+];
+
+function notify(m){const e=document.getElementById('notif');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500)}
+function go(p,btn){document.querySelectorAll('.pg').forEach(e=>e.classList.remove('active'));document.getElementById('pg-'+p).classList.add('active');
+  if(btn){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+  if(p==='home')renderHome();if(p==='members')renderAdminMembers();if(p==='word')renderWord();if(p==='attendance')renderAtt();if(p==='visit')renderVisits();if(p==='settings')renderSettings();if(p==='chat')renderChat();
+}
+
+async function callAI(sys,msg){
+  const key=S.get('apiKey','');if(!key){notify('API Key 필요');return null}
+  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:sys,messages:[{role:'user',content:msg}]})});
+  const d=await r.json();return d.content?.[0]?.text||d.error?.message||null}catch(e){return null}}
+
+// CLOCK
+setInterval(()=>{const n=new Date();document.getElementById('clock').textContent=`${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`},10000);
+document.getElementById('clock').textContent=new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0');
+
+// HOME
+function renderHome(){
+  const m=S.get('members',[]),v=S.get('visits',[]),a=S.get('attendance',[]);
+  document.getElementById('adminStats').innerHTML=`
+    <div class="stat-box"><div class="v">${m.length}</div><div class="l">교인</div></div>
+    <div class="stat-box"><div class="v">${S.get('sermons',[]).length}</div><div class="l">설교</div></div>
+    <div class="stat-box"><div class="v">${v.length}</div><div class="l">심방</div></div>
+    <div class="stat-box"><div class="v">${a.length}</div><div class="l">출석기록</div></div>`;
+
+  // Alerts
+  const today=new Date().toISOString().slice(0,10);const mm=String(new Date().getMonth()+1).padStart(2,'0');
+  const birthdays=m.filter(x=>x.birthday&&x.birthday.slice(5,7)===mm);
+  const hasWord=S.get('dwToday','')&&S.get('dwTodayDate','')===today;
+  document.getElementById('adminAlerts').innerHTML=`<div class="st">📌 알림</div>
+    <div style="font-size:11px;display:flex;flex-direction:column;gap:6px">
+      <div style="padding:6px 8px;background:${hasWord?'#E8F5E9':'#FFF3E0'};border-radius:6px">${hasWord?'✅ 오늘의 말씀 준비됨':'⚠️ 오늘의 말씀 미생성'}</div>
+      ${birthdays.length?`<div style="padding:6px 8px;background:#FFF8E7;border-radius:6px">🎂 이번달 생일 ${birthdays.length}명</div>`:''}
+    </div>`;
+
+  const events=S.get('events',[]);
+  document.getElementById('adminEvents').innerHTML=events.slice(0,5).map(e=>`<div class="list-item"><div><div class="name">${e.title}</div><div class="sub">${e.day} ${e.time} ${e.manager||''}</div></div></div>`).join('');
+
+  const areas=S.get('areas',[]);
+  document.getElementById('adminEvangelism').innerHTML=areas.slice(0,5).map(a=>`<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:11px"><span>${a.name}</span><span style="color:var(--gold-dark)">${a.rate}%</span></div><div class="progress"><div class="progress-fill" style="width:${a.rate}%"></div></div></div>`).join('');
+}
+
+// MEMBERS
+function renderAdminMembers(){
+  const m=S.get('members',[]);const q=(document.getElementById('mSearch')?.value||'').toLowerCase();
+  const zones=[...new Set(m.map(x=>x.zone).filter(x=>x))];
+  document.getElementById('memberZoneChips').innerHTML=zones.map(z=>{const c=m.filter(x=>x.zone===z).length;return `<span class="chip" style="background:var(--cream);border:1px solid var(--border);cursor:pointer" onclick="document.getElementById('mSearch').value='${z}';renderAdminMembers()">${z} ${c}</span>`}).join('');
+  const filtered=m.filter(x=>!q||x.name.toLowerCase().includes(q)||(x.zone||'').toLowerCase().includes(q)||(x.phone||'').includes(q)||(x.role||'').toLowerCase().includes(q));
+  document.getElementById('adminMemberList').innerHTML=filtered.slice(0,50).map(x=>`<div class="list-item"><div><div class="name">${x.name} ${x.role?`<span class="chip" style="background:#FFF8E7;color:var(--gold-dark)">${x.role}</span>`:''}</div><div class="sub">${x.phone||''} ${x.zone||''} ${x.birthday?'🎂'+x.birthday.slice(5):''}</div></div></div>`).join('')||'<div style="text-align:center;color:var(--text-light);padding:30px">교인이 없습니다</div>';
+}
+function addMemberMobile(){notify('PC 시스템에서 등록하세요')}
+
+// CHAT
+let curP=null,chatH=[];
+function renderChat(){
+  document.getElementById('adminPastorChips').innerHTML=PASTORS.map((p,i)=>`<div class="pastor-chip ${curP===i?'active':''}" onclick="selectP(${i})"><div class="pi">${p.i}</div>${p.n}</div>`).join('');
+  if(curP===null){document.getElementById('adminChatBox').innerHTML='<div style="text-align:center;color:var(--text-light);padding:40px;font-size:12px">부목사님을 선택하세요</div>'}
+}
+function selectP(i){curP=i;chatH=[];renderChat();const box=document.getElementById('adminChatBox');box.innerHTML=`<div class="msg-bubble msg-bot">${PASTORS[i].n} 부목사입니다. 무엇을 도와드릴까요?</div>`}
+async function adminSend(){
+  if(curP===null)return;const inp=document.getElementById('adminChatInput');const t=inp.value.trim();if(!t)return;inp.value='';
+  const box=document.getElementById('adminChatBox');box.innerHTML+=`<div class="msg-bubble msg-user">${t}</div>`;
+  chatH.push({role:'user',content:t});box.innerHTML+=`<div class="msg-bubble msg-bot" id="typing"><div class="typing"><span></span><span></span><span></span></div></div>`;box.scrollTop=box.scrollHeight;
+  const r=await callAI(PASTORS[curP].s,t);document.getElementById('typing')?.remove();
+  if(r){chatH.push({role:'assistant',content:r});box.innerHTML+=`<div class="msg-bubble msg-bot">${r.replace(/\n/g,'<br>')}</div>`}
+  else{box.innerHTML+=`<div class="msg-bubble msg-bot">연결 오류. API Key를 확인하세요.</div>`}
+  box.scrollTop=box.scrollHeight}
+document.addEventListener('DOMContentLoaded',()=>{document.getElementById('adminChatInput').addEventListener('keydown',e=>{if(e.key==='Enter')adminSend()})});
+
+// WORD
+function renderWord(){
+  const today=new Date().toISOString().slice(0,10);const plan=S.get('dwArchive',[])||[];
+  // Try READING_PLAN from main system or use stored
+  document.getElementById('adminWordCard').innerHTML=`<div style="font-size:10px;color:var(--gold-light)">${today}</div><div style="font-family:'Noto Serif KR',serif;font-size:18px;font-weight:700;margin:6px 0">오늘의 말씀</div>`;
+  const content=S.get('dwToday','');
+  document.getElementById('adminWordContent').textContent=content||'아직 생성되지 않았습니다. AI 생성 버튼을 누르세요.';
+}
+async function genWord(){
+  notify('생성 중...');const today=new Date().toISOString().slice(0,10);
+  const r=await callAI('당신은 한국 기독교 묵상 콘텐츠 전문 작가입니다.',`${today} 오늘의 말씀을 작성하세요. 구조: 📖 오늘의 말씀 → 🌿 묵상 → ❓ 질문 → ✅ 실천 → 🙏 기도 → 🎵 찬양 → 🔑 요약`);
+  if(r){S.set('dwToday',r);S.set('dwTodayDate',today);document.getElementById('adminWordContent').textContent=r;notify('생성 완료')}
+}
+function copyWord(){const t=S.get('dwToday','');if(t)navigator.clipboard.writeText(t).then(()=>notify('복사됨'))}
+async function sendWordKakao(){notify('브리지 서버 필요 — PC에서 발송하세요')}
+
+// BULLETIN
+async function genBulletin(){
+  notify('주보 생성 중...');
+  const r=await callAI('당신은 교회 주보 편집자입니다. 동산감리교회 주보를 작성하세요.',`이번 주일 주보를 생성하세요. 예배순서, 교회소식, 기도제목, 금주일정 포함. 기독교대한감리회 동산감리교회, 강원도 태백시 계산4길 25`);
+  if(r){document.getElementById('adminBulletin').textContent=r;window.__bul=r;notify('생성 완료')}
+}
+function copyBul(){if(window.__bul)navigator.clipboard.writeText(window.__bul).then(()=>notify('복사됨'))}
+function sendBulKakao(){notify('브리지 서버 필요 — PC에서 발송하세요')}
+
+// ATTENDANCE
+function renderAtt(){
+  document.getElementById('attD').value=new Date().toISOString().slice(0,10);
+  const recs=S.get('attendance',[]).sort((a,b)=>b.date.localeCompare(a.date));
+  const last8=recs.filter(r=>r.service.includes('주일')).slice(0,8).reverse();
+  const max=Math.max(...last8.map(r=>r.count),1);
+  document.getElementById('adminAttChart').innerHTML=last8.length?`<div style="display:flex;align-items:flex-end;gap:4px;height:100px">${last8.map(r=>`<div style="flex:1;text-align:center"><div style="font-size:9px;color:var(--gold-dark)">${r.count}</div><div style="background:var(--gold);height:${r.count/max*80}px;border-radius:3px 3px 0 0;min-height:4px"></div><div style="font-size:8px;color:var(--text-light)">${r.date.slice(5)}</div></div>`).join('')}</div>`:'<div style="text-align:center;color:var(--text-light);padding:20px;font-size:11px">기록 없음</div>';
+  document.getElementById('adminAttList').innerHTML=recs.slice(0,10).map(r=>`<div class="list-item"><div><div class="name">${r.date} · ${r.service}</div></div><div style="font-weight:700;color:var(--gold-dark)">${r.count}명</div></div>`).join('');
+}
+function saveAtt(){
+  const d=document.getElementById('attD').value,s=document.getElementById('attS').value,c=parseInt(document.getElementById('attC').value)||0;
+  if(!d||!c){notify('날짜와 인원 입력');return}
+  const recs=S.get('attendance',[]);recs.push({date:d,service:s,count:c,createdAt:new Date().toISOString()});S.set('attendance',recs);
+  document.getElementById('attC').value='';renderAtt();notify(`${d} ${c}명 기록됨`)}
+
+// VISITS
+function renderVisits(){
+  document.getElementById('vDate').value=new Date().toISOString().slice(0,10);
+  const visits=S.get('visits',[]).sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('adminVisitList').innerHTML=visits.slice(0,15).map(v=>`<div class="list-item"><div><div class="name">${v.target} <span class="chip" style="background:var(--cream);border:1px solid var(--border)">${v.type}</span></div><div class="sub">${v.date} ${v.note?v.note.slice(0,30):''}</div></div></div>`).join('')||'<div style="text-align:center;color:var(--text-light);padding:20px">기록 없음</div>';
+}
+function saveVisit(){
+  const d=document.getElementById('vDate').value,t=document.getElementById('vTarget').value.trim(),tp=document.getElementById('vType').value,n=document.getElementById('vNote').value.trim();
+  if(!t){notify('대상자 입력');return}
+  const visits=S.get('visits',[]);let nid=S.get('visitNextId',1);visits.push({id:nid,date:d,target:t,type:tp,pastor:'담임목사',note:n});
+  S.set('visits',visits);S.set('visitNextId',nid+1);document.getElementById('vTarget').value='';document.getElementById('vNote').value='';
+  renderVisits();notify('심방 기록 저장됨')}
+
+// SETTINGS
+function renderSettings(){
+  document.getElementById('adminApiKey').value=S.get('apiKey','');
+  const m=S.get('members',[]),s=S.get('sermons',[]),v=S.get('visits',[]);
+  document.getElementById('adminDataStats').innerHTML=`교인 ${m.length}명 · 설교 ${s.length}편 · 심방 ${v.length}건 · 출석 ${S.get('attendance',[]).length}회`}
+function exportAll(){
+  const d={exportedAt:new Date().toISOString(),members:S.get('members',[]),sermons:S.get('sermons',[]),visits:S.get('visits',[]),prayers:S.get('prayers',[]),events:S.get('events',[]),attendance:S.get('attendance',[])};
+  const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`동산교회_관리자백업_${new Date().toISOString().slice(0,10)}.json`;a.click();notify('백업 다운로드')}
+
+// Meeting
+async function runMeeting(){
+  const log=document.getElementById('adminMeetingLog');log.textContent='회의 시작 중...\n';
+  for(let i=0;i<PASTORS.length;i++){
+    const p=PASTORS[i];log.textContent+=`\n${p.i} ${p.n} 부목사 발언 중...\n`;
+    const r=await callAI(p.s,`담임목사님께 이번 주 ${p.r} 사역 보고를 3-4줄로 해주세요.`);
+    log.textContent+=`─ ${p.n} (${p.r}) ─\n${r||'(응답 없음)'}\n`;log.scrollTop=log.scrollHeight}
+  log.textContent+='\n✅ 회의 완료';notify('부목사 회의 완료')}
+
+// API Key auto-set
+if(!S.get('apiKey'))S.set('apiKey',"");
+renderHome();
+</script>
+</body>
+</html>
