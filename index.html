@@ -209,7 +209,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--c);color:var(--td);m
 
 <script>
 const P='dongsan_';
-function SG(k,d){try{return JSON.parse(localStorage.getItem(P+k))||d}catch{return d}}
+function SG(k,d){try{return JSON.parse(localStorage.getItem(P+k))||d}catch(e){return d}}
 function SS(k,v){localStorage.setItem(P+k,JSON.stringify(v))}
 function N(m){const e=document.getElementById('notif');e.textContent=m;e.style.transform='translateX(-50%) translateY(0)';setTimeout(()=>e.style.transform='translateX(-50%) translateY(-80px)',2000)}
 
