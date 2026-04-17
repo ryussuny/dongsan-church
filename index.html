@@ -461,6 +461,37 @@ function nextHymn() { if (currentHymn < 645) { document.getElementById('hymnNum'
 // ══════════════════════════════
 // APP INIT & LOGIN
 // ══════════════════════════════
+
+function showProfile() {
+  var name = SG('userName', '');
+  var att = SG('myAttendance', {});
+  var medit = SG('myMeditHistory', []);
+  var ac = Object.keys(att).length;
+  var mc = medit.length;
+  var p = document.createElement('div');
+  p.style.cssText = 'position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px';
+  p.onclick = function(e){if(e.target===p)p.remove()};
+  var h = '<div style="background:white;border-radius:16px;padding:28px;max-width:340px;width:100%;text-align:center">';
+  h += '<div style="width:56px;height:56px;border-radius:50%;background:var(--g);color:white;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin:0 auto 12px">'+name[0]+'</div>';
+  h += '<div style="font-size:18px;font-weight:700;color:var(--n)">'+name+'</div>';
+  h += '<div style="font-size:11px;color:var(--tl);margin:4px 0 16px">동산감리교회 성도</div>';
+  h += '<div style="display:flex;gap:8px"><div style="flex:1;padding:10px;background:var(--c);border-radius:8px"><div style="font-size:18px;font-weight:700;color:var(--n)">'+ac+'</div><div style="font-size:10px;color:var(--tl)">출석</div></div>';
+  h += '<div style="flex:1;padding:10px;background:var(--c);border-radius:8px"><div style="font-size:18px;font-weight:700;color:var(--n)">'+mc+'</div><div style="font-size:10px;color:var(--tl)">묵상</div></div></div>';
+  h += '</div>';
+  p.innerHTML = h;
+  var lb = document.createElement('button');
+  lb.textContent = '로그아웃';
+  lb.style.cssText = 'width:100%;padding:12px;border:1px solid var(--b);border-radius:10px;background:white;color:var(--tm);font-size:13px;cursor:pointer;margin-top:12px';
+  lb.onclick = function(){SS('userName','');location.reload()};
+  var cb = document.createElement('button');
+  cb.textContent = '닫기';
+  cb.style.cssText = 'width:100%;padding:12px;border:none;border-radius:10px;background:var(--n);color:white;font-size:13px;cursor:pointer;margin-top:6px';
+  cb.onclick = function(){p.remove()};
+  p.firstChild.appendChild(lb);
+  p.firstChild.appendChild(cb);
+  document.body.appendChild(p);
+}
+
 function initApp() {
   var user = SG('userName', '');
   var ls = document.getElementById('loginScreen');
