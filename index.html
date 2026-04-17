@@ -208,6 +208,43 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--c);color:var(--td);m
 <div id="notif" style="position:fixed;top:10px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--n);color:var(--w);padding:8px 16px;border-radius:8px;font-size:11px;border-bottom:2px solid var(--g);transition:transform .3s;z-index:999;max-width:90%"></div>
 
 <script>
+// 로그인 (별도 스크립트 - 메인 데이터 로딩과 독립)
+function doLogin(){
+  var n=document.getElementById('loginName');
+  if(!n)return;
+  var name=n.value.trim();
+  if(!name||name.length<2){alert('이름을 2자 이상 입력하세요');return}
+  try{localStorage.setItem('dongsan_userName',JSON.stringify(name))}catch(e){alert('저장 오류: '+e.message);return}
+  document.getElementById('loginScreen').style.display='none';
+  var ub=document.getElementById('userBadge');if(ub)ub.style.display='flex';
+  var ua=document.getElementById('userAvatar');if(ua)ua.textContent=name[0];
+  var un=document.getElementById('userName');if(un)un.textContent=name;
+}
+function guestLogin(){
+  try{localStorage.setItem('dongsan_userName',JSON.stringify('게스트'))}catch(e){}
+  document.getElementById('loginScreen').style.display='none';
+  var ub=document.getElementById('userBadge');if(ub)ub.style.display='flex';
+  var ua=document.getElementById('userAvatar');if(ua)ua.textContent='G';
+  var un=document.getElementById('userName');if(un)un.textContent='게스트';
+}
+// 자동 로그인 체크
+(function(){
+  try{
+    var u=JSON.parse(localStorage.getItem('dongsan_userName'));
+    if(u&&u.length>0){
+      var ls=document.getElementById('loginScreen');if(ls)ls.style.display='none';
+      var ub=document.getElementById('userBadge');if(ub)ub.style.display='flex';
+      var ua=document.getElementById('userAvatar');if(ua)ua.textContent=u[0];
+      var un=document.getElementById('userName');if(un)un.textContent=u;
+    }
+  }catch(e){}
+})();
+// Enter 키
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&document.getElementById('loginScreen').style.display!=='none'){doLogin()}
+});
+</script>
+<script>
 const P='dongsan_';
 function SG(k,d){try{return JSON.parse(localStorage.getItem(P+k))||d}catch(e){return d}}
 function SS(k,v){localStorage.setItem(P+k,JSON.stringify(v))}
@@ -492,62 +529,11 @@ function showProfile() {
   document.body.appendChild(p);
 }
 
-function initApp() {
-  var user = SG('userName', '');
-  var ls = document.getElementById('loginScreen');
-  var ub = document.getElementById('userBadge');
-  var ua = document.getElementById('userAvatar');
-  var un = document.getElementById('userName');
-  
-  if (user && user.length > 0) {
-    // Already logged in
-    if (ls) ls.style.display = 'none';
-    if (ub) ub.style.display = 'flex';
-    if (ua) ua.textContent = user[0];
-    if (un) un.textContent = user;
-    renderWord();
-  } else {
-    // Show login
-    if (ls) ls.style.display = 'flex';
-  }
-}
 
-function doLogin() {
-  var inp = document.getElementById('loginName');
-  if (!inp) return;
-  var name = inp.value.trim();
-  if (!name || name.length < 2) {
-    N('이름을 입력하세요 (2자 이상)');
-    return;
-  }
-  SS('userName', name);
-  
-  var ls = document.getElementById('loginScreen');
-  var ub = document.getElementById('userBadge');
-  var ua = document.getElementById('userAvatar');
-  var un = document.getElementById('userName');
-  
-  if (ls) ls.style.display = 'none';
-  if (ub) ub.style.display = 'flex';
-  if (ua) ua.textContent = name[0];
-  if (un) un.textContent = name;
-  
-  N(name + '님 환영합니다!');
-  renderWord();
-}
 
-function guestLogin() {
-  SS('userName', '게스트');
-  var ls = document.getElementById('loginScreen');
-  if (ls) ls.style.display = 'none';
-  var ub = document.getElementById('userBadge');
-  if (ub) ub.style.display = 'flex';
-  var ua = document.getElementById('userAvatar');
-  if (ua) ua.textContent = 'G';
-  var un = document.getElementById('userName');
-  if (un) un.textContent = '게스트';
-  renderWord();
-}
+
+
+
 
 // Enter key on login input
 document.addEventListener('DOMContentLoaded', function() {
@@ -561,8 +547,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-initApp();
+try{renderWord()}catch(e){}
 </script>
 </body>
 </html>
-<!-- v1776415309 -->
