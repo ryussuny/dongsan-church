@@ -208,40 +208,80 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--c);color:var(--td);m
 <div id="notif" style="position:fixed;top:10px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--n);color:var(--w);padding:8px 16px;border-radius:8px;font-size:11px;border-bottom:2px solid var(--g);transition:transform .3s;z-index:999;max-width:90%"></div>
 
 <script>
-// 로그인 (별도 스크립트 - 메인 데이터 로딩과 독립)
-function doLogin(){
-  var n=document.getElementById('loginName');
-  if(!n)return;
-  var name=n.value.trim();
-  if(!name||name.length<2){alert('이름을 2자 이상 입력하세요');return}
-  try{localStorage.setItem('dongsan_userName',JSON.stringify(name))}catch(e){alert('저장 오류: '+e.message);return}
-  document.getElementById('loginScreen').style.display='none';
-  var ub=document.getElementById('userBadge');if(ub)ub.style.display='flex';
-  var ua=document.getElementById('userAvatar');if(ua)ua.textContent=name[0];
-  var un=document.getElementById('userName');if(un)un.textContent=name;
+// ═══ LOGIN (bulletproof - works on file:// too) ═══
+var _store = {};
+try { _store = localStorage; } catch(e) { _store = {}; }
+
+function _get(k) {
+  try { return JSON.parse(_store.getItem ? _store.getItem(k) : (_store[k]||'null')); }
+  catch(e) { return null; }
 }
-function guestLogin(){
-  try{localStorage.setItem('dongsan_userName',JSON.stringify('게스트'))}catch(e){}
-  document.getElementById('loginScreen').style.display='none';
-  var ub=document.getElementById('userBadge');if(ub)ub.style.display='flex';
-  var ua=document.getElementById('userAvatar');if(ua)ua.textContent='G';
-  var un=document.getElementById('userName');if(un)un.textContent='게스트';
+function _set(k, v) {
+  try { if(_store.setItem) _store.setItem(k, JSON.stringify(v)); else _store[k]=JSON.stringify(v); }
+  catch(e) {}
 }
-// 자동 로그인 체크
+
+function doLogin() {
+  var inp = document.getElementById('loginName');
+  if (!inp) { alert('입력창을 찾을 수 없습니다'); return; }
+  var name = inp.value.trim();
+  if (!name || name.length < 2) { alert('이름을 2자 이상 입력하세요'); return; }
+  
+  _set('dongsan_userName', name);
+  window._currentUser = name;
+  
+  document.getElementById('loginScreen').style.display = 'none';
+  var ub = document.getElementById('userBadge'); if(ub) ub.style.display = 'flex';
+  var ua = document.getElementById('userAvatar'); if(ua) ua.textContent = name[0];
+  var un = document.getElementById('userName'); if(un) un.textContent = name;
+}
+
+function guestLogin() {
+  _set('dongsan_userName', '게스트');
+  window._currentUser = '게스트';
+  document.getElementById('loginScreen').style.display = 'none';
+  var ub = document.getElementById('userBadge'); if(ub) ub.style.display = 'flex';
+  var ua = document.getElementById('userAvatar'); if(ua) ua.textContent = 'G';
+  var un = document.getElementById('userName'); if(un) un.textContent = '게스트';
+}
+
+function showProfile() {
+  var name = window._currentUser || _get('dongsan_userName') || '게스트';
+  var p = document.createElement('div');
+  p.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px';
+  p.onclick = function(e){if(e.target===p)document.body.removeChild(p)};
+  var d = document.createElement('div');
+  d.style.cssText = 'background:white;border-radius:16px;padding:28px;max-width:340px;width:100%;text-align:center';
+  d.innerHTML = '<div style="font-size:18px;font-weight:700;color:#1A2340;margin-bottom:16px">'+name+'</div>';
+  var lb = document.createElement('button');
+  lb.textContent = '로그아웃';
+  lb.style.cssText = 'width:100%;padding:12px;border:none;border-radius:10px;background:#C0392B;color:white;font-size:14px;cursor:pointer;margin-bottom:8px';
+  lb.onclick = function(){_set('dongsan_userName','');window._currentUser='';location.reload()};
+  var cb = document.createElement('button');
+  cb.textContent = '닫기';
+  cb.style.cssText = 'width:100%;padding:12px;border:none;border-radius:10px;background:#1A2340;color:white;font-size:14px;cursor:pointer';
+  cb.onclick = function(){document.body.removeChild(p)};
+  d.appendChild(lb);
+  d.appendChild(cb);
+  p.appendChild(d);
+  document.body.appendChild(p);
+}
+
+// Auto-login check
 (function(){
-  try{
-    var u=JSON.parse(localStorage.getItem('dongsan_userName'));
-    if(u&&u.length>0){
-      var ls=document.getElementById('loginScreen');if(ls)ls.style.display='none';
-      var ub=document.getElementById('userBadge');if(ub)ub.style.display='flex';
-      var ua=document.getElementById('userAvatar');if(ua)ua.textContent=u[0];
-      var un=document.getElementById('userName');if(un)un.textContent=u;
-    }
-  }catch(e){}
+  var u = _get('dongsan_userName');
+  if (u && u.length > 0) {
+    window._currentUser = u;
+    var ls = document.getElementById('loginScreen'); if(ls) ls.style.display = 'none';
+    var ub = document.getElementById('userBadge'); if(ub) ub.style.display = 'flex';
+    var ua = document.getElementById('userAvatar'); if(ua) ua.textContent = u[0];
+    var un = document.getElementById('userName'); if(un) un.textContent = u;
+  }
 })();
-// Enter 키
-document.addEventListener('keydown',function(e){
-  if(e.key==='Enter'&&document.getElementById('loginScreen').style.display!=='none'){doLogin()}
+
+document.addEventListener('keydown', function(e) {
+  var ls = document.getElementById('loginScreen');
+  if (ls && ls.style.display !== 'none' && e.key === 'Enter') doLogin();
 });
 </script>
 <script>
