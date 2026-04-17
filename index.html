@@ -149,30 +149,15 @@ function RNT(){
 }
 
 function exportMyData(){
-  var u=GS('ds_u','게스트');
-  var att=GS('ds_att',{});
-  var med=GS('ds_med',[]);
-  var read=GS('ds_read',{});
-  var data={name:u,attendance:att,meditation:med,reading:read,exported:new Date().toISOString()};
-  var text=u+' 성도 활동 기록
-========================
-';
-  text+='출석: '+Object.keys(att).length+'회
-';
-  Object.keys(att).sort().forEach(function(d){text+='  '+d+': '+Object.keys(att[d]).join(', ')+'
-'});
-  text+='
-성경읽기: '+Object.keys(read).length+'일
-';
-  Object.keys(read).sort().forEach(function(d){text+='  '+d+'
-'});
-  text+='
-묵상: '+med.length+'건
-';
-  med.forEach(function(m){text+='  '+m.date+' ('+m.passage+') '+m.text.slice(0,50)+'
-'});
-  // Copy to clipboard
-  navigator.clipboard.writeText(text).then(function(){NF('기록이 복사되었습니다. 담임목사님께 전달해주세요!')});
+  var u=GS('ds_u','게스트');var att=GS('ds_att',{});var med=GS('ds_med',[]);var read=GS('ds_read',{});
+  var lines=[u+' 성도 활동 기록','========================','출석: '+Object.keys(att).length+'회'];
+  Object.keys(att).sort().forEach(function(d){lines.push('  '+d+': '+Object.keys(att[d]).join(', '))});
+  lines.push('');lines.push('성경읽기: '+Object.keys(read).length+'일');
+  Object.keys(read).sort().forEach(function(d){lines.push('  '+d)});
+  lines.push('');lines.push('묵상: '+med.length+'건');
+  med.forEach(function(m){lines.push('  '+m.date+' ('+m.passage+') '+m.text.slice(0,50))});
+  var text=lines.join(String.fromCharCode(10));
+  navigator.clipboard.writeText(text).then(function(){NF('기록 복사 완료!')});
 }
 function RM(){var att=GS('ds_att',{});var med=GS('ds_med',[]);var read=GS('ds_read',{});document.getElementById('MY').innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px"><div style="text-align:center;padding:12px;background:var(--cr);border-radius:10px"><div style="font-size:22px;font-weight:700;color:var(--nv)">'+Object.keys(att).length+'</div><div style="font-size:10px;color:var(--tx3)">출석</div></div><div style="text-align:center;padding:12px;background:var(--cr);border-radius:10px"><div style="font-size:22px;font-weight:700;color:var(--nv)">'+Object.keys(read).length+'</div><div style="font-size:10px;color:var(--tx3)">성경읽기</div></div><div style="text-align:center;padding:12px;background:var(--cr);border-radius:10px"><div style="font-size:22px;font-weight:700;color:var(--nv)">'+med.length+'</div><div style="font-size:10px;color:var(--tx3)">묵상</div></div></div>'+
     '<div style="margin:10px 0"><button class="btn bo" onclick="exportMyData()">&#128203; 나의 기록 복사 (담임목사님께 전달)</button></div>'+
