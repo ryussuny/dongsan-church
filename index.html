@@ -1,14 +1,12 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
+<!DOCTYPE html><html lang="ko"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>동산감리교회 — 하나님과 함께 이웃과 함께</title>
 <meta name="description" content="강원도 태백시 동산감리교회. 담임목사 류선희. 주일예배 오전 11시. 하나님의 기쁨, 사람들의 행복, 세상의 빛이 되는 교회입니다.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&amp;family=Noto+Sans+KR:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 :root{
@@ -418,16 +416,16 @@ footer{background:#2b2117;color:#d9c9b3;padding:3.6rem 0 2.2rem}
 
     <form class="dw-step" id="dwStepForm" style="display:none">
       <label class="dw-lbl">날짜</label>
-      <input type="date" id="dwDate" class="dw-input" required>
+      <input type="date" id="dwDate" class="dw-input" required="">
 
       <label class="dw-lbl">제목</label>
-      <input type="text" id="dwTitle" class="dw-input" placeholder="예: 로뎀나무 아래에서 일어나라" required>
+      <input type="text" id="dwTitle" class="dw-input" placeholder="예: 로뎀나무 아래에서 일어나라" required="">
 
       <label class="dw-lbl">본문 (성경구절)</label>
-      <input type="text" id="dwPassage" class="dw-input" placeholder="예: 열왕기상 19:1-18" required>
+      <input type="text" id="dwPassage" class="dw-input" placeholder="예: 열왕기상 19:1-18" required="">
 
       <label class="dw-lbl">말씀 본문 · 묵상</label>
-      <textarea id="dwScripture" class="dw-input dw-textarea" placeholder="본문 말씀 또는 오늘의 묵상 내용을 적어주세요" required></textarea>
+      <textarea id="dwScripture" class="dw-input dw-textarea" placeholder="본문 말씀 또는 오늘의 묵상 내용을 적어주세요" required=""></textarea>
 
       <label class="dw-lbl">기도 (선택)</label>
       <textarea id="dwPrayer" class="dw-input dw-textarea" style="min-height:80px" placeholder="함께 드릴 기도문 (선택)"></textarea>
@@ -540,8 +538,7 @@ footer{background:#2b2117;color:#d9c9b3;padding:3.6rem 0 2.2rem}
         <div class="worship-day">매일 DAILY</div>
         <div class="worship-name">아침 기도회</div>
         <div class="worship-time">06:00</div>
-      </div>
-    </div>
+      </div></div>
   </div>
 </section>
 
@@ -573,8 +570,36 @@ footer{background:#2b2117;color:#d9c9b3;padding:3.6rem 0 2.2rem}
       <p class="sec-desc">최근 주일예배 말씀입니다. 목회 시스템과 연결되어 자동으로 갱신됩니다.</p>
     </div>
     <div class="sermon-grid reveal" id="sermonGrid">
-      <div class="sermon-empty">말씀을 불러오는 중입니다…</div>
+    <div class="sermon-card">
+      <div class="sermon-date">2026.12.13 · 열왕기상 강해</div>
+      <div class="sermon-title">로뎀나무 아래에서 일어나라</div>
+      <div class="sermon-scripture">📖 열왕기상 19:1-18</div>
     </div>
+    <div class="sermon-card">
+      <div class="sermon-date">2026.12.06 · 열왕기상 강해</div>
+      <div class="sermon-title">갈멜산 위에서 응답하시는 하나님</div>
+      <div class="sermon-scripture">📖 열왕기상 18:20-40</div>
+    </div>
+    <div class="sermon-card">
+      <div class="sermon-date">2026.11.29 · 열왕기상 강해</div>
+      <div class="sermon-title">마지막 한 줌의 가루가 기적이 됩니다</div>
+      <div class="sermon-scripture">📖 열왕기상 17:8-24</div>
+    </div>
+    <div class="sermon-card">
+      <div class="sermon-date">2026.11.22 · 열왕기상 강해</div>
+      <div class="sermon-title">그릿 시냇가에서 배우는 믿음</div>
+      <div class="sermon-scripture">📖 열왕기상 17:1-7</div>
+    </div>
+    <div class="sermon-card">
+      <div class="sermon-date">2026.11.15 · 열왕기상 강해</div>
+      <div class="sermon-title">갈라진 나라, 갈라진 마음</div>
+      <div class="sermon-scripture">📖 열왕기상 12:1-17</div>
+    </div>
+    <div class="sermon-card">
+      <div class="sermon-date">2026.11.08 · 열왕기상 강해</div>
+      <div class="sermon-title">지혜로운 자의 어리석은 선택</div>
+      <div class="sermon-scripture">📖 열왕기상 11:1-13</div>
+    </div></div>
   </div>
 </section>
 
@@ -704,7 +729,7 @@ function loadTodayWord() {
     return d;
   }).catch(() => null);
 }
-loadTodayWord();
+// [publish-homepage.js] 정적 배포본: 자동 갱신 비활성화 — loadTodayWord();
 
 // ===== 홈페이지 "자주 바뀌는 정보" (예배시간 · 인사말 · 연락처) 표시 =====
 function renderWorshipDisplay(list) {
@@ -754,7 +779,7 @@ function loadHomepageContent() {
   return fetch('/api/public/homepage-content').then(r => r.ok ? r.json() : null)
     .then(c => { applyHomepageContent(c); return c; }).catch(() => null);
 }
-loadHomepageContent();
+// [publish-homepage.js] 정적 배포본: 자동 갱신 비활성화 — loadHomepageContent();
 
 // ===== 관리자: 오늘의 말씀 작성 · 수정 / 예배시간·인사말·연락처 수정 =====
 (function () {
@@ -930,23 +955,8 @@ loadHomepageContent();
   });
 })();
 
-// ===== 최근 설교 (공개 API 연동) =====
-fetch('/api/public/sermons').then(r => r.ok ? r.json() : []).then(list => {
-  const grid = document.getElementById('sermonGrid');
-  if (!Array.isArray(list) || !list.length) {
-    grid.innerHTML = '<div class="sermon-empty">아직 등록된 말씀이 없습니다. 목회 시스템에서 설교가 등록되면 이곳에 자동으로 표시됩니다.</div>';
-    return;
-  }
-  grid.innerHTML = list.slice(0, 6).map(s => `
-    <div class="sermon-card">
-      <div class="sermon-date">${(s.date||'').replace(/-/g,'.')}${s.series ? ' · '+s.series : ''}</div>
-      <div class="sermon-title">${(s.title||'제목 없음').replace(/</g,'&lt;')}</div>
-      <div class="sermon-scripture">📖 ${(s.scripture||'').replace(/</g,'&lt;') || '본문 미기재'}</div>
-    </div>
-  `).join('');
-}).catch(() => {
-  document.getElementById('sermonGrid').innerHTML = '<div class="sermon-empty">최근 말씀은 목회 시스템 서버가 연결되면 자동으로 표시됩니다.</div>';
-});
+// [publish-homepage.js] 정적 배포본: 최근 설교는 게시 시점에 이미 구워 넣었으므로 재조회 생략
 </script>
-</body>
-</html>
+
+
+</body></html>
