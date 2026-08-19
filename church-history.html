@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>교회 역사 — 동산감리교회</title>
+<meta name="description" content="1981년 개척부터 오늘까지, 동산감리교회 44년의 발자취.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --brick:#b3593f; --brick2:#c96f52; --brick-deep:#8f4531;
+  --moss:#7c9a68; --moss2:#5f7d4d; --gold:#c99a3f;
+  --cream:#fbf3e7; --paper:#fffaf2; --warm:#f4e6d3; --stone:#e7d6bd;
+  --text:#3a2e22; --text2:#6b5a45; --text3:#95836b; --white:#ffffff; --border:#e0cca9;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--cream);color:var(--text);font-family:'Pretendard','Noto Sans KR',sans-serif;font-size:17px;line-height:1.7;overflow-x:hidden;word-break:keep-all;letter-spacing:-.01em}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:900px;margin:0 auto;padding:0 1.75rem}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.reveal.on{opacity:1;transform:none}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(251,243,231,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);height:70px;display:flex;align-items:center;transition:box-shadow .3s}
+nav.scrolled{box-shadow:0 4px 24px rgba(143,69,49,.1)}
+.nav-inner{width:100%;max-width:1120px;margin:0 auto;padding:0 1.75rem;display:flex;align-items:center}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-mark{width:38px;height:38px;border-radius:11px;flex:none;background:linear-gradient(145deg,var(--brick2),var(--brick-deep));display:flex;align-items:center;justify-content:center;color:var(--paper);font-family:'Gowun Batang',serif;font-weight:700;font-size:1.05rem;box-shadow:0 3px 10px rgba(143,69,49,.28)}
+.nav-name{font-family:'Gowun Batang',serif;font-size:1.05rem;font-weight:700;color:var(--brick-deep)}
+.nav-sub{font-size:.66rem;color:var(--moss2);letter-spacing:.04em;margin-top:1px}
+.nav-back{margin-left:auto;display:flex;align-items:center;gap:.4rem;font-size:.86rem;font-weight:700;color:var(--text2);padding:.55rem 1.1rem;border-radius:999px;border:1px solid var(--border);background:var(--white)}
+.nav-back:hover{color:var(--brick-deep);border-color:var(--brick2)}
+
+.hero{position:relative;padding:9rem 0 4rem;text-align:center;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(201,111,82,.16),transparent 60%),linear-gradient(180deg,var(--paper) 0%,var(--cream) 100%)}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:.5rem;background:var(--white);border:1px solid var(--border);border-radius:999px;padding:.5rem 1.1rem;font-size:.82rem;font-weight:700;color:var(--brick-deep);margin-bottom:1.6rem}
+h1{font-family:'Gowun Batang',serif;font-weight:700;font-size:clamp(2rem,5vw,3rem);line-height:1.35;color:var(--text);margin-bottom:1.1rem}
+h1 em{font-style:normal;color:var(--brick-deep)}
+.hero p{color:var(--text2);max-width:520px;margin:0 auto;font-size:1.04rem}
+.hero-years{display:flex;justify-content:center;gap:2.6rem;margin-top:2.6rem}
+.hero-years div b{display:block;font-family:'Gowun Batang',serif;font-size:1.7rem;color:var(--brick-deep)}
+.hero-years div span{font-size:.8rem;color:var(--text3)}
+
+section{padding:3.5rem 0}
+.era{margin-bottom:3.2rem}
+.era-head{display:flex;align-items:baseline;gap:.9rem;margin-bottom:1.6rem;padding-bottom:.9rem;border-bottom:2px solid var(--stone)}
+.era-year{font-family:'Gowun Batang',serif;font-size:1.9rem;font-weight:700;color:var(--brick-deep);white-space:nowrap}
+.era-title{font-size:1rem;font-weight:700;color:var(--text2)}
+.era-desc{font-size:.86rem;color:var(--text3);margin-left:auto}
+
+.timeline{position:relative;padding-left:2.2rem}
+.timeline::before{content:'';position:absolute;left:.4rem;top:.4rem;bottom:.4rem;width:2px;background:linear-gradient(var(--stone),var(--stone))}
+.tl-item{position:relative;padding-bottom:1.7rem}
+.tl-item:last-child{padding-bottom:0}
+.tl-item::before{content:'';position:absolute;left:-2.2rem;top:.35rem;width:10px;height:10px;border-radius:50%;background:var(--brick2);box-shadow:0 0 0 4px var(--cream)}
+.tl-item.landmark::before{width:14px;height:14px;left:-2.4rem;background:var(--gold);box-shadow:0 0 0 4px var(--cream),0 0 0 5px var(--gold)}
+.tl-date{font-size:.78rem;font-weight:700;color:var(--moss2);letter-spacing:.02em;margin-bottom:.3rem}
+.tl-title{font-size:1.02rem;font-weight:700;color:var(--text);margin-bottom:.25rem}
+.tl-item.landmark .tl-title{font-family:'Gowun Batang',serif;font-size:1.18rem;color:var(--brick-deep)}
+.tl-desc{font-size:.9rem;color:var(--text2);line-height:1.7}
+
+.pastor-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;margin:.5rem 0 3.5rem}
+.pastor-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:1.5rem 1.3rem;text-align:center}
+.pastor-card .n{font-family:'Gowun Batang',serif;font-size:.78rem;color:var(--moss2);font-weight:700;margin-bottom:.5rem}
+.pastor-card .name{font-family:'Gowun Batang',serif;font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:.3rem}
+.pastor-card .term{font-size:.8rem;color:var(--text3)}
+@media(max-width:640px){.pastor-strip{grid-template-columns:1fr}}
+
+.cta-band{background:linear-gradient(150deg,var(--brick),var(--brick-deep));color:var(--paper);border-radius:26px;padding:3rem 2.4rem;text-align:center;margin-top:1rem}
+.cta-band h2{font-family:'Gowun Batang',serif;font-size:clamp(1.4rem,3vw,1.9rem);margin-bottom:.8rem}
+.cta-band p{opacity:.9;margin-bottom:1.6rem;font-size:.98rem}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.85rem 1.6rem;border-radius:12px;font-weight:700;font-size:.92rem;background:var(--paper);color:var(--brick-deep)}
+
+footer{background:#2b2117;color:#d9c9b3;padding:2.6rem 0;text-align:center;font-size:.82rem}
+footer a{color:#b8a488}
+footer a:hover{color:var(--paper)}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a href="church-home-new.html" class="nav-logo">
+      <div class="nav-mark">동</div>
+      <div><div class="nav-name">동산감리교회</div><div class="nav-sub">DONGSAN METHODIST CHURCH</div></div>
+    </a>
+    <a href="church-home-new.html" class="nav-back">← 홈으로</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-eyebrow">📜 CHURCH HISTORY</div>
+    <h1>주님의 은혜로 걸어온<br><em>44년의 발자취</em></h1>
+    <p>1981년, 두 가정의 작은 기도 모임으로 시작된 동산감리교회는 오늘까지 하나님의 신실하신 인도하심 가운데 성장해 왔습니다.</p>
+    <div class="hero-years">
+      <div><b>1981</b><span>개척</span></div>
+      <div><b>3대</b><span>담임목사 계승</span></div>
+      <div><b>2025</b><span>현재</span></div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+
+    <div class="era-head reveal">
+      <div class="era-year">1981–1989</div>
+      <div class="era-title">개척기 — 두 가정의 기도로 시작하다</div>
+    </div>
+    <div class="timeline reveal">
+      <div class="tl-item landmark">
+        <div class="tl-date">1981.08.13</div>
+        <div class="tl-title">교회 개척을 위한 기도</div>
+        <div class="tl-desc">김재문 장로와 류순형 집사가 개척을 위해 기도하던 중 요한복음 14:14 말씀의 응답을 받고, 태백시 계산동에 교회 터를 마련했습니다.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">1981.08.25–31</div>
+        <div class="tl-title">개척 동역자를 얻다</div>
+        <div class="tl-desc">화광교회·금천교회 성도 가정이 개척에 동참하기로 하고, "동산교회"라는 이름이 정해졌으며 삼척지방 감리사의 동의를 얻었습니다.</div>
+      </div>
+      <div class="tl-item landmark">
+        <div class="tl-date">1981.09.06</div>
+        <div class="tl-title">개척 설립예배</div>
+        <div class="tl-desc">첫 성도 홍창근 성도와 축하 참여자 11명이 모여 첫 설립예배를 드렸습니다. 성도들의 헌금과 헌신으로 개척 비용 218만원을 마련했습니다.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">1981.11.15</div>
+        <div class="tl-title">첫 세례예식</div>
+        <div class="tl-desc">이상용·김춘해 성도가 동산교회 첫 세례를 받았고, 네 명의 아이가 유아세례를 받았습니다.</div>
+      </div>
+      <div class="tl-item landmark">
+        <div class="tl-date">1981.12.13</div>
+        <div class="tl-title">창립예배</div>
+        <div class="tl-desc">감리사 김중성 목사의 주례로 29명이 모여 동산교회 창립예배를 드렸습니다. 같은 날 첫 당회가 열려 신천 권사·집사들이 세워졌습니다.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">1983–1988</div>
+        <div class="tl-title">첫 증축과 부흥의 시간</div>
+        <div class="tl-desc">성도들의 헌금으로 예배당을 증축하고, 학생회·남선교회가 창립되는 등 공동체가 뿌리내려갔습니다.</div>
+      </div>
+    </div>
+
+    <div class="era-head reveal">
+      <div class="era-year">1989–2007</div>
+      <div class="era-title">성장기 — 새 성전을 세우다</div>
+    </div>
+    <div class="timeline reveal">
+      <div class="tl-item landmark">
+        <div class="tl-date">1989.09–11</div>
+        <div class="tl-title">성전 건축과 입당</div>
+        <div class="tl-desc">370평 대지를 매입해 성전 건축 기공예배를 드렸고, 그해 11월 예배당 52평·주택 18평·종각 3평 규모의 새 성전에 입당했습니다.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">1990.11.12</div>
+        <div class="tl-title">기독교대한감리회로 복귀</div>
+        <div class="tl-desc">1985년 분리되어 나갔던 교단에서 다시 기독교대한감리회 본 교단으로 돌아왔습니다.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">1992.04.02</div>
+        <div class="tl-title">김재문 목사 안수</div>
+        <div class="tl-desc">기독교대한감리회 동부연회에서 목사 안수를 받고, 이후 성지순례·부흥신학연수 등을 통해 목회의 깊이를 더해갔습니다.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">1994</div>
+        <div class="tl-title">교육관 건축</div>
+        <div class="tl-desc">다음세대를 위한 교육관(26평)을 건축하고 봉헌예배를 드렸습니다.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">2007.06</div>
+        <div class="tl-title">예배당 리모델링</div>
+        <div class="tl-desc">예배당 내부와 외부를 새롭게 단장했습니다.</div>
+      </div>
+    </div>
+
+    <div class="era-head reveal">
+      <div class="era-year">2012–2019</div>
+      <div class="era-title">계승기 — 2대 담임자, 새 교육관</div>
+    </div>
+    <div class="timeline reveal">
+      <div class="tl-item landmark">
+        <div class="tl-date">2012.04.12</div>
+        <div class="tl-title">류배형 목사, 2대 담임자로 취임</div>
+        <div class="tl-desc">김재문 목사가 동부연회에서 은퇴하고, 인사구역회의 만장일치 결의로 류배형 전도사가 2대 담임자로 취임했습니다.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">2013</div>
+        <div class="tl-title">새 교육관 완공</div>
+        <div class="tl-desc">44.2평 규모의 새 교육관과 부대시설을 완공해 다음세대 교육 공간을 확장했습니다.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">2016.04.06</div>
+        <div class="tl-title">류배형 목사 안수</div>
+        <div class="tl-desc">동부연회에서 목사 안수를 받았습니다.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">2017.03</div>
+        <div class="tl-title">이스라엘 성지순례</div>
+        <div class="tl-desc">담임목사 부부가 9박 11일간 이스라엘 성지순례를 다녀왔습니다.</div>
+      </div>
+    </div>
+
+    <div class="era-head reveal">
+      <div class="era-year">2022–현재</div>
+      <div class="era-title">오늘 — 3대를 이어가는 동산교회</div>
+    </div>
+    <div class="timeline reveal">
+      <div class="tl-item">
+        <div class="tl-date">2022.11</div>
+        <div class="tl-title">김용수 명예장로 소천</div>
+        <div class="tl-desc">향년 88세로 소천하여 태백시 공원묘원에 안장되었습니다.</div>
+      </div>
+      <div class="tl-item landmark">
+        <div class="tl-date">2024.04.20</div>
+        <div class="tl-title">류선희 목사, 3대 담임자로 취임</div>
+        <div class="tl-desc">류배형 목사가 동부연회에서 정년 은퇴하고, 류선희 목사가 3대 담임자로 취임했습니다. 같은 날 원정호 장로도 함께 취임했습니다.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">2025.03</div>
+        <div class="tl-title">사택·사무실·본당 로비 공사</div>
+        <div class="tl-desc">사택 확장공사와 사무실·본당 로비·교육관 공사를 진행하며 더 나은 예배·섬김의 공간을 준비하고 있습니다.</div>
+      </div>
+    </div>
+
+    <div class="pastor-strip reveal">
+      <div class="pastor-card">
+        <div class="n">1대 담임목사</div>
+        <div class="name">김재문 목사</div>
+        <div class="term">1981 – 2012</div>
+      </div>
+      <div class="pastor-card">
+        <div class="n">2대 담임목사</div>
+        <div class="name">류배형 목사</div>
+        <div class="term">2012 – 2024</div>
+      </div>
+      <div class="pastor-card">
+        <div class="n">3대 담임목사</div>
+        <div class="name">류선희 목사</div>
+        <div class="term">2024 – 현재</div>
+      </div>
+    </div>
+
+    <div class="cta-band reveal">
+      <h2>44년을 이어온 은혜, 함께 나누어요</h2>
+      <p>동산감리교회는 앞으로도 하나님과 함께, 이웃과 함께 걸어가겠습니다.</p>
+      <a href="church-home-new.html#location" class="btn">📍 오시는 길 보기</a>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">동산감리교회 · 강원도 태백시 계산 4길 25 · <a href="church-home-new.html">홈으로 돌아가기</a></div>
+</footer>
+
+<script>
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 10));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('on'); });
+}, { threshold: .08 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
