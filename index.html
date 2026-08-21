@@ -737,6 +737,26 @@ function loadTodayWord() {
 }
 // [publish-homepage.js] 정적 배포본: 자동 갱신 비활성화 — loadTodayWord();
 
+// 매일 아침 5시에 자동 게시되는 word-today.json 을 읽어 카드를 채운다 (실패하면 조용히 숨김)
+function loadTodayWordStatic() {
+  return fetch('word-today.json', { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      const card = document.getElementById('todayCard');
+      if (!d || !d.passage) { card.classList.remove('show'); return; }
+      document.getElementById('todayTitle').textContent = d.title || '오늘의 말씀';
+      document.getElementById('todayPassage').textContent =
+        d.passage + (d.date ? '  ·  ' + d.date.replace(/-/g, '.') + ' (' + d.weekday + ')' : '');
+      document.getElementById('todayScripture').textContent = d.verseSnippet || '';
+      card.style.cursor = 'pointer';
+      card.title = '오늘의 말씀 전체 보기';
+      card.onclick = () => { location.href = 'today.html'; };
+      card.classList.add('show');
+    })
+    .catch(() => {});
+}
+loadTodayWordStatic();
+
 // ===== 홈페이지 "자주 바뀌는 정보" (예배시간 · 인사말 · 연락처) 표시 =====
 function renderWorshipDisplay(list) {
   const grid = document.getElementById('worshipGrid');
