@@ -192,6 +192,16 @@ var WordBible=(function(){
     });
     return out;
   }
+  /* 본문 데이터에 빠져 있는 절 번호 (이 성경 파일에는 일부 절이 누락돼 있다) */
+  function missing(passage){
+    var r=WordData.parseRef(passage);
+    if(!r||typeof BIBLE_DATA==='undefined')return [];
+    var bk=BIBLE_DATA[r.book];
+    if(!bk||!bk.data||!bk.data[r.chapter])return [];
+    var ch=bk.data[r.chapter],out=[];
+    for(var v=r.from;v<=r.to;v++)if(!ch[String(v)])out.push(v);
+    return out;
+  }
   function one(ref,doClean){
     var v=verses(ref,doClean);
     return v.length?v[0].t:'';
@@ -199,7 +209,7 @@ var WordBible=(function(){
   function plain(passage,doClean){
     return verses(passage,doClean).map(function(x){return x.t}).join(' ');
   }
-  return {load:load,verses:verses,one:one,plain:plain,clean:clean,get ready(){return ready}};
+  return {load:load,verses:verses,one:one,plain:plain,clean:clean,missing:missing,get ready(){return ready}};
 })();
 
 /* ---------- 공유 ---------- */

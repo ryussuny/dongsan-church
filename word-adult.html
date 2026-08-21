@@ -347,6 +347,10 @@ function renderVerses(){
     var vs=WordBible.verses(d.passage,true);
     if(!vs.length){box.innerHTML='<span style="color:var(--text3)">'+wEsc(d.passage)+' 본문을 찾지 못했습니다.<br>성경책에서 직접 펴서 읽어 주세요.</span>';return}
     box.innerHTML=vs.map(function(v){return '<span class="vn">'+v.v+'</span>'+wEsc(v.t)}).join(' ');
+    var miss=WordBible.missing(d.passage);
+    if(miss.length)box.innerHTML+='<div style="margin-top:12px;padding:10px 12px;background:var(--warm);border-radius:10px;'+
+      'font-size:12.5px;font-family:\'Noto Sans KR\',sans-serif;color:var(--text2);line-height:1.7">'+
+      '📌 '+miss.join(', ')+'절은 앱에 실린 본문 파일에 빠져 있어 표시하지 못했습니다. 성경책에서 함께 읽어 주세요.</div>';
   });
 }
 
