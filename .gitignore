@@ -1,0 +1,4 @@
+# 설교 보관함 원본 — 공개 저장소라 올리지 않는다.
+# 잠근 파일(sermons-archive.enc)만 홈페이지에 올라간다.
+# 필요하면 node scripts/build-sermon-archive.js 로 언제든 다시 만들 수 있다.
+sermons-archive.json

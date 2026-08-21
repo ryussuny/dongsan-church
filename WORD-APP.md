@@ -186,11 +186,12 @@ POST /api/word/amen                    {id,name}
   - 카테고리는 성경 책 이름, 목록은 날짜 역순(최근 설교가 위).
 - `scripts/build-sermon-archive.js` — git 기록에서 옛 데이터를 꺼내 위 파일을 만든다. 한 번 만들면 다시 돌릴 일은 없다.
 - `archive.html` 에 **🗄 설교 보관함** 탭을 더했다. 지금 진행 중인 강해(`sermons.json`)와는 목록이 섞이지 않는다.
+  → **2026-08-21 이후 이 탭은 없어졌다.** 아래 「설교 보관함 암호 잠금」 참고.
 
 | 파일 | 무엇 | 어디에 |
 |---|---|---|
 | `sermons.json` | 지금 진행 중인 강해 (출애굽기·로마서·빌립보서 58편) | 홈페이지 설교란 · 지난 말씀 「설교말씀」 · 교인용 앱 |
-| `sermons-archive.json` | 지난 설교 기록 69편 | 지난 말씀 「설교 보관함」 |
+| `sermons-archive.enc` | 지난 설교 기록 69편 (암호로 잠금) | `vault.html` — 담임목사 전용 |
 | `word-archive.json` | 오늘의 말씀 모음 84편 | 지난 말씀 「오늘의 말씀」 |
 
 ## 설교 본문 1000자 · 수요·금요 설교 정리 (2026-08-21)
@@ -204,3 +205,33 @@ POST /api/word/amen                    {id,name}
   홈페이지 카드에는 짧은 요약만 두고 전문은 아카이브에서 읽도록 안내한다.
 - `scripts/set-body.js` — `{ "본문": "내용" }` 꼴 JSON 을 받아 본문을 채운다.
 - `scripts/add-sermon.js --body "..."` 로도 등록할 수 있다.
+
+## 설교 보관함 암호 잠금 (2026-08-21)
+
+저장소가 공개(public)라 `sermons-archive.json` 을 홈페이지에 두면 주소만 알면 누구나 읽을 수 있었다.
+그래서 보관함을 **담임목사 전용**으로 바꿨다.
+
+- `archive.html` 의 **🗄 설교 보관함 탭을 없앴다.** 교인들이 보는 지난 말씀에는 설교말씀·오늘의 말씀 두 탭만 남는다.
+- `vault.html` — 새로 만든 보관함 전용 페이지. 암호를 넣어야 열린다. 홈페이지 어디에서도 이 주소로 연결하지 않는다.
+- `sermons-archive.enc` — 보관함을 통째로 암호로 잠근 파일. 주소를 직접 열어도 알아볼 수 없는 글자만 보인다.
+  - AES-256-GCM · 암호에서 열쇠를 뽑을 때 PBKDF2-SHA256 25만 회.
+  - 푸는 일은 **브라우저 안에서만** 일어난다. 암호는 어디로도 전송되지 않고 저장소에도 없다.
+- `sermons-archive.json`(원본)은 홈페이지에서 내렸고 `.gitignore` 에 넣었다.
+  필요하면 `node scripts/build-sermon-archive.js` 로 git 기록에서 언제든 다시 만들 수 있다.
+
+### 암호 정하기 · 바꾸기
+
+1. 저장소 **Settings → Secrets and variables → Actions → New repository secret**
+   - 이름: `ARCHIVE_PASSPHRASE`  값: 쓰실 암호 (6자 이상)
+2. **Actions** 탭 → **「설교 보관함 잠그기」** → **Run workflow**
+
+돌리고 나면 `sermons-archive.enc` 가 새로 만들어진다. 암호를 바꾸고 싶으면 1번에서 값을 고치고 2번을 다시 돌리면 된다.
+
+- `scripts/lock-archive.js` — 잠그는 일을 하는 스크립트. `ARCHIVE_PASSPHRASE` 환경변수로 암호를 받고 어디에도 적어 두지 않는다.
+- `.github/workflows/lock-archive.yml` — 위 버튼이 돌리는 작업.
+
+### 알아 두실 점
+
+- **암호를 잊으면 보관함을 열 수 없다.** 다만 원본은 git 기록에 남아 있어 다시 만들어 새 암호로 잠글 수 있다.
+- **2026-08-21 이전 기록에 올라갔던 원본은 저장소 기록(history)에 그대로 남아 있다.** 지금부터 새로 보는 사람은 잠긴 파일만 보지만, 예전 기록을 뒤지면 옛 내용을 찾을 수 있다. 이것까지 지우려면 저장소 기록을 다시 써야 한다.
+- `vault.html` 은 검색엔진에 실리지 않도록 `noindex` 를 걸어 두었다.
