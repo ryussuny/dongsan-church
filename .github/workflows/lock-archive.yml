@@ -1,0 +1,68 @@
+name: 설교 보관함 잠그기
+
+# 설교 보관함(sermons-archive.json)을 암호로 잠가 sermons-archive.enc 로 바꾸고
+# 원본을 지운다. 홈페이지는 공개 저장소라 원본을 그대로 두면 주소만 알면 읽히기 때문이다.
+#
+# 쓰는 법
+#   1) 저장소 Settings → Secrets and variables → Actions → New repository secret
+#      이름: ARCHIVE_PASSPHRASE       값: 쓰실 암호
+#   2) Actions 탭 → 「설교 보관함 잠그기」 → Run workflow
+#
+# 잠근 뒤에는 vault.html 에서 같은 암호를 넣어야 보관함이 열린다.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lock-archive
+  cancel-in-progress: false
+
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 암호가 설정되어 있는지 확인
+        env:
+          ARCHIVE_PASSPHRASE: ${{ secrets.ARCHIVE_PASSPHRASE }}
+        run: |
+          if [ -z "$ARCHIVE_PASSPHRASE" ]; then
+            echo "::error::ARCHIVE_PASSPHRASE 시크릿이 없습니다. Settings → Secrets and variables → Actions 에서 먼저 등록해 주세요."
+            exit 1
+          fi
+
+      - name: 보관함 원본 준비
+        # 원본은 홈페이지에 두지 않는다. 필요할 때 git 기록에서 다시 만들어 쓴다.
+        run: |
+          if [ ! -f sermons-archive.json ]; then
+            git fetch --unshallow || true
+            node scripts/build-sermon-archive.js
+          fi
+
+      - name: 보관함 잠그기
+        env:
+          ARCHIVE_PASSPHRASE: ${{ secrets.ARCHIVE_PASSPHRASE }}
+        run: node scripts/lock-archive.js
+
+      - name: 게시
+        run: |
+          git config user.name  "동산교회 말씀봇"
+          git config user.email "actions@github.com"
+          if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+            echo "바뀐 것이 없습니다 — 이미 잠겨 있습니다."
+            exit 0
+          fi
+          git add -A sermons-archive.enc sermons-archive.json
+          git commit -m "설교 보관함 암호 잠금"
+          for i in 1 2 3 4; do
+            git pull --rebase origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME} && exit 0
+            echo "재시도 ${i}..."; sleep $((2 ** i))
+          done
+          exit 1
