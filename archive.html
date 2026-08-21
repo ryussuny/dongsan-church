@@ -177,6 +177,7 @@ function sermonCard(s, i) {
     <div class="card-title">${esc(s.title || '제목 없음')}</div>
     <div class="card-scripture">📖 ${esc(s.scripture) || '본문 미기재'}</div>
     <div class="card-body">
+      ${s.body ? `<h4>말씀</h4>${s.body.split(/\n{2,}/).map(t => `<p>${esc(t)}</p>`).join('')}` : ''}
       ${points.length ? `<h4>말씀의 흐름</h4><ul>${points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
       ${s.conclusion ? `<h4>맺는 말씀</h4><p>${esc(s.conclusion)}</p>` : ''}
       ${(s.hymns || []).length ? `<h4>찬송</h4><p>${(s.hymns || []).map(esc).join(' · ')}</p>` : ''}

@@ -1010,6 +1010,7 @@ function sermonCard(x) {
     + '<div class="sermon-date">' + sermonEsc(x.series || x.book || '') + '</div>'
     + '<div class="sermon-title">' + sermonEsc(x.title || '') + '</div>'
     + (x.summary ? '<div class="sermon-summary">' + sermonEsc(x.summary) + '</div>' : '')
+    + (x.body ? '<div style="font-size:.82rem;color:var(--brick2);font-weight:700">지난 말씀 보기에서 전문 읽기 →</div>' : '')
     + '<div class="sermon-scripture">📖 ' + sermonEsc(x.scripture || '') + '</div>'
     + '</div>';
 }
