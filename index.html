@@ -283,24 +283,29 @@ section{padding:6rem 0}
 
 /* ===== LOCATION ===== */
 .loc-grid{display:grid;grid-template-columns:1fr 1fr;gap:2.6rem;align-items:stretch}
-.loc-map{
-  border-radius:20px;overflow:hidden;border:1px solid var(--border);min-height:340px;
-  background:
-    linear-gradient(rgba(10,16,30,.06),rgba(10,16,30,.06)),
-    repeating-linear-gradient(45deg,var(--warm) 0 14px,var(--stone) 14px 28px);
-  display:flex;align-items:center;justify-content:center;position:relative;
-}
-.loc-map .pin{
-  width:56px;height:56px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
-  background:var(--brick);box-shadow:0 10px 24px rgba(15,27,51,.35);
-  display:flex;align-items:center;justify-content:center;
-}
-.loc-map .pin span{transform:rotate(45deg);color:var(--paper);font-size:1.3rem}
-.loc-map .maplink{
-  position:absolute;bottom:1.2rem;right:1.2rem;
-  background:var(--white);border-radius:999px;padding:.6rem 1.1rem;font-size:.82rem;font-weight:700;
-  color:var(--brick-deep);text-decoration:none;box-shadow:0 6px 16px rgba(0,0,0,.1);
-}
+.loc-map{margin:0;border-radius:20px;overflow:hidden;border:1px solid var(--border);
+  background:var(--warm);display:flex;align-items:center;justify-content:center}
+.loc-map svg{width:100%;height:auto;display:block}
+.info-note{font-size:.82rem;color:var(--text3);margin-top:.4rem;line-height:1.6}
+.copy-btn{margin-top:.7rem;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;
+  padding:.42rem .95rem;border-radius:999px;border:1px solid var(--border);background:var(--cream);color:var(--text2)}
+.copy-btn:hover{border-color:var(--brick2);color:var(--brick-deep)}
+.map-btns{display:flex;gap:.6rem;flex-wrap:wrap}
+.map-btn{flex:1;min-width:120px;text-align:center;background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:.85rem .6rem;font-size:.86rem;font-weight:700;color:var(--brick-deep);text-decoration:none}
+.map-btn:hover{border-color:var(--brick2);box-shadow:0 8px 20px rgba(15,27,51,.08)}
+.route-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem}
+.route-card{background:var(--white);border:1px solid var(--border);border-radius:18px;padding:1.7rem 1.6rem}
+.route-ico{font-size:1.7rem;line-height:1;margin-bottom:.8rem}
+.route-card h3{font-family:'Gowun Batang',serif;font-size:1.08rem;font-weight:700;color:var(--brick-deep);margin-bottom:.7rem}
+.route-card p{font-size:.92rem;color:var(--text2);line-height:1.85;margin-bottom:.6rem}
+.route-card p:last-child{margin-bottom:0}
+.route-card b{color:var(--text);font-weight:700}
+.route-card a{color:var(--brick2);font-weight:700;text-decoration:underline}
+.route-tip{font-size:.86rem !important;color:var(--text3) !important;padding-top:.6rem;border-top:1px dashed var(--border)}
+.route-note{margin-top:2.2rem;text-align:center;font-size:.95rem;color:var(--text2);line-height:1.9}
+.route-note a{color:var(--brick2);font-weight:800;text-decoration:none}
+@media(max-width:860px){.route-grid{grid-template-columns:1fr}}
 .loc-info{display:flex;flex-direction:column;gap:1.1rem}
 .info-card{
   background:var(--white);border:1px solid var(--border);border-radius:16px;padding:1.4rem 1.5rem;
@@ -620,18 +625,59 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
     <div class="sec-head reveal">
       <div class="sec-eyebrow">Location</div>
       <h2 class="sec-title">오시는 <span>길</span></h2>
+      <p class="sec-desc">강원특별자치도 태백시 계산4길 25, 장성동에 있습니다. 처음 오시는 걸음이 헤매지 않도록 아래에 길을 적어 두었습니다.</p>
     </div>
+
     <div class="loc-grid reveal">
-      <div class="loc-map">
-        <div class="pin"><span>⛪</span></div>
-        <a class="maplink" id="mapLink" href="https://map.kakao.com/?q=%EA%B0%95%EC%9B%90%EB%8F%84%20%ED%83%9C%EB%B0%B1%EC%8B%9C%20%EA%B3%84%EC%82%B0%204%EA%B8%B8%2025" target="_blank" rel="noopener">카카오맵에서 보기 ↗</a>
-      </div>
+      <!-- ── 약도 ── -->
+      <figure class="loc-map">
+        <svg viewBox="0 0 420 400" role="img" aria-labelledby="mapTitle mapDesc" preserveAspectRatio="xMidYMid meet">
+          <title id="mapTitle">동산감리교회 약도</title>
+          <desc id="mapDesc">태백역과 태백시외버스터미널에서 장성동 방면으로 이동해 계산4길 25 동산감리교회에 이르는 길을 나타낸 개념도입니다.</desc>
+
+          <rect x="0" y="0" width="420" height="400" rx="20" fill="#eef1f7"/>
+          <g stroke="#dde3ef" stroke-width="1">
+            <path d="M0 60H420M0 140H420M0 220H420M0 300H420"/>
+            <path d="M70 0V400M170 0V400M250 0V400M350 0V400"/>
+          </g>
+
+          <!-- 길 -->
+          <path d="M126 78 V318" stroke="#c9a24c" stroke-width="26" stroke-linecap="round" opacity=".22"/>
+          <path d="M126 78 V318" stroke="#b8862e" stroke-width="3" stroke-dasharray="9 9" stroke-linecap="round"/>
+
+          <!-- 출발: 태백역 · 시외버스터미널 -->
+          <circle cx="126" cy="82" r="13" fill="#ffffff" stroke="#2f4d85" stroke-width="3"/>
+          <text x="126" y="87" text-anchor="middle" font-size="13">🚉</text>
+          <text x="152" y="78" font-size="15.5" font-weight="700" fill="#0f1b33">태백역 · 시외버스터미널</text>
+          <text x="152" y="96" font-size="13" fill="#4c5468">황지동 광장로 6 — 태백의 관문</text>
+
+          <!-- 경유: 장성동 방면 -->
+          <circle cx="126" cy="200" r="10" fill="#ffffff" stroke="#8891a5" stroke-width="3"/>
+          <text x="152" y="196" font-size="15.5" font-weight="700" fill="#0f1b33">장성동 방면</text>
+          <text x="152" y="214" font-size="13" fill="#4c5468">시내버스 · 택시 · 자동차</text>
+
+          <!-- 도착: 교회 -->
+          <g transform="translate(126 316)">
+            <path d="M0 -34a24 24 0 0 1 24 24c0 17-24 40-24 40S-24 7-24 -10A24 24 0 0 1 0 -34Z" fill="#1a2f5c"/>
+            <text x="0" y="-4" text-anchor="middle" font-size="20" fill="#ffffff">⛪</text>
+          </g>
+          <text x="166" y="306" font-size="17" font-weight="700" fill="#1a2f5c">동산감리교회</text>
+          <text x="166" y="325" font-size="13.5" fill="#4c5468">계산4길 25 (장성동)</text>
+          <text x="166" y="343" font-size="13.5" fill="#4c5468">☎ 010-5052-1728</text>
+
+          <text x="18" y="385" font-size="11.5" fill="#8891a5">※ 길을 알기 쉽게 그린 개념도입니다. 실제 거리·축척과 다릅니다.</text>
+        </svg>
+      </figure>
+
+      <!-- ── 정보 ── -->
       <div class="loc-info">
         <div class="info-card">
           <div class="info-icon">📍</div>
-          <div>
+          <div style="flex:1">
             <div class="info-lbl">주소</div>
-            <div class="info-val" id="locAddress">강원도 태백시 계산 4길 25</div>
+            <div class="info-val" id="locAddress">강원특별자치도 태백시 계산4길 25</div>
+            <div class="info-note">지번 · 태백시 장성동 &nbsp;|&nbsp; 옛 표기 · 강원도 태백시 계산4길 25</div>
+            <button type="button" class="copy-btn" id="copyAddr">주소 복사</button>
           </div>
         </div>
         <div class="info-card">
@@ -639,6 +685,7 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
           <div>
             <div class="info-lbl">전화</div>
             <div class="info-val"><a href="tel:010-5052-1728" id="locPhoneLink">010-5052-1728</a></div>
+            <div class="info-note">길을 찾기 어려우시면 언제든 전화 주세요. 마중 나가겠습니다.</div>
           </div>
         </div>
         <div class="info-card">
@@ -648,14 +695,47 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
             <div class="info-val">기독교대한감리회 동부연회 태백지방 동산구역</div>
           </div>
         </div>
-        <div class="info-card">
-          <div class="info-icon">💬</div>
-          <div>
-            <div class="info-lbl">처음이신가요?</div>
-            <div class="info-val">전화 또는 직접 방문을 언제나 환영합니다</div>
-          </div>
+        <div class="map-btns">
+          <a class="map-btn" id="mapKakao" href="https://map.kakao.com/?q=%EA%B0%95%EC%9B%90%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84%20%ED%83%9C%EB%B0%B1%EC%8B%9C%20%EA%B3%84%EC%82%B04%EA%B8%B8%2025" target="_blank" rel="noopener">카카오맵 ↗</a>
+          <a class="map-btn" id="mapNaver" href="https://map.naver.com/p/search/%EA%B0%95%EC%9B%90%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84%20%ED%83%9C%EB%B0%B1%EC%8B%9C%20%EA%B3%84%EC%82%B04%EA%B8%B8%2025" target="_blank" rel="noopener">네이버지도 ↗</a>
+          <a class="map-btn" id="mapGoogle" href="https://www.google.com/maps/search/?api=1&amp;query=%EA%B0%95%EC%9B%90%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84%20%ED%83%9C%EB%B0%B1%EC%8B%9C%20%EA%B3%84%EC%82%B04%EA%B8%B8%2025" target="_blank" rel="noopener">구글지도 ↗</a>
         </div>
       </div>
+    </div>
+
+    <!-- ── 오는 방법 ── -->
+    <div class="sec-head reveal" style="margin-top:4.5rem">
+      <div class="sec-eyebrow">How to come</div>
+      <h2 class="sec-title">오는 <span>방법</span></h2>
+    </div>
+
+    <div class="route-grid reveal">
+      <div class="route-card">
+        <div class="route-ico">🚗</div>
+        <h3>자동차로 오실 때</h3>
+        <p>내비게이션에 <b>계산4길 25</b> 또는 <b>동산감리교회</b>를 넣으시면 바로 안내됩니다. 옛 주소로 검색하실 때는 <b>태백시 장성동</b>으로 찾으세요.</p>
+        <p class="route-tip">주차 자리가 넉넉하지 않을 수 있습니다. 주일에는 조금 일찍 오시거나 미리 전화 주시면 안내해 드리겠습니다.</p>
+      </div>
+
+      <div class="route-card">
+        <div class="route-ico">🚉</div>
+        <h3>기차로 오실 때</h3>
+        <p><b>태백역</b>에서 내리시면 됩니다. 청량리·제천 방면 열차가 태백역까지 옵니다.</p>
+        <p>역에서 교회까지는 <b>택시</b>가 가장 편합니다. 기사님께 <b>“장성동 계산4길”</b> 이라고 말씀하시면 됩니다. 시내버스도 장성동 방면으로 다닙니다.</p>
+      </div>
+
+      <div class="route-card">
+        <div class="route-ico">🚌</div>
+        <h3>버스로 오실 때</h3>
+        <p><b>태백시외버스터미널</b>(태백역 바로 앞, 황지동 광장로 6)에서 내리시면 기차와 같은 길입니다.</p>
+        <p>장성동에도 <b>장성정류장</b>이 있어, 노선에 따라 장성에서 바로 내리실 수 있습니다.</p>
+        <p class="route-tip">시내버스 노선과 도착 시각은 <a href="https://www.taebaek-pti.kr/" target="_blank" rel="noopener">태백시 대중교통정보</a>에서 확인하실 수 있습니다.</p>
+      </div>
+    </div>
+
+    <div class="route-note reveal">
+      길이 헷갈리시면 망설이지 마시고 <a href="tel:010-5052-1728" id="routePhoneLink">010-5052-1728</a> 로 전화 주세요.<br>
+      처음 오시는 걸음, 저희가 기쁘게 맞이하겠습니다.
     </div>
   </div>
 </section>
@@ -679,7 +759,7 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
     <div class="ft-top">
       <div>
         <div class="ft-brand">동산감리교회</div>
-        <div class="ft-sub">하나님과 함께 이웃과 함께<br><span id="ftAddress">강원도 태백시 계산 4길 25</span> · <span id="ftPhone">010-5052-1728</span><br>기독교대한감리회 동부연회 태백지방 동산구역</div>
+        <div class="ft-sub">하나님과 함께 이웃과 함께<br><span id="ftAddress">강원특별자치도 태백시 계산4길 25</span> · <span id="ftPhone">010-5052-1728</span><br>기독교대한감리회 동부연회 태백지방 동산구역</div>
       </div>
       <div class="ft-links">
         <div class="ft-col">
@@ -693,7 +773,7 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
         <div class="ft-col">
           <b>문의</b>
           <a href="tel:010-5052-1728" id="ftPhoneLink">☎ 010-5052-1728</a>
-          <a href="https://map.kakao.com/?q=%EA%B0%95%EC%9B%90%EB%8F%84%20%ED%83%9C%EB%B0%B1%EC%8B%9C%20%EA%B3%84%EC%82%B0%204%EA%B8%B8%2025" target="_blank" rel="noopener" id="ftMapLink">지도로 보기</a>
+          <a href="https://map.kakao.com/?q=%EA%B0%95%EC%9B%90%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84%20%ED%83%9C%EB%B0%B1%EC%8B%9C%20%EA%B3%84%EC%82%B04%EA%B8%B8%2025" target="_blank" rel="noopener" id="ftMapLink">지도로 보기</a>
         </div>
       </div>
     </div>
@@ -770,9 +850,7 @@ function applyHomepageContent(c) {
     if (address) {
       document.getElementById('locAddress').textContent = address;
       document.getElementById('ftAddress').textContent = address;
-      const mapHref = 'https://map.kakao.com/?q=' + encodeURIComponent(address);
-      document.getElementById('mapLink').href = mapHref;
-      document.getElementById('ftMapLink').href = mapHref;
+      setMapLinks(address);
     }
     if (phone) {
       document.getElementById('locPhoneLink').textContent = phone;
@@ -783,6 +861,8 @@ function applyHomepageContent(c) {
       document.getElementById('ctaPhoneLink').textContent = '☎ ' + phone;
       document.getElementById('ctaPhoneLink').href = 'tel:' + phone;
       document.getElementById('navPhoneLink').href = 'tel:' + phone;
+      const rp = document.getElementById('routePhoneLink');
+      if (rp) { rp.textContent = phone; rp.href = 'tel:' + phone; }
     }
   }
 }
@@ -991,6 +1071,38 @@ function loadTodayWordStatic() {
     .catch(function () {});
 }
 loadTodayWordStatic();
+
+// ===== 오시는 길 — 주소 하나로 지도 3곳 링크를 맞춘다 =====
+function setMapLinks(address) {
+  const q = encodeURIComponent(address);
+  const links = {
+    mapKakao: 'https://map.kakao.com/?q=' + q,
+    mapNaver: 'https://map.naver.com/p/search/' + q,
+    mapGoogle: 'https://www.google.com/maps/search/?api=1&query=' + q,
+    ftMapLink: 'https://map.kakao.com/?q=' + q,
+  };
+  Object.keys(links).forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) el.href = links[id];
+  });
+}
+(function () {
+  const btn = document.getElementById('copyAddr');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    const addr = document.getElementById('locAddress').textContent.trim();
+    const done = function () {
+      const before = btn.textContent;
+      btn.textContent = '복사했습니다';
+      setTimeout(function () { btn.textContent = before; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(addr).then(done, function () { window.prompt('주소', addr); });
+    } else {
+      window.prompt('주소', addr);
+    }
+  });
+})();
 
 // ===== 설교말씀 (sermons.json) — 성경 책 이름별, 성경 차례대로 =====
 var SERMON_DATA = [];
