@@ -46,6 +46,26 @@ nav{position:sticky;top:0;z-index:300;background:rgba(251,243,231,.96);backdrop-
 .gate button:disabled{opacity:.55;cursor:default}
 .gate-msg{margin-top:.9rem;font-size:.86rem;min-height:1.3em;color:var(--danger)}
 .gate-msg.ok{color:var(--moss2)}
+.gate-remember{display:flex;align-items:center;justify-content:center;gap:.45rem;
+  margin-top:.9rem;font-size:.86rem;color:var(--text2);cursor:pointer}
+.gate-remember input{width:auto;accent-color:var(--brick)}
+.gate-back{display:inline-block;margin-top:1.1rem;font-size:.85rem;color:var(--text3)}
+.gate-back:hover{color:var(--brick2)}
+.setup{display:none;max-width:560px;margin:0 auto 5rem;background:var(--white);
+  border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:18px;padding:1.8rem 1.9rem}
+.setup.on{display:block}
+.setup h3{font-family:'Gowun Batang',serif;font-size:1.08rem;font-weight:700;color:var(--brick-deep);margin-bottom:.6rem}
+.setup p{font-size:.9rem;color:var(--text2);line-height:1.8;margin-bottom:1.1rem}
+.setup ol{list-style:none;counter-reset:step;display:flex;flex-direction:column;gap:1rem}
+.setup li{counter-increment:step;position:relative;padding-left:2.3rem}
+.setup li::before{content:counter(step);position:absolute;left:0;top:.1rem;width:1.6rem;height:1.6rem;
+  border-radius:50%;background:var(--brick);color:var(--paper);font-size:.8rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center}
+.setup li a{font-size:.95rem;font-weight:700;color:var(--brick2);text-decoration:underline}
+.setup li span{display:block;font-size:.85rem;color:var(--text2);margin-top:.25rem;line-height:1.7}
+.setup code{background:var(--cream);border:1px solid var(--border);border-radius:5px;padding:.1rem .35rem;font-size:.85em}
+.setup-tip{margin:1.3rem 0 0 !important;padding-top:1rem;border-top:1px dashed var(--border);
+  font-size:.85rem !important;color:var(--text3) !important}
 
 .tools{position:sticky;top:70px;z-index:200;background:var(--cream);padding:1.2rem 0;border-bottom:1px solid var(--border)}
 .search{position:relative}
@@ -99,8 +119,27 @@ nav{position:sticky;top:0;z-index:300;background:rgba(251,243,231,.96);backdrop-
     <h2>암호를 넣어 주세요</h2>
     <p>지난 설교 기록은 암호로 잠겨 있습니다.<br>암호는 이 기기에만 잠시 기억되고, 홈페이지에는 저장되지 않습니다.</p>
     <input type="password" id="pass" placeholder="암호" autocomplete="current-password">
+    <label class="gate-remember"><input type="checkbox" id="remember"> 이 기기에서 기억하기</label>
     <button type="button" id="openBtn">열기</button>
     <div class="gate-msg" id="gateMsg"></div>
+    <a class="gate-back" href="archive.html">← 설교·말씀 목록으로</a>
+  </div>
+
+  <!-- 아직 암호를 정하지 않았을 때만 나온다 -->
+  <div class="setup" id="setup">
+    <h3>아직 암호를 정하지 않으셨습니다</h3>
+    <p>보관함을 잠그려면 아래 두 가지만 하시면 됩니다. 한 번만 하시면 다시 하실 일은 없습니다.</p>
+    <ol>
+      <li>
+        <a href="https://github.com/ryussuny/dongsan-church/settings/secrets/actions/new" target="_blank" rel="noopener">암호 등록하기 ↗</a>
+        <span>Name 칸에 <code>ARCHIVE_PASSPHRASE</code>, Secret 칸에 쓰실 암호를 넣고 <b>Add secret</b></span>
+      </li>
+      <li>
+        <a href="https://github.com/ryussuny/dongsan-church/actions/workflows/lock-archive.yml" target="_blank" rel="noopener">잠그기 실행하기 ↗</a>
+        <span>오른쪽 <b>Run workflow</b> 버튼을 누르고 1분쯤 기다리시면 됩니다</span>
+      </li>
+    </ol>
+    <p class="setup-tip">다 하신 뒤 이 페이지를 새로고침하고 정하신 암호를 넣어 보세요. 맞으면 바로 열리고, 틀리면 틀렸다고 알려 드립니다.</p>
   </div>
 </div>
 
@@ -121,7 +160,8 @@ nav{position:sticky;top:0;z-index:300;background:rgba(251,243,231,.96);backdrop-
 <script>
 // 설교 보관함은 sermons-archive.enc 에 암호로 잠겨 있다.
 // 암호를 넣으면 브라우저 안에서 풀어 보여 준다 — 암호는 서버로 전송되지 않는다.
-const SS_KEY = 'dongsan_vaultPass';
+const SS_KEY = 'dongsan_vaultPass';   // 탭을 닫으면 지워진다
+const LS_KEY = 'dongsan_vaultPassKeep'; // '이 기기에서 기억하기'
 let vault = [], books = [], book = '';
 
 const $ = id => document.getElementById(id);
@@ -152,7 +192,8 @@ async function unlock(pass, quiet) {
     pack = await r.json();
   } catch (e) {
     msg.className = 'gate-msg';
-    msg.textContent = '잠긴 보관함 파일(sermons-archive.enc)이 없습니다.';
+    msg.textContent = '아직 보관함이 잠겨 있지 않습니다.';
+    document.getElementById('setup').classList.add('on');
     btn.disabled = false;
     return false;
   }
@@ -162,9 +203,9 @@ async function unlock(pass, quiet) {
     db = await decrypt(pack, pass);
   } catch (e) {
     msg.className = 'gate-msg';
-    msg.textContent = '암호가 맞지 않습니다.';
+    msg.textContent = '암호가 맞지 않습니다. 다시 넣어 주세요.';
     btn.disabled = false;
-    sessionStorage.removeItem(SS_KEY);
+    forget();
     return false;
   }
 
@@ -174,7 +215,8 @@ async function unlock(pass, quiet) {
     : [...new Set(vault.map(x => x.book))];
   book = books[0] || '';
 
-  try { sessionStorage.setItem(SS_KEY, pass); } catch (e) { /* 사생활 보호 모드 등 */ }
+  remember(pass, document.getElementById('remember').checked);
+  document.getElementById('setup').classList.remove('on');
 
   $('gateWrap').classList.add('hidden');
   $('vaultWrap').classList.remove('hidden');
@@ -185,11 +227,28 @@ async function unlock(pass, quiet) {
   return true;
 }
 
+// 암호 보관 — 기억하기를 켜면 이 기기에 남고, 끄면 탭을 닫을 때 지워진다.
+function remember(pass, keep) {
+  try {
+    sessionStorage.setItem(SS_KEY, pass);
+    if (keep) localStorage.setItem(LS_KEY, pass);
+    else localStorage.removeItem(LS_KEY);
+  } catch (e) { /* 사생활 보호 모드 등 */ }
+}
+function forget() {
+  try { sessionStorage.removeItem(SS_KEY); localStorage.removeItem(LS_KEY); } catch (e) {}
+}
+function saved() {
+  try { return localStorage.getItem(LS_KEY) || sessionStorage.getItem(SS_KEY); } catch (e) { return null; }
+}
+
 function lock() {
-  sessionStorage.removeItem(SS_KEY);
+  forget();
   vault = []; books = []; book = '';
   $('pass').value = '';
+  $('remember').checked = false;
   $('gateMsg').textContent = '';
+  $('setup').classList.remove('on');
   $('vaultWrap').classList.add('hidden');
   $('lockBtn').classList.add('hidden');
   $('gateWrap').classList.remove('hidden');
@@ -253,9 +312,12 @@ $('pass').addEventListener('keydown', e => { if (e.key === 'Enter') unlock($('pa
 $('lockBtn').addEventListener('click', lock);
 $('searchInput').addEventListener('input', render);
 
-// 같은 탭에서 새로고침하면 다시 묻지 않는다. 탭을 닫으면 지워진다.
-const saved = (() => { try { return sessionStorage.getItem(SS_KEY); } catch (e) { return null; } })();
-if (saved) unlock(saved, true);
+// 기억해 둔 암호가 있으면 바로 연다.
+const keptPass = saved();
+if (keptPass) {
+  document.getElementById('remember').checked = true;
+  unlock(keptPass, true);
+}
 </script>
 </body>
 </html>
