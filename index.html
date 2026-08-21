@@ -191,6 +191,16 @@ section{padding:6rem 0}
 .pastor-role{font-size:.85rem;font-weight:700;color:var(--moss2);letter-spacing:.03em;margin-bottom:.4rem}
 .pastor-name{font-family:'Gowun Batang',serif;font-size:1.9rem;font-weight:700;color:var(--text);margin-bottom:1.2rem}
 .pastor-msg{color:var(--text2);font-size:1.02rem;line-height:1.85}
+/* 인사말 사진 — 연필 스케치 느낌.
+   흑백으로 바꾼 원본 위에, 반전·흐림 처리한 같은 그림을 color-dodge 로 겹치면
+   윤곽만 남고 면이 하얗게 날아가 연필로 그린 것처럼 보인다. */
+.pastor-photo.has-photo{padding:0;overflow:hidden;background:#fff;isolation:isolate;position:relative}
+.pastor-photo.has-photo .pastor-initial{display:none}
+.pastor-photo img{display:block;width:100%;height:100%;object-fit:cover}
+.pastor-photo .sk-base{filter:grayscale(1) contrast(1.08) brightness(1.02)}
+.pastor-photo .sk-dodge{position:absolute;inset:0;filter:grayscale(1) invert(1) blur(5px);mix-blend-mode:color-dodge}
+.pastor-photo .sk-grain{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(135deg,rgba(201,162,76,.10),rgba(47,77,133,.07));mix-blend-mode:multiply}
 .pastor-msg + .pastor-msg{margin-top:.9rem}
 @media(max-width:760px){.pastor-wrap{grid-template-columns:1fr;padding:2rem}.pastor-photo{max-width:220px;margin:0 auto}}
 
@@ -368,6 +378,7 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
       <li><a href="#worship">예배안내</a></li>
       <li><a href="#sermons">설교말씀</a></li>
       <li><a href="word.html">오늘의말씀</a></li>
+      <li><a href="photos.html">사진첩</a></li>
       <li><a href="#location">오시는길</a></li>
       <li><a href="tel:010-5052-1728" class="nav-cta" id="navPhoneLink">☎ 문의하기</a></li>
     </ul>
@@ -519,7 +530,9 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
       <h2 class="sec-title">담임목사 <span>인사말</span></h2>
     </div>
     <div class="pastor-wrap reveal">
-      <div class="pastor-photo">류</div>
+      <div class="pastor-photo" id="pastorPhoto">
+        <span class="pastor-initial">류</span>
+      </div>
       <div>
         <div class="pastor-role" id="pastorRole">담임목사</div>
         <div class="pastor-name" id="pastorName">류선희 목사</div>
@@ -768,6 +781,7 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
           <a href="church-history.html">교회역사</a>
           <a href="#worship">예배안내</a>
           <a href="#sermons">설교말씀</a>
+          <a href="photos.html">사진첩</a>
           <a href="#location">오시는길</a>
         </div>
         <div class="ft-col">
@@ -1071,6 +1085,28 @@ function loadTodayWordStatic() {
     .catch(function () {});
 }
 loadTodayWordStatic();
+
+// ===== 담임목사 인사말 사진 — photos/담임목사/인사말.jpg =====
+(function () {
+  const box = document.getElementById('pastorPhoto');
+  if (!box) return;
+  fetch('photos.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      const src = d && d.pastorPhoto;
+      if (!src) return;                       // 사진이 아직 없으면 '류' 글자를 그대로 둔다
+      const base = new Image();
+      base.onload = function () {
+        box.insertAdjacentHTML('beforeend',
+          '<img class="sk-base" src="' + src + '" alt="담임목사 사진">' +
+          '<img class="sk-dodge" src="' + src + '" alt="" aria-hidden="true">' +
+          '<span class="sk-grain"></span>');
+        box.classList.add('has-photo');
+      };
+      base.src = src;                          // 파일이 없으면 onload 가 안 불려 그대로 둔다
+    })
+    .catch(function () { /* 조용히 넘어간다 */ });
+})();
 
 // ===== 오시는 길 — 주소 하나로 지도 3곳 링크를 맞춘다 =====
 function setMapLinks(address) {
