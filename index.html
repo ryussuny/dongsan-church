@@ -585,8 +585,8 @@ footer{background:#2b2117;color:#d9c9b3;padding:3.6rem 0 2.2rem}
       <p class="sec-desc">담임목사가 전한 말씀을 요약해 올립니다.</p>
     </div>
     <div class="sermon-tabs reveal" id="sermonTabs">
-      <button type="button" class="sermon-tab active" data-cat="sunday">주일예배 설교</button>
-      <button type="button" class="sermon-tab" data-cat="midweek">수요·금요예배 설교</button>
+      <button type="button" class="sermon-tab active" data-cat="morning">주일오전 설교</button>
+      <button type="button" class="sermon-tab" data-cat="series">강해시리즈</button>
     </div>
     <div class="sermon-grid reveal" id="sermonGrid"></div>
     <div style="text-align:center;margin-top:2rem">
@@ -746,7 +746,7 @@ loadTodayWordStatic();
 
 // ===== 설교말씀 (sermons.json) — 주일 / 수요·금요 카테고리 =====
 let SERMON_DATA = [];
-let sermonCat = 'sunday';
+let sermonCat = 'morning';
 function sermonCard(x) {
   const d = (x.date || '').replace(/-/g, '.');
   const meta = [d, x.series].filter(Boolean).join(' · ');
@@ -765,12 +765,12 @@ function renderSermons() {
   const grid = document.getElementById('sermonGrid');
   if (!grid) return;
   const list = SERMON_DATA
-    .filter(x => (x.category || 'sunday') === sermonCat)
+    .filter(x => (x.category || 'morning') === sermonCat)
     .sort((a, b) => String(b.date).localeCompare(String(a.date)))
     .slice(0, 6);
   grid.innerHTML = list.length
     ? list.map(sermonCard).join('')
-    : `<div class="sermon-empty">아직 등록된 ${sermonCat === 'sunday' ? '주일예배' : '수요·금요예배'} 설교가 없습니다.<br>새 말씀이 올라오면 이곳에 요약과 함께 게시됩니다.</div>`;
+    : `<div class="sermon-empty">아직 등록된 ${sermonCat === 'morning' ? '주일오전' : '강해시리즈'} 설교가 없습니다.<br>새 말씀이 올라오면 이곳에 요약과 함께 게시됩니다.</div>`;
 }
 function loadSermons() {
   return fetch('sermons.json', { cache: 'no-store' })

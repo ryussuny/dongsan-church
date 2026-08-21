@@ -89,8 +89,8 @@ nav{position:sticky;top:0;z-index:300;background:rgba(251,243,231,.96);backdrop-
     <div class="tab" id="tabDaily">✝ 오늘의 말씀</div>
   </div>
   <div class="cats" id="sermonCats">
-    <button type="button" class="cat active" data-cat="sunday">주일예배 설교</button>
-    <button type="button" class="cat" data-cat="midweek">수요·금요예배 설교</button>
+    <button type="button" class="cat active" data-cat="morning">주일오전 설교</button>
+    <button type="button" class="cat" data-cat="series">강해시리즈</button>
   </div>
   <div class="search">
     <span class="ico">🔍</span>
@@ -108,7 +108,7 @@ nav{position:sticky;top:0;z-index:300;background:rgba(251,243,231,.96);backdrop-
 let sermons = [];
 let dailywords = [];
 let tab = 'sermon';
-let sermonCat = 'sunday';
+let sermonCat = 'morning';
 
 async function loadData() {
   try {
@@ -172,7 +172,7 @@ function render() {
   const list = document.getElementById('list');
   document.getElementById('sermonCats').style.display = tab === 'sermon' ? 'flex' : 'none';
   const source = tab === 'sermon'
-    ? sermons.filter(x => (x.category || 'sunday') === sermonCat)
+    ? sermons.filter(x => (x.category || 'morning') === sermonCat)
     : dailywords;
   const filtered = !q ? source : source.filter(x =>
     (x.title || '').toLowerCase().includes(q) ||
@@ -181,7 +181,7 @@ function render() {
   );
   if (!filtered.length) {
     const emptyMsg = tab === 'sermon'
-      ? `아직 등록된 ${sermonCat === 'sunday' ? '주일예배' : '수요·금요예배'} 설교가 없습니다.<br>새 말씀이 올라오면 요약과 함께 게시됩니다.`
+      ? `아직 등록된 ${sermonCat === 'morning' ? '주일오전' : '강해시리즈'} 설교가 없습니다.<br>새 말씀이 올라오면 요약과 함께 게시됩니다.`
       : '오늘의 말씀을 불러오지 못했습니다.<br>매일 아침 5시에 새 말씀이 올라옵니다.';
     list.innerHTML = `<div class="empty">${q ? '검색 결과가 없습니다.' : emptyMsg}</div>`;
     return;

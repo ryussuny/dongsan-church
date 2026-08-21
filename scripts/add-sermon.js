@@ -5,21 +5,21 @@
 
    사용 예)
    node scripts/add-sermon.js \
-     --date 2026-08-23 --cat sunday --service "주일오전" \
+     --date 2026-08-23 --cat morning --service "주일오전" \
      --title "여호와께 물을 만한 사람이 없느냐" \
      --scripture "열왕기하 3:1-12" --series "열왕기하 강해" \
      --summary "어려움에 빠진 뒤에야 하나님을 찾은 왕들 …" \
      --points "1. 먼저 묻지 않았습니다|2. 마른 골짜기에서 …|3. 하나님이 채우십니다" \
      --hymns "찬송가 famous|찬송가 …"
 
-   --cat 은 sunday(주일) 또는 midweek(수요·금요)
+   --cat 은 morning(주일오전) 또는 series(강해시리즈)
    같은 날짜·같은 구분의 설교가 있으면 덮어쓴다.
    =========================================================== */
 const fs = require('fs');
 const path = require('path');
 
 const FILE = path.join(__dirname, '..', 'sermons.json');
-const CATS = { sunday: '주일예배 설교', midweek: '수요·금요예배 설교' };
+const CATS = { morning: '주일오전 설교', series: '강해시리즈' };
 
 const args = {};
 for (let i = 2; i < process.argv.length; i++) {
@@ -31,13 +31,13 @@ function fail(msg) { console.error('오류: ' + msg); process.exit(1); }
 
 if (!args.date || !/^\d{4}-\d{2}-\d{2}$/.test(args.date)) fail('--date YYYY-MM-DD 가 필요합니다.');
 if (!args.title) fail('--title 이 필요합니다.');
-const cat = args.cat || 'sunday';
-if (!CATS[cat]) fail('--cat 은 sunday 또는 midweek 이어야 합니다.');
+const cat = args.cat || 'morning';
+if (!CATS[cat]) fail('--cat 은 morning(주일오전) 또는 series(강해시리즈) 여야 합니다.');
 
 const entry = {
   date: args.date,
   category: cat,
-  service: args.service || (cat === 'sunday' ? '주일예배' : '수요예배'),
+  service: args.service || (cat === 'morning' ? '주일오전' : ''),
   title: args.title,
   scripture: args.scripture || '',
   series: args.series || '',
@@ -48,7 +48,7 @@ const entry = {
 };
 
 const db = JSON.parse(fs.readFileSync(FILE, 'utf8'));
-db.sermons = (db.sermons || []).filter(x => !(x.date === entry.date && (x.category || 'sunday') === cat));
+db.sermons = (db.sermons || []).filter(x => !(x.date === entry.date && (x.category || 'morning') === cat));
 db.sermons.push(entry);
 db.sermons.sort((a, b) => String(b.date).localeCompare(String(a.date)));
 db.updatedAt = new Date().toISOString();
