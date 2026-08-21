@@ -1,0 +1,46 @@
+name: 사진첩 갱신
+
+# photos 폴더에 사진을 올리면 사진첩 목록(photos.json)을 다시 만들어 홈페이지에 반영한다.
+on:
+  push:
+    paths:
+      - 'photos/**'
+      - 'scripts/build-photos.js'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: photos-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 사진첩 목록 만들기
+        run: node scripts/build-photos.js
+
+      - name: 게시
+        run: |
+          git config user.name  "동산교회 말씀봇"
+          git config user.email "actions@github.com"
+          if git diff --quiet -- photos.json; then
+            echo "바뀐 사진 없음 — 게시 생략"
+            exit 0
+          fi
+          COUNT=$(node -e "const d=require('./photos.json');console.log(d.categories.reduce((n,c)=>n+c.photos.length,0))")
+          git add photos.json
+          git commit -m "사진첩 갱신 (사진 ${COUNT}장)"
+          for i in 1 2 3 4; do
+            git pull --rebase origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME} && exit 0
+            echo "재시도 ${i}..."; sleep $((2 ** i))
+          done
+          exit 1
