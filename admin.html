@@ -99,6 +99,34 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   </div>
 </div>
 
+<!-- SERMON — 설교문 올리기 · 자동 요약 -->
+<div class="pg" id="pg-sermon">
+  <div class="cd">
+    <div class="st">📜 설교문 올리기 (자동 요약)</div>
+    <div style="font-size:11px;color:#8888AA;line-height:1.8;margin-bottom:8px">
+      설교 원고를 아래에 붙여 넣으면 제목·본문·말씀의 흐름·맺는 말씀을 자동으로 뽑아냅니다.<br>
+      원고 첫머리에 <b>제목:</b> 과 <b>본문: 로마서 8:31-39</b> 를 적어 두시면 가장 정확합니다.
+    </div>
+    <textarea id="sermonRaw" placeholder="설교 원고를 여기에 붙여 넣으세요" style="width:100%;height:150px;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:12px;font-family:inherit;line-height:1.7"></textarea>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button class="btn btn-g" onclick="sermonAuto()" style="flex:1">자동 요약</button>
+      <button class="btn btn-n" onclick="sermonAI()" style="flex:1">✨ AI로 다듬기</button>
+    </div>
+    <div id="sermonResult" style="margin-top:10px;font-size:12px;line-height:1.8"></div>
+    <div id="sermonActions" style="display:none;gap:6px;margin-top:8px">
+      <button class="btn btn-o" onclick="sermonCopy()" style="flex:1">JSON 복사</button>
+      <button class="btn btn-o" onclick="sermonDownload()" style="flex:1">파일로 내려받기</button>
+    </div>
+  </div>
+  <div class="cd">
+    <div class="st">🗂 홈페이지에 올라간 설교</div>
+    <div id="sermonSynced" style="font-size:12px;line-height:1.9;color:#4c5468">불러오는 중…</div>
+    <div style="font-size:11px;color:#8888AA;line-height:1.8;margin-top:8px">
+      원고 파일(.docx)을 저장소의 <b>sermons-src</b> 폴더에 올리면, 요약과 등록까지 자동으로 진행됩니다.
+    </div>
+  </div>
+</div>
+
 <!-- BULLETIN -->
 <div class="pg" id="pg-bulletin">
   <div class="cd">
@@ -171,11 +199,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   <button class="nb" onclick="go('members',this)"><span class="ni">👥</span>교인</button>
   <button class="nb" onclick="go('chat',this)"><span class="ni">💬</span>상담</button>
   <button class="nb" onclick="go('word',this)"><span class="ni">📖</span>말씀</button>
+  <button class="nb" onclick="go('sermon',this)"><span class="ni">📜</span>설교</button>
   <button class="nb" onclick="go('settings',this)"><span class="ni">⚙️</span>더보기</button>
 </nav>
 
 <div class="notif" id="notif"></div>
 
+<script src="sermon-summary.js"></script>
 <script>
 const P='dongsan_';
 const S={get(k,d){try{const v=localStorage.getItem(P+k);return v?JSON.parse(v):d}catch{return d}},set(k,v){localStorage.setItem(P+k,JSON.stringify(v))}};
@@ -197,7 +227,7 @@ const PASTORS=[
 function notify(m){const e=document.getElementById('notif');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500)}
 function go(p,btn){document.querySelectorAll('.pg').forEach(e=>e.classList.remove('active'));document.getElementById('pg-'+p).classList.add('active');
   if(btn){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
-  if(p==='home')renderHome();if(p==='members')renderAdminMembers();if(p==='word')renderWord();if(p==='attendance')renderAtt();if(p==='visit')renderVisits();if(p==='settings')renderSettings();if(p==='chat')renderChat();
+  if(p==='sermon')renderSermonAdmin();if(p==='home')renderHome();if(p==='members')renderAdminMembers();if(p==='word')renderWord();if(p==='attendance')renderAtt();if(p==='visit')renderVisits();if(p==='settings')renderSettings();if(p==='chat')renderChat();
 }
 
 async function callAI(sys,msg){
@@ -336,6 +366,71 @@ async function runMeeting(){
 // API Key auto-set
 if(!S.get('apiKey'))S.set('apiKey',"");
 renderHome();
+
+/* ===== 설교문 올리기 · 자동 요약 ===== */
+var SERMON_ENTRY=null;
+function renderSermonAdmin(){
+  fetch('sermons.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(d){
+    var list=(d&&d.sermons)||[],books={};
+    list.forEach(function(x){books[x.book]=(books[x.book]||0)+1});
+    document.getElementById('sermonSynced').innerHTML=list.length
+      ? '전체 <b>'+list.length+'편</b><br>'+Object.keys(books).map(function(b){return b+' '+books[b]+'편'}).join(' · ')
+      : '아직 등록된 설교가 없습니다.';
+  }).catch(function(){document.getElementById('sermonSynced').textContent='목록을 불러오지 못했습니다.'});
+}
+function sermonShow(e,note){
+  SERMON_ENTRY=e;
+  document.getElementById('sermonResult').innerHTML=
+    '<div style="padding:10px;background:var(--cream);border-radius:8px">'
+    +'<div style="font-weight:700">'+(e.title||'(제목 없음)')+'</div>'
+    +'<div style="color:#8888AA;font-size:11px;margin:2px 0 6px">'+(e.scripture||'(본문 없음)')+(e.series?' · '+e.series:'')+'</div>'
+    +(e.summary?'<div>'+e.summary+'</div>':'')
+    +((e.keyPoints||[]).length?'<ul style="margin:6px 0 0 16px">'+e.keyPoints.map(function(p){return '<li>'+p+'</li>'}).join('')+'</ul>':'')
+    +(e.conclusion?'<div style="margin-top:6px;color:#4c5468">맺는 말씀 · '+e.conclusion+'</div>':'')
+    +(note?'<div style="margin-top:6px;color:#B3593F;font-size:11px">'+note+'</div>':'')
+    +'</div>';
+  document.getElementById('sermonActions').style.display='flex';
+}
+function sermonAuto(){
+  var t=document.getElementById('sermonRaw').value;
+  if(!t.trim()){notify('설교 원고를 붙여 넣어 주세요');return}
+  var r=SermonSummary.parse(t,{source:''});
+  sermonShow(r.entry, r.ok?'':('⚠ '+r.reason));
+  if(!r.ok)notify(r.reason);
+}
+async function sermonAI(){
+  var t=document.getElementById('sermonRaw').value;
+  if(!t.trim()){notify('설교 원고를 붙여 넣어 주세요');return}
+  var base=SermonSummary.parse(t,{source:''}).entry;
+  notify('AI로 다듬는 중…');
+  var out=await callAI('한국 개신교 설교 요약 편집자. 원고에 있는 내용만 쓰고, 성도 개인 신상·건강 정보는 절대 넣지 않는다.',SermonSummary.aiPrompt(t,base));
+  if(!out){notify('AI 다듬기에 실패했습니다 — 자동 요약 결과를 씁니다');sermonShow(base);return}
+  try{
+    var j=JSON.parse(out.match(/\{[\s\S]*\}/)[0]);
+    var ref=SermonSummary.normalizeRef(j.scripture||base.scripture);
+    sermonShow(Object.assign({},base,j,ref?{scripture:ref.ref,book:ref.book,chapter:ref.chapter,verse:ref.verse}:{}),'✨ AI로 다듬은 요약입니다');
+  }catch(e){notify('AI 응답을 읽지 못했습니다');sermonShow(base)}
+}
+function sermonCopy(){
+  if(!SERMON_ENTRY)return;
+  var s=JSON.stringify(SERMON_ENTRY,null,2);
+  navigator.clipboard&&navigator.clipboard.writeText(s).then(function(){notify('복사했습니다')});
+}
+function sermonDownload(){
+  if(!SERMON_ENTRY)return;
+  var b=new Blob([JSON.stringify(SERMON_ENTRY,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(b);
+  a.download=(SERMON_ENTRY.scripture||'설교').replace(/[\s:]/g,'_')+'.json';
+  a.click();
+}
+/* 예전 기기에 남아 있던 옛 설교 데이터를 한 번 지운다 */
+(function(){try{
+  if(localStorage.getItem('dongsan_sermonReset')!=='2026-08-21'){
+    localStorage.removeItem('dongsan_sermons');
+    localStorage.setItem('dongsan_sermonReset','2026-08-21');
+  }
+}catch(e){}})();
 </script>
 </body>
 </html>

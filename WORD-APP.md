@@ -150,3 +150,28 @@ POST /api/word/amen                    {id,name}
 - 그 밖에도 여러 책의 313개 장에 누락된 절이 있습니다(예: 사무엘하 17:10, 역대상 1:13).
 
 정확한 새번역 본문을 확보하면 `dongsan_bible.js` 를 교체하는 것이 근본 해결입니다.
+
+---
+
+## 설교문 자동 요약·등록 (2026-08-21 추가)
+
+설교 원고를 올리면 요약까지 자동으로 만들어 홈페이지에 게시한다.
+
+| 올리는 곳 | 흐름 |
+|---|---|
+| `sermons-src/` 폴더 (.docx/.txt/.md) | GitHub Actions 「설교문 자동 요약·등록」 → `scripts/import-sermons.js` → `sermons.json` → 홈페이지 |
+| 관리자 화면 `admin.html` → 설교 탭 | 원고 붙여넣기 → 자동 요약 → JSON 복사·내려받기 (AI로 다듬기 선택 가능) |
+
+- 요약 규칙은 `sermon-summary.js` 한 곳에 있고, 노드와 브라우저가 함께 쓴다.
+- 원고의 짜임(제목 / 본문 / 서론 / 본론 / 결론 / 찬송)을 읽는 방식이라 API 키 없이 동작한다.
+- `ANTHROPIC_API_KEY` (저장소 Secrets 또는 관리자 화면의 API Key)를 넣으면 AI 가 문장을 다듬는다.
+- 같은 본문이 이미 등록되어 있으면 덮어쓰지 않는다 (`--force` 로만 교체).
+- `.docx` 는 외부 패키지 없이 직접 읽는다 (ZIP → `word/document.xml`).
+
+## 목회 시스템 정리 (2026-08-21)
+
+- `deployed.html` (교인용 앱) 안에 구워져 있던 옛 설교 목록 50편을 삭제하고, 홈페이지와 같은
+  `sermons.json` 을 읽어 **성경 책 이름 탭 · 날짜 없이** 표시하도록 바꿨다.
+- 기기에 남아 있던 `dongsan_sermons` (localStorage) 는 앱을 열 때 한 번 지운다 (`dongsan_sermonReset` 표시).
+- `admin.html` 에 **설교** 탭을 추가해 원고 붙여넣기 → 자동 요약 → 등록용 JSON 을 만들 수 있게 했다.
+- 이로써 홈페이지 · 아카이브 · 교인용 앱 · 관리자 화면이 모두 `sermons.json` 한 파일을 본다.
