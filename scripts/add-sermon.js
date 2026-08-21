@@ -66,11 +66,14 @@ const entry = {
   summary: args.summary || '',
   keyPoints: args.points ? args.points.split('|').map(s => s.trim()).filter(Boolean) : [],
   conclusion: args.conclusion || '',
-  hymns: args.hymns ? args.hymns.split('|').map(s => s.trim()).filter(Boolean) : []
+  hymns: args.hymns ? args.hymns.split('|').map(s => s.trim()).filter(Boolean) : [],
+  source: args.source || ''      /* 원본 설교문 파일명 — 중복 등록을 막는 데 쓴다 */
 };
 
 const db = JSON.parse(fs.readFileSync(FILE, 'utf8'));
-db.sermons = (db.sermons || []).filter(x => !(x.book === entry.book && x.scripture === entry.scripture));
+db.sermons = (db.sermons || []).filter(x =>
+  !(x.book === entry.book && x.scripture === entry.scripture) &&
+  !(entry.source && x.source === entry.source));
 db.sermons.push(entry);
 
 /* 성경 차례 → 장 → 절 순으로 정렬 */
