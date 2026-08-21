@@ -208,6 +208,15 @@ section{padding:6rem 0}
   grid-column:1/-1;text-align:center;padding:2.6rem 1rem;color:var(--text3);
   background:var(--paper);border:1px dashed var(--border);border-radius:16px;font-size:.92rem;
 }
+.sermon-tabs{display:flex;gap:.6rem;justify-content:center;margin-bottom:1.6rem;flex-wrap:wrap}
+.sermon-tab{
+  background:var(--white);border:1px solid var(--border);border-radius:999px;
+  padding:.5rem 1.15rem;font-size:.9rem;font-weight:700;color:var(--text3);cursor:pointer;
+  font-family:inherit;transition:all .18s;
+}
+.sermon-tab:hover{border-color:var(--brick2);color:var(--text)}
+.sermon-tab.active{background:var(--brick2);border-color:var(--brick2);color:#fff}
+.sermon-summary{font-size:.88rem;line-height:1.75;color:var(--text2);margin-bottom:.6rem}
 @media(max-width:860px){.sermon-grid{grid-template-columns:1fr}}
 
 /* ===== TODAY WORD ===== */
@@ -354,6 +363,7 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
       <li><a href="#worship">예배안내</a></li>
       <li><a href="#pastor">담임목사</a></li>
       <li><a href="#sermons">설교말씀</a></li>
+      <li><a href="word.html">오늘의말씀</a></li>
       <li><a href="#location">오시는길</a></li>
       <li><a href="tel:010-5052-1728" class="nav-cta" id="navPhoneLink">☎ 문의하기</a></li>
     </ul>
@@ -569,8 +579,9 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
     <div class="sec-head reveal">
       <div class="sec-eyebrow">Recent Sermons</div>
       <h2 class="sec-title">최근 <span>말씀</span></h2>
-      <p class="sec-desc">최근 주일예배 말씀입니다. 목회 시스템과 연결되어 자동으로 갱신됩니다.</p>
+      <p class="sec-desc">성경 책별로 정리한 강해 말씀입니다. 책 이름을 눌러 보시고, <a href="archive.html" style="color:var(--brick2);font-weight:700">지난 말씀 보기</a>에서 전체를 읽으실 수 있습니다.</p>
     </div>
+    <div class="sermon-tabs reveal" id="sermonTabs"></div>
     <div class="sermon-grid reveal" id="sermonGrid">
     <div class="sermon-card">
       <div class="sermon-date">2026.08.16 · 사무엘하 강해</div>
@@ -962,6 +973,85 @@ function loadHomepageContent() {
 })();
 
 // [publish-homepage.js] 정적 배포본: 최근 설교는 게시 시점에 이미 구워 넣었으므로 재조회 생략
+
+/* ===== [오늘의 말씀 앱 연동] 아래 블록은 홈페이지 자동 게시본 위에 덮어쓴다 ===== */
+
+// 매일 아침 5시에 자동 게시되는 word-today.json 을 읽어 카드를 채운다 (실패하면 조용히 숨김)
+function loadTodayWordStatic() {
+  return fetch('word-today.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      var card = document.getElementById('todayCard');
+      if (!card) return;
+      if (!d || !d.passage) { card.classList.remove('show'); return; }
+      document.getElementById('todayTitle').textContent = d.title || '오늘의 말씀';
+      document.getElementById('todayPassage').textContent =
+        d.passage + (d.date ? '  ·  ' + d.date.replace(/-/g, '.') + ' (' + d.weekday + ')' : '');
+      document.getElementById('todayScripture').textContent = d.verseSnippet || '';
+      card.style.cursor = 'pointer';
+      card.title = '오늘의 말씀 전체 보기';
+      card.onclick = function () { location.href = 'today.html'; };
+      card.classList.add('show');
+    })
+    .catch(function () {});
+}
+loadTodayWordStatic();
+
+// ===== 설교말씀 (sermons.json) — 성경 책 이름별, 성경 차례대로 =====
+var SERMON_DATA = [];
+var SERMON_BOOKS = [];
+var sermonBook = '';
+function sermonEsc(t) {
+  return String(t == null ? '' : t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function sermonCard(x) {
+  return '<div class="sermon-card">'
+    + '<div class="sermon-date">' + sermonEsc(x.series || x.book || '') + '</div>'
+    + '<div class="sermon-title">' + sermonEsc(x.title || '') + '</div>'
+    + (x.summary ? '<div class="sermon-summary">' + sermonEsc(x.summary) + '</div>' : '')
+    + '<div class="sermon-scripture">📖 ' + sermonEsc(x.scripture || '') + '</div>'
+    + '</div>';
+}
+function renderSermonTabs() {
+  var wrap = document.getElementById('sermonTabs');
+  if (!wrap) return;
+  wrap.innerHTML = SERMON_BOOKS.map(function (b) {
+    return '<button type="button" class="sermon-tab' + (b === sermonBook ? ' active' : '')
+      + '" data-book="' + sermonEsc(b) + '">' + sermonEsc(b) + '</button>';
+  }).join('');
+  wrap.querySelectorAll('.sermon-tab').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      sermonBook = btn.dataset.book; renderSermonTabs(); renderSermons();
+    });
+  });
+}
+function renderSermons() {
+  var grid = document.getElementById('sermonGrid');
+  if (!grid) return;
+  if (!SERMON_BOOKS.length) {
+    grid.innerHTML = '<div class="sermon-empty">아직 등록된 설교가 없습니다.<br>새 말씀이 올라오면 이곳에 요약과 함께 게시됩니다.</div>';
+    return;
+  }
+  var list = SERMON_DATA.filter(function (x) { return x.book === sermonBook; }).slice(0, 9);
+  grid.innerHTML = list.length
+    ? list.map(sermonCard).join('')
+    : '<div class="sermon-empty">' + sermonEsc(sermonBook) + ' 설교가 아직 올라오지 않았습니다.<br>말씀이 준비되는 대로 요약과 함께 게시됩니다.</div>';
+}
+function loadSermons() {
+  return fetch('sermons.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      SERMON_DATA = (d && Array.isArray(d.sermons)) ? d.sermons : [];
+      SERMON_BOOKS = (d && Array.isArray(d.categories) && d.categories.length)
+        ? d.categories.map(function (c) { return c.key; })
+        : Array.from(new Set(SERMON_DATA.map(function (x) { return x.book; })));
+      sermonBook = SERMON_BOOKS[0] || '';
+      renderSermonTabs(); renderSermons();
+    })
+    .catch(function () { SERMON_DATA = []; SERMON_BOOKS = []; renderSermonTabs(); renderSermons(); });
+}
+loadSermons();
 </script>
 
 
