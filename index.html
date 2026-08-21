@@ -582,12 +582,9 @@ footer{background:#2b2117;color:#d9c9b3;padding:3.6rem 0 2.2rem}
     <div class="sec-head reveal">
       <div class="sec-eyebrow">Sermons</div>
       <h2 class="sec-title">설교 <span>말씀</span></h2>
-      <p class="sec-desc">담임목사가 전한 말씀을 요약해 올립니다.</p>
+      <p class="sec-desc">담임목사가 전한 말씀을 성경 순서대로 요약해 올립니다.</p>
     </div>
-    <div class="sermon-tabs reveal" id="sermonTabs">
-      <button type="button" class="sermon-tab active" data-cat="morning">주일오전 설교</button>
-      <button type="button" class="sermon-tab" data-cat="series">강해시리즈</button>
-    </div>
+    <div class="sermon-tabs reveal" id="sermonTabs"></div>
     <div class="sermon-grid reveal" id="sermonGrid"></div>
     <div style="text-align:center;margin-top:2rem">
       <a href="archive.html" class="btn btn-ghost">📚 설교·말씀 전체 보기</a>
@@ -744,48 +741,57 @@ function loadTodayWordStatic() {
 }
 loadTodayWordStatic();
 
-// ===== 설교말씀 (sermons.json) — 주일 / 수요·금요 카테고리 =====
+// ===== 설교말씀 (sermons.json) — 성경 책 이름별, 성경 차례대로 =====
 let SERMON_DATA = [];
-let sermonCat = 'morning';
+let SERMON_BOOKS = [];
+let sermonBook = '';
+function escHtml(t) {
+  return String(t == null ? '' : t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 function sermonCard(x) {
-  const d = (x.date || '').replace(/-/g, '.');
-  const meta = [d, x.series].filter(Boolean).join(' · ');
   return `<div class="sermon-card">
-    <div class="sermon-date">${escHtml(meta)}${x.service ? `<span class="sermon-badge">${escHtml(x.service)}</span>` : ''}</div>
+    <div class="sermon-date">${escHtml(x.series || x.book || '')}</div>
     <div class="sermon-title">${escHtml(x.title || '')}</div>
     ${x.summary ? `<div class="sermon-summary">${escHtml(x.summary)}</div>` : ''}
     <div class="sermon-scripture">📖 ${escHtml(x.scripture || '')}</div>
   </div>`;
 }
-function escHtml(t) {
-  return String(t == null ? '' : t)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function renderSermonTabs() {
+  const wrap = document.getElementById('sermonTabs');
+  if (!wrap) return;
+  wrap.innerHTML = SERMON_BOOKS
+    .map(b => `<button type="button" class="sermon-tab${b === sermonBook ? ' active' : ''}" data-book="${escHtml(b)}">${escHtml(b)}</button>`)
+    .join('');
+  wrap.querySelectorAll('.sermon-tab').forEach(btn => {
+    btn.addEventListener('click', () => { sermonBook = btn.dataset.book; renderSermonTabs(); renderSermons(); });
+  });
 }
 function renderSermons() {
   const grid = document.getElementById('sermonGrid');
   if (!grid) return;
-  const list = SERMON_DATA
-    .filter(x => (x.category || 'morning') === sermonCat)
-    .sort((a, b) => String(b.date).localeCompare(String(a.date)))
-    .slice(0, 6);
+  if (!SERMON_DATA.length) {
+    grid.innerHTML = '<div class="sermon-empty">아직 등록된 설교가 없습니다.<br>새 말씀이 올라오면 이곳에 요약과 함께 게시됩니다.</div>';
+    return;
+  }
+  const list = SERMON_DATA.filter(x => x.book === sermonBook).slice(0, 9);
   grid.innerHTML = list.length
     ? list.map(sermonCard).join('')
-    : `<div class="sermon-empty">아직 등록된 ${sermonCat === 'morning' ? '주일오전' : '강해시리즈'} 설교가 없습니다.<br>새 말씀이 올라오면 이곳에 요약과 함께 게시됩니다.</div>`;
+    : `<div class="sermon-empty">${escHtml(sermonBook)} 설교가 아직 없습니다.</div>`;
 }
 function loadSermons() {
   return fetch('sermons.json', { cache: 'no-store' })
     .then(r => r.ok ? r.json() : null)
-    .then(d => { SERMON_DATA = (d && Array.isArray(d.sermons)) ? d.sermons : []; renderSermons(); })
-    .catch(() => { SERMON_DATA = []; renderSermons(); });
+    .then(d => {
+      SERMON_DATA = (d && Array.isArray(d.sermons)) ? d.sermons : [];
+      SERMON_BOOKS = (d && Array.isArray(d.categories) && d.categories.length)
+        ? d.categories.map(c => c.key)
+        : [...new Set(SERMON_DATA.map(x => x.book))];
+      sermonBook = SERMON_BOOKS[0] || '';
+      renderSermonTabs(); renderSermons();
+    })
+    .catch(() => { SERMON_DATA = []; SERMON_BOOKS = []; renderSermonTabs(); renderSermons(); });
 }
-document.querySelectorAll('.sermon-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.sermon-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    sermonCat = btn.dataset.cat;
-    renderSermons();
-  });
-});
 loadSermons();
 
 // ===== 홈페이지 "자주 바뀌는 정보" (예배시간 · 인사말 · 연락처) 표시 =====

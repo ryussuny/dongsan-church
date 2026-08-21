@@ -1,15 +1,6 @@
 {
-  "note": "동산감리교회 설교 목록. 담임목사가 올린 말씀을 요약해 이 파일에 추가하면 홈페이지와 아카이브에 함께 반영된다. category 는 morning(주일오전) 또는 series(강해시리즈).",
-  "categories": [
-    {
-      "key": "morning",
-      "label": "주일오전 설교"
-    },
-    {
-      "key": "series",
-      "label": "강해시리즈"
-    }
-  ],
+  "note": "동산감리교회 설교 목록. 카테고리는 성경 책 이름이며, 목록은 성경 차례(장·절 순)로 정렬된다. scripts/add-sermon.js 로 등록한다.",
+  "categories": [],
   "sermons": [],
   "updatedAt": ""
 }
