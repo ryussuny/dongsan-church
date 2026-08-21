@@ -107,6 +107,8 @@ let dailywords = [];
 let tab = 'sermon';
 let sermonBook = '';
 let sermonBooks = [];
+let dailyBook = '';
+let dailyBooks = [];
 
 async function loadData() {
   try {
@@ -120,16 +122,32 @@ async function loadData() {
   } catch (e) { sermons = []; sermonBooks = []; }
 
   try {
-    const r = await fetch('word-today.json', { cache: 'no-store' });
+    const r = await fetch('word-archive.json', { cache: 'no-store' });
     const d = r.ok ? await r.json() : null;
-    dailywords = d && d.passage ? [{
-      date: d.date, title: d.title, passage: d.passage,
-      scripture: d.verseSnippet || '',
-      meditation: (d.adult && d.adult.questions || []).join('  /  '),
-      practice: d.kids && d.kids.mission ? '어린이 미션 · ' + d.kids.mission : '',
-      prayer: d.adult && d.adult.prayer || ''
-    }] : [];
-  } catch (e) { dailywords = []; }
+    dailywords = (d && Array.isArray(d.words)) ? d.words : [];
+    dailyBooks = (d && Array.isArray(d.categories) && d.categories.length)
+      ? d.categories.map(c => c.key)
+      : [...new Set(dailywords.map(x => x.book))];
+    dailyBook = dailyBooks[0] || '';
+  } catch (e) { dailywords = []; dailyBooks = []; }
+
+  // 모음 파일을 못 읽으면 최소한 오늘 말씀이라도 보여 준다
+  if (!dailywords.length) {
+    try {
+      const r = await fetch('word-today.json', { cache: 'no-store' });
+      const d = r.ok ? await r.json() : null;
+      if (d && d.passage) {
+        dailywords = [{
+          date: d.date, title: d.title, passage: d.passage, book: (d.passage.split(' ')[0] || ''),
+          scripture: d.verseSnippet || '',
+          questions: (d.adult && d.adult.questions) || [],
+          practice: d.kids && d.kids.mission ? '어린이 미션 · ' + d.kids.mission : '',
+          prayer: (d.adult && d.adult.prayer) || ''
+        }];
+        dailyBooks = [dailywords[0].book]; dailyBook = dailyBooks[0];
+      }
+    } catch (e) { /* 조용히 넘어간다 */ }
+  }
 
   render();
 }
@@ -153,16 +171,23 @@ function sermonCard(s, i) {
 }
 
 function dailyCard(d, i) {
+  const qs = Array.isArray(d.questions) ? d.questions.filter(Boolean)
+    : (d.meditation ? [d.meditation] : []);
+  const day = (d.date || '').replace(/-/g, '.') + (d.weekday ? ' (' + d.weekday + ')' : '');
   return `<div class="card" data-i="${i}">
-    <div class="card-top"><span class="card-date">${esc((d.date || '').replace(/-/g, '.'))}</span></div>
+    <div class="card-top">
+      <span class="card-date">${esc(d.theme || d.book || '오늘의 말씀')}</span>
+      <span class="card-series">· ${esc(day)}</span>
+    </div>
     <div class="card-title">${esc(d.title || '오늘의 말씀')}</div>
     <div class="card-scripture">📖 ${esc(d.passage) || ''}</div>
     <div class="card-body">
       ${d.scripture ? `<h4>말씀</h4><p>${esc(d.scripture)}</p>` : ''}
-      ${d.meditation ? `<h4>묵상</h4><p>${esc(d.meditation)}</p>` : ''}
+      ${qs.length ? `<h4>묵상</h4><ul>${qs.map(q => `<li>${esc(q)}</li>`).join('')}</ul>` : ''}
       ${d.practice ? `<h4>오늘의 실천</h4><p>${esc(d.practice)}</p>` : ''}
       ${d.prayer ? `<h4>기도</h4><p>${esc(d.prayer)}</p>` : ''}
       ${d.hymnTitle ? `<h4>찬송</h4><p>${esc(d.hymnTitle)}</p>` : ''}
+      ${(d.missingVerses || []).length ? `<p style="color:var(--text3);font-size:.85rem">📌 ${d.missingVerses.join(', ')}절은 앱에 실린 본문 파일에 빠져 있어 성경책에서 함께 읽어 주세요.</p>` : ''}
     </div>
   </div>`;
 }
@@ -171,11 +196,13 @@ function render() {
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
   const list = document.getElementById('list');
   const cats = document.getElementById('sermonCats');
-  cats.style.display = tab === 'sermon' ? 'flex' : 'none';
-  if (tab === 'sermon') renderCats();
+  const books = tab === 'sermon' ? sermonBooks : dailyBooks;
+  const book = tab === 'sermon' ? sermonBook : dailyBook;
+  cats.style.display = books.length ? 'flex' : 'none';
+  renderCats(books, book);
   const source = tab === 'sermon'
     ? sermons.filter(x => x.book === sermonBook)
-    : dailywords;
+    : dailywords.filter(x => !dailyBooks.length || x.book === dailyBook);
   const filtered = !q ? source : source.filter(x =>
     (x.title || '').toLowerCase().includes(q) ||
     (x.scripture || '').toLowerCase().includes(q) ||
@@ -184,7 +211,7 @@ function render() {
   if (!filtered.length) {
     const emptyMsg = tab === 'sermon'
       ? (sermonBooks.length ? `${esc(sermonBook)} 설교가 아직 올라오지 않았습니다.<br>말씀이 준비되는 대로 요약과 함께 게시됩니다.` : '아직 등록된 설교가 없습니다.')
-      : '오늘의 말씀을 불러오지 못했습니다.<br>매일 아침 5시에 새 말씀이 올라옵니다.';
+      : (dailyBooks.length ? `${esc(dailyBook)} 말씀이 아직 올라오지 않았습니다.` : '오늘의 말씀을 불러오지 못했습니다.<br>매일 아침 5시에 새 말씀이 올라옵니다.');
     list.innerHTML = `<div class="empty">${q ? '검색 결과가 없습니다.' : emptyMsg}</div>`;
     return;
   }
@@ -206,13 +233,17 @@ document.getElementById('tabDaily').addEventListener('click', () => {
   document.getElementById('tabSermon').classList.remove('active');
   render();
 });
-function renderCats() {
+function renderCats(books, current) {
   const wrap = document.getElementById('sermonCats');
-  wrap.innerHTML = sermonBooks
-    .map(b => `<button type="button" class="cat${b === sermonBook ? ' active' : ''}" data-book="${esc(b)}">${esc(b)}</button>`)
+  wrap.innerHTML = books
+    .map(b => `<button type="button" class="cat${b === current ? ' active' : ''}" data-book="${esc(b)}">${esc(b)}</button>`)
     .join('');
   wrap.querySelectorAll('.cat').forEach(btn => {
-    btn.addEventListener('click', () => { sermonBook = btn.dataset.book; render(); });
+    btn.addEventListener('click', () => {
+      if (tab === 'sermon') sermonBook = btn.dataset.book;
+      else dailyBook = btn.dataset.book;
+      render();
+    });
   });
 }
 document.getElementById('searchInput').addEventListener('input', render);
