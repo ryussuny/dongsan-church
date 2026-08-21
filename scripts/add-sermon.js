@@ -82,8 +82,10 @@ db.sermons.sort((a, b) =>
   (a.chapter || 0) - (b.chapter || 0) ||
   (a.verse || 0) - (b.verse || 0));
 
-/* 등록된 책만 카테고리로, 역시 성경 차례대로 */
-const books = [...new Set(db.sermons.map(x => x.book))]
+/* 카테고리 = 미리 적어 둔 책 + 등록된 책, 성경 차례대로 */
+const preset = (db.categories || []).map(c => c.key);
+const books = [...new Set([...preset, ...db.sermons.map(x => x.book)])]
+  .filter(b => BOOK_ORDER.indexOf(b) >= 0)
   .sort((a, b) => BOOK_ORDER.indexOf(a) - BOOK_ORDER.indexOf(b));
 db.categories = books.map(b => ({ key: b, label: b }));
 db.updatedAt = new Date().toISOString();

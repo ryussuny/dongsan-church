@@ -184,7 +184,7 @@ function render() {
   );
   if (!filtered.length) {
     const emptyMsg = tab === 'sermon'
-      ? (sermons.length ? `${esc(sermonBook)} 설교가 아직 없습니다.` : '아직 등록된 설교가 없습니다.<br>새 말씀이 올라오면 요약과 함께 게시됩니다.')
+      ? (sermonBooks.length ? `${esc(sermonBook)} 설교가 아직 올라오지 않았습니다.<br>말씀이 준비되는 대로 요약과 함께 게시됩니다.` : '아직 등록된 설교가 없습니다.')
       : '오늘의 말씀을 불러오지 못했습니다.<br>매일 아침 5시에 새 말씀이 올라옵니다.';
     list.innerHTML = `<div class="empty">${q ? '검색 결과가 없습니다.' : emptyMsg}</div>`;
     return;

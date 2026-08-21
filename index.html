@@ -770,14 +770,14 @@ function renderSermonTabs() {
 function renderSermons() {
   const grid = document.getElementById('sermonGrid');
   if (!grid) return;
-  if (!SERMON_DATA.length) {
+  if (!SERMON_BOOKS.length) {
     grid.innerHTML = '<div class="sermon-empty">아직 등록된 설교가 없습니다.<br>새 말씀이 올라오면 이곳에 요약과 함께 게시됩니다.</div>';
     return;
   }
   const list = SERMON_DATA.filter(x => x.book === sermonBook).slice(0, 9);
   grid.innerHTML = list.length
     ? list.map(sermonCard).join('')
-    : `<div class="sermon-empty">${escHtml(sermonBook)} 설교가 아직 없습니다.</div>`;
+    : `<div class="sermon-empty">${escHtml(sermonBook)} 설교가 아직 올라오지 않았습니다.<br>말씀이 준비되는 대로 요약과 함께 게시됩니다.</div>`;
 }
 function loadSermons() {
   return fetch('sermons.json', { cache: 'no-store' })

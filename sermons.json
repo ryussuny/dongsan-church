@@ -1,6 +1,19 @@
 {
-  "note": "동산감리교회 설교 목록. 카테고리는 성경 책 이름이며, 목록은 성경 차례(장·절 순)로 정렬된다. scripts/add-sermon.js 로 등록한다.",
-  "categories": [],
+  "note": "동산감리교회 설교 목록. 카테고리는 성경 책 이름이며, 목록은 성경 차례(장·절 순)로 정렬된다. categories 에 미리 적어 둔 책은 설교가 없어도 탭으로 표시된다. scripts/add-sermon.js 로 등록한다.",
+  "categories": [
+    {
+      "key": "출애굽기",
+      "label": "출애굽기"
+    },
+    {
+      "key": "로마서",
+      "label": "로마서"
+    },
+    {
+      "key": "빌립보서",
+      "label": "빌립보서"
+    }
+  ],
   "sermons": [],
   "updatedAt": ""
 }
