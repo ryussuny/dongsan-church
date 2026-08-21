@@ -361,7 +361,6 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
       <li><a href="#vision">교회소개</a></li>
       <li><a href="church-history.html">교회역사</a></li>
       <li><a href="#worship">예배안내</a></li>
-      <li><a href="#pastor">담임목사</a></li>
       <li><a href="#sermons">설교말씀</a></li>
       <li><a href="word.html">오늘의말씀</a></li>
       <li><a href="#location">오시는길</a></li>
@@ -509,6 +508,20 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
         </div>
       </div>
     </div>
+
+    <div class="sec-head reveal" style="margin-top:4.5rem">
+      <div class="sec-eyebrow">Senior Pastor</div>
+      <h2 class="sec-title">담임목사 <span>인사말</span></h2>
+    </div>
+    <div class="pastor-wrap reveal">
+      <div class="pastor-photo">류</div>
+      <div>
+        <div class="pastor-role" id="pastorRole">담임목사</div>
+        <div class="pastor-name" id="pastorName">류선희 목사</div>
+        <p class="pastor-msg" id="pastorMsg1">동산감리교회 홈페이지를 찾아주셔서 감사합니다. 저희 교회는 하나님과 함께, 이웃과 함께 걸어가는 신앙 공동체를 소망하며 한 걸음씩 나아가고 있습니다.</p>
+        <p class="pastor-msg" id="pastorMsg2">누구든지 처음 오시는 걸음이 어색하지 않도록, 따뜻하게 맞이하는 교회가 되고자 합니다. 언제든 예배 자리에 함께해 주시기를 진심으로 환영합니다.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -554,24 +567,6 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
   </div>
 </section>
 
-<!-- ===== PASTOR ===== -->
-<section id="pastor">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <div class="sec-eyebrow">Senior Pastor</div>
-      <h2 class="sec-title">담임목사 <span>인사말</span></h2>
-    </div>
-    <div class="pastor-wrap reveal">
-      <div class="pastor-photo">류</div>
-      <div>
-        <div class="pastor-role" id="pastorRole">담임목사</div>
-        <div class="pastor-name" id="pastorName">류선희 목사</div>
-        <p class="pastor-msg" id="pastorMsg1">동산감리교회 홈페이지를 찾아주셔서 감사합니다. 저희 교회는 하나님과 함께, 이웃과 함께 걸어가는 신앙 공동체를 소망하며 한 걸음씩 나아가고 있습니다.</p>
-        <p class="pastor-msg" id="pastorMsg2">누구든지 처음 오시는 걸음이 어색하지 않도록, 따뜻하게 맞이하는 교회가 되고자 합니다. 언제든 예배 자리에 함께해 주시기를 진심으로 환영합니다.</p>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- ===== SERMONS (dynamic) ===== -->
 <section id="sermons" class="sec-alt">
@@ -1010,6 +1005,7 @@ function sermonCard(x) {
     + '<div class="sermon-date">' + sermonEsc(x.series || x.book || '') + '</div>'
     + '<div class="sermon-title">' + sermonEsc(x.title || '') + '</div>'
     + (x.summary ? '<div class="sermon-summary">' + sermonEsc(x.summary) + '</div>' : '')
+    + (x.body ? '<div style="font-size:.82rem;color:var(--brick2);font-weight:700">지난 말씀 보기에서 전문 읽기 →</div>' : '')
     + '<div class="sermon-scripture">📖 ' + sermonEsc(x.scripture || '') + '</div>'
     + '</div>';
 }

@@ -64,6 +64,7 @@ const entry = {
   scripture: args.scripture,
   series: args.series || '',
   summary: args.summary || '',
+  body: args.body || '',           /* 설교 내용 1000자 안팎 — 아카이브에서 전문으로 보여 준다 */
   keyPoints: args.points ? args.points.split('|').map(s => s.trim()).filter(Boolean) : [],
   conclusion: args.conclusion || '',
   hymns: args.hymns ? args.hymns.split('|').map(s => s.trim()).filter(Boolean) : [],
