@@ -313,6 +313,9 @@ function renderToday(){
     kv.textContent=one||('성경책에서 '+k.verseRef+'을 펴서 읽어 보아요.');
     var vs=WordBible.verses(d.passage,true);
     full.innerHTML=vs.length?vs.map(function(v){return '<span class="vn">'+v.v+'</span>'+wEsc(v.t)}).join(' '):'성경책에서 함께 읽어요.';
+    var miss=WordBible.missing(d.passage);
+    if(miss.length)full.innerHTML+='<div style="margin-top:10px;padding:10px 12px;background:#fff8e6;border-radius:12px;'+
+      'font-size:14px;color:#6b4f00;line-height:1.7">📌 '+miss.join(', ')+'절은 앱에 없어요. 성경책을 펴서 함께 읽어 보아요!</div>';
   });
 }
 

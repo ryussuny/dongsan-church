@@ -1,0 +1,46 @@
+name: 오늘의 말씀 자동 게시
+
+# 매일 아침 5시(한국시간)에 그날의 말씀 페이지를 만들어 홈페이지에 올린다.
+# GitHub 예약 실행은 UTC 기준이라 20:00 UTC = 다음 날 05:00 KST 이다.
+# (GitHub 사정으로 몇 분 늦게 시작될 수 있다.)
+on:
+  schedule:
+    - cron: '0 20 * * *'
+  workflow_dispatch:        # 필요할 때 손으로도 실행할 수 있게 둔다
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-word
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 오늘의 말씀 페이지 생성
+        run: node scripts/build-today.js
+
+      - name: 변경 사항 게시
+        run: |
+          git config user.name  "동산교회 말씀봇"
+          git config user.email "actions@github.com"
+          if git diff --quiet -- today.html word-today.json; then
+            echo "오늘의 말씀에 변경 없음 — 게시 생략"
+            exit 0
+          fi
+          TODAY=$(date -u -d '+9 hours' +%Y-%m-%d)
+          git add today.html word-today.json
+          git commit -m "오늘의 말씀 자동 게시 ${TODAY}"
+          for i in 1 2 3 4; do
+            git pull --rebase origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME} && exit 0
+            echo "재시도 ${i}..."; sleep $((2 ** i))
+          done
+          exit 1
