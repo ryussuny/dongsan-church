@@ -87,6 +87,7 @@ nav{position:sticky;top:0;z-index:300;background:rgba(251,243,231,.96);backdrop-
   <div class="tabs">
     <div class="tab active" id="tabSermon">📖 설교말씀</div>
     <div class="tab" id="tabDaily">✝ 오늘의 말씀</div>
+    <div class="tab" id="tabVault">🗄 설교 보관함</div>
   </div>
   <div class="search">
     <span class="ico">🔍</span>
@@ -109,6 +110,9 @@ let sermonBook = '';
 let sermonBooks = [];
 let dailyBook = '';
 let dailyBooks = [];
+let vault = [];
+let vaultBook = '';
+let vaultBooks = [];
 
 async function loadData() {
   try {
@@ -148,6 +152,16 @@ async function loadData() {
       }
     } catch (e) { /* 조용히 넘어간다 */ }
   }
+
+  try {
+    const r = await fetch('sermons-archive.json', { cache: 'no-store' });
+    const d = r.ok ? await r.json() : null;
+    vault = (d && Array.isArray(d.sermons)) ? d.sermons : [];
+    vaultBooks = (d && Array.isArray(d.categories) && d.categories.length)
+      ? d.categories.map(c => c.key)
+      : [...new Set(vault.map(x => x.book))];
+    vaultBook = vaultBooks[0] || '';
+  } catch (e) { vault = []; vaultBooks = []; }
 
   render();
 }
@@ -192,17 +206,38 @@ function dailyCard(d, i) {
   </div>`;
 }
 
+function vaultCard(s, i) {
+  const points = (s.keyPoints || []).filter(Boolean);
+  const day = (s.date || '').replace(/-/g, '.');
+  return `<div class="card" data-i="${i}">
+    <div class="card-top">
+      <span class="card-date">${esc(s.series || s.book || '')}</span>
+      <span class="card-series">· ${esc(day)}${s.type ? ' · ' + esc(s.type) : ''}</span>
+    </div>
+    <div class="card-title">${esc(s.title || '제목 없음')}</div>
+    <div class="card-scripture">📖 ${esc(s.scripture) || '본문 미기재'}</div>
+    <div class="card-body">
+      ${points.length ? `<h4>말씀의 흐름</h4><ul>${points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
+      ${s.conclusion ? `<h4>맺는 말씀</h4><p>${esc(s.conclusion)}</p>` : ''}
+      ${(s.hymns || []).length ? `<h4>찬송</h4><p>${(s.hymns || []).map(esc).join(' · ')}</p>` : ''}
+      ${!points.length && !s.conclusion ? `<p style="color:var(--text3)">제목과 본문만 남아 있는 기록입니다.</p>` : ''}
+    </div>
+  </div>`;
+}
+
 function render() {
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
   const list = document.getElementById('list');
   const cats = document.getElementById('sermonCats');
-  const books = tab === 'sermon' ? sermonBooks : dailyBooks;
-  const book = tab === 'sermon' ? sermonBook : dailyBook;
+  const books = tab === 'sermon' ? sermonBooks : (tab === 'daily' ? dailyBooks : vaultBooks);
+  const book = tab === 'sermon' ? sermonBook : (tab === 'daily' ? dailyBook : vaultBook);
   cats.style.display = books.length ? 'flex' : 'none';
   renderCats(books, book);
   const source = tab === 'sermon'
     ? sermons.filter(x => x.book === sermonBook)
-    : dailywords.filter(x => !dailyBooks.length || x.book === dailyBook);
+    : tab === 'daily'
+      ? dailywords.filter(x => !dailyBooks.length || x.book === dailyBook)
+      : vault.filter(x => !vaultBooks.length || x.book === vaultBook);
   const filtered = !q ? source : source.filter(x =>
     (x.title || '').toLowerCase().includes(q) ||
     (x.scripture || '').toLowerCase().includes(q) ||
@@ -211,27 +246,28 @@ function render() {
   if (!filtered.length) {
     const emptyMsg = tab === 'sermon'
       ? (sermonBooks.length ? `${esc(sermonBook)} 설교가 아직 올라오지 않았습니다.<br>말씀이 준비되는 대로 요약과 함께 게시됩니다.` : '아직 등록된 설교가 없습니다.')
-      : (dailyBooks.length ? `${esc(dailyBook)} 말씀이 아직 올라오지 않았습니다.` : '오늘의 말씀을 불러오지 못했습니다.<br>매일 아침 5시에 새 말씀이 올라옵니다.');
+      : tab === 'daily'
+        ? (dailyBooks.length ? `${esc(dailyBook)} 말씀이 아직 올라오지 않았습니다.` : '오늘의 말씀을 불러오지 못했습니다.<br>매일 아침 5시에 새 말씀이 올라옵니다.')
+        : (vaultBooks.length ? `${esc(vaultBook)} 설교가 보관함에 없습니다.` : '보관함을 불러오지 못했습니다.');
     list.innerHTML = `<div class="empty">${q ? '검색 결과가 없습니다.' : emptyMsg}</div>`;
     return;
   }
-  list.innerHTML = filtered.map((x, i) => tab === 'sermon' ? sermonCard(x, i) : dailyCard(x, i)).join('');
+  list.innerHTML = filtered.map((x, i) =>
+    tab === 'sermon' ? sermonCard(x, i) : tab === 'daily' ? dailyCard(x, i) : vaultCard(x, i)).join('');
   list.querySelectorAll('.card').forEach(el => {
     el.addEventListener('click', () => el.classList.toggle('open'));
   });
 }
 
-document.getElementById('tabSermon').addEventListener('click', () => {
-  tab = 'sermon';
-  document.getElementById('tabSermon').classList.add('active');
-  document.getElementById('tabDaily').classList.remove('active');
-  render();
-});
-document.getElementById('tabDaily').addEventListener('click', () => {
-  tab = 'daily';
-  document.getElementById('tabDaily').classList.add('active');
-  document.getElementById('tabSermon').classList.remove('active');
-  render();
+const TABS = { sermon: 'tabSermon', daily: 'tabDaily', vault: 'tabVault' };
+Object.keys(TABS).forEach(name => {
+  document.getElementById(TABS[name]).addEventListener('click', () => {
+    tab = name;
+    Object.keys(TABS).forEach(n => {
+      document.getElementById(TABS[n]).classList.toggle('active', n === name);
+    });
+    render();
+  });
 });
 function renderCats(books, current) {
   const wrap = document.getElementById('sermonCats');
@@ -241,7 +277,8 @@ function renderCats(books, current) {
   wrap.querySelectorAll('.cat').forEach(btn => {
     btn.addEventListener('click', () => {
       if (tab === 'sermon') sermonBook = btn.dataset.book;
-      else dailyBook = btn.dataset.book;
+      else if (tab === 'daily') dailyBook = btn.dataset.book;
+      else vaultBook = btn.dataset.book;
       render();
     });
   });
