@@ -1,0 +1,521 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>오늘의 말씀 · 어린이 — 동산감리교회</title>
+<meta name="theme-color" content="#4aa3df">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#4aa3df;--sky2:#7fc4f0;--sun:#ffc93c;--grass:#6fc36f;--berry:#ff8a8a;--grape:#a98ada;
+  --bg:#f2f9ff;--card:#ffffff;--line:#dfeef9;--tx:#2f4256;--tx2:#5b7186;--tx3:#93a7ba;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Gowun Dodum','Noto Sans KR',sans-serif;background:var(--bg);color:var(--tx);
+  line-height:1.75;word-break:keep-all;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+a{color:inherit;text-decoration:none}
+
+header{position:sticky;top:0;z-index:50;background:linear-gradient(135deg,var(--sky),var(--sky2));
+  color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px}
+header .mark{width:38px;height:38px;border-radius:14px;background:rgba(255,255,255,.25);display:flex;
+  align-items:center;justify-content:center;font-size:20px;flex:none}
+header h1{font-size:18px;font-weight:700}
+header .sub{font-size:11px;opacity:.9}
+header .who{margin-left:auto;background:rgba(255,255,255,.25);padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer}
+
+.pg{display:none;padding:14px}
+.pg.on{display:block}
+.card{background:var(--card);border-radius:22px;padding:18px;margin-bottom:14px;box-shadow:0 4px 14px rgba(74,163,223,.12)}
+.step{display:inline-block;background:var(--sky);color:#fff;font-size:12px;font-weight:700;
+  padding:3px 12px;border-radius:999px;margin-bottom:10px}
+.step.y{background:var(--sun);color:#5a4200}
+.step.g{background:var(--grass)}
+.step.p{background:var(--grape)}
+.step.r{background:var(--berry)}
+
+.today-hero{background:linear-gradient(160deg,#ffe9a8,#ffd166);border-radius:26px;padding:22px 18px;text-align:center;margin-bottom:14px}
+.today-hero .emo{font-size:60px;line-height:1}
+.today-hero .ttl{font-size:22px;font-weight:700;color:#6b4f00;margin-top:6px}
+.today-hero .ps{font-size:14px;color:#8a6a1a;margin-top:4px}
+.today-hero .dt{font-size:12px;color:#a98422;margin-top:8px}
+
+.keyverse{background:#f7fbff;border:2px dashed var(--sky2);border-radius:18px;padding:16px;text-align:center}
+.keyverse .t{font-size:20px;line-height:1.9;font-weight:700;color:var(--tx)}
+.keyverse .r{font-size:13px;color:var(--sky);margin-top:8px;font-weight:700}
+
+.story{font-size:18px;line-height:2;color:var(--tx2)}
+.full{display:none;margin-top:12px;background:#f7fbff;border-radius:14px;padding:14px;font-size:16px;line-height:2;color:var(--tx2)}
+.vn{display:inline-block;color:var(--sky);font-weight:700;font-size:13px;margin-right:3px}
+
+.big{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:18px;border:none;
+  border-radius:18px;font-family:inherit;font-size:19px;font-weight:700;cursor:pointer;transition:transform .12s}
+.big:active{transform:scale(.97)}
+.b-sky{background:var(--sky);color:#fff}
+.b-sun{background:var(--sun);color:#5a4200}
+.b-grass{background:var(--grass);color:#fff}
+.b-soft{background:#eef6fd;color:var(--tx2);font-size:16px;padding:15px}
+.b-done{background:#e8f6e8;color:#3f8a3f;border:2px solid var(--grass)}
+.row{display:flex;gap:10px;margin-top:10px}
+.row .big{margin:0}
+
+.quiz-q{font-size:19px;font-weight:700;margin-bottom:12px}
+.choice{display:block;width:100%;text-align:left;background:#f7fbff;border:2px solid var(--line);border-radius:16px;
+  padding:15px;font-family:inherit;font-size:17px;margin-bottom:9px;cursor:pointer;color:var(--tx)}
+.choice.ok{background:#e8f6e8;border-color:var(--grass);color:#2f6b2f;font-weight:700}
+.choice.no{background:#ffeef0;border-color:var(--berry);color:#a34a4a}
+.quiz-msg{font-size:16px;font-weight:700;margin-top:8px;text-align:center}
+
+.mission{display:flex;align-items:center;gap:12px;background:#fff8e6;border-radius:16px;padding:16px}
+.mission .em{font-size:30px}
+.mission .tx{font-size:17px;font-weight:700;color:#6b4f00}
+
+.moods{display:flex;gap:8px;margin:10px 0}
+.moods button{flex:1;background:#f7fbff;border:2px solid var(--line);border-radius:16px;padding:11px 4px;
+  font-size:26px;cursor:pointer}
+.moods button.on{background:#fff3cd;border-color:var(--sun);transform:scale(1.05)}
+textarea,input,select{width:100%;font-family:inherit;font-size:17px;padding:14px;border:2px solid var(--line);
+  border-radius:16px;background:#fff;color:var(--tx);outline:none}
+textarea{min-height:80px;resize:vertical}
+label.f{display:block;font-size:13px;color:var(--tx3);margin:12px 0 6px}
+
+.stars{display:flex;align-items:center;gap:6px;justify-content:center;font-size:30px;margin:6px 0}
+.starbox{text-align:center}
+.starbox .n{font-size:34px;font-weight:900;color:var(--sun)}
+.starbox .l{font-size:13px;color:var(--tx3)}
+
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal .h{text-align:center;font-size:12px;color:var(--tx3);padding-bottom:4px}
+.cal .d{aspect-ratio:1;border-radius:14px;background:#f2f8fd;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;font-size:12px;color:var(--tx3)}
+.cal .d.on{background:#fff3cd;color:#7a5b00;font-weight:700}
+.cal .d .s{font-size:19px;line-height:1}
+.cal .d.today{box-shadow:0 0 0 3px var(--sky2)}
+
+.friend{display:flex;gap:10px;padding:14px 0;border-bottom:1px solid var(--line)}
+.friend:last-child{border-bottom:none}
+.fav{width:42px;height:42px;border-radius:50%;background:#fff3cd;display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex:none}
+.fname{font-size:16px;font-weight:700}
+.ftime{font-size:12px;color:var(--tx3)}
+.ftext{font-size:17px;color:var(--tx2);margin-top:4px;white-space:pre-wrap}
+.clap{margin-top:8px;background:#f7fbff;border:2px solid var(--line);border-radius:999px;padding:7px 16px;
+  font-size:15px;font-family:inherit;cursor:pointer;color:var(--tx2)}
+.clap.on{background:var(--sun);border-color:var(--sun);color:#5a4200;font-weight:700}
+.empty{text-align:center;color:var(--tx3);font-size:16px;padding:36px 10px}
+.tagk{display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;background:#eaf6ea;color:#4c7c3a;margin-left:6px}
+
+nav{position:fixed;left:0;right:0;bottom:0;z-index:60;background:#fff;border-top:2px solid var(--line);
+  display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:none;padding:10px 2px 12px;font-family:inherit;font-size:12px;color:var(--tx3);cursor:pointer}
+nav button .i{display:block;font-size:24px;margin-bottom:2px}
+nav button.on{color:var(--sky);font-weight:700}
+
+@keyframes pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+.pop{animation:pop .45s ease}
+.stamp{position:fixed;inset:0;background:rgba(255,255,255,.9);display:none;align-items:center;justify-content:center;
+  z-index:200;flex-direction:column;text-align:center;padding:24px}
+.stamp.on{display:flex}
+.stamp .big-emo{font-size:96px;animation:pop .5s ease}
+.stamp .msg{font-size:24px;font-weight:700;margin-top:12px;color:var(--sky)}
+.stamp .sub{font-size:16px;color:var(--tx2);margin-top:6px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="mark">🕊️</div>
+  <div><h1>오늘의 말씀</h1><div class="sub">동산감리교회 어린이</div></div>
+  <div class="who" id="who" onclick="go('parent')">이름 정하기</div>
+</header>
+
+<!-- ===== 오늘 ===== -->
+<div class="pg on" id="pg-today">
+  <div class="today-hero" id="hero"></div>
+
+  <div class="card">
+    <div class="step">1단계 · 말씀 읽기</div>
+    <div class="keyverse" id="keyVerse"></div>
+    <div class="row">
+      <button class="big b-soft" onclick="readAloud()">🔊 읽어 주기</button>
+      <button class="big b-soft" onclick="toggleFull()">📖 전체 보기</button>
+    </div>
+    <div class="full" id="fullText">말씀을 가져오는 중이에요…</div>
+  </div>
+
+  <div class="card">
+    <div class="step y">2단계 · 무슨 이야기일까?</div>
+    <div class="story" id="story"></div>
+  </div>
+
+  <div class="card" id="quizCard">
+    <div class="step g">3단계 · 말씀 퀴즈</div>
+    <div class="quiz-q" id="quizQ"></div>
+    <div id="quizC"></div>
+    <div class="quiz-msg" id="quizMsg"></div>
+  </div>
+
+  <div class="card">
+    <div class="step p">4단계 · 오늘의 미션</div>
+    <div class="mission"><div class="em">🎯</div><div class="tx" id="missionTx"></div></div>
+    <button class="big b-sun" id="missionBtn" style="margin-top:12px" onclick="doMission()">미션 했어요!</button>
+  </div>
+
+  <div class="card">
+    <div class="step r">5단계 · 내 마음 나누기</div>
+    <div style="font-size:16px;color:var(--tx2)">오늘 내 마음은 어때요?</div>
+    <div class="moods" id="moods"></div>
+    <textarea id="kidShare" placeholder="오늘 말씀에서 느낀 것을 한 줄로 써 보아요."></textarea>
+    <button class="big b-sky" style="margin-top:10px" onclick="postKidShare()">친구들에게 보내기</button>
+  </div>
+
+  <div class="card" style="text-align:center">
+    <div class="step">마지막 · 도장 찍기</div>
+    <div class="stars" id="todayStars"></div>
+    <button class="big b-grass" id="stampBtn" onclick="doStamp()">오늘 말씀 읽었어요! 🖐️</button>
+    <button class="big b-soft" style="margin-top:10px" onclick="parentCheck()">👨‍👩‍👧 부모님 확인</button>
+    <div style="font-size:13px;color:var(--tx3);margin-top:10px" id="parentState"></div>
+  </div>
+</div>
+
+<!-- ===== 스티커판 ===== -->
+<div class="pg" id="pg-board">
+  <div class="card">
+    <div class="starbox"><div class="n" id="totalStars">0</div><div class="l">모은 별</div></div>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <div class="starbox" style="flex:1"><div class="n" id="totalDays" style="color:var(--grass)">0</div><div class="l">말씀 읽은 날</div></div>
+      <div class="starbox" style="flex:1"><div class="n" id="streakDays" style="color:var(--berry)">0</div><div class="l">연속 읽기</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="step y" id="boardMonth">이번 달 스티커판</div>
+    <div style="display:flex;gap:8px;margin:8px 0 12px">
+      <button class="big b-soft" onclick="moveMonth(-1)">◀ 지난달</button>
+      <button class="big b-soft" onclick="moveMonth(1)">다음달 ▶</button>
+    </div>
+    <div class="cal" id="cal"></div>
+  </div>
+  <div class="card">
+    <div class="step g">받은 배지</div>
+    <div id="badges" style="font-size:17px;line-height:2.2"></div>
+  </div>
+</div>
+
+<!-- ===== 친구들 ===== -->
+<div class="pg" id="pg-friends">
+  <div class="card">
+    <div class="step">오늘 친구들의 나눔 <span id="fcnt" style="font-weight:400"></span></div>
+    <div id="friendList"></div>
+  </div>
+</div>
+
+<!-- ===== 부모님 ===== -->
+<div class="pg" id="pg-parent">
+  <div class="card">
+    <div class="step p">아이 정보</div>
+    <label class="f">이름</label>
+    <input id="nameInput" placeholder="예) 김소망" maxlength="12">
+    <label class="f">글자 크기</label>
+    <select id="fontSel" onchange="setFontAbs(this.value)">
+      <option value="17">보통</option><option value="20">크게</option><option value="24">아주 크게</option>
+    </select>
+    <button class="big b-sky" style="margin-top:12px" onclick="saveProfile()">저장하기</button>
+  </div>
+  <div class="card">
+    <div class="step">이번 주 읽은 날</div>
+    <div id="weekRow" style="font-size:17px;line-height:2.2"></div>
+    <div style="font-size:13px;color:var(--tx3);margin-top:8px" id="modeInfo"></div>
+  </div>
+  <div class="card">
+    <div class="step g">부모님을 위한 안내</div>
+    <div style="font-size:15px;color:var(--tx2);line-height:1.95">
+      · 하루 5분이면 충분합니다. 읽기 → 퀴즈 → 미션 → 도장 순서로 진행해 주세요.<br>
+      · 아이가 도장을 찍으면 교회 <b>말씀 나눔</b>에 함께 표시됩니다.<br>
+      · “읽어 주기”를 누르면 말씀을 소리로 들려줍니다.<br>
+      · 미션은 가정에서 함께 해 주실 때 가장 큰 열매를 맺습니다.
+    </div>
+    <div class="row" style="margin-top:12px">
+      <a class="big b-soft" href="word-adult.html">🙏 성인용 앱</a>
+      <a class="big b-soft" href="index.html">⛪ 교회 홈</a>
+    </div>
+  </div>
+</div>
+
+<div class="stamp" id="stampOv" onclick="this.classList.remove('on')">
+  <div class="big-emo" id="stampEmo">🌟</div>
+  <div class="msg" id="stampMsg">참 잘했어요!</div>
+  <div class="sub" id="stampSub"></div>
+</div>
+
+<nav>
+  <button class="on" onclick="go('today',this)"><span class="i">📖</span>오늘</button>
+  <button onclick="go('board',this)"><span class="i">🌟</span>스티커판</button>
+  <button onclick="go('friends',this)"><span class="i">🧒</span>친구들</button>
+  <button onclick="go('parent',this)"><span class="i">👨‍👩‍👧</span>부모님</button>
+</nav>
+
+<script src="word-data.js"></script>
+<script src="word-core.js"></script>
+<script>
+var VER='kids';
+var viewDate=WordData.today();
+var viewMonth=viewDate.slice(0,7);
+var me=WordUser.get();
+var feedCache={confirms:[],shares:[]};
+var MOODS=['😀','🙂','😐','😢','😡'];
+var PENDING='dongsan_word_kidday';
+
+function go(p,btn){
+  document.querySelectorAll('.pg').forEach(function(e){e.classList.remove('on')});
+  document.getElementById('pg-'+p).classList.add('on');
+  if(btn){document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('on')});btn.classList.add('on')}
+  if(p==='board')renderBoard();
+  if(p==='friends')renderFriends();
+  if(p==='parent')renderParent();
+  window.scrollTo(0,0);
+}
+
+function day(){return WordData.forDate(viewDate,WordStore.custom())}
+
+/* 오늘의 진행 상태 (도장 전에는 임시 저장, 도장 후에는 확인기록에 합쳐짐) */
+function pend(){try{var p=JSON.parse(localStorage.getItem(PENDING))||{};return p.date===viewDate?p:{date:viewDate}}catch(e){return {date:viewDate}}}
+function setPend(o){var p=pend();Object.keys(o).forEach(function(k){p[k]=o[k]});localStorage.setItem(PENDING,JSON.stringify(p));return p}
+function myRec(){
+  var r=null;
+  WordStore.myConfirms(me.name,VER).forEach(function(c){if(c.date===viewDate)r=c});
+  return r;
+}
+function state(){
+  var r=myRec()||{},p=pend();
+  return {stamped:!!r.date,quizOk:!!(r.quizOk||p.quizOk),missionOk:!!(r.missionOk||p.missionOk),
+          mood:r.mood||p.mood||'',parent:r.parent||''};
+}
+function sync(o){
+  setPend(o);
+  if(myRec())WordStore.confirm(Object.assign({date:viewDate,name:me.name,ver:VER},o));
+}
+
+/* ---------- 오늘 ---------- */
+function renderToday(){
+  var d=day(),k=d.kids;
+  document.getElementById('hero').innerHTML=
+    '<div class="emo">'+k.emoji+'</div><div class="ttl">'+wEsc(d.title)+'</div>'+
+    '<div class="ps">'+wEsc(d.passage)+'</div>'+
+    '<div class="dt">'+viewDate.replace(/-/g,'.')+' ('+WordData.weekday(viewDate)+'요일)</div>';
+  document.getElementById('story').textContent=k.summary;
+  document.getElementById('missionTx').textContent=k.mission;
+  document.getElementById('keyVerse').innerHTML='<div class="t" id="kvText">말씀을 가져오는 중이에요…</div>'+
+    '<div class="r">'+wEsc(k.verseRef)+'</div>';
+  renderMoods();renderQuiz();renderProgress();applyFont();
+
+  WordBible.load().then(function(ok){
+    var kv=document.getElementById('kvText'),full=document.getElementById('fullText');
+    if(!ok){kv.textContent='성경책에서 '+k.verseRef+'을 펴서 읽어 보아요.';full.textContent='';return}
+    var one=WordBible.one(k.verseRef,true);
+    kv.textContent=one||('성경책에서 '+k.verseRef+'을 펴서 읽어 보아요.');
+    var vs=WordBible.verses(d.passage,true);
+    full.innerHTML=vs.length?vs.map(function(v){return '<span class="vn">'+v.v+'</span>'+wEsc(v.t)}).join(' '):'성경책에서 함께 읽어요.';
+  });
+}
+
+function renderMoods(){
+  var s=state();
+  document.getElementById('moods').innerHTML=MOODS.map(function(m){
+    return '<button class="'+(s.mood===m?'on':'')+'" onclick="pickMood(\''+m+'\')">'+m+'</button>'}).join('');
+}
+function pickMood(m){sync({mood:m});renderMoods()}
+
+function renderQuiz(){
+  var q=day().kids.quiz,s=state();
+  document.getElementById('quizQ').textContent=q.q;
+  document.getElementById('quizC').innerHTML=q.c.map(function(c,i){
+    var cls=s.quizOk&&i===q.a?'choice ok':'choice';
+    return '<button class="'+cls+'" onclick="answer('+i+')">'+wEsc(c)+'</button>'}).join('');
+  document.getElementById('quizMsg').textContent=s.quizOk?'⭐ 정답이에요! 참 잘했어요':'';
+}
+function answer(i){
+  var q=day().kids.quiz,btns=document.querySelectorAll('#quizC .choice');
+  if(i===q.a){
+    btns[i].className='choice ok';
+    document.getElementById('quizMsg').textContent='⭐ 정답이에요! 참 잘했어요';
+    if(!state().quizOk){sync({quizOk:true});celebrate('⭐','정답이에요!','별 하나를 받았어요')}
+    renderProgress();
+  }else{
+    btns[i].className='choice no';
+    document.getElementById('quizMsg').textContent='조금만 더 생각해 볼까요? 말씀을 다시 읽어 보아요';
+    setTimeout(function(){btns[i].className='choice'},1200);
+  }
+}
+
+function doMission(){
+  if(state().missionOk){wToast('이미 미션을 마쳤어요 👏');return}
+  sync({missionOk:true});celebrate('🎯','미션 완료!','별 하나를 받았어요');renderProgress();
+}
+
+function doStamp(){
+  if(!me.name){go('parent');wToast('먼저 이름을 정해 주세요');return}
+  if(viewDate>WordData.today()){wToast('아직 오지 않은 날이에요');return}
+  if(state().stamped){wToast('오늘은 이미 도장을 찍었어요 🌟');return}
+  var p=pend();
+  WordStore.confirm({date:viewDate,name:me.name,ver:VER,quizOk:!!p.quizOk,missionOk:!!p.missionOk,mood:p.mood||''})
+    .then(function(){
+      var st=wordStreak(me.name,VER);
+      celebrate(day().kids.emoji,'도장 꾹! 참 잘했어요','연속 '+st.days+'일째 말씀을 읽었어요');
+      renderProgress();loadFeed();
+    });
+}
+
+function parentCheck(){
+  if(!state().stamped){wToast('먼저 도장을 찍어 주세요 🖐️');return}
+  var n=prompt('확인하신 부모님 성함을 적어 주세요');
+  if(!n)return;
+  WordStore.confirm({date:viewDate,name:me.name,ver:VER,parent:n.trim()}).then(function(){
+    wToast('부모님 확인이 기록되었어요');renderProgress();
+  });
+}
+
+function renderProgress(){
+  var s=state(),n=(s.stamped?1:0)+(s.quizOk?1:0)+(s.missionOk?1:0);
+  document.getElementById('todayStars').innerHTML=[0,1,2].map(function(i){
+    return '<span class="'+(i<n?'pop':'')+'" style="opacity:'+(i<n?1:.25)+'">⭐</span>'}).join('');
+  var b=document.getElementById('stampBtn');
+  b.className=s.stamped?'big b-done':'big b-grass';
+  b.textContent=s.stamped?'✓ 오늘 도장을 찍었어요':'오늘 말씀 읽었어요! 🖐️';
+  var mb=document.getElementById('missionBtn');
+  mb.className=s.missionOk?'big b-done':'big b-sun';
+  mb.textContent=s.missionOk?'✓ 미션을 마쳤어요':'미션 했어요!';
+  document.getElementById('parentState').textContent=s.parent?'👨‍👩‍👧 '+s.parent+' 님이 확인하셨어요':'';
+}
+
+function celebrate(emo,msg,sub){
+  document.getElementById('stampEmo').textContent=emo;
+  document.getElementById('stampMsg').textContent=msg;
+  document.getElementById('stampSub').textContent=sub||'';
+  var ov=document.getElementById('stampOv');ov.classList.add('on');
+  setTimeout(function(){ov.classList.remove('on')},1800);
+}
+
+function toggleFull(){
+  var f=document.getElementById('fullText');
+  f.style.display=f.style.display==='block'?'none':'block';
+}
+function readAloud(){
+  if(WordVoice.playing){WordVoice.stop();wToast('그만 읽을게요');return}
+  var d=day(),kv=document.getElementById('kvText').textContent;
+  WordVoice.speak(d.title+'. '+kv+' '+d.kids.summary);
+  wToast('말씀을 읽어 드릴게요 🔊');
+}
+
+function postKidShare(){
+  var el=document.getElementById('kidShare'),t=el.value.trim(),s=state();
+  if(!me.name){go('parent');wToast('먼저 이름을 정해 주세요');return}
+  if(!t){wToast('한 줄만 써 볼까요?');return}
+  WordStore.share({date:viewDate,name:me.name,ver:VER,text:(s.mood?s.mood+' ':'')+t}).then(function(){
+    el.value='';celebrate('💌','마음을 보냈어요','친구들 방에서 볼 수 있어요');loadFeed();
+  });
+}
+
+/* ---------- 친구들 ---------- */
+function loadFeed(cb){WordStore.feed(viewDate).then(function(f){feedCache=f;renderFriends();if(cb)cb()})}
+function renderFriends(){
+  var s=feedCache.shares.slice().sort(function(a,b){return b.ts-a.ts});
+  document.getElementById('fcnt').textContent=s.length?'('+s.length+')':'';
+  document.getElementById('friendList').innerHTML=s.length?s.map(function(x){
+    var claps=x.amens||[],on=me.name&&claps.indexOf(me.name)>=0;
+    return '<div class="friend"><div class="fav">'+(x.ver==='kids'?'🧒':'🙏')+'</div><div style="flex:1">'+
+      '<div class="fname">'+wEsc(x.name)+(x.ver==='kids'?'<span class="tagk">어린이</span>':'<span class="tagk">어른</span>')+'</div>'+
+      '<div class="ftime">'+timeAgo(x.ts)+'</div>'+
+      '<div class="ftext">'+wEsc(x.text)+'</div>'+
+      '<button class="clap'+(on?' on':'')+'" onclick="clap(\''+x.id+'\')">👏 잘했어요 '+(claps.length||'')+'</button>'+
+      '</div></div>';
+  }).join(''):'<div class="empty">아직 나눔이 없어요.<br>내가 먼저 마음을 나눠 볼까요? 💌</div>';
+  applyFont();
+}
+function clap(id){
+  if(!me.name){go('parent');wToast('먼저 이름을 정해 주세요');return}
+  WordStore.amen(id,me.name).then(function(){loadFeed()});
+}
+function timeAgo(ts){
+  var s=Math.floor((Date.now()-(ts||0))/1000);
+  if(s<60)return '방금';
+  if(s<3600)return Math.floor(s/60)+'분 전';
+  if(s<86400)return Math.floor(s/3600)+'시간 전';
+  return new Date(ts).toLocaleDateString('ko-KR');
+}
+
+/* ---------- 스티커판 ---------- */
+function moveMonth(n){
+  var p=viewMonth.split('-'),d=new Date(Date.UTC(+p[0],+p[1]-1+n,1));
+  viewMonth=d.getUTCFullYear()+'-'+WordData.pad(d.getUTCMonth()+1);
+  renderBoard();
+}
+function renderBoard(){
+  var recs=me.name?WordStore.myConfirms(me.name,VER):[];
+  var map={},stars=0;
+  recs.forEach(function(c){map[c.date]=c;stars+=1+(c.quizOk?1:0)+(c.missionOk?1:0)});
+  var st=me.name?wordStreak(me.name,VER):{days:0,total:0};
+  document.getElementById('totalStars').textContent=stars;
+  document.getElementById('totalDays').textContent=st.total;
+  document.getElementById('streakDays').textContent=st.days;
+  document.getElementById('boardMonth').textContent=viewMonth.replace('-','년 ')+'월 스티커판';
+
+  var p=viewMonth.split('-'),y=+p[0],mo=+p[1];
+  var first=new Date(Date.UTC(y,mo-1,1)).getUTCDay(),last=new Date(Date.UTC(y,mo,0)).getUTCDate();
+  var html=['일','월','화','수','목','금','토'].map(function(w){return '<div class="h">'+w+'</div>'}).join('');
+  for(var i=0;i<first;i++)html+='<div></div>';
+  for(var d=1;d<=last;d++){
+    var ds=y+'-'+WordData.pad(mo)+'-'+WordData.pad(d),rec=map[ds];
+    var emo=rec?(WordData.forDate(ds,WordStore.custom()).kids.emoji):'';
+    html+='<div class="d'+(rec?' on':'')+(ds===WordData.today()?' today':'')+'" onclick="openDay(\''+ds+'\')">'+
+      (rec?'<div class="s">'+emo+'</div>':'')+d+'</div>';
+  }
+  document.getElementById('cal').innerHTML=html;
+
+  var badges=[];
+  if(st.total>=1)badges.push('🌱 첫 말씀 · 처음으로 말씀을 읽었어요');
+  if(st.days>=3)badges.push('🔥 3일 연속 · 꾸준한 어린이');
+  if(st.days>=7)badges.push('🏅 일주일 연속 · 말씀 지킴이');
+  if(st.total>=30)badges.push('👑 30일 · 말씀 왕관');
+  if(stars>=50)badges.push('🌟 별 50개 · 반짝반짝');
+  document.getElementById('badges').innerHTML=badges.length?badges.map(function(b){return '<div>'+b+'</div>'}).join(''):
+    '<div style="color:var(--tx3)">말씀을 읽으면 배지를 받을 수 있어요!</div>';
+}
+function openDay(ds){
+  if(ds>WordData.today()){wToast('아직 오지 않은 날이에요');return}
+  viewDate=ds;renderToday();loadFeed();
+  document.querySelectorAll('nav button').forEach(function(b,i){b.classList.toggle('on',i===0)});
+  go('today');
+}
+
+/* ---------- 부모님 ---------- */
+function renderParent(){
+  document.getElementById('nameInput').value=me.name||'';
+  document.getElementById('fontSel').value=String(me.kidFont||17);
+  var st=me.name?wordStreak(me.name,VER):{doneMap:{}};
+  var t=WordData.today(),rows='';
+  for(var i=6;i>=0;i--){
+    var ds=WordData.shift(t,-i);
+    rows+='<div>'+ds.slice(5).replace('-','월 ')+'일 ('+WordData.weekday(ds)+') · '+(st.doneMap&&st.doneMap[ds]?'✅ 읽었어요':'⬜ 아직이에요')+'</div>';
+  }
+  document.getElementById('weekRow').innerHTML=rows;
+  document.getElementById('modeInfo').textContent=WordStore.mode==='server'
+    ? '교회 서버에 연결되어 다른 성도들과 함께 기록됩니다.'
+    : '지금은 이 기기에만 기록이 저장됩니다.';
+}
+function saveProfile(){
+  var n=document.getElementById('nameInput').value.trim();
+  if(!n){wToast('이름을 적어 주세요');return}
+  me=WordUser.set({name:n});
+  document.getElementById('who').textContent=n;
+  wToast('반가워요, '+n+'!');renderProgress();renderFriends();
+}
+function setFontAbs(v){me=WordUser.set({kidFont:+v});applyFont()}
+function applyFont(){
+  var f=me.kidFont||17;
+  document.querySelectorAll('.story,.ftext').forEach(function(e){e.style.fontSize=f+'px'});
+  document.querySelectorAll('.keyverse .t').forEach(function(e){e.style.fontSize=(f+3)+'px'});
+}
+
+/* ---------- 시작 ---------- */
+document.getElementById('who').textContent=me.name||'이름 정하기';
+WordStore.init().then(function(){renderToday();loadFeed();applyFont()});
+</script>
+</body></html>

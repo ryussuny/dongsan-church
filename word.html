@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>오늘의 말씀 나눔 — 동산감리교회</title>
+<meta name="description" content="동산감리교회 성도들이 매일 같은 말씀을 읽고, 확인하고, 은혜를 나누는 앱입니다. 성인용과 어린이용 두 가지 버전.">
+<meta name="theme-color" content="#8f4531">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(170deg,#fbf3e7,#f4e6d3);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:28px 20px;color:#3a2e22;word-break:keep-all}
+.wrap{width:100%;max-width:440px}
+.top{text-align:center;margin-bottom:26px}
+.cross{font-size:34px;color:#c99a3f}
+h1{font-family:'Gowun Batang',serif;font-size:26px;margin:8px 0 4px}
+.sub{font-size:13px;color:#8a795f}
+.verse{font-family:'Gowun Batang',serif;font-size:14px;color:#6b5a45;margin-top:14px;line-height:1.9}
+.today{background:#fffaf2;border:1px solid #e6d3b4;border-radius:16px;padding:14px 16px;margin-bottom:16px;text-align:center}
+.today .d{font-size:11px;color:#9b8a72}
+.today .p{font-family:'Gowun Batang',serif;font-size:19px;font-weight:700;margin:4px 0 2px}
+.today .t{font-size:13px;color:#6b5a45}
+a.card{display:block;border-radius:20px;padding:20px;margin-bottom:12px;color:#fff;text-decoration:none;
+  box-shadow:0 6px 18px rgba(143,69,49,.16);transition:transform .15s}
+a.card:active{transform:scale(.98)}
+a.adult{background:linear-gradient(135deg,#b3593f,#8f4531)}
+a.kids{background:linear-gradient(135deg,#4aa3df,#7fc4f0)}
+.card .row{display:flex;align-items:center;gap:14px}
+.card .emo{font-size:38px}
+.card .ttl{font-size:19px;font-weight:700}
+.card .desc{font-size:12.5px;opacity:.92;margin-top:3px;line-height:1.7}
+.foot{text-align:center;font-size:11px;color:#9b8a72;margin-top:18px;line-height:1.9}
+.foot a{color:#8f4531;font-weight:700;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="cross">✝</div>
+    <h1>오늘의 말씀 나눔</h1>
+    <div class="sub">동산감리교회 · 하나님과 함께 이웃과 함께</div>
+    <div class="verse">“주의 말씀은 내 발에 등이요<br>내 길에 빛입니다” (시편 119:105)</div>
+  </div>
+
+  <div class="today" id="today"></div>
+
+  <a class="card adult" href="word-adult.html">
+    <div class="row"><div class="emo">🙏</div>
+      <div><div class="ttl">성인용</div>
+        <div class="desc">본문 전문 · 묵상 길잡이 · 읽음 확인 · 은혜 나눔<br>큰 글씨 지원</div></div></div>
+  </a>
+
+  <a class="card kids" href="word-kids.html">
+    <div class="row"><div class="emo">🧒</div>
+      <div><div class="ttl">어린이용</div>
+        <div class="desc">쉬운 말씀 · 읽어 주기 · 퀴즈와 미션<br>도장·스티커판</div></div></div>
+  </a>
+
+  <div class="foot">
+    강원도 태백시 계산4길 25 · 주일예배 오전 9:00 / 11:00<br>
+    <a href="index.html">교회 홈페이지</a> · <a href="archive.html">말씀 아카이브</a>
+  </div>
+</div>
+
+<script src="word-data.js"></script>
+<script>
+(function(){
+  var custom={};
+  try{custom=JSON.parse(localStorage.getItem('dongsan_word_custom'))||{}}catch(e){}
+  var d=WordData.forDate(WordData.today(),custom);
+  document.getElementById('today').innerHTML=
+    '<div class="d">'+d.date.replace(/-/g,'.')+' ('+WordData.weekday(d.date)+') 오늘의 말씀</div>'+
+    '<div class="p">'+d.passage+'</div><div class="t">'+d.title+'</div>';
+})();
+</script>
+</body></html>
