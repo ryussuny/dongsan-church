@@ -219,7 +219,12 @@ section{padding:6rem 0}
 .sermon-card:hover{transform:translateY(-4px);box-shadow:0 16px 36px rgba(15,27,51,.12);border-color:var(--brick2)}
 .sermon-date{font-size:.78rem;font-weight:700;color:var(--gold);letter-spacing:.03em;margin-bottom:.6rem}
 .sermon-title{font-family:'Gowun Batang',serif;font-size:1.12rem;font-weight:700;color:var(--text);line-height:1.5;margin-bottom:.5rem}
-.sermon-scripture{font-size:.85rem;color:var(--text3);margin-top:auto;padding-top:.8rem;border-top:1px dashed var(--border)}
+.sermon-scripture{font-size:.85rem;color:var(--text3);margin-top:auto;padding-top:.8rem;border-top:1px dashed var(--border);
+  display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap}
+.sermon-go{margin-left:auto;font-size:.82rem;font-weight:700;color:var(--brick2);white-space:nowrap}
+a.sermon-card{cursor:pointer;color:inherit}
+a.sermon-card:hover .sermon-go{color:var(--brick-deep)}
+a.sermon-card:focus-visible{outline:3px solid var(--brick2);outline-offset:3px}
 .sermon-empty{
   grid-column:1/-1;text-align:center;padding:2.6rem 1rem;color:var(--text3);
   background:var(--paper);border:1px dashed var(--border);border-radius:16px;font-size:.92rem;
@@ -904,13 +909,16 @@ function sermonEsc(t) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 function sermonCard(x) {
-  return '<div class="sermon-card">'
+  // 카드를 누르면 지난 말씀에서 그 설교가 펼쳐진 채로 열린다.
+  var href = 'archive.html?book=' + encodeURIComponent(x.book || '')
+           + '&s=' + encodeURIComponent(x.scripture || '');
+  return '<a class="sermon-card" href="' + href + '">'
     + '<div class="sermon-date">' + sermonEsc(x.series || x.book || '') + '</div>'
     + '<div class="sermon-title">' + sermonEsc(x.title || '') + '</div>'
     + (x.summary ? '<div class="sermon-summary">' + sermonEsc(x.summary) + '</div>' : '')
-    + (x.body ? '<div style="font-size:.82rem;color:var(--brick2);font-weight:700">지난 말씀 보기에서 전문 읽기 →</div>' : '')
-    + '<div class="sermon-scripture">📖 ' + sermonEsc(x.scripture || '') + '</div>'
-    + '</div>';
+    + '<div class="sermon-scripture">📖 ' + sermonEsc(x.scripture || '')
+    + '<span class="sermon-go">' + (x.body ? '전문 읽기' : '자세히') + ' →</span></div>'
+    + '</a>';
 }
 function renderSermonTabs() {
   var wrap = document.getElementById('sermonTabs');
