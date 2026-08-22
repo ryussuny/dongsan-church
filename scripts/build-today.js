@@ -27,16 +27,22 @@ const clean = t => String(t || '')
   .replace(/([가-힣,.\s"“”'’]|^)([a-z])(?=[가-힣])/g, '$1')
   .replace(/\s{2,}/g, ' ').trim();
 
+/* "사무엘상 3:19-4:11" 처럼 장을 넘어가는 본문도 읽는다 */
 function passageVerses(passage) {
   const r = WordData.parseRef(passage);
   if (!r) return { verses: [], missing: [] };
   const bk = BIBLE_DATA[r.book];
-  if (!bk || !bk.data || !bk.data[r.chapter]) return { verses: [], missing: [] };
-  const ch = bk.data[r.chapter], verses = [], missing = [];
-  for (let v = r.from; v <= r.to; v++) {
-    if (ch[String(v)]) verses.push({ v, t: clean(ch[String(v)]) });
-    else missing.push(v);
-  }
+  if (!bk || !bk.data) return { verses: [], missing: [] };
+  const multi = String(r.chapter) !== String(r.toChapter);
+  const verses = [], missing = [];
+  WordData.refSpans(r, bk).forEach(sp => {
+    const ch = bk.data[sp.chapter];
+    for (let v = sp.from; v <= sp.to; v++) {
+      const label = multi ? sp.chapter + ':' + v : v;
+      if (ch[String(v)]) verses.push({ v: label, t: clean(ch[String(v)]) });
+      else missing.push(label);
+    }
+  });
   return { verses, missing };
 }
 function oneVerse(ref) {

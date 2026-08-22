@@ -194,10 +194,14 @@ var WordBible=(function(){
     var r=WordData.parseRef(passage);
     if(!r||typeof BIBLE_DATA==='undefined')return [];
     var bk=BIBLE_DATA[r.book];
-    if(!bk||!bk.data||!bk.data[r.chapter])return [];
-    var ch=bk.data[r.chapter],out=[];
-    Object.keys(ch).map(Number).sort(function(a,b){return a-b}).forEach(function(v){
-      if(v>=r.from&&v<=r.to)out.push({v:v,t:doClean?clean(ch[v]):ch[v]});
+    if(!bk||!bk.data)return [];
+    var out=[],multi=String(r.chapter)!==String(r.toChapter||r.chapter);
+    WordData.refSpans(r,bk).forEach(function(sp){
+      var ch=bk.data[sp.chapter];
+      for(var v=sp.from;v<=sp.to;v++){
+        if(!ch[String(v)])continue;
+        out.push({v:multi?sp.chapter+':'+v:v,t:doClean?clean(ch[String(v)]):ch[String(v)]});
+      }
     });
     return out;
   }
@@ -206,9 +210,12 @@ var WordBible=(function(){
     var r=WordData.parseRef(passage);
     if(!r||typeof BIBLE_DATA==='undefined')return [];
     var bk=BIBLE_DATA[r.book];
-    if(!bk||!bk.data||!bk.data[r.chapter])return [];
-    var ch=bk.data[r.chapter],out=[];
-    for(var v=r.from;v<=r.to;v++)if(!ch[String(v)])out.push(v);
+    if(!bk||!bk.data)return [];
+    var out=[],multi=String(r.chapter)!==String(r.toChapter||r.chapter);
+    WordData.refSpans(r,bk).forEach(function(sp){
+      var ch=bk.data[sp.chapter];
+      for(var v=sp.from;v<=sp.to;v++)if(!ch[String(v)])out.push(multi?sp.chapter+':'+v:v);
+    });
     return out;
   }
   function one(ref,doClean){
