@@ -817,6 +817,27 @@ function loadHomepageContent() {
 }
 // [publish-homepage.js] 정적 배포본: 자동 갱신 비활성화 — loadHomepageContent();
 
+// 매일 아침 5시에 자동 게시되는 word-today.json 을 읽어 카드를 채운다 (실패하면 조용히 숨김)
+function loadTodayWordStatic() {
+  return fetch('word-today.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      var card = document.getElementById('todayCard');
+      if (!card) return;
+      if (!d || !d.passage) { card.classList.remove('show'); return; }
+      document.getElementById('todayTitle').textContent = d.title || '오늘의 말씀';
+      document.getElementById('todayPassage').textContent =
+        d.passage + (d.date ? '  ·  ' + d.date.replace(/-/g, '.') + ' (' + d.weekday + ')' : '');
+      document.getElementById('todayScripture').textContent = d.verseSnippet || '';
+      card.style.cursor = 'pointer';
+      card.title = '오늘의 말씀 전체 보기';
+      card.onclick = function () { location.href = 'today.html'; };
+      card.classList.add('show');
+    })
+    .catch(function () {});
+}
+loadTodayWordStatic();
+
 // ===== 담임목사 인사말 사진 — photos/담임목사/인사말.jpg =====
 (function () {
   const box = document.getElementById('pastorPhoto');
