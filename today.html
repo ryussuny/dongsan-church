@@ -1,6 +1,13 @@
 <!DOCTYPE html><html lang="ko"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="favicon.png" type="image/png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="동산 말씀">
+<meta name="mobile-web-app-capable" content="yes">
 <title>오늘의 말씀 · 2026.08.22 — 동산감리교회</title>
 <meta name="description" content="열왕기하 4:1-7 있는 것으로 시작하십시오 — 동산감리교회 오늘의 말씀">
 <meta property="og:title" content="오늘의 말씀 · 열왕기하 4:1-7">
@@ -130,6 +137,14 @@ function copyToday(){
   var t=document.createElement('textarea');t.value=SHARE;document.body.appendChild(t);t.select();
   try{document.execCommand('copy');alert('복사했습니다.')}catch(e){}
   document.body.removeChild(t);
+}
+</script>
+<script>
+/* 앱처럼 쓰기 — 홈 화면에 추가하면 주소창 없이 열린다 */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
 }
 </script>
 </body></html>

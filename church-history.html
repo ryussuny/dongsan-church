@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="favicon.png" type="image/png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="동산 말씀">
+<meta name="mobile-web-app-capable" content="yes">
 <title>교회 역사 — 동산감리교회</title>
 <meta name="description" content="1981년 개척부터 오늘까지, 동산감리교회 45년의 발자취. 2026년 창립 45주년을 맞았습니다.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -239,6 +246,14 @@ const io = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('on'); });
 }, { threshold: .08 });
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+<script>
+/* 앱처럼 쓰기 — 홈 화면에 추가하면 주소창 없이 열린다 */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
 </script>
 </body>
 </html>

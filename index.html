@@ -1,6 +1,13 @@
 <!DOCTYPE html><html lang="ko"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="favicon.png" type="image/png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="동산 말씀">
+<meta name="mobile-web-app-capable" content="yes">
 <title>동산감리교회 — 하나님과 함께 이웃과 함께</title>
 <meta name="description" content="강원도 태백시 동산감리교회. 담임목사 류선희. 주일예배 오전 11시. 하나님의 기쁨, 사람들의 행복, 세상의 빛이 되는 교회입니다.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -962,4 +969,12 @@ loadSermons();
 </script>
 
 
+<script>
+/* 앱처럼 쓰기 — 홈 화면에 추가하면 주소창 없이 열린다 */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script>
 </body></html>

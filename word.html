@@ -1,6 +1,13 @@
 <!DOCTYPE html><html lang="ko"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="favicon.png" type="image/png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="동산 말씀">
+<meta name="mobile-web-app-capable" content="yes">
 <title>오늘의 말씀 나눔 — 동산감리교회</title>
 <meta name="description" content="동산감리교회 성도들이 매일 같은 말씀을 읽고, 확인하고, 은혜를 나누는 앱입니다. 성인용과 어린이용 두 가지 버전.">
 <meta name="theme-color" content="#8f4531">
@@ -73,5 +80,13 @@ a.kids{background:linear-gradient(135deg,#4aa3df,#7fc4f0)}
     '<div class="d">'+d.date.replace(/-/g,'.')+' ('+WordData.weekday(d.date)+') 오늘의 말씀</div>'+
     '<div class="p">'+d.passage+'</div><div class="t">'+d.title+'</div>';
 })();
+</script>
+<script>
+/* 앱처럼 쓰기 — 홈 화면에 추가하면 주소창 없이 열린다 */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
 </script>
 </body></html>
