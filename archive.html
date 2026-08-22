@@ -61,6 +61,14 @@ nav{position:sticky;top:0;z-index:300;background:rgba(251,243,231,.96);backdrop-
 .card-body h4{font-size:.82rem;color:var(--moss2);font-weight:700;margin:.9rem 0 .4rem}
 .card-body h4:first-child{margin-top:0}
 .card-body ul{padding-left:1.2rem}
+.bible{background:var(--warm);border:1px solid var(--border);border-left:3px solid var(--moss);
+  border-radius:10px;padding:.9rem 1.05rem;margin:.2rem 0 .4rem}
+.bible p{margin:0 0 .45rem;color:var(--text);line-height:1.95;text-indent:-1.35rem;padding-left:1.35rem}
+.bible p:last-child{margin-bottom:0}
+.bible .vn{color:var(--moss2);font-weight:700;font-size:.78em;margin-right:.3rem;vertical-align:.08em}
+.bible .src{display:block;margin-top:.7rem;padding-top:.55rem;border-top:1px dotted var(--border);
+  font-size:.76rem;color:var(--text3);text-indent:0;padding-left:0}
+.bible .gap{font-size:.78rem;color:var(--text3)}
 .card-body li{margin-bottom:.35rem}
 .empty{text-align:center;color:var(--text3);padding:3rem 1rem;font-size:.92rem;line-height:1.9}
 .cats{display:flex;gap:.5rem;flex-wrap:wrap;margin:.9rem 0 .2rem}
@@ -107,6 +115,7 @@ nav{position:sticky;top:0;z-index:300;background:rgba(251,243,231,.96);backdrop-
 // 설교는 sermons.json(담임목사가 올린 말씀 요약),
 // 오늘의 말씀은 word-today.json(매일 아침 5시 자동 게시)에서 읽어 온다.
 let sermons = [];
+let bible = { verses: {}, version: '개역개정', source: '대한성서공회' };
 let dailywords = [];
 let tab = 'sermon';
 let sermonBook = '';
@@ -124,6 +133,13 @@ async function loadData() {
       : [...new Set(sermons.map(x => x.book))];
     sermonBook = sermonBooks[0] || '';
   } catch (e) { sermons = []; sermonBooks = []; }
+
+  // 설교 본문 성경 구절 — scripts/build-sermon-verses.js 가 개역개정에서 뽑아 둔 것
+  try {
+    const r = await fetch('sermon-verses.json', { cache: 'no-store' });
+    const d = r.ok ? await r.json() : null;
+    if (d && d.verses) bible = d;
+  } catch (e) {}
 
   try {
     const r = await fetch('word-archive.json', { cache: 'no-store' });
@@ -173,6 +189,20 @@ function applyQuery() {
 
 function esc(s) { return String(s || '').replace(/</g, '&lt;'); }
 
+// 설교 본문을 성경 그대로 — 없으면 아무것도 그리지 않는다
+function bibleBlock(ref) {
+  const got = bible.verses && bible.verses[ref];
+  const vs = Array.isArray(got) ? got : (got && got.v);
+  const missing = (got && got.missing) || [];
+  if (!vs || !vs.length) return '';
+  const many = vs.some((v, i) => i && v.c !== vs[i - 1].c);   // 장이 바뀌면 장:절 로 적는다
+  return `<h4>성경 본문</h4><div class="bible">`
+    + vs.map(v => `<p><span class="vn">${many ? v.c + ':' + v.v : v.v}</span>${esc(v.t)}</p>`).join('')
+    + (missing.length ? `<p class="gap">📌 ${esc(missing.join(', '))} 절이 홈페이지에 실린 본문 파일에 빠져 있습니다. 성경책에서 펴서 읽어 주세요.</p>` : '')
+    + `<span class="src">${esc(ref)} · ${esc(bible.version || '개역개정')} — ${esc(bible.source || '대한성서공회')}</span>`
+    + `</div>`;
+}
+
 function sermonCard(s, i) {
   const points = (s.keyPoints || []).filter(Boolean);
   return `<div class="card" data-i="${i}" data-scripture="${esc(s.scripture || '')}">
@@ -182,6 +212,7 @@ function sermonCard(s, i) {
     <div class="card-title">${esc(s.title || '제목 없음')}</div>
     <div class="card-scripture">📖 ${esc(s.scripture) || '본문 미기재'}</div>
     <div class="card-body">
+      ${bibleBlock(s.scripture)}
       ${s.body ? `<h4>말씀</h4>${s.body.split(/\n{2,}/).map(t => `<p>${esc(t)}</p>`).join('')}` : ''}
       ${points.length ? `<h4>말씀의 흐름</h4><ul>${points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
       ${s.conclusion ? `<h4>맺는 말씀</h4><p>${esc(s.conclusion)}</p>` : ''}

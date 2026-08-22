@@ -159,7 +159,7 @@ details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
   </div>
 
   <div class="card">
-    <div class="st">📖 오늘의 본문 <span class="r">새번역</span></div>
+    <div class="st">📖 오늘의 본문 <span class="r">개역개정</span></div>
     <div class="verse">${verses.length
       ? verses.map(v => `<span class="vn">${v.v}</span>${esc(v.t)}`).join(' ')
       : `<span style="color:var(--text3)">${esc(day.passage)} 본문을 성경책에서 펴서 읽어 주세요.</span>`}</div>
