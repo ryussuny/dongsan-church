@@ -36,16 +36,21 @@ const clean = t => String(t || '')
   .replace(/([가-힣,.\s"“”'’]|^)([a-z])(?=[가-힣])/g, '$1')
   .replace(/\s{2,}/g, ' ').trim();
 
+/* 장을 넘어가는 본문("사무엘상 3:19-4:11")도 읽는다 */
 function passageText(passage) {
   const r = WordData.parseRef(passage);
   if (!r) return { text: '', missing: [] };
   const bk = BIBLE_DATA[r.book];
-  if (!bk || !bk.data || !bk.data[r.chapter]) return { text: '', missing: [] };
-  const ch = bk.data[r.chapter], parts = [], missing = [];
-  for (let v = r.from; v <= r.to; v++) {
-    if (ch[String(v)]) parts.push(clean(ch[String(v)]));
-    else missing.push(v);
-  }
+  if (!bk || !bk.data) return { text: '', missing: [] };
+  const multi = String(r.chapter) !== String(r.toChapter);
+  const parts = [], missing = [];
+  WordData.refSpans(r, bk).forEach(sp => {
+    const ch = bk.data[sp.chapter];
+    for (let v = sp.from; v <= sp.to; v++) {
+      if (ch[String(v)]) parts.push(clean(ch[String(v)]));
+      else missing.push(multi ? sp.chapter + ':' + v : v);
+    }
+  });
   return { text: parts.join(' '), missing };
 }
 
