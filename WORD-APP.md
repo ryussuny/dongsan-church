@@ -284,3 +284,36 @@ POST /api/word/amen                    {id,name}
    → `sermons-archive.enc` 만 add 한다.
 
 두 번째 문제 덕분에 첫 번째 문제가 커밋되지 않았다.
+
+## 설교 보관함·잠금장치 삭제 · 관리자 비밀번호 정리 (2026-08-22)
+
+### 보관함을 없앴다
+
+목사님 요청으로 설교 보관함과 암호 잠금을 통째로 걷어냈다.
+
+- `vault.html` — 삭제
+- `scripts/lock-archive.js` · `.github/workflows/lock-archive.yml` — 삭제
+- `scripts/build-sermon-archive.js` — 삭제
+- `archive.html` 의 보관함 카드 — 삭제
+- `.gitignore` — 보관함 원본만 막던 파일이라 삭제
+
+**되살려야 할 때**: 지난 설교 69편은 git 기록에 그대로 있다.
+
+    git show e55da9c46d9249eae73520a0d5efae4f1b880e8d:sermons-archive.json > sermons-archive.json
+
+깃허브에 남아 있는 `ARCHIVE_PASSPHRASE` 시크릿은 이제 쓰지 않으므로 지워도 된다.
+(Settings 에서 Secrets and variables 에 있는 Actions 항목)
+
+### 관리자 비밀번호는 원래 동작하지 않았다
+
+홈 화면에 있던 두 버튼(오늘의 말씀 작성 / 예배시간·인사말·연락처 수정)은
+`/api/admin/verify` 로 비밀번호를 확인하고 `/api/dailywords` 로 저장하는 구조였다.
+그런데 이 저장소에는 **서버가 없다** (`.env`·`package.json`·서버 코드 모두 없음).
+GitHub Pages 정적 호스팅이라 `/api/…` 는 존재할 수 없다.
+
+즉 비밀번호를 무엇으로 넣든 "서버에 연결할 수 없습니다"만 떴다. 안내에 적혀 있던
+`.env` 의 `CHURCH_PASSWORD` 도 실재하지 않는 파일이다. 예전 서버 기반 홈페이지에서
+넘어온 잔재였다.
+
+그래서 눌러도 오류만 나는 버튼·모달·서버 호출 코드를 모두 걷어냈다.
+자주 바뀌는 정보(예배시간·인사말·연락처)는 지금처럼 이 파일에 직접 적어 게시한다.
