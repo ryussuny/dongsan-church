@@ -55,6 +55,9 @@ nav{position:sticky;top:0;z-index:300;background:rgba(251,243,231,.96);backdrop-
 .card-scripture{font-size:.86rem;color:var(--text3);margin-top:.3rem}
 .card-body{display:none;margin-top:1rem;padding-top:1rem;border-top:1px dashed var(--border);font-size:.92rem;color:var(--text2);line-height:1.8}
 .card.open .card-body{display:block}
+.card.just-opened{border-color:var(--brick2);box-shadow:0 0 0 3px rgba(47,77,133,.16);
+  animation:cardFlash 2.2s ease-out}
+@keyframes cardFlash{0%{background:#fdf6e6}100%{background:var(--white)}}
 .card-body h4{font-size:.82rem;color:var(--moss2);font-weight:700;margin:.9rem 0 .4rem}
 .card-body h4:first-child{margin-top:0}
 .card-body ul{padding-left:1.2rem}
@@ -151,14 +154,28 @@ async function loadData() {
   }
 
 
+  applyQuery();
   render();
+}
+
+// 주소에 book·s 가 있으면 그 성경 책 탭으로 맞춰 둔다.
+function applyQuery() {
+  const q = new URLSearchParams(location.search);
+  const book = q.get('book');
+  const sc = q.get('s');
+  if (book && sermonBooks.includes(book)) { tab = 'sermon'; sermonBook = book; }
+  if (sc) wanted = sc;
+  if (tab === 'sermon') {
+    document.getElementById('tabSermon').classList.add('active');
+    document.getElementById('tabDaily').classList.remove('active');
+  }
 }
 
 function esc(s) { return String(s || '').replace(/</g, '&lt;'); }
 
 function sermonCard(s, i) {
   const points = (s.keyPoints || []).filter(Boolean);
-  return `<div class="card" data-i="${i}">
+  return `<div class="card" data-i="${i}" data-scripture="${esc(s.scripture || '')}">
     <div class="card-top">
       <span class="card-date">${esc(s.series || s.book || '')}</span>
     </div>
@@ -223,6 +240,21 @@ function render() {
   list.querySelectorAll('.card').forEach(el => {
     el.addEventListener('click', () => el.classList.toggle('open'));
   });
+  openWanted();
+}
+
+// 홈에서 설교 카드를 누르고 오면 archive.html?book=…&s=… 로 들어온다.
+// 그 설교를 찾아 펼치고, 화면 가운데로 옮긴 뒤 잠깐 강조해 준다.
+let wanted = null;
+function openWanted() {
+  if (!wanted) return;
+  const el = [...document.querySelectorAll('#list .card')]
+    .find(c => c.dataset.scripture === wanted);
+  if (!el) return;
+  wanted = null;                       // 한 번만
+  el.classList.add('open', 'just-opened');
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  setTimeout(() => el.classList.remove('just-opened'), 2200);
 }
 
 const TABS = { sermon: 'tabSermon', daily: 'tabDaily' };
