@@ -650,7 +650,7 @@ var WordData=(function(){
   function today(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
   function dayIndex(ds){var p=String(ds).split('-');return Math.floor(Date.UTC(+p[0],+p[1]-1,+p[2])/MS)}
   function shift(ds,n){var d=new Date((dayIndex(ds)+n)*MS);return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate())}
-  function weekday(ds){return ['일','월','화','수','목','금','토'][new Date(dayIndex(ds)*MS).getUTCDay()]}
+  function weekday(ds){return ['주일','월','화','수','목','금','토'][new Date(dayIndex(ds)*MS).getUTCDay()]}
 
   /* "사무엘상 17:41-50"  → {book,chapter,from,toChapter,to}
      "사무엘상 3:19-4:11" 처럼 장을 넘어가는 것도 읽는다.
