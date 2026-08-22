@@ -334,7 +334,7 @@ function renderToday(){
   document.getElementById('questions').innerHTML=d.adult.questions.map(function(q,i){
     return '<div class="q"><b>'+(i+1)+'.</b><div>'+wEsc(q)+'</div></div>'}).join('');
   document.getElementById('prayer').textContent='🙏 '+d.adult.prayer;
-  document.getElementById('verSrc').textContent='새번역';
+  document.getElementById('verSrc').textContent='개역개정';
   renderVerses();
   refreshConfirmBtn();
   loadFeed();

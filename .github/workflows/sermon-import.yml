@@ -34,16 +34,19 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/import-sermons.js
 
+      - name: 설교 본문 성경 구절 뽑기
+        run: node scripts/build-sermon-verses.js
+
       - name: 등록 결과 게시
         run: |
           git config user.name  "동산교회 말씀봇"
           git config user.email "actions@github.com"
-          if git diff --quiet -- sermons.json; then
+          if git diff --quiet -- sermons.json sermon-verses.json; then
             echo "새로 등록된 설교 없음 — 게시 생략"
             exit 0
           fi
           COUNT=$(node -e "console.log(require('./sermons.json').sermons.length)")
-          git add sermons.json
+          git add sermons.json sermon-verses.json
           git commit -m "설교 자동 등록 (전체 ${COUNT}편)"
           for i in 1 2 3 4; do
             git pull --rebase origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME} && exit 0
