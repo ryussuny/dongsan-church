@@ -5,6 +5,8 @@
 <meta name="theme-color" content="#4aa3df">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
+.privnote{margin-top:8px;font-size:13px;color:var(--tx2);background:#fff8e1;border:1px solid #ffe6a3;
+  border-radius:10px;padding:8px 11px;line-height:1.6}
 :root{
   --sky:#4aa3df;--sky2:#7fc4f0;--sun:#ffc93c;--grass:#6fc36f;--berry:#ff8a8a;--grape:#a98ada;
   --bg:#f2f9ff;--card:#ffffff;--line:#dfeef9;--tx:#2f4256;--tx2:#5b7186;--tx3:#93a7ba;
@@ -164,7 +166,8 @@ nav button.on{color:var(--sky);font-weight:700}
     <div style="font-size:16px;color:var(--tx2)">오늘 내 마음은 어때요?</div>
     <div class="moods" id="moods"></div>
     <textarea id="kidShare" placeholder="오늘 말씀에서 느낀 것을 한 줄로 써 보아요."></textarea>
-    <button class="big b-sky" style="margin-top:10px" onclick="postKidShare()">친구들에게 보내기</button>
+    <button class="big b-sky" style="margin-top:10px" onclick="postKidShare()">보내기</button>
+    <div class="privnote">🔒 내가 쓴 글은 <b>목사님만</b> 보셔요. 홈페이지에 올라가지 않아요.</div>
   </div>
 
   <div class="card" style="text-align:center">
@@ -202,7 +205,7 @@ nav button.on{color:var(--sky);font-weight:700}
 <!-- ===== 친구들 ===== -->
 <div class="pg" id="pg-friends">
   <div class="card">
-    <div class="step">오늘 친구들의 나눔 <span id="fcnt" style="font-weight:400"></span></div>
+    <div class="step">오늘 교회 식구들의 나눔 <span id="fcnt" style="font-weight:400"></span></div>
     <div id="friendList"></div>
   </div>
 </div>
@@ -253,6 +256,7 @@ nav button.on{color:var(--sky);font-weight:700}
 </nav>
 
 <script src="word-data.js"></script>
+<script src="word-config.js"></script>
 <script src="word-core.js"></script>
 <script>
 var VER='kids';
@@ -412,7 +416,7 @@ function postKidShare(){
   if(!me.name){go('parent');wToast('먼저 이름을 정해 주세요');return}
   if(!t){wToast('한 줄만 써 볼까요?');return}
   WordStore.share({date:viewDate,name:me.name,ver:VER,text:(s.mood?s.mood+' ':'')+t}).then(function(){
-    el.value='';celebrate('💌','마음을 보냈어요','친구들 방에서 볼 수 있어요');loadFeed();
+    el.value='';celebrate('💌','마음을 보냈어요','목사님이 읽어 주실 거예요');loadFeed();
   });
 }
 
@@ -429,7 +433,7 @@ function renderFriends(){
       '<div class="ftext">'+wEsc(x.text)+'</div>'+
       '<button class="clap'+(on?' on':'')+'" onclick="clap(\''+x.id+'\')">👏 잘했어요 '+(claps.length||'')+'</button>'+
       '</div></div>';
-  }).join(''):'<div class="empty">아직 나눔이 없어요.<br>내가 먼저 마음을 나눠 볼까요? 💌</div>';
+  }).join(''):'<div class="empty">아직 오늘 나눔이 없어요.<br>내가 먼저 마음을 나눠 볼까요? 💌</div>';
   applyFont();
 }
 function clap(id){

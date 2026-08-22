@@ -19,37 +19,46 @@ function wToast(msg){
 }
 
 /* ---------- 저장소 ----------
-   기본은 이 기기(localStorage).
-   같은 도메인에 아래 API가 있으면 자동으로 서버 공유 모드로 전환한다.
-     GET  /api/word/feed?date=YYYY-MM-DD  -> {confirms:[...],shares:[...]}
-     POST /api/word/confirm  {date,name,ver,quizOk,missionOk}
-     POST /api/word/share    {id,date,name,ver,text,mood}
-     POST /api/word/amen     {id,name}
-   서버가 없으면 모든 기록은 이 기기에만 저장된다(앱에 그대로 표시). */
+   word-config.js 의 WORD_API 에 구글 앱스 스크립트 주소가 적혀 있으면
+   그곳에 함께 저장해 온 교회가 같은 나눔을 본다(server 모드).
+   주소가 비어 있거나 연결이 안 되면 이 기기에만 저장한다(local 모드).
+   어느 쪽이든 화면은 똑같이 돌아간다.
+
+   어린이 글은 서버로 보내되 돌려받지 않는다. 목사님이 시트에서만 보신다. */
 var WordStore=(function(){
   var K='dongsan_word_db', KC='dongsan_word_custom';
-  var mode='local', api='/api/word';
+  var mode='local';
+  var api=(typeof WORD_API==='string'?WORD_API:'').trim();
 
   function raw(){try{return JSON.parse(localStorage.getItem(K))||{}}catch(e){return {}}}
   function db(){var d=raw();if(!d.confirms)d.confirms=[];if(!d.shares)d.shares=[];return d}
   function save(d){try{localStorage.setItem(K,JSON.stringify(d))}catch(e){}}
 
-  function post(path,body){
-    return fetch(api+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
-      .then(function(r){if(!r.ok)throw new Error('bad');return r.json().catch(function(){return {}})});
+  /* 앱스 스크립트는 text/plain 으로 보내야 미리 확인(preflight) 없이 통과한다 */
+  function post(action,rec){
+    return fetch(api,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+                      body:JSON.stringify({action:action,rec:rec})})
+      .then(function(r){if(!r.ok)throw new Error('bad');return r.json()})
+      .then(function(d){if(d&&d.ok===false)throw new Error(d.error||'거절됨');return d||{}});
   }
 
   function init(){
-    return fetch(api+'/feed?date='+WordData.today(),{headers:{'Accept':'application/json'}})
+    if(!api)return Promise.resolve(mode='local');
+    return fetch(api+'?action=ping')
       .then(function(r){if(!r.ok)throw new Error('no api');return r.json()})
-      .then(function(){mode='server';return mode})
+      .then(function(d){mode=(d&&d.ok)?'server':'local';return mode})
       .catch(function(){mode='local';return mode});
   }
 
   function feed(date){
     if(mode==='server'){
-      return fetch(api+'/feed?date='+date).then(function(r){return r.json()})
-        .then(function(d){return {confirms:d.confirms||[],shares:d.shares||[]}})
+      return fetch(api+'?action=feed&date='+encodeURIComponent(date)).then(function(r){return r.json()})
+        .then(function(d){
+          if(!d||d.ok===false)return localFeed(date);
+          /* 서버가 돌려주는 나눔은 어른 글뿐이다. 어린이는 자기가 쓴 것만 이 기기에서 보탠다. */
+          var mine=localFeed(date).shares.filter(function(s){return s.ver==='kids'});
+          return {confirms:d.confirms||[],shares:(d.shares||[]).concat(mine)};
+        })
         .catch(function(){return localFeed(date)});
     }
     return Promise.resolve(localFeed(date));
@@ -65,7 +74,7 @@ var WordStore=(function(){
     d.confirms.forEach(function(c,idx){if(c.date===rec.date&&c.name===rec.name&&c.ver===rec.ver)i=idx});
     if(i>=0)d.confirms[i]=Object.assign({},d.confirms[i],rec);else d.confirms.push(Object.assign({ts:Date.now()},rec));
     save(d);
-    if(mode==='server')return post('/confirm',rec).catch(function(){});
+    if(mode==='server')return post('confirm',rec).catch(function(){});
     return Promise.resolve();
   }
 
@@ -73,20 +82,20 @@ var WordStore=(function(){
     var d=db();
     d.confirms=d.confirms.filter(function(c){return !(c.date===rec.date&&c.name===rec.name&&c.ver===rec.ver)});
     save(d);
-    if(mode==='server')return post('/confirm/delete',rec).catch(function(){});
+    if(mode==='server')return post('confirm/delete',rec).catch(function(){});
     return Promise.resolve();
   }
 
   function share(rec){
     rec.id=rec.id||wUid();rec.ts=rec.ts||Date.now();rec.amens=rec.amens||[];
     var d=db();d.shares.push(rec);save(d);
-    if(mode==='server')return post('/share',rec).catch(function(){}).then(function(){return rec});
+    if(mode==='server')return post('share',rec).catch(function(){}).then(function(){return rec});
     return Promise.resolve(rec);
   }
 
   function removeShare(id,name){
     var d=db();d.shares=d.shares.filter(function(s){return !(s.id===id&&s.name===name)});save(d);
-    if(mode==='server')return post('/share/delete',{id:id,name:name}).catch(function(){});
+    if(mode==='server')return post('share/delete',{id:id,name:name}).catch(function(){});
     return Promise.resolve();
   }
 
@@ -100,7 +109,7 @@ var WordStore=(function(){
       changed=true;
     });
     if(changed)save(d);
-    if(mode==='server')return post('/amen',{id:id,name:name}).catch(function(){});
+    if(mode==='server')return post('amen',{id:id,name:name}).catch(function(){});
     return Promise.resolve();
   }
 
