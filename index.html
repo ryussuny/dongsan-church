@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&amp;family=Noto+Sans+KR:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&amp;family=Nanum+Brush+Script&amp;family=Nanum+Pen+Script&amp;family=Noto+Sans+KR:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 :root{
@@ -188,8 +188,12 @@ section{padding:6rem 0}
   display:flex;align-items:center;justify-content:center;
   color:var(--brick-deep);font-family:'Gowun Batang',serif;font-size:4.5rem;font-weight:700;
 }
-.pastor-role{font-size:.85rem;font-weight:700;color:var(--moss2);letter-spacing:.03em;margin-bottom:.4rem}
-.pastor-name{font-family:'Gowun Batang',serif;font-size:1.9rem;font-weight:700;color:var(--text);margin-bottom:1.2rem}
+/* 담임목사 류선희 — 직함은 작게, 이름만 조금 크게 손글씨체로 */
+.pastor-sign{display:flex;align-items:baseline;gap:.7rem;flex-wrap:wrap;margin-bottom:1.3rem}
+.pastor-role{font-size:1.02rem;font-weight:700;color:var(--moss2);letter-spacing:.02em}
+.pastor-name{font-family:'Nanum Brush Script','Nanum Pen Script','Gowun Batang',cursive;
+  font-size:clamp(2.3rem,3.4vw,2.9rem);font-weight:400;color:var(--brick-deep);
+  line-height:1;letter-spacing:.02em}
 .pastor-msg{color:var(--text2);font-size:1.02rem;line-height:1.85}
 /* 인사말 사진 — 연필 스케치.
    스케치 변환은 파일에 이미 입혀 두었다(scripts/sketch-photo.js).
@@ -472,7 +476,7 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
 
       <label class="dw-lbl">담임목사 인사말</label>
       <input type="text" id="cRole" class="dw-input" placeholder="예: 담임목사" style="margin-bottom:.6rem">
-      <input type="text" id="cName" class="dw-input" placeholder="예: 류선희 목사" style="margin-bottom:.6rem">
+      <input type="text" id="cName" class="dw-input" placeholder="예: 류선희" style="margin-bottom:.6rem">
       <textarea id="cMsg1" class="dw-input dw-textarea" style="min-height:80px" placeholder="인사말 첫 문단"></textarea>
       <textarea id="cMsg2" class="dw-input dw-textarea" style="min-height:80px;margin-top:.6rem" placeholder="인사말 둘째 문단 (선택)"></textarea>
 
@@ -536,10 +540,13 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
         <span class="pastor-initial">류</span>
       </div>
       <div>
-        <div class="pastor-role" id="pastorRole">담임목사</div>
-        <div class="pastor-name" id="pastorName">류선희 목사</div>
-        <p class="pastor-msg" id="pastorMsg1">동산감리교회 홈페이지를 찾아주셔서 감사합니다. 저희 교회는 하나님과 함께, 이웃과 함께 걸어가는 신앙 공동체를 소망하며 한 걸음씩 나아가고 있습니다.</p>
-        <p class="pastor-msg" id="pastorMsg2">누구든지 처음 오시는 걸음이 어색하지 않도록, 따뜻하게 맞이하는 교회가 되고자 합니다. 언제든 예배 자리에 함께해 주시기를 진심으로 환영합니다.</p>
+        <div class="pastor-sign">
+          <span class="pastor-role" id="pastorRole">담임목사</span>
+          <span class="pastor-name" id="pastorName">류선희</span>
+        </div>
+        <p class="pastor-msg" id="pastorMsg1">동산감리교회 홈페이지를 찾아주셔서 감사합니다. 저희는 강원특별자치도 태백, 이 작은 도시에서 하나님을 예배하며 살아가는 기독교대한감리회 동부연회 태백지방 동산구역의 신앙 공동체입니다. 어르신부터 어린아이까지 한자리에 모여 함께 예배하고, 함께 웃고, 함께 우는 것을 가장 귀하게 여깁니다.</p>
+        <p class="pastor-msg" id="pastorMsg2">저희가 바라보는 것은 마태복음 22장의 두 계명, <b>하나님과 함께 이웃과 함께</b>입니다. 예배와 기도로 <b>하나님의 기쁨이 되는 교회</b>, 서로 돌보고 섬겨 <b>사람들의 행복이 되는 교회</b>, 지역과 이웃을 향해 나아가 <b>세상에서 빛이 되는 교회</b>—이 세 걸음을 오늘도 한 걸음씩 걷고 있습니다.</p>
+        <p class="pastor-msg" id="pastorMsg3">교회는 완성된 사람들이 모이는 곳이 아니라, 부족한 사람들이 주님의 손을 붙들고 함께 자라 가는 곳입니다. 그래서 처음 오시는 걸음이 어색하지 않도록 따뜻하게 맞이하려 합니다. 지치고 무거운 마음으로 오셔도 좋습니다. 그 자리에서 주님을 만나시기를 바라며, 언제든 예배 자리에 함께해 주시기를 진심으로 환영합니다.</p>
       </div>
     </div>
   </div>
