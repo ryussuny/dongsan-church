@@ -241,7 +241,7 @@ function dailyCard(d, i) {
     <div class="card-scripture">📖 ${esc(d.passage) || ''}</div>
     <div class="card-body">
       ${d.scripture ? `<h4>말씀</h4><p>${esc(d.scripture)}</p>` : ''}
-      ${d.explain ? `<h4>말씀 설명</h4><p>${esc(d.explain)}</p>` : ''}
+      ${d.explain ? `<h4>말씀 설명</h4>${d.explain.split(/\n{2,}/).map(t => `<p>${esc(t.trim())}</p>`).join('')}` : ''}
       ${qs.length ? `<h4>묵상</h4><ul>${qs.map(q => `<li>${esc(q)}</li>`).join('')}</ul>` : ''}
       ${d.practice ? `<h4>오늘의 실천</h4><p>${esc(d.practice)}</p>` : ''}
       ${d.prayer ? `<h4>기도</h4><p>${esc(d.prayer)}</p>` : ''}
