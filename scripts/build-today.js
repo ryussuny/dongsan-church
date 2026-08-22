@@ -147,7 +147,9 @@ details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
 .b3{background:var(--warm);color:var(--text2);border-color:var(--border)}
 .foot{text-align:center;font-size:11.5px;color:var(--text3);line-height:2;margin-top:22px}
 @media print{header,.btns,.foot{display:none}body{background:#fff}.card,.kids{border:none;padding:0;margin-bottom:18px}}
-.explain{font-size:1rem;line-height:1.95;color:var(--text);word-break:keep-all}
+.explain{font-size:1rem;color:var(--text);word-break:keep-all}
+.explain p{line-height:2.0;margin:0 0 .95rem;text-align:justify;text-justify:inter-word}
+.explain p:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
@@ -175,7 +177,7 @@ details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
 
   ${day.explain ? `<div class="card">
     <div class="st">💡 말씀 설명</div>
-    <div class="explain">${esc(day.explain)}</div>
+    <div class="explain">${day.explain.split(/\n{2,}/).map(t => `<p>${esc(t.trim())}</p>`).join('')}</div>
   </div>` : ''}
 
   <div class="card">

@@ -12,7 +12,9 @@
 <meta name="theme-color" content="#8f4531">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-.explain{font-size:.97rem;line-height:1.95;color:var(--text);word-break:keep-all}
+.explain{font-size:.97rem;color:var(--text);word-break:keep-all}
+.explain p{line-height:2.0;margin:0 0 .9rem;text-align:justify;text-justify:inter-word}
+.explain p:last-child{margin-bottom:0}
 .shnote{margin-top:.6rem;font-size:.82rem;color:var(--text3);line-height:1.6}
 :root{
   --brick:#b3593f;--brick-deep:#8f4531;--moss:#5f7d4d;--gold:#c99a3f;
@@ -352,7 +354,9 @@ function renderToday(){
     return '<div class="q"><b>'+(i+1)+'.</b><div>'+wEsc(q)+'</div></div>'}).join('');
   document.getElementById('prayer').textContent='🙏 '+d.adult.prayer;
   var ex=document.getElementById('explainBox'), exc=document.getElementById('explainCard');
-  if(ex){ex.textContent=d.explain||''; if(exc)exc.style.display=d.explain?'':'none';}
+  if(ex){ex.innerHTML=(d.explain||'').split(/\n{2,}/).filter(Boolean)
+    .map(function(t){return '<p>'+wEsc(t.trim())+'</p>'}).join('');
+  if(exc)exc.style.display=d.explain?'':'none';}
   document.getElementById('verSrc').textContent='개역개정';
   renderVerses();
   refreshConfirmBtn();
