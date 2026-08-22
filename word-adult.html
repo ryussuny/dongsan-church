@@ -12,6 +12,7 @@
 <meta name="theme-color" content="#8f4531">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+.explain{font-size:.97rem;line-height:1.95;color:var(--text);word-break:keep-all}
 .shnote{margin-top:.6rem;font-size:.82rem;color:var(--text3);line-height:1.6}
 :root{
   --brick:#b3593f;--brick-deep:#8f4531;--moss:#5f7d4d;--gold:#c99a3f;
@@ -156,7 +157,12 @@ nav button.on{color:var(--brick-deep);font-weight:700}
     <div class="verse" id="verseBox">본문을 불러오는 중입니다…</div>
   </div>
 
-  <div class="card">
+  <div class="card" id="explainCard">
+    <div class="st">💡 말씀 설명</div>
+    <div id="explainBox" class="explain"></div>
+  </div>
+
+  <div class="card" id="guideCard">
     <div class="st">🌿 묵상 길잡이</div>
     <div id="questions"></div>
     <div class="pray" id="prayer"></div>
@@ -345,6 +351,8 @@ function renderToday(){
   document.getElementById('questions').innerHTML=d.adult.questions.map(function(q,i){
     return '<div class="q"><b>'+(i+1)+'.</b><div>'+wEsc(q)+'</div></div>'}).join('');
   document.getElementById('prayer').textContent='🙏 '+d.adult.prayer;
+  var ex=document.getElementById('explainBox'), exc=document.getElementById('explainCard');
+  if(ex){ex.textContent=d.explain||''; if(exc)exc.style.display=d.explain?'':'none';}
   document.getElementById('verSrc').textContent='개역개정';
   renderVerses();
   refreshConfirmBtn();
