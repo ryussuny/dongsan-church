@@ -61,15 +61,6 @@ nav{position:sticky;top:0;z-index:300;background:rgba(251,243,231,.96);backdrop-
 .card-body li{margin-bottom:.35rem}
 .empty{text-align:center;color:var(--text3);padding:3rem 1rem;font-size:.92rem;line-height:1.9}
 .cats{display:flex;gap:.5rem;flex-wrap:wrap;margin:.9rem 0 .2rem}
-.vault-link{display:none;align-items:center;gap:1rem;margin:0 0 4rem;padding:1.1rem 1.4rem;
-  background:var(--white);border:1px solid var(--border);border-radius:16px;
-  border-left:4px solid var(--gold);transition:box-shadow .2s,border-color .2s}
-.vault-link.on{display:flex}
-.vault-link:hover{box-shadow:0 10px 26px rgba(15,27,51,.1);border-color:var(--brick2);border-left-color:var(--gold)}
-.vault-lock{font-size:1.3rem;line-height:1;flex:none}
-.vault-link b{display:block;font-size:.98rem;font-weight:700;color:var(--brick-deep)}
-.vault-link em{display:block;font-style:normal;font-size:.82rem;color:var(--text3);margin-top:.2rem}
-.vault-go{margin-left:auto;flex:none;font-size:.85rem;font-weight:700;color:var(--brick2)}
 .cat{font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;padding:.55rem 1.1rem;
   border-radius:999px;border:1px solid var(--border);background:var(--paper);color:var(--text2)}
 .cat.active{background:var(--brick);border-color:var(--brick);color:#fff}
@@ -107,14 +98,6 @@ nav{position:sticky;top:0;z-index:300;background:rgba(251,243,231,.96);backdrop-
 <div class="wrap">
   <div class="cats" id="sermonCats"></div>
   <div class="list" id="list"></div>
-  <a class="vault-link" id="vaultLink" href="vault.html">
-    <span class="vault-lock">🔒</span>
-    <span>
-      <b>설교 보관함</b>
-      <em>지난 설교 기록 69편 · 담임목사 전용 · 암호 필요</em>
-    </span>
-    <span class="vault-go">열기 →</span>
-  </a>
 </div>
 
 <script>
@@ -214,8 +197,6 @@ function dailyCard(d, i) {
 
 function render() {
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  // 설교 보관함 안내는 「설교말씀」 탭에서만 내보인다.
-  document.getElementById('vaultLink').classList.toggle('on', tab === 'sermon');
   const list = document.getElementById('list');
   const cats = document.getElementById('sermonCats');
   const books = tab === 'sermon' ? sermonBooks : dailyBooks;
