@@ -473,7 +473,7 @@ function renderBoard(){
 
   var p=viewMonth.split('-'),y=+p[0],mo=+p[1];
   var first=new Date(Date.UTC(y,mo-1,1)).getUTCDay(),last=new Date(Date.UTC(y,mo,0)).getUTCDate();
-  var html=['일','월','화','수','목','금','토'].map(function(w){return '<div class="h">'+w+'</div>'}).join('');
+  var html=['주일','월','화','수','목','금','토'].map(function(w){return '<div class="h">'+w+'</div>'}).join('');
   for(var i=0;i<first;i++)html+='<div></div>';
   for(var d=1;d<=last;d++){
     var ds=y+'-'+WordData.pad(mo)+'-'+WordData.pad(d),rec=map[ds];
