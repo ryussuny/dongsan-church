@@ -190,17 +190,20 @@ def fmt_bits(ecl,mask):
     return ((d<<10)|v) ^ 0b101010000010010
 
 def put_format(m,n,ecl,mask):
+    """형식정보 15비트를 두 곳에 심는다. 규격은 최상위 비트(14번)부터 놓는다."""
     f=fmt_bits(ecl,mask)
     for i in range(15):
-        b=(f>>i)&1
-        if i<6: m[8][i]=b
+        b=(f>>(14-i))&1
+        # 사본 1 — 왼쪽 위 파인더 둘레
+        if   i<6:  m[8][i]=b
         elif i==6: m[8][7]=b
         elif i==7: m[8][8]=b
         elif i==8: m[7][8]=b
-        else: m[14-i][8]=b
-        if i<8: m[n-1-i][8]=b
-        else: m[8][n-15+i]=b
-    m[n-8][8]=1
+        else:      m[14-i][8]=b
+        # 사본 2 — 왼쪽 아래 세로 7칸, 오른쪽 위 가로 8칸
+        if i<7: m[n-1-i][8]=b
+        else:   m[8][n-15+i]=b
+    m[n-8][8]=1                      # 항상 검은 모듈
 
 def put_version(m,n,v):
     if v<7: return
