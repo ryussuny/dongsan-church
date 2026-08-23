@@ -21,10 +21,13 @@ const { WordData } = require(path.join(ROOT, 'word-data.js'));
 const esc = s => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-/* 각주 기호 정리: "a태초에 …(a 또는 '…')" → "태초에 …" */
+/* 각주 기호만 걷어낸다.
+   개역개정 원문의 괄호·대괄호는 본문이므로 절대 지우지 않는다 —
+   통째로 지우면 신 3:9·3:11 은 빈 절이 되고 145절이 훼손된다. */
 const clean = t => String(t || '')
-  .replace(/\([a-z] [^)]*\)/g, '')
-  .replace(/([가-힣,.\s"“”'’]|^)([a-z])(?=[가-힣])/g, '$1')
+  .replace(/\([a-z](?:\s[^)]*)?\)/g, '')     // "(a 또는 …)", "(a)" 같은 각주 괄호
+  .replace(/(^|\s)[a-z](?=[가-힣])/g, '$1')    // 낱말 앞에 붙은 각주 문자
+  .replace(/[a-z]:(?=\d)/g, '')                // "창a:1" → "창1"
   .replace(/\s{2,}/g, ' ').trim();
 
 /* "사무엘상 3:19-4:11" 처럼 장을 넘어가는 본문도 읽는다 */
@@ -161,7 +164,7 @@ details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
 
 <div class="wrap">
   <div class="hero">
-    <div class="d">${esc(today.replace(/-/g, '.'))} (${esc(weekday)}) · ${day.source === 'plan' ? '교회 읽기표' : (day.source === 'custom' ? '인도자 지정' : '오늘의 묵상')}</div>
+    <div class="d">${esc(today.replace(/-/g, '.'))} (${esc(weekday)}) · ${day.source === 'plan' ? '교회 읽기표' : (day.source === 'custom' ? '인도자 지정' : '매일 묵상표')}</div>
     <div class="p">${esc(day.passage)}</div>
     <div class="t">${esc(day.title)}</div>
     ${day.theme ? `<div class="th">${esc(day.theme)}</div>` : ''}
@@ -176,7 +179,7 @@ details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
   </div>
 
   ${day.explain ? `<div class="card">
-    <div class="st">💡 말씀 설명</div>
+    <div class="st">💡 오늘의 묵상</div>
     <div class="explain">${day.explain.split(/\n{2,}/).map(t => `<p>${esc(t.trim())}</p>`).join('')}</div>
   </div>` : ''}
 
