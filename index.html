@@ -368,6 +368,17 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
 .ft-col a{display:block;font-size:.86rem;color:#8a93b0;text-decoration:none;margin-bottom:.5rem}
 .ft-col a:hover{color:var(--paper)}
 .ft-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:1.6rem;font-size:.78rem;color:#6b7390}
+/* 방문자 수 */
+.visitors{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.45rem;
+  margin:0 0 1.1rem;font-size:.8rem;color:#8d95ad}
+.visitors b{color:#c8d2ea;font-weight:600}
+.vt-sep{color:#4a5170}
+.vt-dot{width:7px;height:7px;border-radius:50%;background:#5fce7d;margin-right:.2rem;
+  box-shadow:0 0 0 0 rgba(95,206,125,.6);animation:vtPulse 2s infinite}
+@keyframes vtPulse{
+  70%{box-shadow:0 0 0 7px rgba(95,206,125,0)}
+  100%{box-shadow:0 0 0 0 rgba(95,206,125,0)}}
+@media (prefers-reduced-motion:reduce){.vt-dot{animation:none}}
 
 /* ===== back to top ===== */
 .top-btn{
@@ -733,6 +744,7 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
         </div>
       </div>
     </div>
+    <div class="visitors" id="visitorBox" hidden aria-live="polite" aria-label="방문자 수"></div>
     <div class="ft-bottom">© <span id="year"></span> 동산감리교회. All rights reserved.</div>
   </div>
 </footer>
@@ -977,4 +989,8 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+<!-- 방문자 수 (WORD_API 를 넣기 전까지는 저절로 숨는다) -->
+<script src="word-config.js"></script>
+<script src="visitors.js"></script>
 </body></html>
