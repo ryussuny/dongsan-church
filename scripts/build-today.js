@@ -108,6 +108,18 @@ header .wrap{display:flex;align-items:center;gap:10px}
 h1{font-family:'Gowun Batang',serif;font-size:17px;font-weight:700}
 .sub{font-size:11px;opacity:.85}
 .home{margin-left:auto;font-size:12px;background:rgba(255,255,255,.2);padding:7px 13px;border-radius:999px}
+/* 방문자 수 — 나눔터 주소를 넣기 전에는 자리도 차지하지 않는다 */
+.visitors{display:flex;align-items:center;flex-wrap:wrap;gap:6px;
+ margin:0 0 14px;font-size:12px;color:var(--text3)}
+.visitors[hidden]{display:none}
+.visitors b{color:var(--text2);font-weight:700}
+.vt-sep{color:var(--border)}
+.vt-dot{width:7px;height:7px;border-radius:50%;background:var(--moss);margin-right:2px;
+ box-shadow:0 0 0 0 rgba(95,125,77,.55);animation:vtPulse 2s infinite}
+@keyframes vtPulse{
+ 70%{box-shadow:0 0 0 7px rgba(95,125,77,0)}
+ 100%{box-shadow:0 0 0 0 rgba(95,125,77,0)}}
+@media (prefers-reduced-motion:reduce){.vt-dot{animation:none}}
 .hero{background:linear-gradient(135deg,#2f2a26,#4a3a2c);color:#fff;border-radius:20px;padding:26px 22px;
  position:relative;overflow:hidden;margin-bottom:16px}
 .hero::after{content:'';position:absolute;right:-40px;top:-40px;width:170px;height:170px;border-radius:50%;
@@ -163,6 +175,7 @@ details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
 </div></header>
 
 <div class="wrap">
+  <div class="visitors" id="visitorBox" hidden aria-live="polite" aria-label="방문자 수"></div>
   <div class="hero">
     <div class="d">${esc(today.replace(/-/g, '.'))} (${esc(weekday)}) · ${day.source === 'plan' ? '교회 읽기표' : (day.source === 'custom' ? '인도자 지정' : '매일 묵상표')}</div>
     <div class="p">${esc(day.passage)}</div>
@@ -227,6 +240,10 @@ function copyToday(){
   document.body.removeChild(t);
 }
 </script>
+
+<!-- 방문자 수 (WORD_API 를 넣기 전까지는 저절로 숨는다) -->
+<script src="word-config.js"></script>
+<script src="visitors.js"></script>
 </body></html>
 `;
 
