@@ -8,4 +8,4 @@
    주소 받는 법은 저장소의 말씀나눔-설치.md 를 보세요.
    붙여 넣을 주소는 https://script.google.com/macros/s/……/exec 모양이다.
    =========================================================== */
-var WORD_API = '';
+var WORD_API = 'https://script.google.com/macros/s/AKfycbwQutl5NeKIGb7H4KHK8yqNTvF1ih8AEYA5-ny6Qo4tNOGKw4sEIDRdmi4qy45pcA1t/exec';
