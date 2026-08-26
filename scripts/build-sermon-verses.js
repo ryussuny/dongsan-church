@@ -21,10 +21,13 @@ const ROOT = path.join(__dirname, '..');
 const BIBLE_DATA = new Function(
   fs.readFileSync(path.join(ROOT, 'dongsan_bible.js'), 'utf8') + '\nreturn BIBLE_DATA;')();
 
-/* 각주 기호 정리 — "a태초에 …(a 또는 '…')" 같은 표시를 걷어낸다 */
+/* 각주 기호만 걷어낸다.
+   개역개정 원문의 괄호·대괄호는 본문이므로 절대 지우지 않는다 —
+   통째로 지우면 신 3:9·3:11 은 빈 절이 되고 145절이 훼손된다. */
 const clean = t => String(t || '')
-  .replace(/\([a-z] [^)]*\)/g, '')
-  .replace(/([가-힣,.\s"“”'’]|^)([a-z])(?=[가-힣])/g, '$1')
+  .replace(/\([a-z](?:\s[^)]*)?\)/g, '')     // "(a 또는 …)", "(a)" 같은 각주 괄호
+  .replace(/(^|\s)[a-z](?=[가-힣])/g, '$1')    // 낱말 앞에 붙은 각주 문자
+  .replace(/[a-z]:(?=\d)/g, '')                // "창a:1" → "창1"
   .replace(/\s{2,}/g, ' ').trim();
 
 /* "출애굽기 7:14-8:19" · "로마서 8:1-11" · "요한복음 3:16" 모두 받는다 */

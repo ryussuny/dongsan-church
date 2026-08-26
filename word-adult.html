@@ -160,7 +160,7 @@ nav button.on{color:var(--brick-deep);font-weight:700}
   </div>
 
   <div class="card" id="explainCard">
-    <div class="st">💡 말씀 설명</div>
+    <div class="st">💡 오늘의 묵상</div>
     <div id="explainBox" class="explain"></div>
   </div>
 
@@ -344,7 +344,7 @@ function renderToday(){
   var label=viewDate.replace(/-/g,'.')+' ('+WordData.weekday(viewDate)+')'+(isToday?' · 오늘':'');
   document.getElementById('dateLabel').textContent=label;
   document.getElementById('dateLabel2').textContent=label;
-  var srcTxt=d.source==='plan'?'교회 읽기표':(d.source==='custom'?'인도자 지정':'오늘의 묵상');
+  var srcTxt=d.source==='plan'?'교회 읽기표':(d.source==='custom'?'인도자 지정':'매일 묵상표');
   document.getElementById('hero').innerHTML=
     '<div class="d">'+label+' <span class="badge-src">'+srcTxt+'</span></div>'+
     '<div class="p">'+wEsc(d.passage)+'</div>'+

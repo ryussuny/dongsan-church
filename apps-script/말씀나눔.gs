@@ -15,12 +15,13 @@
    설치하는 법은 저장소의 말씀나눔-설치.md 에 적어 두었다.
    =========================================================== */
 
-var SHEET_NAMES = { share: '나눔', kid: '어린이', confirm: '읽음', stat: '통계' };
+var SHEET_NAMES = { share: '나눔', kid: '어린이', confirm: '읽음', stat: '통계', visit: '방문' };
 
 var HEADERS = {
   나눔:   ['글번호', '날짜', '이름', '나눈 말씀', '아멘 누른 사람', '아멘 수', '올린 시각'],
   어린이: ['글번호', '날짜', '이름', '나눈 말씀', '기분', '퀴즈 정답', '미션 완료', '보호자 확인', '올린 시각'],
   읽음:   ['날짜', '이름', '구분', '퀴즈 정답', '미션 완료', '기분', '보호자 확인', '기록 시각'],
+  방문:   ['날짜', '기기', '첫 방문 시각'],
 };
 
 /* ---------- 시트 준비 ---------- */
@@ -65,7 +66,8 @@ function ymd(v) {
 function doGet(e) {
   var p = (e && e.parameter) || {};
   try {
-    if (p.action === 'ping') return json({ ok: true, mode: 'server' });
+    if (p.action === 'ping')  return json({ ok: true, mode: 'server' });
+    if (p.action === 'visit') return json(countVisit(String(p.id || '')));
 
     var date = ymd(p.date || '');
     var shares = rowsOf(SHEET_NAMES.share)
@@ -201,6 +203,117 @@ function dropConfirm(rec) {
   return { ok: true };
 }
 
+/* ===========================================================
+   방문자 세기
+
+   홈페이지가 1분에 한 번 ?action=visit&id=<기기번호> 로 신호를 보낸다.
+   기기번호는 방문자 기기 안에서 만들어진 임의의 글자이고, 이름·전화번호 같은
+   개인 정보는 오가지 않는다.
+
+     실시간  최근 5분 안에 신호를 보낸 기기 수
+     오늘    오늘 하루 다녀간 서로 다른 기기 수
+     누적    날마다의 「오늘」을 더한 수 (연인원)
+
+   빠르게 세려고 숫자는 스크립트 저장소에 두고, 「방문」 시트에는
+   하루에 기기 하나당 한 줄만 남긴다. 목사님이 시트에서 바로 보실 수 있다.
+   =========================================================== */
+
+var LIVE_WINDOW_MS = 5 * 60 * 1000;   /* 실시간으로 치는 시간 */
+var LIVE_MAX       = 500;             /* 저장소가 넘치지 않게 두는 상한 */
+var TODAY_MAX      = 3000;
+var KEEP_DAYS      = 14;              /* 지난 날짜 기록을 남겨 두는 기간 */
+
+function propStore() { return PropertiesService.getScriptProperties(); }
+
+function countVisit(id) {
+  var now = Date.now();
+  var today = Utilities.formatDate(new Date(now), 'Asia/Seoul', 'yyyy-MM-dd');
+  var props = propStore();
+
+  /* 기기번호가 없으면 세지 않고 지금 숫자만 알려 준다 */
+  if (!id) return visitCounts(props, today, now);
+
+  var lock = LockService.getScriptLock();
+  var got = false;
+  try { got = lock.tryLock(5000); } catch (err) { got = false; }
+  /* 잠금을 못 잡으면 세는 것만 건너뛰고 숫자는 돌려준다 — 화면이 멈추지 않게 */
+  if (!got) return visitCounts(props, today, now);
+
+  try {
+    /* 실시간 — 5분 지난 기기는 지운다 */
+    var live = readJson(props, '접속중', {});
+    Object.keys(live).forEach(function (k) {
+      if (now - Number(live[k] || 0) > LIVE_WINDOW_MS) delete live[k];
+    });
+    live[id] = now;
+    if (Object.keys(live).length > LIVE_MAX) live = trimOldest(live, LIVE_MAX);
+    props.setProperty('접속중', JSON.stringify(live));
+
+    /* 오늘 — 처음 온 기기면 한 줄 남기고 누적을 하나 올린다 */
+    var todayKey = '방문_' + today;
+    var seen = readJson(props, todayKey, []);
+    if (seen.indexOf(id) < 0) {
+      if (seen.length < TODAY_MAX) {
+        seen.push(id);
+        props.setProperty(todayKey, JSON.stringify(seen));
+        props.setProperty('방문_누적', String(Number(props.getProperty('방문_누적') || 0) + 1));
+        try {
+          sheet(SHEET_NAMES.visit).appendRow([today, id, new Date(now)]);
+        } catch (err) { /* 시트에 못 남겨도 숫자는 살아 있게 둔다 */ }
+      }
+      purgeOldDays(props, today);
+    }
+
+    return visitCounts(props, today, now);
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  } finally {
+    try { lock.releaseLock(); } catch (err2) {}
+  }
+}
+
+function visitCounts(props, today, now) {
+  var live = readJson(props, '접속중', {});
+  var n = 0;
+  Object.keys(live).forEach(function (k) {
+    if (now - Number(live[k] || 0) <= LIVE_WINDOW_MS) n++;
+  });
+  return {
+    ok: true,
+    live: n,
+    today: readJson(props, '방문_' + today, []).length,
+    total: Number(props.getProperty('방문_누적') || 0),
+  };
+}
+
+function readJson(props, key, fallback) {
+  try {
+    var v = props.getProperty(key);
+    return v ? JSON.parse(v) : fallback;
+  } catch (err) { return fallback; }
+}
+
+/* 오래된 것부터 버려 상한을 지킨다 */
+function trimOldest(obj, keep) {
+  var out = {};
+  Object.keys(obj)
+    .sort(function (a, b) { return Number(obj[b]) - Number(obj[a]); })
+    .slice(0, keep)
+    .forEach(function (k) { out[k] = obj[k]; });
+  return out;
+}
+
+/* 오래된 날짜 기록을 지운다 — 저장소가 계속 불어나지 않게 */
+function purgeOldDays(props, today) {
+  var cut = new Date(today + 'T00:00:00+09:00').getTime() - KEEP_DAYS * 86400000;
+  props.getKeys().forEach(function (k) {
+    if (k.indexOf('방문_') !== 0 || k === '방문_누적') return;
+    var d = k.slice(3);
+    var t = new Date(d + 'T00:00:00+09:00').getTime();
+    if (t && t < cut) props.deleteProperty(k);
+  });
+}
+
 function json(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -298,11 +411,27 @@ function onOpen() {
   SpreadsheetApp.getUi().createMenu('말씀 나눔')
     .addItem('통계 다시 만들기', '통계다시만들기')
     .addItem('시트 처음 만들기', '시트준비')
+    .addSeparator()
+    .addItem('방문자 수 초기화', '방문자초기화')
     .addToUi();
 }
 
 function 시트준비() {
-  [SHEET_NAMES.share, SHEET_NAMES.kid, SHEET_NAMES.confirm, SHEET_NAMES.stat].forEach(sheet);
+  [SHEET_NAMES.share, SHEET_NAMES.kid, SHEET_NAMES.confirm, SHEET_NAMES.stat, SHEET_NAMES.visit].forEach(sheet);
   rebuildStats();
   SpreadsheetApp.getActive().toast('시트를 준비했습니다');
+}
+
+/* 방문자 숫자를 처음부터 다시 세고 싶을 때 (시트 메뉴에서 누른다) */
+function 방문자초기화() {
+  var ui = SpreadsheetApp.getUi();
+  var ans = ui.alert('방문자 수 초기화',
+    '실시간·오늘·누적 방문자 숫자를 모두 0 으로 되돌립니다.\n「방문」 시트에 쌓인 기록은 그대로 둡니다.\n계속할까요?',
+    ui.ButtonSet.YES_NO);
+  if (ans !== ui.Button.YES) return;
+  var props = propStore();
+  props.getKeys().forEach(function (k) {
+    if (k === '접속중' || k.indexOf('방문_') === 0) props.deleteProperty(k);
+  });
+  SpreadsheetApp.getActive().toast('방문자 수를 초기화했습니다');
 }
