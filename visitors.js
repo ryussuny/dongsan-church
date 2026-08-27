@@ -36,8 +36,20 @@
 
   function num(n) { return Number(n || 0).toLocaleString('ko-KR'); }
 
+  /* 어린이 화면은 말을 부드럽게 하고 「누적」은 빼 준다 —
+     아이들에게 연인원은 와닿지 않는다 */
+  var kids = box.getAttribute('data-tone') === 'kids';
+
   function paint(d) {
     box.hidden = false;
+    if (kids) {
+      box.innerHTML =
+        '<span class="vt-dot" aria-hidden="true"></span>' +
+        '<span class="vt-item">지금 <b>' + num(d.live) + '</b>명이 함께 읽고 있어요</span>' +
+        '<span class="vt-sep">·</span>' +
+        '<span class="vt-item">오늘 <b>' + num(d.today) + '</b>명</span>';
+      return;
+    }
     box.innerHTML =
       '<span class="vt-dot" aria-hidden="true"></span>' +
       '<span class="vt-item"><b>' + num(d.live) + '</b>명 접속 중</span>' +
