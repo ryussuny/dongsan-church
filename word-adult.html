@@ -34,6 +34,18 @@ header .mark{width:34px;height:34px;border-radius:10px;background:rgba(255,255,2
 header h1{font-family:'Gowun Batang',serif;font-size:16px;font-weight:700}
 header .sub{font-size:10px;opacity:.8}
 header .who{margin-left:auto;font-size:12px;background:rgba(255,255,255,.18);padding:6px 12px;border-radius:999px;cursor:pointer}
+/* 방문자 수 — 나눔터 주소를 넣기 전에는 자리도 차지하지 않는다 */
+.visitors{display:flex;align-items:center;flex-wrap:wrap;gap:6px;
+  padding:10px 14px 0;font-size:12px;color:var(--text3)}
+.visitors[hidden]{display:none}
+.visitors b{color:var(--text2);font-weight:700}
+.vt-sep{color:var(--border)}
+.vt-dot{width:7px;height:7px;border-radius:50%;background:var(--moss);margin-right:2px;
+  box-shadow:0 0 0 0 rgba(95,125,77,.55);animation:vtPulse 2s infinite}
+@keyframes vtPulse{
+  70%{box-shadow:0 0 0 7px rgba(95,125,77,0)}
+  100%{box-shadow:0 0 0 0 rgba(95,125,77,0)}}
+@media (prefers-reduced-motion:reduce){.vt-dot{animation:none}}
 
 .pg{display:none;padding:14px}
 .pg.on{display:block}
@@ -141,6 +153,9 @@ nav button.on{color:var(--brick-deep);font-weight:700}
   <div><h1>오늘의 말씀 나눔</h1><div class="sub">동산감리교회 · 성인용</div></div>
   <div class="who" id="who" onclick="go('set')">이름 설정</div>
 </header>
+
+<!-- 어느 탭에 있든 보이도록 화면(.pg) 바깥에 둔다 -->
+<div class="visitors" id="visitorBox" hidden aria-live="polite" aria-label="방문자 수"></div>
 
 <!-- ===== 오늘 ===== -->
 <div class="pg on" id="pg-today">
@@ -613,4 +628,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+<!-- 방문자 수 (WORD_API 를 넣기 전까지는 저절로 숨는다) -->
+<script src="visitors.js"></script>
 </body></html>
