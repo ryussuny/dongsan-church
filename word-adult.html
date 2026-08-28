@@ -132,6 +132,20 @@ label.f{display:block;font-size:12px;color:var(--text3);margin:10px 0 5px}
 .tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:999px;background:var(--warm);color:var(--text2);margin-left:6px}
 .tag.kid{background:#e7f0dc;color:#4c6b3a}
 .empty{text-align:center;color:var(--text3);font-size:14px;padding:34px 10px}
+/* 마중글 — 빈 화면 앞에서 막막하지 않도록 첫 문장을 미리 놓아 둔다.
+   성도의 나눔인 척하지 않는다. 점선과 「예시」 딱지로 한눈에 구분되고,
+   나눔 수에도 세지 않으며, 아멘·삭제도 없다. */
+.seed{margin-top:4px}
+.seed-h{font-size:12.5px;color:var(--text3);line-height:1.7;margin-bottom:10px}
+.seed-item{border:1px dashed var(--border);border-radius:12px;padding:12px 13px;margin-bottom:8px;background:#fdfaf4}
+.seed-tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:999px;
+  background:var(--warm);color:var(--text3);margin-bottom:7px}
+.seed-q{font-size:13px;color:var(--text3);margin-bottom:5px}
+.seed-s{font-size:15px;line-height:1.8;color:var(--text2)}
+.seed-s i{font-style:normal;color:var(--text3)}
+.seed-btn{margin-top:9px;background:none;border:1px solid var(--border);border-radius:999px;
+  padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit;color:var(--brick-deep)}
+.seed-btn:hover{background:var(--warm)}
 
 nav{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--paper);border-top:1px solid var(--border);
   display:flex;padding-bottom:env(safe-area-inset-bottom)}
@@ -442,10 +456,42 @@ function loadFeed(cb){
   WordStore.feed(viewDate).then(function(f){feedCache=f;renderShares();renderStatLight();if(cb)cb()});
 }
 
+/* 오늘 말씀에서 뽑은 첫 문장 세 가지. 지어낸 고백이 아니라 시작 문장이다. */
+function seedStarters(){
+  var d=day(),q=(d.adult&&d.adult.questions)||[];
+  var out=[{title:'마음에 남은 구절로',
+            starter:d.passage+' 중에서 마음에 남은 구절은 '}];
+  if(q[0])out.push({title:'묵상 질문에 답하며',question:q[0],starter:''});
+  out.push({title:'기도로',starter:'오늘 이렇게 기도합니다. '});
+  return out.slice(0,3);
+}
+/* 마중글은 나눔이 아직 적을 때만 나오고, 나눔이 오가기 시작하면 물러난다 */
+function renderSeeds(){
+  return '<div class="seed"><div class="seed-h">처음 올리기가 어렵다면, 아래 문장으로 시작해 보세요.<br>'+
+    '누르면 아래 칸에 들어옵니다. 뒤는 성도님의 이야기로 채워 주세요.</div>'+
+    seedStarters().map(function(x,i){
+      return '<div class="seed-item"><div class="seed-tag">예시 · '+wEsc(x.title)+'</div>'+
+        (x.question?'<div class="seed-q">'+wEsc(x.question)+'</div>':'')+
+        '<div class="seed-s">'+wEsc(x.starter)+'<i>…</i></div>'+
+        '<button class="seed-btn" onclick="useSeed('+i+')">이 문장으로 시작하기</button></div>';
+    }).join('')+'</div>';
+}
+function useSeed(i){
+  var x=seedStarters()[i];if(!x)return;
+  var el=document.getElementById('shareText2');
+  el.value=(x.question?x.question+'\n':'')+x.starter;
+  el.focus();
+  try{el.setSelectionRange(el.value.length,el.value.length)}catch(err){}
+  el.scrollIntoView({block:'center',behavior:'smooth'});
+}
 function renderShares(){
   var list=document.getElementById('shareList'),s=feedCache.shares.slice().sort(function(a,b){return b.ts-a.ts});
   document.getElementById('shareCnt').textContent=s.length?s.length+'개의 나눔':'';
-  if(!s.length){list.innerHTML='<div class="empty">아직 나눔이 없습니다.<br>첫 나눔의 주인공이 되어 주세요 🙏</div>';return}
+  if(!s.length){
+    list.innerHTML='<div class="empty">오늘은 아직 나눔이 없습니다.<br>한 줄이면 충분합니다 🙏</div>'+renderSeeds();
+    return;
+  }
+  var seeds=s.length<2?renderSeeds():'';
   list.innerHTML=s.map(function(x){
     var amens=x.amens||[],on=me.name&&amens.indexOf(me.name)>=0;
     return '<div class="share-item">'+
@@ -455,7 +501,7 @@ function renderShares(){
       '<div class="si-body">'+wEsc(x.text)+'</div>'+
       '<div class="si-act"><button class="amen'+(on?' on':'')+'" onclick="tapAmen(\''+x.id+'\')">🙏 아멘 '+(amens.length||'')+'</button>'+
       (me.name===x.name?'<button class="del" onclick="delShare(\''+x.id+'\')">삭제</button>':'')+'</div></div>';
-  }).join('');
+  }).join('')+seeds;
 }
 function tapAmen(id){
   if(!me.name){go('set');wToast('이름을 먼저 설정해 주세요');return}
