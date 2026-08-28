@@ -16,6 +16,7 @@ const KST = 9 * 60 * 60 * 1000;
 const BIBLE_DATA = new Function(
   fs.readFileSync(path.join(ROOT, 'dongsan_bible.js'), 'utf8') + '\nreturn BIBLE_DATA;')();
 const { WordData } = require(path.join(ROOT, 'word-data.js'));
+const { keepTimeIfSame } = require('./kept-time.js');
 
 /* ---------- 유틸 ---------- */
 const esc = s => String(s == null ? '' : s)
@@ -257,9 +258,9 @@ const json = {
   adult: day.adult,
   kids: { verseRef: day.kids.verseRef, verse: kidVerse, emoji: day.kids.emoji,
           summary: day.kids.summary, mission: day.kids.mission, quiz: day.kids.quiz },
-  missingVerses: missing,
-  updatedAt: new Date().toISOString()
+  missingVerses: missing
 };
+json.updatedAt = keepTimeIfSame(path.join(ROOT, 'word-today.json'), json);
 
 fs.writeFileSync(path.join(ROOT, 'today.html'), html);
 fs.writeFileSync(path.join(ROOT, 'word-today.json'), JSON.stringify(json, null, 2) + '\n');
