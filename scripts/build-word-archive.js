@@ -16,6 +16,7 @@ const KST = 9 * 60 * 60 * 1000;
 const BIBLE_DATA = new Function(
   fs.readFileSync(path.join(ROOT, 'dongsan_bible.js'), 'utf8') + '\nreturn BIBLE_DATA;')();
 const { WordData, WORD_PLAN } = require(path.join(ROOT, 'word-data.js'));
+const { keepTimeIfSame } = require('./kept-time.js');
 
 /* 성경 차례 — 카테고리 정렬에 쓴다 */
 const BOOK_ORDER = [
@@ -155,9 +156,9 @@ const out = {
   note: '오늘의 말씀 모음. 카테고리는 성경 책 이름이며 목록은 성경 차례(장·절 순)로 정렬한다.',
   categories: books.map(b => ({ key: b, label: b, count: words.filter(w => w.book === b).length })),
   words,
-  builtFor: today,
-  updatedAt: new Date().toISOString()
+  builtFor: today
 };
+out.updatedAt = keepTimeIfSame(path.join(ROOT, 'word-archive.json'), out);
 
 fs.writeFileSync(path.join(ROOT, 'word-archive.json'), JSON.stringify(out, null, 2) + '\n');
 console.log(`[오늘의 말씀 모음] ${start} ~ ${today} · 전체 ${words.length}편`);
