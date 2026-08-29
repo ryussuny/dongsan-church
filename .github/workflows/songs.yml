@@ -1,0 +1,46 @@
+name: 찬양 갱신
+
+# songs 폴더에 노래를 올리면 찬양 목록(songs.json)을 다시 만들어 홈페이지에 반영한다.
+on:
+  push:
+    paths:
+      - 'songs/**'
+      - 'scripts/build-songs.js'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: songs-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 찬양 목록 만들기
+        run: node scripts/build-songs.js
+
+      - name: 게시
+        run: |
+          git config user.name  "동산교회 말씀봇"
+          git config user.email "actions@github.com"
+          if git diff --quiet -- songs.json; then
+            echo "바뀐 찬양 없음 — 게시 생략"
+            exit 0
+          fi
+          COUNT=$(node -e "const d=require('./songs.json');console.log(d.categories.reduce((n,c)=>n+c.songs.length,0))")
+          git add songs.json
+          git commit -m "찬양 갱신 (곡 ${COUNT}곡)"
+          for i in 1 2 3 4; do
+            git pull --rebase origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME} && exit 0
+            echo "재시도 ${i}..."; sleep $((2 ** i))
+          done
+          exit 1
