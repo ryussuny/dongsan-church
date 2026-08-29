@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /* ===========================================================
    오늘의 말씀 자동 게시 — 정적 페이지 생성기
-   매일 아침 5시(한국시간)에 GitHub Actions가 실행한다.
+   매일 새벽(한국시간)에 GitHub Actions가 실행한다. 04:41 을 본 게시로 두고
+   06:23·09:11 에 그물을 더 던진다 — 예약이 밀려도 그날을 거르지 않게.
      생성물: today.html      (홈페이지에 올라가는 오늘의 말씀 한 장)
              word-today.json (다른 페이지가 읽어 쓰는 요약 데이터)
    사용법: node scripts/build-today.js [YYYY-MM-DD]
@@ -163,6 +164,15 @@ details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
 .b3{background:var(--warm);color:var(--text2);border-color:var(--border)}
 .foot{text-align:center;font-size:11.5px;color:var(--text3);line-height:2;margin-top:22px}
 @media print{header,.btns,.foot{display:none}body{background:#fff}.card,.kids{border:none;padding:0;margin-bottom:18px}}
+/* 지난 말씀 알림 — 게시가 늦어 어제 것이 걸려 있을 때만 나온다.
+   오늘 것이면 아예 그리지 않으므로 평소에는 보이지 않는다. */
+.stale{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;
+  background:#fff6e6;border:1px solid var(--gold);border-left:4px solid var(--gold);
+  border-radius:12px;padding:12px 14px;margin:14px 0 0;font-size:13.5px;color:var(--text2)}
+.stale[hidden]{display:none}
+.stale b{color:var(--brick-deep)}
+.stale a{margin-left:auto;flex:none;background:var(--brick-deep);color:#fff;font-weight:700;
+  border-radius:999px;padding:7px 15px;font-size:13px;white-space:nowrap}
 .explain{font-size:1rem;color:var(--text);word-break:keep-all}
 .explain p{line-height:2.0;margin:0 0 .95rem;text-align:justify;text-justify:inter-word}
 .explain p:last-child{margin-bottom:0}
@@ -171,12 +181,13 @@ details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
 <body>
 <header><div class="wrap">
   <div class="mark">✝</div>
-  <div><h1>오늘의 말씀</h1><div class="sub">동산감리교회 · 매일 아침 5시</div></div>
+  <div><h1>오늘의 말씀</h1><div class="sub">동산감리교회 · 매일 새벽</div></div>
   <a class="home" href="index.html">교회 홈</a>
 </div></header>
 
 <div class="wrap">
   <div class="visitors" id="visitorBox" hidden aria-live="polite" aria-label="방문자 수"></div>
+  <div class="stale" id="staleBox" hidden role="status"></div>
   <div class="hero">
     <div class="d">${esc(today.replace(/-/g, '.'))} (${esc(weekday)}) · ${day.source === 'plan' ? '교회 읽기표' : (day.source === 'custom' ? '인도자 지정' : '매일 묵상표')}</div>
     <div class="p">${esc(day.passage)}</div>
@@ -224,13 +235,38 @@ details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
   </div>
 
   <div class="foot">
-    이 페이지는 매일 아침 5시에 자동으로 새로 올라갑니다.<br>
+    이 페이지는 매일 새벽에 자동으로 새로 올라갑니다. 늦어질 때는 위에 알려 드립니다.<br>
     지난 말씀은 <a href="word-adult.html" style="color:var(--brick-deep);font-weight:700">말씀표</a>에서 보실 수 있습니다.<br>
     동산감리교회 · 강원도 태백시 계산4길 25 · 주일예배 오전 9:00 / 11:00
   </div>
 </div>
 
 <script>
+/* ── 이 페이지가 오늘 것인지 스스로 확인한다 ────────────────────
+   게시는 GitHub 이 정해진 시각에 돌려 주는데, 붐빌 때는 여섯 시간
+   넘게 밀리기도 한다. 그동안 이 페이지에는 어제 말씀이 걸려 있고,
+   카톡으로 받은 분은 그것을 오늘 말씀으로 읽게 된다.
+
+   그래서 화면을 열 때 한국 날짜와 견주어, 지난 것이면 그렇다고
+   말하고 늘 오늘 것을 보여 주는 앱으로 안내한다.
+   오늘 것이면 아무것도 그리지 않는다. ── */
+var PAGE_DATE=${JSON.stringify(today)};
+(function(){
+  var box=document.getElementById('staleBox'); if(!box) return;
+  var k=new Date(Date.now()+(new Date().getTimezoneOffset()*60000)+9*3600000);
+  var p=function(n){return String(n).padStart(2,'0')};
+  var today=k.getFullYear()+'-'+p(k.getMonth()+1)+'-'+p(k.getDate());
+  if(PAGE_DATE>=today) return;              /* 오늘 것이거나 앞선 것이면 조용히 있는다 */
+
+  var d=PAGE_DATE.split('-');
+  var gap=Math.round((Date.parse(today)-Date.parse(PAGE_DATE))/86400000);
+  var when=gap===1?'어제':gap+'일 전';
+  box.innerHTML='<span>이 페이지는 <b>'+when+'('+Number(d[1])+'월 '+Number(d[2])+'일)</b> 말씀입니다. '+
+    '오늘 말씀은 아직 올라오지 않았습니다.</span>'+
+    '<a href="word-adult.html">오늘 말씀 보기 →</a>';
+  box.hidden=false;
+})();
+
 var SHARE=${JSON.stringify(shareText)};
 function copyToday(){
   if(navigator.share){navigator.share({text:SHARE}).catch(function(){});return}
