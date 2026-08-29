@@ -65,6 +65,10 @@ header .who{margin-left:auto;font-size:12px;background:rgba(255,255,255,.18);pad
 .nav-date button{flex:none;background:var(--paper);border:1px solid var(--border);border-radius:10px;
   padding:8px 12px;font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit}
 .nav-date .now{flex:1;text-align:center;font-size:13px;color:var(--text2)}
+/* 아직 열리지 않은 날 — 눌러도 넘어가지 않으니 흐리게 보여 준다 */
+.nav-date button.fwd.lock{opacity:.4}
+.plan-row.lock{opacity:.42}
+.plan-row.lock .plan-chk::before{content:'🔒';font-size:11px}
 
 .verse{font-family:'Gowun Batang',serif;font-size:var(--fs);line-height:2.05;color:var(--text)}
 .vn{display:inline-block;min-width:20px;color:var(--brick);font-weight:700;font-size:.78em;
@@ -176,7 +180,7 @@ nav button.on{color:var(--brick-deep);font-weight:700}
   <div class="nav-date">
     <button onclick="moveDay(-1)">◀ 어제</button>
     <div class="now" id="dateLabel"></div>
-    <button onclick="moveDay(1)">내일 ▶</button>
+    <button class="fwd" onclick="moveDay(1)">내일 ▶</button>
   </div>
 
   <div class="hero" id="hero"></div>
@@ -221,7 +225,7 @@ nav button.on{color:var(--brick-deep);font-weight:700}
   <div class="nav-date">
     <button onclick="moveDay(-1)">◀ 어제</button>
     <div class="now" id="dateLabel2"></div>
-    <button onclick="moveDay(1)">내일 ▶</button>
+    <button class="fwd" onclick="moveDay(1)">내일 ▶</button>
   </div>
   <div class="card">
     <div class="st">💬 성도들의 나눔 <span class="right" id="shareCnt"></span></div>
@@ -357,8 +361,12 @@ function go(p,btn){
 function day(){return WordData.forDate(viewDate,WordStore.custom())}
 function isFuture(){return viewDate>WordData.today()}
 
+/* 아직 열리지 않은 날로는 넘어가지 않는다 */
+var LOCK_MSG='내일 말씀은 내일 새벽 '+WordData.openHour+'시에 열립니다';
 function moveDay(n){
-  viewDate=WordData.shift(viewDate,n);
+  var next=WordData.shift(viewDate,n);
+  if(WordData.locked(next)){wToast(LOCK_MSG);return}
+  viewDate=next;
   renderToday();renderShares();
 }
 function moveMonth(n){
@@ -373,6 +381,11 @@ function renderToday(){
   var label=viewDate.replace(/-/g,'.')+' ('+WordData.weekday(viewDate)+')'+(isToday?' · 오늘':'');
   document.getElementById('dateLabel').textContent=label;
   document.getElementById('dateLabel2').textContent=label;
+  var atEdge=WordData.locked(WordData.shift(viewDate,1));
+  [].forEach.call(document.querySelectorAll('.nav-date button.fwd'),function(b){
+    b.classList.toggle('lock',atEdge);
+    b.title=atEdge?LOCK_MSG:'';
+  });
   var srcTxt=d.source==='plan'?'교회 읽기표':(d.source==='custom'?'인도자 지정':'매일 묵상표');
   document.getElementById('hero').innerHTML=
     '<div class="d">'+label+' <span class="badge-src">'+srcTxt+'</span></div>'+
@@ -569,13 +582,14 @@ function renderPlan(){
   document.getElementById('monthNow').textContent=viewMonth.replace('-','년 ')+'월';
   document.getElementById('monthLabel').textContent=WordStore.mode==='server'?'서버 공유':'이 기기 기록';
   document.getElementById('planList').innerHTML=list.map(function(d){
-    return '<div class="plan-row'+(d.date===t?' today':'')+'" onclick="openDay(\''+d.date+'\')">'+
+    return '<div class="plan-row'+(d.date===t?' today':'')+(d.date>t?' lock':'')+'" onclick="openDay(\''+d.date+'\')">'+
       '<div class="plan-d">'+d.date.slice(5).replace('-','/')+'<br><span style="font-size:10px">'+WordData.weekday(d.date)+'</span></div>'+
       '<div><div class="plan-p">'+wEsc(d.passage)+'</div><div class="plan-t">'+wEsc(d.title)+'</div></div>'+
       '<div class="plan-chk">'+(doneMap[d.date]?'✓':'')+'</div></div>';
   }).join('');
 }
 function openDay(ds){
+  if(WordData.locked(ds)){wToast(LOCK_MSG);return}
   viewDate=ds;renderToday();
   document.querySelectorAll('nav button').forEach(function(b,i){b.classList.toggle('on',i===0)});
   go('today');

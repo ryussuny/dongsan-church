@@ -647,7 +647,37 @@ var WordData=(function(){
   var MS=86400000;
 
   function pad(n){return (n<10?'0':'')+n}
-  function today(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+
+  /* 그날 말씀은 새벽 다섯 시(한국시간)에 열린다.
+     그 전에는 아직 어제 말씀을 읽는 때다 — 밤 열두 시가 넘었다고
+     다음 날 말씀이 미리 열리지는 않는다.
+     기기 시계가 어느 나라에 맞춰져 있든 한국 시각으로 따진다. */
+  var OPEN_HOUR = 5;
+
+  function kstNow(){
+    var n = new Date();
+    try {
+      var f = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul',
+        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hour12: false });
+      var o = {};
+      f.formatToParts(n).forEach(function (p) { o[p.type] = p.value; });
+      if (o.year && o.month && o.day && o.hour != null) {
+        return { y: +o.year, m: +o.month, d: +o.day, h: (+o.hour) % 24 };
+      }
+    } catch (e) { /* 시간대를 모르는 낡은 브라우저 */ }
+    var k = new Date(n.getTime() + n.getTimezoneOffset() * 60000 + 9 * 3600000);
+    return { y: k.getFullYear(), m: k.getMonth() + 1, d: k.getDate(), h: k.getHours() };
+  }
+
+  /* 지금 열려 있는 말씀의 날짜 */
+  function today(){
+    var k = kstNow();
+    var ds = k.y + '-' + pad(k.m) + '-' + pad(k.d);
+    return k.h < OPEN_HOUR ? shift(ds, -1) : ds;
+  }
+
+  /* 아직 열리지 않은 날인가 */
+  function locked(ds){ return String(ds) > today(); }
   function dayIndex(ds){var p=String(ds).split('-');return Math.floor(Date.UTC(+p[0],+p[1]-1,+p[2])/MS)}
   function shift(ds,n){var d=new Date((dayIndex(ds)+n)*MS);return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate())}
   function weekday(ds){return ['주일','월','화','수','목','금','토'][new Date(dayIndex(ds)*MS).getUTCDay()]}
@@ -754,7 +784,7 @@ var WordData=(function(){
     return out;
   }
 
-  return {today:today,pad:pad,dayIndex:dayIndex,shift:shift,weekday:weekday,
+  return {today:today,locked:locked,openHour:OPEN_HOUR,pad:pad,dayIndex:dayIndex,shift:shift,weekday:weekday,
           parseRef:parseRef,refSpans:refSpans,forDate:forDate,monthList:monthList,recent:recent};
 })();
 
