@@ -67,6 +67,13 @@ section{padding:3.5rem 0}
 .month-h b{font-family:'Gowun Batang',serif;font-size:1.6rem;color:var(--brick-deep)}
 .month-h span{font-size:.82rem;color:var(--text3)}
 
+/* 헌금위원과 청소는 한 달에 한 분·한 모임이다 — 주일마다 되풀이하지 않고
+   달 머리에 한 번만 적는다 */
+.month-duty{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .8rem;
+  margin:-.4rem 0 1rem;font-size:.82rem;color:var(--text3)}
+.month-duty span{background:var(--warm);border-radius:8px;padding:.24rem .7rem}
+.month-duty b{color:var(--brick-deep);font-weight:700}
+
 .day{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:1.15rem 1.3rem;margin-bottom:.8rem;transition:box-shadow .25s,border-color .25s}
 .day.next{border-color:var(--gold);box-shadow:0 4px 18px rgba(201,162,76,.18)}
 .day-top{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:.2rem}
@@ -150,9 +157,9 @@ footer a:hover{color:var(--paper)}
 
     <div class="next-band" id="nextBand"></div>
 
-    <!-- ===== 9월 ===== -->
     <div class="month reveal">
       <div class="month-h"><b>9월</b><span>성령강림 후 · 창립기념주일</span></div>
+      <div class="month-duty">이 달의 <span>헌금위원 <b>최해숙 권사</b></span><span>청소 <b>남선교회</b></span></div>
 
       <div class="day" data-date="2026-09-06">
         <div class="day-top">
@@ -161,10 +168,11 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">성령강림 후 제15주 · 창립기념주일</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>원정호 장로</b> · 오후 <b>최해숙 권사</b></div></div>
-          <div class="row"><div class="k">행사</div><div class="v">성만찬 · 전도</div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>원정호 장로</b></div></div>
+          <div class="row"><div class="k">주일일정</div><div class="v">성만찬</div></div>
+          <div class="row"><div class="k">주간행사</div><div class="v">전도</div></div>
         </div>
-        <div class="duty"><span class="chip">청소 <b>남선교회</b></span><span class="chip">주방 <b>3여선교회</b></span></div>
+        <div class="duty"><span class="chip">주방 <b>3여선교회</b></span></div>
       </div>
 
       <div class="day" data-date="2026-09-13">
@@ -174,8 +182,8 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">성령강림 후 제16주 · 교역자보건주일</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>강덕훈 권사</b></div></div>
-          <div class="row"><div class="k">행사</div><div class="v">이웃주민 식사</div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>강덕훈 권사</b></div></div>
+          <div class="row"><div class="k">주간행사</div><div class="v">이웃주민 식사</div></div>
         </div>
         <div class="duty"><span class="chip">주방 <b>1여선교회</b></span></div>
       </div>
@@ -187,7 +195,7 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">성령강림 후 제17주</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>이상용 명예장로</b></div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>이상용 명예장로</b></div></div>
         </div>
         <div class="duty"><span class="chip">주방 <b>2여선교회</b></span></div>
       </div>
@@ -199,16 +207,16 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">성령강림 후 제18주 · 농어촌선교주일</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>임춘길 명예장로</b></div></div>
-          <div class="row"><div class="k">행사</div><div class="v">임원교육 및 교사 교육</div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>임춘길 명예장로</b></div></div>
+          <div class="row"><div class="k">주일일정</div><div class="v">임원교육 및 교사교육</div></div>
         </div>
         <div class="duty"><span class="chip">주방 <b>3여선교회</b></span></div>
       </div>
     </div>
 
-    <!-- ===== 10월 ===== -->
     <div class="month reveal">
       <div class="month-h"><b>10월</b><span>세계성찬주일 · 종교개혁주일</span></div>
+      <div class="month-duty">이 달의 <span>헌금위원 <b>정순애 권사</b></span><span>청소 <b>1여선교회</b></span></div>
 
       <div class="day" data-date="2026-10-04">
         <div class="day-top">
@@ -217,10 +225,11 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">성령강림 후 제19주 · 세계성찬주일</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>최해숙 권사</b> · 오후 <b>정순애 권사</b></div></div>
-          <div class="row"><div class="k">행사</div><div class="v">성만찬 · 전도</div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>최해숙 권사</b></div></div>
+          <div class="row"><div class="k">주일일정</div><div class="v">성만찬</div></div>
+          <div class="row"><div class="k">주간행사</div><div class="v">전도</div></div>
         </div>
-        <div class="duty"><span class="chip">청소 <b>1여선교회</b></span><span class="chip">주방 <b>1여선교회</b></span></div>
+        <div class="duty"><span class="chip">주방 <b>1여선교회</b></span></div>
       </div>
 
       <div class="day" data-date="2026-10-11">
@@ -230,8 +239,8 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">성령강림 후 제20주</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>정순애 권사</b></div></div>
-          <div class="row"><div class="k">행사</div><div class="v">이웃주민 식사</div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>정순애 권사</b></div></div>
+          <div class="row"><div class="k">주간행사</div><div class="v">이웃주민 식사</div></div>
         </div>
         <div class="duty"><span class="chip">주방 <b>2여선교회</b></span></div>
       </div>
@@ -243,8 +252,8 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">성령강림 후 제21주</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>이은주 권사</b></div></div>
-          <div class="row"><div class="k">행사</div><div class="v">기획위원회</div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>이은주 권사</b></div></div>
+          <div class="row"><div class="k">주일일정</div><div class="v">기획위원회</div></div>
         </div>
         <div class="duty"><span class="chip">주방 <b>3여선교회</b></span></div>
       </div>
@@ -256,15 +265,15 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">성령강림 후 제22주 · 종교개혁주일</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>정양환 원로장로</b></div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>정양환 원로장로</b></div></div>
         </div>
         <div class="duty"><span class="chip">주방 <b>1여선교회</b></span></div>
       </div>
     </div>
 
-    <!-- ===== 11월 ===== -->
     <div class="month reveal">
       <div class="month-h"><b>11월</b><span>추수감사주일 · 다니엘 기도회 · 대림절</span></div>
+      <div class="month-duty">이 달의 <span>헌금위원 <b>이은주 권사</b></span><span>청소 <b>2여선교회</b></span></div>
 
       <div class="day" data-date="2026-11-01">
         <div class="day-top">
@@ -273,10 +282,11 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">추수감사주일</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>원정호 장로</b> · 오후 <b>이은주 권사</b></div></div>
-          <div class="row"><div class="k">행사</div><div class="v">성만찬 · 전도 · <b>다니엘 기도회</b></div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>원정호 장로</b></div></div>
+          <div class="row"><div class="k">주일일정</div><div class="v">성만찬</div></div>
+          <div class="row"><div class="k">주간행사</div><div class="v">전도</div></div>
         </div>
-        <div class="duty"><span class="chip">청소 <b>2여선교회</b></span><span class="chip">주방 <b>2여선교회</b></span></div>
+        <div class="duty"><span class="chip">주방 <b>2여선교회</b></span></div>
       </div>
 
       <div class="day" data-date="2026-11-08">
@@ -286,8 +296,8 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">성령강림 후 제24주 · 선교사복지주일</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>강덕훈 권사</b></div></div>
-          <div class="row"><div class="k">행사</div><div class="v">이웃주민 식사</div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>강덕훈 권사</b></div></div>
+          <div class="row"><div class="k">주간행사</div><div class="v">이웃주민 식사</div></div>
         </div>
         <div class="duty"><span class="chip">주방 <b>3여선교회</b></span></div>
       </div>
@@ -299,8 +309,8 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">성령강림 후 제25주</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>이상용 명예장로</b></div></div>
-          <div class="row"><div class="k">행사</div><div class="v">기획위원회</div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>이상용 명예장로</b></div></div>
+          <div class="row"><div class="k">주일일정</div><div class="v">기획위원회</div></div>
         </div>
         <div class="duty"><span class="chip">주방 <b>1여선교회</b></span></div>
       </div>
@@ -312,7 +322,7 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">성령강림 후 마지막 주 · 왕국주일</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>임춘길 명예장로</b></div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>임춘길 명예장로</b></div></div>
         </div>
         <div class="duty"><span class="chip">주방 <b>2여선교회</b></span></div>
       </div>
@@ -324,15 +334,15 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">대림절 제1주</div>
         <div class="rows">
-          <div class="row"><div class="k">담당</div><div class="v">교회학교</div></div>
-          <div class="row"><div class="k">행사</div><div class="v">속회데이</div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>교회학교</b></div></div>
+          <div class="row"><div class="k">주일 오후</div><div class="v">속회데이</div></div>
         </div>
       </div>
     </div>
 
-    <!-- ===== 12월 ===== -->
     <div class="month reveal">
       <div class="month-h"><b>12월</b><span>대림절 · 성탄절 · 송구영신</span></div>
+      <div class="month-duty">이 달의 <span>헌금위원 <b>강덕훈 권사</b></span><span>청소 <b>3여선교회</b></span></div>
 
       <div class="day" data-date="2026-12-06">
         <div class="day-top">
@@ -341,10 +351,11 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">대림절 제2주</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>최해숙 권사</b> · 오후 <b>강덕훈 권사</b></div></div>
-          <div class="row"><div class="k">행사</div><div class="v">성만찬 · 전도</div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>최해숙 권사</b></div></div>
+          <div class="row"><div class="k">주일일정</div><div class="v">성만찬</div></div>
+          <div class="row"><div class="k">주간행사</div><div class="v">전도</div></div>
         </div>
-        <div class="duty"><span class="chip">청소 <b>3여선교회</b></span><span class="chip">주방 <b>3여선교회</b></span></div>
+        <div class="duty"><span class="chip">주방 <b>3여선교회</b></span></div>
       </div>
 
       <div class="day" data-date="2026-12-13">
@@ -354,8 +365,8 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">대림절 제3주</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>정순애 권사</b></div></div>
-          <div class="row"><div class="k">행사</div><div class="v">이웃주민 식사</div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>정순애 권사</b></div></div>
+          <div class="row"><div class="k">주간행사</div><div class="v">이웃주민 식사</div></div>
         </div>
         <div class="duty"><span class="chip">주방 <b>1여선교회</b></span></div>
       </div>
@@ -367,7 +378,7 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">대림절 제4주</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>이은주 권사</b></div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>이은주 권사</b></div></div>
         </div>
         <div class="duty"><span class="chip">주방 <b>2여선교회</b></span></div>
       </div>
@@ -379,7 +390,7 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">성탄절</div>
         <div class="rows">
-          <div class="row"><div class="k">담당</div><div class="v">교회학교</div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>교회학교</b></div></div>
         </div>
         <div class="duty"><span class="chip">주방 <b>3여선교회</b></span></div>
       </div>
@@ -391,7 +402,7 @@ footer a:hover{color:var(--paper)}
         </div>
         <div class="day-name">성탄 후 제1주 · 송년주일</div>
         <div class="rows">
-          <div class="row"><div class="k">헌금위원</div><div class="v">오전 <b>정양환 원로장로</b></div></div>
+          <div class="row"><div class="k">대표기도</div><div class="v"><b>정양환 원로장로</b></div></div>
         </div>
         <div class="duty"><span class="chip">주방 <b>1여선교회</b></span></div>
       </div>
