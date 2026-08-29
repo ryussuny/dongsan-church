@@ -381,7 +381,7 @@ function doMission(){
 
 function doStamp(){
   if(!me.name){go('parent');wToast('먼저 이름을 정해 주세요');return}
-  if(viewDate>WordData.today()){wToast('아직 오지 않은 날이에요');return}
+  if(WordData.locked(viewDate)){wToast('내일 말씀은 내일 새벽에 열려요');return}
   if(state().stamped){wToast('오늘은 이미 도장을 찍었어요 🌟');return}
   var p=pend();
   WordStore.confirm({date:viewDate,name:me.name,ver:VER,quizOk:!!p.quizOk,missionOk:!!p.missionOk,mood:p.mood||''})
@@ -508,7 +508,7 @@ function renderBoard(){
     '<div style="color:var(--tx3)">말씀을 읽으면 배지를 받을 수 있어요!</div>';
 }
 function openDay(ds){
-  if(ds>WordData.today()){wToast('아직 오지 않은 날이에요');return}
+  if(WordData.locked(ds)){wToast('내일 말씀은 내일 새벽에 열려요');return}
   viewDate=ds;renderToday();loadFeed();
   document.querySelectorAll('nav button').forEach(function(b,i){b.classList.toggle('on',i===0)});
   go('today');
