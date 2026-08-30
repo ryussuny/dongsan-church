@@ -10,18 +10,20 @@
      나눔     — 어른 묵상 나눔 (홈페이지에서 모두가 본다)
      어린이   — 어린이 묵상·퀴즈·미션 (홈페이지에 내보내지 않는다. 목사님만 본다)
      읽음     — 누가 어느 날 말씀을 읽었는지
+     찬양     — 곡마다 몇 번 들었는지 (누가 들었는지는 남기지 않는다)
      통계     — 위 세 장을 요약한 표 (자동으로 다시 만들어진다)
 
    설치하는 법은 저장소의 말씀나눔-설치.md 에 적어 두었다.
    =========================================================== */
 
-var SHEET_NAMES = { share: '나눔', kid: '어린이', confirm: '읽음', stat: '통계', visit: '방문' };
+var SHEET_NAMES = { share: '나눔', kid: '어린이', confirm: '읽음', stat: '통계', visit: '방문', song: '찬양' };
 
 var HEADERS = {
   나눔:   ['글번호', '날짜', '이름', '나눈 말씀', '아멘 누른 사람', '아멘 수', '올린 시각'],
   어린이: ['글번호', '날짜', '이름', '나눈 말씀', '기분', '퀴즈 정답', '미션 완료', '보호자 확인', '올린 시각'],
   읽음:   ['날짜', '이름', '구분', '퀴즈 정답', '미션 완료', '기분', '보호자 확인', '기록 시각'],
   방문:   ['날짜', '기기', '첫 방문 시각'],
+  찬양:   ['곡', '들은 수', '마지막 들은 시각'],
 };
 
 /* ---------- 시트 준비 ---------- */
@@ -68,6 +70,7 @@ function doGet(e) {
   try {
     if (p.action === 'ping')  return json({ ok: true, mode: 'server' });
     if (p.action === 'visit') return json(countVisit(String(p.id || '')));
+    if (p.action === 'song')  return json(countSong(String(p.song || '')));
 
     var date = ymd(p.date || '');
     var shares = rowsOf(SHEET_NAMES.share)
@@ -272,6 +275,56 @@ function countVisit(id) {
   }
 }
 
+/* ===========================================================
+   찬양 들은 수
+
+   찬양 페이지가 곡을 틀 때 ?action=song&song=<곡파일> 을 부른다.
+   곡 이름이 없으면 세지 않고 지금 숫자만 알려 준다 — 페이지를 열 때
+   쓴다. 누가 들었는지는 남기지 않는다. 곡마다 몇 번인지만 센다.
+   =========================================================== */
+
+var SONG_MAX = 300;   /* 저장소가 넘치지 않게 두는 곡 수 상한 */
+
+function songCounts(props) {
+  return { ok: true, counts: readJson(props, '찬양_들은수', {}) };
+}
+
+function countSong(name) {
+  var props = propStore();
+  if (!name) return songCounts(props);          /* 세지 않고 읽기만 */
+
+  var lock = LockService.getScriptLock();
+  var got = false;
+  try { got = lock.tryLock(5000); } catch (err) { got = false; }
+  /* 잠금을 못 잡으면 세는 것만 건너뛴다 — 노래는 그대로 나온다 */
+  if (!got) return songCounts(props);
+
+  try {
+    var counts = readJson(props, '찬양_들은수', {});
+    if (!(name in counts) && Object.keys(counts).length >= SONG_MAX) return songCounts(props);
+    counts[name] = Number(counts[name] || 0) + 1;
+    props.setProperty('찬양_들은수', JSON.stringify(counts));
+
+    /* 시트에도 남겨 목사님이 바로 보실 수 있게 한다 */
+    try {
+      var sh = sheet(SHEET_NAMES.song);
+      var rows = rowsOf(SHEET_NAMES.song);
+      var at = -1;
+      for (var i = 0; i < rows.length; i++) {
+        if (String(rows[i]['곡']) === name) { at = i + 2; break; }   /* 머리글 한 줄 */
+      }
+      if (at > 0) sh.getRange(at, 2, 1, 2).setValues([[counts[name], new Date()]]);
+      else sh.appendRow([name, counts[name], new Date()]);
+    } catch (err) { /* 시트에 못 남겨도 숫자는 살아 있게 둔다 */ }
+
+    return songCounts(props);
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  } finally {
+    try { lock.releaseLock(); } catch (err2) {}
+  }
+}
+
 function visitCounts(props, today, now) {
   var live = readJson(props, '접속중', {});
   var n = 0;
@@ -417,7 +470,7 @@ function onOpen() {
 }
 
 function 시트준비() {
-  [SHEET_NAMES.share, SHEET_NAMES.kid, SHEET_NAMES.confirm, SHEET_NAMES.stat, SHEET_NAMES.visit].forEach(sheet);
+  [SHEET_NAMES.share, SHEET_NAMES.kid, SHEET_NAMES.confirm, SHEET_NAMES.stat, SHEET_NAMES.visit, SHEET_NAMES.song].forEach(sheet);
   rebuildStats();
   SpreadsheetApp.getActive().toast('시트를 준비했습니다');
 }
