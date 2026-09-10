@@ -10,8 +10,8 @@
    연필선만 흰색으로 남긴 그림(PNG)으로 바꾼다. 첫 화면은 짙은 남색이라
    종이가 남아 있으면 흰 상자처럼 보이기 때문이다.
 
-   위쪽은 서서히 사라지고 맨 아래도 조금 눕혀 두었다. 글씨 위로
-   그림이 올라와 읽기를 방해하지 않게 하려는 것이다.
+   맨 윗줄만 살짝 눕혀 남색 바탕에 자연스럽게 스며들게 한다.
+   얼굴은 잘리지 않아야 하므로 사진 전체를 그대로 담는다.
 
    올라가는 파일은 스케치라 원본 사진은 공개되지 않는다.
    =========================================================== */
@@ -22,15 +22,15 @@ const path = require('path');
 
 const [, , src, outArg, widthArg] = process.argv;
 if (!src) {
-  console.error('사용법: node scripts/hero-lineart.js <원본사진> [저장할 곳] [가로크기=1600]');
+  console.error('사용법: node scripts/hero-lineart.js <원본사진> [저장할 곳] [가로크기=2000]');
   process.exit(1);
 }
 const out = outArg || path.join('assets', '첫화면-단체사진-스케치.png');
-const width = Number(widthArg) || 1600;
+const width = Number(widthArg) || 2000;
 
 /* 1) 연필 스케치 — 변환 방법은 한 곳(sketch-photo.js)에만 둔다 */
 const tmp = path.join(os.tmpdir(), `hero-sketch-${process.pid}.jpg`);
-execFileSync('node', [path.join(__dirname, 'sketch-photo.js'), src, tmp, String(width + 200), '8'], {
+execFileSync('node', [path.join(__dirname, 'sketch-photo.js'), src, tmp, String(width + 200), '6'], {
   stdio: 'inherit',
 });
 
@@ -46,20 +46,29 @@ if im.width != W:
 w, h = im.size
 
 # 진할수록 또렷하게 — 종이(흰 곳)는 알파 0 이 되어 비어 버린다
-a = im.point(lambda g: min(255, int((((255 - g) / 255.0) ** 1.15) * 255)))
-a = a.point(lambda v: 0 if v < 28 else (v // 16) * 16)
+a = im.point(lambda g: min(255, int((((255 - g) / 255.0) ** 0.92) * 255)))
+a = a.point(lambda v: 0 if v < 20 else (v // 12) * 12)
 
-# 위는 서서히 나타나고 맨 아래는 조금 눕힌다
+# 가장자리를 살짝 눕혀 남색 바탕에 스며들게 한다.
+# 위(천장·벽)는 넉넉히, 좌우와 아래는 아주 조금만 — 사람은 지우지 않는다.
 fade = Image.new('L', (1, h))
 px = fade.load()
 for y in range(h):
     t = y / (h - 1)
-    if t < 0.34:   v = t / 0.34
-    elif t > 0.93: v = 1 - (t - 0.93) / 0.07 * 0.45
+    if t < 0.14:   v = t / 0.14
+    elif t > 0.96: v = 1 - (t - 0.96) / 0.04
     else:          v = 1.0
     px[0, y] = int(max(0.0, min(1.0, v)) * 255)
 a = ImageChops.multiply(a, fade.resize((w, h)))
-a = a.point(lambda v: 0 if v < 10 else (v // 16) * 16)
+
+side = Image.new('L', (w, 1))
+sx = side.load()
+for x in range(w):
+    t = x / (w - 1)
+    v = t / 0.03 if t < 0.03 else (1 - (t - 0.97) / 0.03 if t > 0.97 else 1.0)
+    sx[x, 0] = int(max(0.0, min(1.0, v)) * 255)
+a = ImageChops.multiply(a, side.resize((w, h)))
+a = a.point(lambda v: 0 if v < 8 else (v // 12) * 12)
 
 Image.merge('LA', (Image.new('L', (w, h), 255), a)).save(out, optimize=True)
 print(f'{w}x{h}')
