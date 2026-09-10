@@ -102,6 +102,18 @@ nav.scrolled{box-shadow:0 4px 24px rgba(6,10,20,.35)}
   background-image:radial-gradient(circle,rgba(255,255,255,.06) 1px,transparent 1px);
   background-size:26px 26px;opacity:.5;
 }
+/* 첫 화면 아래에 온 교회가 함께 선 단체사진 — 연필 스케치.
+   스케치 변환은 파일에 이미 입혀 두었다(scripts/sketch-photo.js).
+   흰 선만 남기고 종이는 비워 두어, 네이비 위에 옅게 겹쳐 놓는다. */
+.hero-photo{
+  position:absolute;left:0;right:0;bottom:0;
+  height:min(64%,540px);pointer-events:none;
+  background:url('assets/첫화면-단체사진-스케치.png') center bottom/cover no-repeat;
+  opacity:.34;
+  /* 글이 놓이는 왼쪽은 비우고 오른쪽으로 갈수록 진해지게 */
+  -webkit-mask-image:linear-gradient(100deg,transparent 4%,rgba(0,0,0,.22) 32%,#000 66%);
+  mask-image:linear-gradient(100deg,transparent 4%,rgba(0,0,0,.22) 32%,#000 66%);
+}
 .hero-inner{position:relative;z-index:2;width:100%}
 /* 머릿글 딱지와 방문자 수를 한 묶음으로 세운다 */
 .hero-top{display:flex;flex-direction:column;align-items:flex-start;gap:.9rem;margin-bottom:1.8rem}
@@ -136,6 +148,14 @@ h1.hero-title em{
 .hero-facts{display:flex;gap:2.6rem;flex-wrap:wrap;padding-top:2rem;border-top:1px solid rgba(255,255,255,.14)}
 .hero-fact b{display:block;font-family:'Gowun Batang',serif;font-size:1.5rem;color:var(--gold)}
 .hero-fact span{font-size:.82rem;color:#8b93b0}
+/* 좁은 화면에서는 글이 아래까지 내려오니 그림을 더 눕힌다 */
+@media(max-width:760px){
+  .hero-photo{
+    height:min(48%,300px);opacity:.17;
+    -webkit-mask-image:linear-gradient(to bottom,transparent,#000 45%);
+    mask-image:linear-gradient(to bottom,transparent,#000 45%);
+  }
+}
 
 /* ===== SECTION shared ===== */
 section{padding:6rem 0}
@@ -422,6 +442,7 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
 
 <!-- ===== HERO ===== -->
 <header class="hero">
+  <div class="hero-photo" aria-hidden="true"></div>
   <div class="wrap hero-inner">
     <div class="hero-top">
       <div class="hero-eyebrow">🌿 <b>강원도 태백시</b> · 기독교대한감리회 동산교회</div>
