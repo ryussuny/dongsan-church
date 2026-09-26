@@ -72,6 +72,7 @@ function doGet(e) {
     if (p.action === 'visit') return json(countVisit(String(p.id || '')));
     if (p.action === 'song')  return json(countSong(String(p.song || '')));
     if (p.action === 'kids')  return json(kidShares(p.key, p.date));
+    if (p.action === 'stats') return json(statsReport(p.key));
 
     var date = ymd(p.date || '');
     var shares = rowsOf(SHEET_NAMES.share)
@@ -133,6 +134,89 @@ function kidShares(key, date) {
   }
   rows.sort(function (a, b) { return b.ts - a.ts; });          /* 새 글이 위로 */
   return { ok: true, shares: rows.slice(0, 300) };
+}
+
+/* ===========================================================
+   기록 보관소 — 목사님만
+
+   어른과 어린이가 읽고 적은 것을 한눈에 세어 내어 준다.
+   시트의 「통계」와 같은 셈이되, 휴대폰에서도 보시라고 만든 것이다.
+   어린이 나눔과 같은 열쇠말('어린이_열쇠')로 잠근다.
+   글 내용은 내보내지 않고 숫자만 내어 준다.
+   =========================================================== */
+function statsReport(key) {
+  var want = String(propStore().getProperty('어린이_열쇠') || '').trim();
+  if (!want) return { ok: false, error: '열쇠말이 아직 정해지지 않았습니다' };
+  if (String(key || '').trim() !== want) return { ok: false, error: '열쇠말이 맞지 않습니다' };
+
+  var kids  = rowsOf(SHEET_NAMES.kid);
+  var conf  = rowsOf(SHEET_NAMES.confirm);
+  var share = rowsOf(SHEET_NAMES.share);
+  var visit = rowsOf(SHEET_NAMES.visit);
+
+  var kidConf   = conf.filter(function (r) { return String(r['구분']) === 'kids'; });
+  var adultConf = conf.filter(function (r) { return String(r['구분']) !== 'kids'; });
+
+  /* ── 사람별 (어린이 / 어른) ── */
+  function tally(confRows, shareRows) {
+    var by = {};
+    function slot(n) {
+      return by[n] = by[n] || { name: n, days: {}, quiz: 0, mission: 0, share: 0, last: '' };
+    }
+    confRows.forEach(function (r) {
+      var n = String(r['이름'] || '').trim(); if (!n) return;
+      var k = slot(n), d = ymd(r['날짜']);
+      k.days[d] = true;
+      if (String(r['퀴즈 정답']) === 'O') k.quiz++;
+      if (String(r['미션 완료']) === 'O') k.mission++;
+      if (d > k.last) k.last = d;
+    });
+    shareRows.forEach(function (r) {
+      var n = String(r['이름'] || '').trim(); if (!n) return;
+      slot(n).share++;
+    });
+    return Object.keys(by).map(function (n) {
+      var k = by[n];
+      return { name: n, days: Object.keys(k.days).length, quiz: k.quiz,
+               mission: k.mission, share: k.share, last: k.last };
+    }).sort(function (a, b) {
+      return b.days - a.days || b.share - a.share || a.name.localeCompare(b.name, 'ko');
+    });
+  }
+
+  /* ── 날짜별 ── */
+  var byDate = {};
+  function slot(d) { return byDate[d] = byDate[d] || { date: d, a: 0, k: 0, as: 0, ks: 0 }; }
+  conf.forEach(function (r) {
+    var s = slot(ymd(r['날짜']));
+    if (String(r['구분']) === 'kids') s.k++; else s.a++;
+  });
+  share.forEach(function (r) { slot(ymd(r['날짜'])).as++; });
+  kids.forEach(function (r)  { slot(ymd(r['날짜'])).ks++; });
+
+  function days(rows)  { return uniq(rows.map(function (r) { return ymd(r['날짜']); })).length; }
+  function people(rows) { return uniq(rows.map(function (r) { return String(r['이름'] || '').trim(); })).length; }
+
+  return {
+    ok: true,
+    madeAt: Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm'),
+    sum: {
+      adultShare:  share.length,
+      kidShare:    kids.length,
+      adultPeople: people(adultConf),
+      adultDays:   days(adultConf),
+      kidPeople:   people(kidConf),
+      kidDays:     days(kidConf),
+      quiz:    kidConf.filter(function (r) { return String(r['퀴즈 정답']) === 'O'; }).length,
+      mission: kidConf.filter(function (r) { return String(r['미션 완료']) === 'O'; }).length,
+      parent:  kidConf.filter(function (r) { return String(r['보호자 확인'] || '').trim(); }).length,
+      visitDays:  uniq(visit.map(function (r) { return ymd(r['날짜']); })).length,
+      visitTotal: visit.length,
+    },
+    kids:   tally(kidConf, kids),
+    adults: tally(adultConf, share),
+    days: Object.keys(byDate).sort().reverse().slice(0, 120).map(function (d) { return byDate[d]; }),
+  };
 }
 
 /* ---------- 홈페이지가 써 넣는 곳 ---------- */

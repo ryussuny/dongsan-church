@@ -1,0 +1,217 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<link rel="icon" href="favicon.png" type="image/png">
+<meta name="robots" content="noindex,nofollow">
+<title>기록 보관소 — 동산감리교회</title>
+<meta name="theme-color" content="#8f4531">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(170deg,#fbf3e7,#f6ece0);
+  min-height:100vh;padding:24px 18px 48px;color:#3a2e22;word-break:keep-all}
+.wrap{width:100%;max-width:620px;margin:0 auto}
+.top{text-align:center;margin-bottom:20px}
+.top .emo{font-size:32px}
+h1{font-family:'Gowun Batang',serif;font-size:24px;margin:6px 0 4px}
+.sub{font-size:12.5px;color:#8a795f;line-height:1.8}
+
+.lock{background:#fffaf2;border:1px solid #e6d3b4;border-radius:16px;padding:20px 18px;text-align:center;
+  box-shadow:0 6px 18px rgba(143,69,49,.10)}
+.lock p{font-size:13px;color:#6b5a45;line-height:1.9;margin-bottom:14px}
+.lock input{width:100%;padding:12px 14px;border:1px solid #e0cdae;border-radius:12px;font-size:16px;
+  font-family:inherit;text-align:center;outline:none;background:#fffdf9}
+.lock input:focus{border-color:#c99a3f}
+.lock button{margin-top:10px;width:100%;padding:12px;border:none;border-radius:12px;cursor:pointer;
+  background:linear-gradient(135deg,#b3593f,#8f4531);color:#fff;font-size:15px;font-weight:700;font-family:inherit}
+.err{color:#c0392b;font-size:12.5px;margin-top:10px;line-height:1.7}
+
+.bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.bar button{padding:8px 12px;border:1px solid #e0cdae;border-radius:10px;background:#fffaf2;
+  font-family:inherit;font-size:12.5px;color:#5c4a34;cursor:pointer}
+.bar .made{margin-left:auto;font-size:11.5px;color:#9b8a72}
+
+h2{font-family:'Gowun Batang',serif;font-size:16px;color:#8f4531;margin:22px 0 10px}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.card{background:#fffaf2;border:1px solid #e6d3b4;border-radius:12px;padding:12px 10px;text-align:center}
+.card .v{font-family:'Gowun Batang',serif;font-size:22px;font-weight:700;color:#8f4531;line-height:1.3}
+.card .l{font-size:11px;color:#8a795f;margin-top:2px}
+
+table{width:100%;border-collapse:collapse;background:#fffaf2;border:1px solid #e6d3b4;border-radius:12px;overflow:hidden}
+th,td{padding:9px 8px;font-size:12.5px;text-align:center;border-bottom:1px solid #f0e2cd}
+th{background:#f6ead6;color:#6b5a45;font-weight:700;font-size:11.5px}
+td:first-child,th:first-child{text-align:left;padding-left:12px}
+tbody tr:last-child td{border-bottom:none}
+td.n{font-variant-numeric:tabular-nums}
+td.z{color:#c3b49c}
+.scroll{overflow-x:auto}
+.empty{text-align:center;color:#9b8a72;font-size:13px;padding:22px 0}
+.more{display:block;width:100%;margin-top:8px;padding:10px;border:1px solid #e0cdae;border-radius:10px;
+  background:#fffaf2;font-family:inherit;font-size:12.5px;color:#5c4a34;cursor:pointer}
+.foot{text-align:center;font-size:11.5px;color:#9b8a72;margin-top:26px;line-height:2}
+.foot a{color:#8f4531;font-weight:700;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="emo">📊</div>
+    <h1>기록 보관소</h1>
+    <div class="sub">어른과 어린이가 읽고 적은 것을 한눈에 모았습니다.<br>숫자만 모아 둔 곳이라 글 내용은 나오지 않습니다.</div>
+  </div>
+
+  <div class="lock" id="lock">
+    <p>열쇠말을 넣어 주세요.<br>어린이 나눔 보기와 같은 열쇠말입니다.</p>
+    <input id="key" type="password" inputmode="text" autocomplete="off" placeholder="열쇠말" aria-label="열쇠말">
+    <button id="go">열기</button>
+    <div class="err" id="err" hidden></div>
+  </div>
+
+  <div id="view" hidden>
+    <div class="bar">
+      <button id="reload">새로 받기</button>
+      <button id="lockBtn">잠그기</button>
+      <span class="made" id="made"></span>
+    </div>
+    <div id="body"></div>
+  </div>
+
+  <div class="foot">
+    <a href="word-kids-notes.html">🧒 어린이 나눔 보기</a> · <a href="home.html">처음으로</a>
+  </div>
+</div>
+
+<script src="word-config.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var API  = (typeof WORD_API === 'string' ? WORD_API : '').trim();
+  var SAVE = 'dongsan_kids_key';        /* 어린이 나눔 보기와 같은 열쇠말을 쓴다 */
+
+  var lock = document.getElementById('lock');
+  var view = document.getElementById('view');
+  var keyIn = document.getElementById('key');
+  var err = document.getElementById('err');
+  var body = document.getElementById('body');
+  var made = document.getElementById('made');
+
+  var data = null, allDays = false;
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function say(msg) { err.textContent = msg; err.hidden = !msg; }
+  function saved() { try { return localStorage.getItem(SAVE) || ''; } catch (e) { return ''; } }
+  function keep(k) { try { localStorage.setItem(SAVE, k); } catch (e) {} }
+  function forget() { try { localStorage.removeItem(SAVE); } catch (e) {} }
+
+  var DAY = ['일', '월', '화', '수', '목', '금', '토'];
+  function prettyDay(d) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || '');
+    if (!m) return d || '';
+    var dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return Number(m[2]) + '. ' + Number(m[3]) + ' (' + DAY[dt.getDay()] + ')';
+  }
+  function num(n) { return Number(n || 0).toLocaleString('ko-KR'); }
+  function cell(n) { return '<td class="n' + (Number(n) ? '' : ' z') + '">' + num(n) + '</td>'; }
+
+  function cards(list) {
+    return '<div class="cards">' + list.map(function (c) {
+      return '<div class="card"><div class="v">' + num(c[1]) + '</div><div class="l">' + esc(c[0]) + '</div></div>';
+    }).join('') + '</div>';
+  }
+
+  function peopleTable(rows, kind) {
+    if (!rows.length) return '<div class="empty">아직 기록이 없습니다.</div>';
+    var head = kind === 'kids'
+      ? '<tr><th>이름</th><th>읽은 날</th><th>퀴즈</th><th>미션</th><th>나눔 글</th><th>마지막</th></tr>'
+      : '<tr><th>이름</th><th>읽은 날</th><th>나눔 글</th><th>마지막</th></tr>';
+    var lines = rows.map(function (r) {
+      return '<tr><td>' + esc(r.name) + '</td>'
+        + cell(r.days)
+        + (kind === 'kids' ? cell(r.quiz) + cell(r.mission) : '')
+        + cell(r.share)
+        + '<td class="n">' + esc(prettyDay(r.last)) + '</td></tr>';
+    }).join('');
+    return '<div class="scroll"><table><thead>' + head + '</thead><tbody>' + lines + '</tbody></table></div>';
+  }
+
+  function dayTable(rows) {
+    if (!rows.length) return '<div class="empty">아직 기록이 없습니다.</div>';
+    var show = allDays ? rows : rows.slice(0, 14);
+    var lines = show.map(function (r) {
+      return '<tr><td>' + esc(prettyDay(r.date)) + '</td>'
+        + cell(r.a) + cell(r.k) + cell(r.as) + cell(r.ks) + '</tr>';
+    }).join('');
+    var html = '<div class="scroll"><table><thead>'
+      + '<tr><th>날짜</th><th>어른 읽음</th><th>어린이 읽음</th><th>어른 나눔</th><th>어린이 나눔</th></tr>'
+      + '</thead><tbody>' + lines + '</tbody></table></div>';
+    if (!allDays && rows.length > show.length) {
+      html += '<button class="more" id="moreBtn">지난 기록 모두 보기 (' + rows.length + '일)</button>';
+    }
+    return html;
+  }
+
+  function paint() {
+    var s = data.sum;
+    made.textContent = data.madeAt ? data.madeAt + ' 기준' : '';
+
+    body.innerHTML =
+        '<h2>한눈에</h2>'
+      + cards([['어른 읽은 날', s.adultDays], ['어른 참여', s.adultPeople], ['어른 나눔 글', s.adultShare],
+               ['어린이 읽은 날', s.kidDays], ['어린이 참여', s.kidPeople], ['어린이 나눔 글', s.kidShare]])
+      + '<h2>어린이가 해낸 것</h2>'
+      + cards([['퀴즈 맞힘', s.quiz], ['미션 마침', s.mission], ['보호자 확인', s.parent]])
+      + '<h2>어린이별</h2>'  + peopleTable(data.kids || [], 'kids')
+      + '<h2>어른별</h2>'    + peopleTable(data.adults || [], 'adult')
+      + '<h2>날짜별</h2>'    + dayTable(data.days || []);
+
+    var more = document.getElementById('moreBtn');
+    if (more) more.addEventListener('click', function () { allDays = true; paint(); });
+  }
+
+  function load(key, quiet) {
+    if (!API) { say('나눔터 주소가 아직 연결되지 않았습니다.'); return; }
+    if (!quiet) say('');
+
+    fetch(API + '?action=stats&key=' + encodeURIComponent(key) + '&t=' + Date.now())
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok) {
+          forget();
+          lock.hidden = false; view.hidden = true;
+          say((d && d.error) || '기록을 받아 오지 못했습니다.');
+          return;
+        }
+        keep(key);
+        data = d; allDays = false;
+        lock.hidden = true; view.hidden = false;
+        paint();
+      })
+      .catch(function () {
+        say('인터넷이 잠시 끊긴 것 같습니다. 다시 눌러 주세요.');
+      });
+  }
+
+  document.getElementById('go').addEventListener('click', function () {
+    var k = keyIn.value.trim();
+    if (!k) { say('열쇠말을 넣어 주세요.'); return; }
+    load(k);
+  });
+  keyIn.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') document.getElementById('go').click();
+  });
+  document.getElementById('reload').addEventListener('click', function () { load(saved(), true); });
+  document.getElementById('lockBtn').addEventListener('click', function () {
+    forget(); data = null; body.innerHTML = '';
+    view.hidden = true; lock.hidden = false; keyIn.value = ''; say('');
+  });
+
+  if (saved()) load(saved(), true);
+})();
+</script>
+</body></html>
