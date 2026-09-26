@@ -71,6 +71,7 @@ function doGet(e) {
     if (p.action === 'ping')  return json({ ok: true, mode: 'server' });
     if (p.action === 'visit') return json(countVisit(String(p.id || '')));
     if (p.action === 'song')  return json(countSong(String(p.song || '')));
+    if (p.action === 'kids')  return json(kidShares(p.key, p.date));
 
     var date = ymd(p.date || '');
     var shares = rowsOf(SHEET_NAMES.share)
@@ -95,6 +96,43 @@ function doGet(e) {
   } catch (err) {
     return json({ ok: false, error: String(err) });
   }
+}
+
+/* ===========================================================
+   어린이 나눔 보기 — 목사님만
+
+   어린이 글은 홈페이지에 그냥은 내보내지 않는다. 다만 목사님이
+   시트를 열지 않고도 보실 수 있게, 열쇠말을 아는 분에게만 내어 준다.
+
+   열쇠말은 앱스 스크립트 「프로젝트 설정 → 스크립트 속성」에
+   '어린이_열쇠' 라는 이름으로 적어 두신다. 적어 두지 않으면
+   아무에게도 내어 주지 않는다(비어 있으면 잠긴 것으로 본다).
+   =========================================================== */
+function kidShares(key, date) {
+  var want = String(propStore().getProperty('어린이_열쇠') || '').trim();
+  if (!want) return { ok: false, error: '열쇠말이 아직 정해지지 않았습니다' };
+  if (String(key || '').trim() !== want) return { ok: false, error: '열쇠말이 맞지 않습니다' };
+
+  var rows = rowsOf(SHEET_NAMES.kid).map(function (r) {
+    return {
+      id: String(r['글번호']),
+      date: ymd(r['날짜']),
+      name: String(r['이름']),
+      text: String(r['나눈 말씀']),
+      mood: String(r['기분'] || ''),
+      quizOk: String(r['퀴즈 정답'] || '').trim() === 'O',
+      missionOk: String(r['미션 완료'] || '').trim() === 'O',
+      parent: String(r['보호자 확인'] || ''),
+      ts: r['올린 시각'] instanceof Date ? r['올린 시각'].getTime() : Number(r['올린 시각']) || 0,
+    };
+  });
+
+  if (date) {
+    var want2 = ymd(date);
+    rows = rows.filter(function (r) { return r.date === want2; });
+  }
+  rows.sort(function (a, b) { return b.ts - a.ts; });          /* 새 글이 위로 */
+  return { ok: true, shares: rows.slice(0, 300) };
 }
 
 /* ---------- 홈페이지가 써 넣는 곳 ---------- */
