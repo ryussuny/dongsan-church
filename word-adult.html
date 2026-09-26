@@ -162,6 +162,23 @@ nav button.on{color:var(--brick-deep);font-weight:700}
   padding:12px;font-size:13px;font-weight:700;color:var(--text2)}
 .modewrap a.on{background:var(--brick-deep);border-color:var(--brick-deep);color:#fff}
 .badge-src{font-size:10px;padding:3px 8px;border-radius:999px;background:var(--warm);color:var(--text2)}
+/* 🔊 듣기 — 글자 크기 단추 옆에 놓는다 */
+.fsbar .listen{width:auto;border:1px solid var(--border);background:var(--warm);border-radius:8px;height:26px;padding:0 10px;
+  font-size:12px;font-family:inherit;color:var(--brick-deep);font-weight:700;cursor:pointer;white-space:nowrap}
+.fsbar .listen.on{background:var(--brick-deep);border-color:var(--brick-deep);color:#fff}
+.btn[disabled]{opacity:.65}
+.btn-card{margin-top:8px;background:#fff6e6;color:var(--brick-deep);border:1px dashed var(--gold);font-size:14px;padding:13px}
+.btn-card.hi{box-shadow:0 0 0 3px rgba(201,154,63,.45)}
+.grace{color:var(--moss);font-weight:700}
+.wd .b.gr{background:#eef3e8;border-color:#cfdcc3;color:var(--moss)}
+/* 놓친 말씀 이어 읽기 */
+.catch-h{font-size:13.5px;color:var(--text2);line-height:1.75;margin-bottom:8px}
+.catch-row{display:flex;gap:10px;align-items:flex-start;padding:10px 4px;border-top:1px dashed var(--border);cursor:pointer}
+.catch-h+.catch-row{border-top:none}
+.catch-row .cd{flex:none;width:52px;font-size:12px;color:var(--text3);line-height:1.5}
+.catch-row .cp{font-size:14px;font-weight:700;color:var(--text)}
+.catch-row .cs{font-size:13px;color:var(--text2);line-height:1.7;margin-top:2px}
+.catch-row .go{margin-left:auto;flex:none;font-size:12px;color:var(--brick-deep);font-weight:700;padding-top:2px}
 </style>
 </head>
 <body>
@@ -185,9 +202,15 @@ nav button.on{color:var(--brick-deep);font-weight:700}
 
   <div class="hero" id="hero"></div>
 
+  <div class="card" id="catchCard" hidden>
+    <div class="st">🧺 놓친 말씀 이어 읽기</div>
+    <div id="catchBox"></div>
+  </div>
+
   <div class="card">
     <div class="st">📖 오늘의 본문 <span class="right" id="verSrc"></span>
-      <div class="fsbar"><button onclick="setFont(-1)">가－</button><button onclick="setFont(1)">가＋</button></div>
+      <div class="fsbar"><button class="listen" id="listenBtn" onclick="listen()" hidden>🔊 듣기</button>
+        <button onclick="setFont(-1)" aria-label="글자 작게">가－</button><button onclick="setFont(1)" aria-label="글자 크게">가＋</button></div>
     </div>
     <div class="verse" id="verseBox">본문을 불러오는 중입니다…</div>
   </div>
@@ -210,12 +233,13 @@ nav button.on{color:var(--brick-deep);font-weight:700}
       <button class="btn btn-sub" onclick="shareToday()">📤 카톡으로 나누기</button>
       <button class="btn btn-sub" onclick="go('share')">💬 은혜 나눔</button>
     </div>
+    <button class="btn btn-card" id="cardBtn" onclick="sendCard()">🌅 단톡방에 아침 말씀 카드 보내기</button>
   </div>
 
   <div class="card">
     <div class="st">✍️ 오늘 받은 은혜를 나눠 주세요</div>
     <textarea id="shareText" placeholder="오늘 말씀에서 받은 은혜, 기도 제목을 자유롭게 적어 주세요."></textarea>
-    <div class="row2"><button class="btn btn-main" onclick="postShare()">나눔 올리기</button></div>
+    <div class="row2"><button class="btn btn-main" onclick="postShare(1,this)">나눔 올리기</button></div>
     <div class="shnote" id="shareNote1"></div>
   </div>
 </div>
@@ -234,7 +258,7 @@ nav button.on{color:var(--brick-deep);font-weight:700}
   <div class="card">
     <div class="st">✍️ 나도 나누기</div>
     <textarea id="shareText2" placeholder="짧아도 좋습니다. 오늘 마음에 남은 한 구절을 적어 보세요."></textarea>
-    <div class="row2"><button class="btn btn-main" onclick="postShare(2)">나눔 올리기</button></div>
+    <div class="row2"><button class="btn btn-main" onclick="postShare(2,this)">나눔 올리기</button></div>
     <div class="shnote" id="shareNote2"></div>
   </div>
 </div>
@@ -400,9 +424,57 @@ function renderToday(){
     .map(function(t){return '<p>'+wEsc(t.trim())+'</p>'}).join('');
   if(exc)exc.style.display=d.explain?'':'none';}
   document.getElementById('verSrc').textContent='개역개정';
+  WordVoice.stop();
   renderVerses();
   refreshConfirmBtn();
+  renderCatch();
   loadFeed();
+}
+
+/* ---------- 🔊 듣기 ----------
+   어린이 화면에만 있던 읽어 주기를 어른 본문에도 붙인다.
+   절마다 끊어 읽고, 다 읽으면 버튼이 저절로 돌아온다. */
+function listen(){
+  var b=document.getElementById('listenBtn');
+  if(WordVoice.playing){WordVoice.stop();return}
+  var d=day(),vs=WordBible.ready?WordBible.verses(d.passage,true):[];
+  if(!vs.length){wToast('본문을 불러온 뒤 다시 눌러 주세요');return}
+  WordVoice.speak([d.passage+'. '+d.title+'.'].concat(vs.map(function(v){return v.t})),{rate:.9,pitch:1,
+    onChange:function(on){b.classList.toggle('on',on);b.textContent=on?'■ 멈추기':'🔊 듣기'}});
+}
+
+/* ---------- 놓친 말씀 이어 읽기 ----------
+   며칠 쉬신 분께 지난 말씀을 한 줄씩 보여 드리고, 누르면 그날로 간다.
+   그날 읽고 확인하시면 기록이 채워져 연속도 다시 이어진다. */
+function renderCatch(){
+  var card=document.getElementById('catchCard'),box=document.getElementById('catchBox');
+  if(!me.name||viewDate!==WordData.today()){card.hidden=true;return}
+  var s=wordStreak(me.name,VER),miss=wordMissed(s.doneMap);
+  if(!miss.length){card.hidden=true;return}
+  var t=WordData.today(),readToday=!!s.doneMap[t],sim=Object.assign({},s.doneMap);
+  sim[t]=true;
+  var covered=wordStreakOf(sim).grace.indexOf(miss[0])>=0,G='<span class="grace">🕊 은혜의 하루</span>',head;
+  if(miss.length>1)head='지난 '+miss.length+'일 말씀을 놓치셨네요. 한 줄씩 훑고 오늘 말씀으로 이어 가세요. 그날을 눌러 읽고 확인하시면 기록도 채워집니다.';
+  else if(covered&&readToday)head='어제 말씀은 '+G+'로 이어졌습니다. 어제 이야기도 짧게 보고 가세요.';
+  else if(covered)head='어제 말씀을 놓치셨네요. 오늘 읽으시면 '+G+'로 연속 기록이 이어집니다. 어제 이야기도 짧게 보고 가세요.';
+  else head='어제 말씀을 놓치셨네요. 이번 주 은혜의 하루는 이미 쓰셨습니다. 어제 날을 눌러 읽고 확인하시면 연속 기록이 이어집니다.';
+  box.innerHTML='<div class="catch-h">'+head+'</div>'+miss.slice(0,5).map(function(ds){
+    var d=WordData.forDate(ds,WordStore.custom());
+    return '<div class="catch-row" role="button" tabindex="0" onclick="openDay(\''+ds+'\')">'+
+      '<div class="cd">'+ds.slice(5).replace('-','/')+'<br>'+WordData.weekday(ds)+'</div>'+
+      '<div><div class="cp">'+wEsc(d.passage)+' · '+wEsc(d.title)+'</div>'+
+      (d.kids&&d.kids.summary?'<div class="cs">'+wEsc(d.kids.summary)+'</div>':'')+'</div>'+
+      '<div class="go">읽기 ›</div></div>';
+  }).join('');
+  card.hidden=false;
+}
+
+/* ---------- 🌅 아침 말씀 카드 ----------
+   단톡방에 올리기 좋은 짧은 카드. 구절 하나, 물음 하나, 주소 하나. */
+function sendCard(){
+  var d=day(),ref=d.kids&&d.kids.verseRef;
+  var v=(ref&&WordBible.ready)?WordBible.one(ref,true):'';
+  WordShare.send(WordShare.card(d,v,v?ref:''));
 }
 
 function renderVerses(){
@@ -421,30 +493,49 @@ function renderVerses(){
 
 function refreshConfirmBtn(){
   var b=document.getElementById('confirmBtn');
-  if(!me.name){b.className='btn btn-main';b.textContent='이름을 먼저 설정해 주세요';return}
   if(isFuture()){b.className='btn btn-sub';b.textContent='아직 오지 않은 날입니다';return}
+  if(!me.name){b.className='btn btn-main';b.textContent='오늘 말씀을 읽었습니다';
+    document.getElementById('streakTxt').textContent='';return}
   var mine=WordStore.myConfirms(me.name,VER).some(function(c){return c.date===viewDate});
   b.className=mine?'btn btn-done':'btn btn-main';
   b.textContent=mine?'✓ 읽음 확인 완료 (누르면 취소)':'오늘 말씀을 읽었습니다';
   var s=wordStreak(me.name,VER);
-  document.getElementById('streakTxt').textContent=s.days>0?'연속 '+s.days+'일 · 누적 '+s.total+'일':'누적 '+s.total+'일';
+  document.getElementById('streakTxt').innerHTML=(s.days>0?'연속 '+s.days+'일 · 누적 '+s.total+'일':'누적 '+s.total+'일')+
+    (s.grace.length?' · <span class="grace" title="이레에 하루는 빠져도 연속이 이어집니다">🕊 은혜의 하루</span>':'');
 }
 
+/* 이름을 그 자리에서 여쭙고, 하려던 일을 이어서 한다 */
+function needName(then){
+  if(me.name)return then();
+  wAskName({title:'성함을 알려 주세요',sub:'확인과 나눔에 이 이름이 적힙니다. 한 번만 적으시면 됩니다.'},function(n){
+    me=WordUser.set({name:n});
+    document.getElementById('who').textContent=n+' 님';
+    refreshConfirmBtn();renderCatch();
+    then();
+  });
+}
+
+var confirming=false;
 function toggleConfirm(){
-  if(!me.name){go('set');wToast('이름을 먼저 설정해 주세요');return}
   if(isFuture()){wToast('오늘 이후는 확인할 수 없습니다');return}
+  if(!me.name){needName(toggleConfirm);return}
+  if(confirming)return;
   var mine=WordStore.myConfirms(me.name,VER).some(function(c){return c.date===viewDate});
+  confirming=true;
+  var done=function(){confirming=false};
   if(mine){
     WordStore.unconfirm({date:viewDate,name:me.name,ver:VER}).then(function(){
-      wToast('확인을 취소했습니다');refreshConfirmBtn();loadFeed();
-    });
+      done();wToast('확인을 취소했습니다');refreshConfirmBtn();renderCatch();loadFeed();
+    },done);
     return;
   }
   WordStore.confirm({date:viewDate,name:me.name,ver:VER}).then(function(){
+    done();
     var s=wordStreak(me.name,VER);
-    wToast(s.days>1?'확인되었습니다 · 연속 '+s.days+'일째 🎉':'확인되었습니다. 은혜가 넘치시길 🙏');
-    refreshConfirmBtn();loadFeed();
-  });
+    wToast(s.days>1?(s.grace.length?'확인되었습니다 · 🕊 은혜의 하루로 이어져 연속 '+s.days+'일째':'확인되었습니다 · 연속 '+s.days+'일째 🎉')
+                   :'확인되었습니다. 은혜가 넘치시길 🙏');
+    refreshConfirmBtn();renderCatch();loadFeed();
+  },done);
 }
 
 function shareToday(){
@@ -454,13 +545,15 @@ function shareToday(){
   WordShare.send(t);
 }
 
-function postShare(which){
+function postShare(which,btn){
   var el=document.getElementById(which===2?'shareText2':'shareText');
   var txt=el.value.trim();
-  if(!me.name){go('set');wToast('이름을 먼저 설정해 주세요');return}
   if(!txt){wToast('나눌 내용을 적어 주세요');return}
-  WordStore.share({date:viewDate,name:me.name,ver:VER,text:txt}).then(function(){
-    el.value='';wToast('나눔을 올렸습니다');loadFeed(function(){renderShares()});
+  if(!me.name){needName(function(){postShare(which,btn)});return}
+  wOnce(btn,'올리는 중…',function(){
+    return WordStore.share({date:viewDate,name:me.name,ver:VER,text:txt}).then(function(){
+      el.value='';wToast('나눔을 올렸습니다');loadFeed(function(){renderShares()});
+    });
   });
 }
 
@@ -517,7 +610,7 @@ function renderShares(){
   }).join('')+seeds;
 }
 function tapAmen(id){
-  if(!me.name){go('set');wToast('이름을 먼저 설정해 주세요');return}
+  if(!me.name){needName(function(){tapAmen(id)});return}
   WordStore.amen(id,me.name).then(function(){loadFeed()});
 }
 function delShare(id){
@@ -537,16 +630,17 @@ function renderStatLight(){
   document.getElementById('stToday').textContent=feedCache.confirms.length;
 }
 function renderStat(){
-  var s=me.name?wordStreak(me.name,VER):{days:0,total:0,doneMap:{}};
+  var s=me.name?wordStreak(me.name,VER):{days:0,total:0,doneMap:{},grace:[]};
   document.getElementById('stStreak').textContent=s.days;
   document.getElementById('stTotal').textContent=s.total;
   document.getElementById('stToday').textContent=feedCache.confirms.length;
 
   var t=WordData.today(),html='';
   for(var i=6;i>=0;i--){
-    var ds=WordData.shift(t,-i),ok=s.doneMap[ds];
+    var ds=WordData.shift(t,-i),ok=s.doneMap[ds],gr=!ok&&s.grace&&s.grace.indexOf(ds)>=0;
     html+='<div class="wd"><div class="n">'+WordData.weekday(ds)+'</div>'+
-      '<div class="b'+(ok?' ok':'')+(ds===t?' today':'')+'">'+(ok?'✓':ds.slice(8))+'</div></div>';
+      '<div class="b'+(ok?' ok':'')+(gr?' gr':'')+(ds===t?' today':'')+'"'+(gr?' title="은혜의 하루"':'')+'>'+
+      (ok?'✓':gr?'🕊':ds.slice(8))+'</div></div>';
   }
   document.getElementById('week7').innerHTML=html;
 
@@ -563,10 +657,8 @@ function renderStat(){
   var byName={};
   WordStore.allConfirms().forEach(function(c){(byName[c.name]=byName[c.name]||{}) [c.date]=true});
   var rank=Object.keys(byName).map(function(n){
-    var days=0,cur=WordData.today();
-    if(!byName[n][cur])cur=WordData.shift(cur,-1);
-    while(byName[n][cur]){days++;cur=WordData.shift(cur,-1)}
-    return {n:n,days:days,total:Object.keys(byName[n]).length};
+    var st=wordStreakOf(byName[n]);
+    return {n:n,days:st.days,total:st.total};
   }).sort(function(a,b){return b.days-a.days||b.total-a.total}).slice(0,10);
   document.getElementById('rankList').innerHTML=rank.length?rank.map(function(r,i){
     return '<div class="plan-row"><div class="plan-d">'+(i<3?['🥇','🥈','🥉'][i]:(i+1)+'위')+'</div>'+
@@ -678,7 +770,16 @@ function renderShareNote(){
     var el=document.getElementById(id); if(el)el.innerHTML=t;
   });
 }
-WordStore.init().then(function(){renderToday();scheduleAlarm();renderShareNote()});
+WordStore.init().then(function(){
+  renderToday();scheduleAlarm();renderShareNote();
+  /* 목사님 첫 화면의 「아침 말씀 카드」에서 들어오면 카드 버튼을 바로 보여 드린다 */
+  if(location.hash==='#card'){
+    var cb=document.getElementById('cardBtn');
+    cb.classList.add('hi');cb.scrollIntoView({block:'center'});
+    wToast('🌅 버튼을 누르면 카드가 복사됩니다');
+  }
+});
+if(WordVoice.supported())document.getElementById('listenBtn').hidden=false;
 </script>
 <script>
 /* 앱처럼 쓰기 — 홈 화면에 추가하면 주소창 없이 열린다 */

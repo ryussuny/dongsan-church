@@ -188,7 +188,7 @@ nav button.on{color:var(--sky);font-weight:700}
     <div style="font-size:16px;color:var(--tx2)">오늘 내 마음은 어때요?</div>
     <div class="moods" id="moods"></div>
     <textarea id="kidShare" placeholder="오늘 말씀에서 느낀 것을 한 줄로 써 보아요."></textarea>
-    <button class="big b-sky" style="margin-top:10px" onclick="postKidShare()">보내기</button>
+    <button class="big b-sky" style="margin-top:10px" onclick="postKidShare(this)">보내기</button>
     <div class="privnote">🔒 내가 쓴 글은 <b>목사님만</b> 보셔요. 홈페이지에 올라가지 않아요.</div>
   </div>
 
@@ -209,6 +209,7 @@ nav button.on{color:var(--sky);font-weight:700}
       <div class="starbox" style="flex:1"><div class="n" id="totalDays" style="color:var(--grass)">0</div><div class="l">말씀 읽은 날</div></div>
       <div class="starbox" style="flex:1"><div class="n" id="streakDays" style="color:var(--berry)">0</div><div class="l">연속 읽기</div></div>
     </div>
+    <div id="graceNote" style="margin-top:10px;font-size:13px;color:var(--tx2);text-align:center;line-height:1.7" hidden></div>
   </div>
   <div class="card">
     <div class="step y" id="boardMonth">이번 달 스티커판</div>
@@ -379,17 +380,33 @@ function doMission(){
   sync({missionOk:true});celebrate('🎯','미션 완료!','별 하나를 받았어요');renderProgress();
 }
 
+/* 이름이 없으면 그 자리에서 묻고, 하려던 일을 이어서 한다 */
+function needName(then){
+  if(me.name)return then();
+  wAskName({title:'이름이 뭐예요?',sub:'도장판과 나눔에 이 이름이 적혀요. 한 번만 쓰면 돼요.',
+    placeholder:'예) 김소망',ok:'좋아요!',color:'linear-gradient(135deg,#4aa3df,#7fc4f0)'},function(n){
+    me=WordUser.set({name:n});
+    document.getElementById('who').textContent=n;
+    renderProgress();renderFriends();
+    then();
+  });
+}
+
+var stamping=false;
 function doStamp(){
-  if(!me.name){go('parent');wToast('먼저 이름을 정해 주세요');return}
+  if(!me.name){needName(doStamp);return}
+  if(stamping)return;
   if(WordData.locked(viewDate)){wToast('내일 말씀은 내일 새벽에 열려요');return}
   if(state().stamped){wToast('오늘은 이미 도장을 찍었어요 🌟');return}
-  var p=pend();
+  var p=pend();stamping=true;
   WordStore.confirm({date:viewDate,name:me.name,ver:VER,quizOk:!!p.quizOk,missionOk:!!p.missionOk,mood:p.mood||''})
     .then(function(){
+      stamping=false;
       var st=wordStreak(me.name,VER);
-      celebrate(day().kids.emoji,'도장 꾹! 참 잘했어요','연속 '+st.days+'일째 말씀을 읽었어요');
+      celebrate(day().kids.emoji,'도장 꾹! 참 잘했어요',
+        st.grace.length&&st.days>1?'🕊 은혜의 하루로 이어져 연속 '+st.days+'일째예요':'연속 '+st.days+'일째 말씀을 읽었어요');
       renderProgress();loadFeed();
-    });
+    },function(){stamping=false});
 }
 
 function parentCheck(){
@@ -433,12 +450,14 @@ function readAloud(){
   wToast('말씀을 읽어 드릴게요 🔊');
 }
 
-function postKidShare(){
+function postKidShare(btn){
   var el=document.getElementById('kidShare'),t=el.value.trim(),s=state();
-  if(!me.name){go('parent');wToast('먼저 이름을 정해 주세요');return}
   if(!t){wToast('한 줄만 써 볼까요?');return}
-  WordStore.share({date:viewDate,name:me.name,ver:VER,text:(s.mood?s.mood+' ':'')+t}).then(function(){
-    el.value='';celebrate('💌','마음을 보냈어요','목사님이 읽어 주실 거예요');loadFeed();
+  if(!me.name){needName(function(){postKidShare(btn)});return}
+  wOnce(btn,'보내는 중…',function(){
+    return WordStore.share({date:viewDate,name:me.name,ver:VER,text:(s.mood?s.mood+' ':'')+t}).then(function(){
+      el.value='';celebrate('💌','마음을 보냈어요','목사님이 읽어 주실 거예요');loadFeed();
+    });
   });
 }
 
@@ -459,7 +478,7 @@ function renderFriends(){
   applyFont();
 }
 function clap(id){
-  if(!me.name){go('parent');wToast('먼저 이름을 정해 주세요');return}
+  if(!me.name){needName(function(){clap(id)});return}
   WordStore.amen(id,me.name).then(function(){loadFeed()});
 }
 function timeAgo(ts){
@@ -484,6 +503,9 @@ function renderBoard(){
   document.getElementById('totalStars').textContent=stars;
   document.getElementById('totalDays').textContent=st.total;
   document.getElementById('streakDays').textContent=st.days;
+  var gn=document.getElementById('graceNote');
+  gn.hidden=!(st.grace&&st.grace.length);
+  gn.textContent='🕊 은혜의 하루 — 하루 빠졌지만 연속 기록이 이어졌어요. 일주일에 하루는 괜찮아요!';
   document.getElementById('boardMonth').textContent=viewMonth.replace('-','년 ')+'월 스티커판';
 
   var p=viewMonth.split('-'),y=+p[0],mo=+p[1];
