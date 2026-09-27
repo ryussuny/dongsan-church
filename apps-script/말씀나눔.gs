@@ -20,7 +20,8 @@ var SHEET_NAMES = { share: '나눔', kid: '어린이', confirm: '읽음', stat: 
 
 var HEADERS = {
   나눔:   ['글번호', '날짜', '이름', '나눈 말씀', '아멘 누른 사람', '아멘 수', '올린 시각'],
-  어린이: ['글번호', '날짜', '이름', '나눈 말씀', '기분', '퀴즈 정답', '미션 완료', '보호자 확인', '올린 시각'],
+  어린이: ['글번호', '날짜', '이름', '나눈 말씀', '기분', '퀴즈 정답', '미션 완료', '보호자 확인', '올린 시각',
+           '목사님 답장', '답장 시각'],
   읽음:   ['날짜', '이름', '구분', '퀴즈 정답', '미션 완료', '기분', '보호자 확인', '기록 시각'],
   방문:   ['날짜', '기기', '첫 방문 시각'],
   찬양:   ['곡', '들은 수', '마지막 들은 시각'],
@@ -37,6 +38,18 @@ function sheet(name) {
       sh.getRange(1, 1, 1, HEADERS[name].length).setValues([HEADERS[name]])
         .setFontWeight('bold').setBackground('#eef1f7');
       sh.setFrozenRows(1);
+    }
+  }
+  return sh;
+}
+
+/* 예전에 만든 시트에 새로 늘어난 머리글(예: 어린이 「목사님 답장」)을 채워 넣는다 */
+function ensureHeaders(name) {
+  var sh = sheet(name), want = HEADERS[name];
+  var have = sh.getRange(1, 1, 1, want.length).getValues()[0];
+  for (var c = 0; c < want.length; c++) {
+    if (!String(have[c] || '').trim()) {
+      sh.getRange(1, c + 1).setValue(want[c]).setFontWeight('bold').setBackground('#eef1f7');
     }
   }
   return sh;
@@ -73,6 +86,8 @@ function doGet(e) {
     if (p.action === 'song')  return json(countSong(String(p.song || '')));
     if (p.action === 'kids')  return json(kidShares(p.key, p.date));
     if (p.action === 'stats') return json(statsReport(p.key));
+    if (p.action === 'together')   return json(together());
+    if (p.action === 'kidreplies') return json(kidReplies(String(p.ids || '')));
 
     var date = ymd(p.date || '');
     var shares = rowsOf(SHEET_NAMES.share)
@@ -114,16 +129,24 @@ function kidShares(key, date) {
   if (!want) return { ok: false, error: '열쇠말이 아직 정해지지 않았습니다' };
   if (String(key || '').trim() !== want) return { ok: false, error: '열쇠말이 맞지 않습니다' };
 
+  ensureHeaders(SHEET_NAMES.kid);
+  /* 나눔 칸이 비어 있으면(예전 글) 같은 날 읽음 기록에서 퀴즈·미션·보호자를 가져온다 */
+  var read = {};
+  rowsOf(SHEET_NAMES.confirm).forEach(function (r) {
+    if (String(r['구분']) === 'kids') read[ymd(r['날짜']) + '|' + String(r['이름'])] = r;
+  });
   var rows = rowsOf(SHEET_NAMES.kid).map(function (r) {
+    var date = ymd(r['날짜']), name = String(r['이름']), c = read[date + '|' + name] || {};
     return {
       id: String(r['글번호']),
-      date: ymd(r['날짜']),
-      name: String(r['이름']),
+      date: date,
+      name: name,
       text: String(r['나눈 말씀']),
-      mood: String(r['기분'] || ''),
-      quizOk: String(r['퀴즈 정답'] || '').trim() === 'O',
-      missionOk: String(r['미션 완료'] || '').trim() === 'O',
-      parent: String(r['보호자 확인'] || ''),
+      mood: String(r['기분'] || c['기분'] || ''),
+      quizOk: String(r['퀴즈 정답'] || c['퀴즈 정답'] || '').trim() === 'O',
+      missionOk: String(r['미션 완료'] || c['미션 완료'] || '').trim() === 'O',
+      parent: String(r['보호자 확인'] || c['보호자 확인'] || ''),
+      reply: String(r['목사님 답장'] || ''),
       ts: r['올린 시각'] instanceof Date ? r['올린 시각'].getTime() : Number(r['올린 시각']) || 0,
     };
   });
@@ -235,6 +258,7 @@ function doPost(e) {
       case 'amen':          return json(toggleAmen(rec));
       case 'confirm':       return json(putConfirm(rec));
       case 'confirm/delete':return json(dropConfirm(rec));
+      case 'kid/reply':     return json(putKidReply(body.key, rec));
       default:              return json({ ok: false, error: '알 수 없는 요청: ' + action });
     }
   } catch (err) {
@@ -254,6 +278,11 @@ function putShare(rec) {
   var id = String(rec.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)));
   var ts = Number(rec.ts) || Date.now();
 
+  /* 버튼을 두 번 눌러 같은 글이 잇달아 들어오면 한 번만 남긴다.
+     같은 날·같은 이름·같은 글이 2분 안에 또 오면 처음 것을 돌려준다. */
+  var twin = recentTwin(String(rec.ver) === 'kids' ? SHEET_NAMES.kid : SHEET_NAMES.share, date, name, text, ts);
+  if (twin) return { ok: true, id: twin, duplicate: true };
+
   if (String(rec.ver) === 'kids') {
     sheet(SHEET_NAMES.kid).appendRow([
       id, date, name, text, String(rec.mood || ''),
@@ -264,6 +293,21 @@ function putShare(rec) {
 
   sheet(SHEET_NAMES.share).appendRow([id, date, name, text, '', 0, new Date(ts)]);
   return { ok: true, id: id };
+}
+
+function recentTwin(sheetName, date, name, text, ts) {
+  var sh = sheet(sheetName), last = sh.getLastRow();
+  if (last < 2) return '';
+  var n = Math.min(20, last - 1);
+  var vals = sh.getRange(last - n + 1, 1, n, HEADERS[sheetName].length).getValues();
+  var tsCol = HEADERS[sheetName].indexOf('올린 시각');
+  for (var i = vals.length - 1; i >= 0; i--) {
+    var v = vals[i], at = v[tsCol] instanceof Date ? v[tsCol].getTime() : 0;
+    if (ymd(v[1]) === date && String(v[2]) === name && String(v[3]).trim() === text && Math.abs(ts - at) < 120000) {
+      return String(v[0]);
+    }
+  }
+  return '';
 }
 
 function dropShare(rec) {
@@ -316,7 +360,102 @@ function putConfirm(rec) {
   } else {
     sh.appendRow(row);
   }
+  if (ver === 'kids') fillKidRows(date, name, row);
+  try { CacheService.getScriptCache().remove('함께'); } catch (err) {}   /* 함께 읽은 수를 바로 새로 센다 */
   return { ok: true };
+}
+
+/* 어린이가 도장·퀴즈·미션·보호자 확인을 하면, 그날 올린 나눔 글 줄의 빈칸도 채운다.
+   목사님이 「어린이」 시트 한 장만 보셔도 아이가 무엇을 해냈는지 알 수 있게. */
+function fillKidRows(date, name, row) {
+  var sh = sheet(SHEET_NAMES.kid);
+  rowsOf(SHEET_NAMES.kid).forEach(function (r) {
+    if (ymd(r['날짜']) !== date || String(r['이름']) !== name) return;
+    var cur = [r['기분'], r['퀴즈 정답'], r['미션 완료'], r['보호자 확인']];
+    var next = [cur[0] || row[5], row[3] || cur[1], row[4] || cur[2], row[6] || cur[3]];
+    if (next.join('|') !== cur.join('|')) sh.getRange(r._row, colIndex('어린이', '기분'), 1, 4).setValues([next]);
+  });
+}
+
+/* ===========================================================
+   목사님 답장 — 어린이 나눔에
+
+   어린이 나눔 보기에서 목사님이 답장을 쓰시면 「어린이」 시트의
+   「목사님 답장」 칸에 남는다. 열쇠말이 맞아야 쓸 수 있다.
+   아이 앱은 자기가 쓴 글의 글번호로만 답장을 받아 간다.
+   글번호는 아이 기기에서 만든 임의의 글자라 남의 답장은 볼 수 없다.
+   =========================================================== */
+function putKidReply(key, rec) {
+  var want = String(propStore().getProperty('어린이_열쇠') || '').trim();
+  if (!want || String(key || '').trim() !== want) return { ok: false, error: '열쇠말이 맞지 않습니다' };
+  var id = String(rec.id || ''), text = String(rec.text || '').trim().slice(0, 500);
+  if (!id) return { ok: false, error: '글번호가 필요합니다' };
+  var sh = ensureHeaders(SHEET_NAMES.kid);
+  var hit = rowsOf(SHEET_NAMES.kid).filter(function (r) { return String(r['글번호']) === id; })[0];
+  if (!hit) return { ok: false, error: '글을 찾지 못했습니다' };
+  sh.getRange(hit._row, colIndex('어린이', '목사님 답장'), 1, 2).setValues([[text, text ? new Date() : '']]);
+  return { ok: true, reply: text };
+}
+
+function kidReplies(ids) {
+  var want = {};
+  ids.split(',').slice(0, 60).forEach(function (s) { s = s.trim(); if (s) want[s] = 1; });
+  if (!Object.keys(want).length) return { ok: true, replies: [] };
+  var out = rowsOf(SHEET_NAMES.kid).filter(function (r) {
+    return want[String(r['글번호'])] && String(r['목사님 답장'] || '').trim();
+  }).map(function (r) {
+    var at = r['답장 시각'];
+    return { id: String(r['글번호']), date: ymd(r['날짜']), reply: String(r['목사님 답장']),
+             at: at instanceof Date ? at.getTime() : 0 };
+  });
+  return { ok: true, replies: out };
+}
+
+/* ===========================================================
+   온 교회가 함께 — 이번 주 읽음 수
+
+   이름은 내보내지 않고 숫자만 준다. 한 주는 월요일에 시작한다.
+   목표는 스크립트 속성 '함께_목표' 에 숫자를 적으면 그것을,
+   없으면 지난주보다 조금 높게(20 이상, 10 단위) 저절로 잡는다.
+   5분 동안은 셈을 다시 하지 않고 캐시에서 돌려준다.
+   =========================================================== */
+function together() {
+  var cache = CacheService.getScriptCache(), hit = cache.get('함께');
+  if (hit) return JSON.parse(hit);
+
+  var now = new Date();
+  var today = Utilities.formatDate(now, 'Asia/Seoul', 'yyyy-MM-dd');
+  var dow = Number(Utilities.formatDate(now, 'Asia/Seoul', 'u'));        /* 1=월 … 7=주일 */
+  var mon = shiftDay(today, -(dow - 1)), lastMon = shiftDay(mon, -7);
+
+  var byDay = [0, 0, 0, 0, 0, 0, 0], names = {}, count = 0, last = 0, kids = 0;
+  rowsOf(SHEET_NAMES.confirm).forEach(function (r) {
+    var d = ymd(r['날짜']);
+    if (d >= mon && d <= today) {
+      count++;
+      byDay[dayGap(mon, d)]++;
+      names[String(r['이름'])] = 1;
+      if (String(r['구분']) === 'kids') kids++;
+    } else if (d >= lastMon && d < mon) {
+      last++;
+    }
+  });
+
+  var set = Number(propStore().getProperty('함께_목표') || 0);
+  var goal = set > 0 ? set : Math.max(20, Math.ceil(last * 1.2 / 10) * 10);
+  var out = { ok: true, week: { start: mon, count: count, people: Object.keys(names).length, kids: kids, byDay: byDay },
+              lastWeek: last, goal: goal };
+  cache.put('함께', JSON.stringify(out), 300);
+  return out;
+}
+
+function shiftDay(ds, n) {
+  var p = ds.split('-'), d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2] + n));
+  return Utilities.formatDate(d, 'UTC', 'yyyy-MM-dd');
+}
+function dayGap(a, b) {
+  var pa = a.split('-'), pb = b.split('-');
+  return Math.round((Date.UTC(+pb[0], +pb[1] - 1, +pb[2]) - Date.UTC(+pa[0], +pa[1] - 1, +pa[2])) / 86400000);
 }
 
 function dropConfirm(rec) {
@@ -325,6 +464,7 @@ function dropConfirm(rec) {
     return ymd(r['날짜']) === date && String(r['이름']) === name && String(r['구분']) === String(rec.ver || 'adult');
   })[0];
   if (hit) sh.deleteRow(hit._row);
+  try { CacheService.getScriptCache().remove('함께'); } catch (err) {}
   return { ok: true };
 }
 

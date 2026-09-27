@@ -179,6 +179,16 @@ nav button.on{color:var(--brick-deep);font-weight:700}
 .catch-row .cp{font-size:14px;font-weight:700;color:var(--text)}
 .catch-row .cs{font-size:13px;color:var(--text2);line-height:1.7;margin-top:2px}
 .catch-row .go{margin-left:auto;flex:none;font-size:12px;color:var(--brick-deep);font-weight:700;padding-top:2px}
+/* 온 교회가 함께 */
+.tg-num{font-size:14px;color:var(--text2)}
+.tg-num b{font-family:'Gowun Batang',serif;font-size:26px;color:var(--brick-deep);margin-right:2px}
+.tg-bar{margin-top:8px;height:12px;border-radius:99px;background:var(--warm);overflow:hidden}
+.tg-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--moss),#86a86f);transition:width .6s}
+.tg-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px;text-align:center}
+.tg-days div{font-size:11px;color:var(--text3)}
+.tg-days b{display:block;font-size:13px;color:var(--text2);font-variant-numeric:tabular-nums}
+.tg-days .now b{color:var(--brick-deep)}
+.tg-cap{margin-top:8px;font-size:12px;color:var(--text3);line-height:1.7}
 /* 지금 이야기, 어디쯤일까 — 성경 큰 이야기 열 칸 가운데 오늘의 자리 */
 .wx-eras{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;align-items:center}
 .wx-e{text-align:center;font-size:15px;line-height:30px;border-radius:8px;background:var(--warm);opacity:.45;filter:grayscale(.6)}
@@ -239,6 +249,11 @@ nav button.on{color:var(--brick-deep);font-weight:700}
   </div>
 
   <div class="hero" id="hero"></div>
+
+  <div class="card" id="togetherCard" hidden>
+    <div class="st">⛪ 이번 주 온 교회가 함께 <span class="right" id="tgPeople"></span></div>
+    <div id="togetherBox"></div>
+  </div>
 
   <div class="card" id="whereCard" hidden>
     <div class="st">🧭 지금 이야기, 어디쯤일까</div>
@@ -493,6 +508,24 @@ function renderToday(){
   loadFeed();
 }
 
+/* ---------- 온 교회가 함께 ---------- */
+function renderTogether(){
+  wTogether(function(d){
+    var card=document.getElementById('togetherCard');
+    if(!d){card.hidden=true;return}
+    var w=d.week,pct=Math.min(100,Math.round(w.count/Math.max(1,d.goal)*100));
+    var todayIx=WordData.dayIndex(WordData.today())-WordData.dayIndex(w.start);
+    document.getElementById('tgPeople').textContent=w.people+'명 참여';
+    document.getElementById('togetherBox').innerHTML=
+      '<div class="tg-num"><b>'+w.count+'</b>번 읽었습니다 · 목표 '+d.goal+'번'+(w.count>=d.goal?' 🎉':'')+'</div>'+
+      '<div class="tg-bar" role="img" aria-label="목표 '+d.goal+'번 가운데 '+w.count+'번"><i style="width:'+Math.max(2,pct)+'%"></i></div>'+
+      '<div class="tg-days">'+['월','화','수','목','금','토','주일'].map(function(n,i){
+        return '<div class="'+(i===todayIx?'now':'')+'"><b>'+(i>todayIx?'·':w.byDay[i])+'</b>'+n+'</div>'}).join('')+'</div>'+
+      '<div class="tg-cap">어른과 어린이가 「읽었습니다」를 누를 때마다 막대가 자랍니다. 어린이 '+w.kids+'번 · 지난주 '+d.lastWeek+'번</div>';
+    card.hidden=false;
+  });
+}
+
 /* ---------- 지금 이야기, 어디쯤일까 ---------- */
 function renderWhere(){
   var w=WordExtra.where(day()),card=document.getElementById('whereCard');
@@ -664,7 +697,7 @@ function toggleConfirm(){
   var done=function(){confirming=false};
   if(mine){
     WordStore.unconfirm({date:viewDate,name:me.name,ver:VER}).then(function(){
-      done();wToast('확인을 취소했습니다');refreshConfirmBtn();renderCatch();loadFeed();
+      done();wToast('확인을 취소했습니다');refreshConfirmBtn();renderCatch();loadFeed();renderTogether();
     },done);
     return;
   }
@@ -673,7 +706,7 @@ function toggleConfirm(){
     var s=wordStreak(me.name,VER);
     wToast(s.days>1?(s.grace.length?'확인되었습니다 · 🕊 은혜의 하루로 이어져 연속 '+s.days+'일째':'확인되었습니다 · 연속 '+s.days+'일째 🎉')
                    :'확인되었습니다. 은혜가 넘치시길 🙏');
-    refreshConfirmBtn();renderCatch();loadFeed();
+    refreshConfirmBtn();renderCatch();loadFeed();renderTogether();
   },done);
 }
 
@@ -910,7 +943,7 @@ function renderShareNote(){
   });
 }
 WordStore.init().then(function(){
-  renderToday();scheduleAlarm();renderShareNote();
+  renderToday();scheduleAlarm();renderShareNote();renderTogether();
   /* 목사님 첫 화면의 「아침 말씀 카드」에서 들어오면 카드 버튼을 바로 보여 드린다 */
   if(location.hash==='#card'){
     var cb=document.getElementById('cardBtn');
