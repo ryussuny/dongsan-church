@@ -185,6 +185,17 @@ nav button.on{color:var(--sky);font-weight:700}
 .pc.lock{background:#eef3f8;color:var(--tx3);box-shadow:none}
 .pc.lock .pe{filter:grayscale(1);opacity:.35}
 .pc.lock .pn{font-size:11px;font-weight:400}
+.tg{font-size:15px;color:var(--tx2)}
+.tg b{font-size:28px;font-weight:900;color:var(--grass);margin-right:2px}
+.tg-bar{margin-top:8px;height:16px;border-radius:99px;background:#eef6fd;overflow:hidden}
+.tg-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--grass),var(--sun));transition:width .6s}
+.tg-cap{margin-top:8px;font-size:13px;color:var(--tx3);line-height:1.7}
+/* 목사님 답장 */
+.rp{padding:12px 0;border-top:2px dashed var(--line)}
+.rp:first-of-type{border-top:none}
+.rp .mine{font-size:14px;color:var(--tx3);line-height:1.7}
+.rp .ans{margin-top:6px;background:#fff3f5;border-radius:16px;padding:12px 14px;font-size:17px;line-height:1.8;color:#8a3b4a;font-weight:700}
+.rp .new{display:inline-block;font-size:11px;background:var(--berry);color:#fff;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:2px}
 .tease{font-size:14px;color:#8a6a1a;background:#fff8e6;border-radius:14px;padding:9px 12px;margin:4px 0 12px}
 </style>
 </head>
@@ -202,6 +213,16 @@ nav button.on{color:var(--sky);font-weight:700}
 <!-- ===== 오늘 ===== -->
 <div class="pg on" id="pg-today">
   <div class="today-hero" id="hero"></div>
+
+  <div class="card" id="replyCard" hidden>
+    <div class="step r">💌 목사님의 답장</div>
+    <div id="replyList"></div>
+  </div>
+
+  <div class="card" id="togetherCard" hidden>
+    <div class="step g">⛪ 이번 주 우리 교회가 함께 읽었어요</div>
+    <div id="togetherBox"></div>
+  </div>
 
   <div class="card" id="whereCard" hidden>
     <div class="step y">🚂 성경 이야기 기차 · 지금 어디쯤일까?</div>
@@ -410,7 +431,7 @@ function renderToday(){
   document.getElementById('hero').innerHTML=
     '<div class="emo">'+k.emoji+'</div><div class="ttl">'+wEsc(d.title)+'</div>'+
     '<div class="ps">'+wEsc(d.passage)+'</div>'+
-    '<div class="dt">'+viewDate.replace(/-/g,'.')+' ('+WordData.weekday(viewDate)+'요일)</div>';
+    '<div class="dt">'+viewDate.replace(/-/g,'.')+' ('+(WordData.weekday(viewDate)==='주일'?'주일':WordData.weekday(viewDate)+'요일')+')</div>';
   document.getElementById('story').textContent=k.summary;
   document.getElementById('tableQ').textContent=WordExtra.table(d);
   document.getElementById('missionTx').textContent=k.mission;
@@ -592,6 +613,49 @@ function pickReview(i){
   },1100);
 }
 
+/* ---------- 온 교회가 함께 ---------- */
+function renderTogether(){
+  wTogether(function(d){
+    var card=document.getElementById('togetherCard');
+    if(!d){card.hidden=true;return}
+    var w=d.week,pct=Math.min(100,Math.round(w.count/Math.max(1,d.goal)*100));
+    document.getElementById('togetherBox').innerHTML=
+      '<div class="tg"><b>'+w.count+'</b>번 · 목표 '+d.goal+'번 '+(w.count>=d.goal?'🎉 목표를 넘었어요!':'')+'</div>'+
+      '<div class="tg-bar"><i style="width:'+Math.max(3,pct)+'%"></i></div>'+
+      '<div class="tg-cap">누구든 도장을 찍으면 막대가 한 칸 자라요. 그중 어린이가 '+w.kids+'번 읽었어요!</div>';
+    card.hidden=false;
+  });
+}
+
+/* ---------- 목사님 답장 ----------
+   이 기기에서 보낸 글의 글번호로만 답장을 받아 온다. 새 답장은 한 번 축하한다. */
+var SEEN='dongsan_kid_replies_seen';
+function renderReplies(){
+  var since=WordData.shift(WordData.today(),-45);
+  var mine=WordStore.myShares('kids').filter(function(x){return x.date>=since});
+  if(!mine.length)return;
+  WordStore.ask({action:'kidreplies',ids:mine.map(function(x){return x.id}).slice(-60).join(',')}).then(function(d){
+    var list=(d&&d.ok&&d.replies)||[],card=document.getElementById('replyCard');
+    if(!list.length){card.hidden=true;return}
+    var seen={};try{seen=JSON.parse(localStorage.getItem(SEEN))||{}}catch(e){}
+    var byId={};mine.forEach(function(x){byId[x.id]=x});
+    list.sort(function(a,b){return (b.at||0)-(a.at||0)});
+    var fresh=list.filter(function(r){return seen[r.id]!==r.reply});
+    document.getElementById('replyList').innerHTML=list.slice(0,3).map(function(r){
+      var m=byId[r.id]||{};
+      return '<div class="rp"><div class="mine">'+r.date.slice(5).replace('-','/')+' 내가 쓴 글 · '+wEsc((m.mood?m.mood+' ':'')+(m.text||''))+
+        (seen[r.id]!==r.reply?'<span class="new">새 답장</span>':'')+'</div>'+
+        '<div class="ans">✉️ '+wEsc(r.reply)+'</div></div>';
+    }).join('');
+    card.hidden=false;
+    if(fresh.length){
+      celebrate('💌','목사님이 답장해 주셨어요!','오늘 화면 맨 위에서 읽어 보아요');
+      list.forEach(function(r){seen[r.id]=r.reply});
+      try{localStorage.setItem(SEEN,JSON.stringify(seen))}catch(e){}
+    }
+  });
+}
+
 /* ---------- 인물 카드 ---------- */
 function myDates(){return me.name?WordStore.myConfirms(me.name,VER).map(function(c){return c.date}):[]}
 function renderTease(){
@@ -643,7 +707,7 @@ function doStamp(){
       fresh.forEach(function(k,i){
         setTimeout(function(){celebrate(k.e,'새 인물 카드 · '+k.n,k.t)},2000*(i+1));
       });
-      renderProgress();renderTease();loadFeed();
+      renderProgress();renderTease();loadFeed();renderTogether();
     },function(){stamping=false});
 }
 
@@ -696,7 +760,9 @@ function postKidShare(btn){
   if(!t){wToast('한 줄만 써 볼까요?');return}
   if(!me.name){needName(function(){postKidShare(btn)});return}
   wOnce(btn,'보내는 중…',function(){
-    return WordStore.share({date:viewDate,name:me.name,ver:VER,text:(s.mood?s.mood+' ':'')+t}).then(function(){
+    /* 기분·퀴즈·미션은 글에 붙이지 않고 따로 보낸다. 교회 시트 「어린이」의 칸이 채워진다 */
+    return WordStore.share({date:viewDate,name:me.name,ver:VER,text:t,mood:s.mood||'',
+                            quizOk:s.quizOk,missionOk:s.missionOk,parent:s.parent||''}).then(function(){
       el.value='';celebrate('💌','마음을 보냈어요','목사님이 읽어 주실 거예요');loadFeed();
     });
   });
@@ -712,7 +778,7 @@ function renderFriends(){
     return '<div class="friend"><div class="fav">'+(x.ver==='kids'?'🧒':'🙏')+'</div><div style="flex:1">'+
       '<div class="fname">'+wEsc(x.name)+(x.ver==='kids'?'<span class="tagk">어린이</span>':'<span class="tagk">어른</span>')+'</div>'+
       '<div class="ftime">'+timeAgo(x.ts)+'</div>'+
-      '<div class="ftext">'+wEsc(x.text)+'</div>'+
+      '<div class="ftext">'+(x.mood?wEsc(x.mood)+' ':'')+wEsc(x.text)+'</div>'+
       '<button class="clap'+(on?' on':'')+'" onclick="clap(\''+x.id+'\')">👏 잘했어요 '+(claps.length||'')+'</button>'+
       '</div></div>';
   }).join(''):'<div class="empty">아직 오늘 나눔이 없어요.<br>내가 먼저 마음을 나눠 볼까요? 💌</div>';
@@ -820,7 +886,7 @@ function applyFont(){
 
 /* ---------- 시작 ---------- */
 document.getElementById('who').textContent=me.name||'이름 정하기';
-WordStore.init().then(function(){renderToday();loadFeed();applyFont()});
+WordStore.init().then(function(){renderToday();loadFeed();applyFont();renderTogether();renderReplies()});
 </script>
 <script>
 /* 앱처럼 쓰기 — 홈 화면에 추가하면 주소창 없이 열린다 */

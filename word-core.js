@@ -113,6 +113,15 @@ var WordStore=(function(){
     return Promise.resolve();
   }
 
+  /* 교회 서버에 묻기 (함께 읽은 수, 목사님 답장 등). 서버가 없거나 옛 판이면 null */
+  function ask(params){
+    if(mode!=='server')return Promise.resolve(null);
+    var q=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k])}).join('&');
+    return fetch(api+'?'+q+'&t='+Date.now()).then(function(r){return r.json()}).catch(function(){return null});
+  }
+  /* 이 기기에서 쓴 나눔 글 */
+  function myShares(ver){return db().shares.filter(function(s){return !ver||s.ver===ver})}
+
   /* 내 기록 전체 (연속일수/스티커 계산용) */
   function myConfirms(name,ver){
     return db().confirms.filter(function(c){return c.name===name&&(!ver||c.ver===ver)});
@@ -130,7 +139,7 @@ var WordStore=(function(){
     if(o.custom)localStorage.setItem(KC,JSON.stringify(o.custom));
   }
 
-  return {init:init,get mode(){return mode},feed:feed,confirm:confirm,unconfirm:unconfirm,share:share,removeShare:removeShare,
+  return {init:init,get mode(){return mode},ask:ask,myShares:myShares,feed:feed,confirm:confirm,unconfirm:unconfirm,share:share,removeShare:removeShare,
           amen:amen,myConfirms:myConfirms,allConfirms:allConfirms,custom:custom,setCustom:setCustom,
           exportAll:exportAll,importAll:importAll};
 })();
@@ -194,6 +203,13 @@ function wordMissed(done){
     out.push(ds);
   }
   return out.length===7?[]:out;               /* 이레를 넘게 쉬었으면 오늘부터 새로 */
+}
+
+/* ---------- 온 교회가 함께 ----------
+   이번 주 온 교회(어른·어린이)가 누른 「읽었습니다」 수를 막대로 보여 준다.
+   이름은 오가지 않고 숫자만 온다. 서버가 옛 판이면 아무것도 그리지 않는다. */
+function wTogether(cb){
+  WordStore.ask({action:'together'}).then(function(d){cb(d&&d.ok&&d.week?d:null)});
 }
 
 /* ---------- 이름 묻기 ----------
