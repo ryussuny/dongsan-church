@@ -86,6 +86,7 @@ function doGet(e) {
     if (p.action === 'song')  return json(countSong(String(p.song || '')));
     if (p.action === 'kids')  return json(kidShares(p.key, p.date));
     if (p.action === 'stats') return json(statsReport(p.key));
+    if (p.action === 'person') return json(personReport(p.key, p.name));
     if (p.action === 'together')   return json(together());
     if (p.action === 'kidreplies') return json(kidReplies(String(p.ids || '')));
 
@@ -240,6 +241,48 @@ function statsReport(key) {
     adults: tally(adultConf, share),
     days: Object.keys(byDate).sort().reverse().slice(0, 120).map(function (d) { return byDate[d]; }),
   };
+}
+
+/* ===========================================================
+   한 사람의 기록 — 목사님만 (기록 보관소에서 이름을 누르면)
+
+   그 이름으로 남은 읽음 기록과 나눔 글을 모두 내어 준다.
+   어른과 어린이 기록이 같은 이름으로 함께 있으면 둘 다 준다.
+   어린이 글이 들어 있으므로 같은 열쇠말('어린이_열쇠')로 잠근다.
+   =========================================================== */
+function personReport(key, name) {
+  var want = String(propStore().getProperty('어린이_열쇠') || '').trim();
+  if (!want) return { ok: false, error: '열쇠말이 아직 정해지지 않았습니다' };
+  if (String(key || '').trim() !== want) return { ok: false, error: '열쇠말이 맞지 않습니다' };
+  name = String(name || '').trim();
+  if (!name) return { ok: false, error: '이름이 필요합니다' };
+
+  function ts(v) { return v instanceof Date ? v.getTime() : Number(v) || 0; }
+
+  var confirms = rowsOf(SHEET_NAMES.confirm).filter(function (r) {
+    return String(r['이름']).trim() === name;
+  }).map(function (r) {
+    return { date: ymd(r['날짜']), ver: String(r['구분'] || 'adult') === 'kids' ? 'kids' : 'adult',
+             quizOk: String(r['퀴즈 정답']) === 'O', missionOk: String(r['미션 완료']) === 'O',
+             mood: String(r['기분'] || ''), parent: String(r['보호자 확인'] || ''), ts: ts(r['기록 시각']) };
+  });
+
+  var shares = rowsOf(SHEET_NAMES.share).filter(function (r) {
+    return String(r['이름']).trim() === name;
+  }).map(function (r) {
+    return { id: String(r['글번호']), date: ymd(r['날짜']), ver: 'adult', text: String(r['나눈 말씀']),
+             amens: Number(r['아멘 수']) || 0, ts: ts(r['올린 시각']) };
+  });
+  ensureHeaders(SHEET_NAMES.kid);
+  rowsOf(SHEET_NAMES.kid).forEach(function (r) {
+    if (String(r['이름']).trim() !== name) return;
+    shares.push({ id: String(r['글번호']), date: ymd(r['날짜']), ver: 'kids', text: String(r['나눈 말씀']),
+                  mood: String(r['기분'] || ''), reply: String(r['목사님 답장'] || ''), ts: ts(r['올린 시각']) });
+  });
+
+  confirms.sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+  shares.sort(function (a, b) { return b.ts - a.ts; });
+  return { ok: true, person: true, name: name, confirms: confirms.slice(0, 400), shares: shares.slice(0, 200) };
 }
 
 /* ---------- 홈페이지가 써 넣는 곳 ---------- */

@@ -50,6 +50,40 @@ td.z{color:#c3b49c}
 .more{display:block;width:100%;margin-top:8px;padding:10px;border:1px solid #e0cdae;border-radius:10px;
   background:#fffaf2;font-family:inherit;font-size:12.5px;color:#5c4a34;cursor:pointer}
 .foot{text-align:center;font-size:11.5px;color:#9b8a72;margin-top:26px;line-height:2}
+
+/* 이름을 누르면 그 사람의 기록 */
+.nm{border:none;background:none;padding:0;font:inherit;color:#8f4531;font-weight:700;cursor:pointer;
+  text-decoration:underline;text-decoration-color:#e0cdae;text-underline-offset:3px;text-align:left}
+.pick{width:100%;padding:11px 12px;border:1px solid #e0cdae;border-radius:12px;background:#fffaf2;
+  font-family:inherit;font-size:14px;color:#3a2e22;margin-bottom:4px}
+.back{border:1px solid #e0cdae;background:#fffaf2;border-radius:10px;padding:8px 12px;font-family:inherit;
+  font-size:12.5px;color:#5c4a34;cursor:pointer}
+.phead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 4px}
+.pname{font-family:'Gowun Batang',serif;font-size:24px;margin:0;color:#3a2e22}
+.chip{font-size:11px;padding:3px 9px;border-radius:999px;background:#f6ead6;color:#8f4531;font-weight:700}
+.chip.k{background:#e3eef7;color:#2f6f9e}
+.psub{font-size:12px;color:#9b8a72}
+.months{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.mon{background:#fffaf2;border:1px solid #e6d3b4;border-radius:12px;padding:10px}
+.mon .mt{font-size:12.5px;font-weight:700;color:#6b5a45;margin-bottom:6px}
+.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.mgrid span{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:10.5px;
+  color:#c3b49c;font-variant-numeric:tabular-nums}
+.mgrid .h{color:#9b8a72;font-size:10px}
+.mgrid .a{background:#8f4531;color:#fff}
+.mgrid .k{background:#ffc93c;color:#5a4200}
+.mgrid .ak{background:linear-gradient(135deg,#8f4531 50%,#ffc93c 50%);color:#fff}
+.mgrid .t{box-shadow:0 0 0 2px #c99a3f}
+.legend{display:flex;gap:12px;font-size:11.5px;color:#8a795f;margin-top:8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.dl td:first-child{white-space:nowrap}
+.dl .ttl{text-align:left;font-size:12px;color:#6b5a45}
+.tg{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:999px;background:#e9f2e2;color:#3f6a30;margin:1px}
+.tg.k{background:#e3eef7;color:#2f6f9e}
+.note{background:#fffaf2;border:1px solid #e6d3b4;border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.note .nh{display:flex;gap:6px;align-items:center;font-size:12px;color:#9b8a72;margin-bottom:4px;flex-wrap:wrap}
+.note .nt{font-size:14px;line-height:1.85;color:#3a2e22;white-space:pre-wrap;word-break:keep-all}
+.note .nr{margin-top:6px;font-size:13px;color:#8a3b4a;background:#fff3f5;border-radius:8px;padding:6px 9px}
 .foot a{color:#8f4531;font-weight:700;text-decoration:none}
 </style>
 </head>
@@ -58,7 +92,7 @@ td.z{color:#c3b49c}
   <div class="top">
     <div class="emo">📊</div>
     <h1>기록 보관소</h1>
-    <div class="sub">어른과 어린이가 읽고 적은 것을 한눈에 모았습니다.<br>숫자만 모아 둔 곳이라 글 내용은 나오지 않습니다.</div>
+    <div class="sub">어른과 어린이가 읽고 적은 것을 한눈에 모았습니다.<br>이름을 누르면 그 사람의 달력과 나눈 글까지 볼 수 있습니다.</div>
   </div>
 
   <div class="lock" id="lock">
@@ -82,6 +116,7 @@ td.z{color:#c3b49c}
   </div>
 </div>
 
+<script src="word-data.js"></script>
 <script src="word-config.js"></script>
 <script>
 (function () {
@@ -97,7 +132,7 @@ td.z{color:#c3b49c}
   var body = document.getElementById('body');
   var made = document.getElementById('made');
 
-  var data = null, allDays = false;
+  var data = null, allDays = false, person = null;
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -131,7 +166,7 @@ td.z{color:#c3b49c}
       ? '<tr><th>이름</th><th>읽은 날</th><th>퀴즈</th><th>미션</th><th>나눔 글</th><th>마지막</th></tr>'
       : '<tr><th>이름</th><th>읽은 날</th><th>나눔 글</th><th>마지막</th></tr>';
     var lines = rows.map(function (r) {
-      return '<tr><td>' + esc(r.name) + '</td>'
+      return '<tr><td><button class="nm" data-person="' + esc(r.name) + '">' + esc(r.name) + '</button></td>'
         + cell(r.days)
         + (kind === 'kids' ? cell(r.quiz) + cell(r.mission) : '')
         + cell(r.share)
@@ -157,11 +192,18 @@ td.z{color:#c3b49c}
   }
 
   function paint() {
+    if (person) { paintPerson(); return; }
     var s = data.sum;
     made.textContent = data.madeAt ? data.madeAt + ' 기준' : '';
 
+    var names = {};
+    (data.kids || []).concat(data.adults || []).forEach(function (r) { names[r.name] = 1; });
+    var nameList = Object.keys(names).sort(function (a, b) { return a.localeCompare(b, 'ko'); });
+
     body.innerHTML =
-        '<h2>한눈에</h2>'
+        '<select class="pick" id="pick" aria-label="사람 골라 보기"><option value="">👤 한 사람의 기록 보기 — 이름을 고르세요</option>'
+      + nameList.map(function (n) { return '<option>' + esc(n) + '</option>'; }).join('') + '</select>'
+      + '<h2>한눈에</h2>'
       + cards([['어른 읽은 날', s.adultDays], ['어른 참여', s.adultPeople], ['어른 나눔 글', s.adultShare],
                ['어린이 읽은 날', s.kidDays], ['어린이 참여', s.kidPeople], ['어린이 나눔 글', s.kidShare]])
       + '<h2>어린이가 해낸 것</h2>'
@@ -172,6 +214,110 @@ td.z{color:#c3b49c}
 
     var more = document.getElementById('moreBtn');
     if (more) more.addEventListener('click', function () { allDays = true; paint(); });
+    document.getElementById('pick').addEventListener('change', function () { if (this.value) openPerson(this.value); });
+  }
+
+  /* ---------- 한 사람의 기록 ---------- */
+  body.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-person]');
+    if (b) { openPerson(b.getAttribute('data-person')); return; }
+    if (e.target.closest('#backBtn')) { person = null; paint(); window.scrollTo(0, 0); }
+  });
+
+  function openPerson(name) {
+    body.innerHTML = '<div class="empty">' + esc(name) + ' 님의 기록을 가져오는 중입니다…</div>';
+    window.scrollTo(0, 0);
+    fetch(API + '?action=person&key=' + encodeURIComponent(saved()) + '&name=' + encodeURIComponent(name) + '&t=' + Date.now())
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok || !d.person) {
+          person = null; paint();
+          say(d && d.ok && !d.person
+            ? '앱스 스크립트를 새 버전으로 배포하시면 사람마다 기록을 볼 수 있습니다.'
+            : ((d && d.error) || '기록을 받아 오지 못했습니다.'));
+          return;
+        }
+        say(''); person = d; paint();
+      })
+      .catch(function () { person = null; paint(); say('인터넷이 잠시 끊긴 것 같습니다. 다시 눌러 주세요.'); });
+  }
+
+  function dayIx(ds) { var p = ds.split('-'); return Math.round(Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000); }
+  function streaks(dates) {
+    var ix = dates.map(dayIx).sort(function (a, b) { return a - b; }), best = 0, run = 0, prev = null;
+    ix.forEach(function (x) { run = (prev !== null && x === prev + 1) ? run + 1 : 1; if (run > best) best = run; prev = x; });
+    var today = dayIx(WordData.today()), have = {}, cur = 0;
+    ix.forEach(function (x) { have[x] = 1; });
+    var at = have[today] ? today : today - 1;
+    while (have[at]) { cur++; at--; }
+    return { best: best, cur: cur };
+  }
+  function titleOf(ds) {
+    try { var d = WordData.forDate(ds); return d.passage + ' · ' + d.title; } catch (e) { return ''; }
+  }
+
+  function paintPerson() {
+    var p = person, byDate = {}, kinds = {};
+    p.confirms.forEach(function (c) {
+      var x = byDate[c.date] = byDate[c.date] || { date: c.date, a: false, k: null };
+      if (c.ver === 'kids') x.k = c; else x.a = true;
+      kinds[c.ver] = 1;
+    });
+    p.shares.forEach(function (s) { kinds[s.ver] = 1; });
+    var dates = Object.keys(byDate).sort().reverse(), st = streaks(dates);
+    var kc = p.confirms.filter(function (c) { return c.ver === 'kids'; });
+    var cardsList = [['읽은 날', dates.length], ['지금 연속', st.cur], ['가장 긴 연속', st.best], ['나눔 글', p.shares.length]];
+    if (kinds.kids) cardsList.push(['퀴즈 맞힘', kc.filter(function (c) { return c.quizOk; }).length],
+                                   ['미션 마침', kc.filter(function (c) { return c.missionOk; }).length],
+                                   ['보호자 확인', kc.filter(function (c) { return c.parent; }).length]);
+
+    /* 최근 석 달 달력 */
+    var t = WordData.today(), y = +t.slice(0, 4), m = +t.slice(5, 7), months = '';
+    for (var i = 2; i >= 0; i--) {
+      var mm = m - i, yy = y; while (mm < 1) { mm += 12; yy--; }
+      var first = new Date(Date.UTC(yy, mm - 1, 1)).getUTCDay(), last = new Date(Date.UTC(yy, mm, 0)).getUTCDate();
+      var g = ['일', '월', '화', '수', '목', '금', '토'].map(function (w) { return '<span class="h">' + w + '</span>'; }).join('');
+      for (var b = 0; b < first; b++) g += '<span></span>';
+      for (var dd = 1; dd <= last; dd++) {
+        var ds = yy + '-' + (mm < 10 ? '0' : '') + mm + '-' + (dd < 10 ? '0' : '') + dd, x = byDate[ds];
+        var cls = x ? (x.a && x.k ? 'ak' : (x.k ? 'k' : 'a')) : '';
+        g += '<span class="' + cls + (ds === t ? ' t' : '') + '">' + dd + '</span>';
+      }
+      months += '<div class="mon"><div class="mt">' + yy + '년 ' + mm + '월</div><div class="mgrid">' + g + '</div></div>';
+    }
+
+    var rows = dates.slice(0, 60).map(function (ds) {
+      var x = byDate[ds], tags = '';
+      if (x.a) tags += '<span class="tg">어른 읽음</span>';
+      if (x.k) {
+        tags += '<span class="tg k">어린이 도장</span>';
+        if (x.k.quizOk) tags += '<span class="tg k">퀴즈</span>';
+        if (x.k.missionOk) tags += '<span class="tg k">미션</span>';
+        if (x.k.parent) tags += '<span class="tg k">보호자 ' + esc(x.k.parent) + '</span>';
+        if (x.k.mood) tags += ' ' + esc(x.k.mood);
+      }
+      return '<tr><td>' + esc(prettyDay(ds)) + '</td><td class="ttl">' + esc(titleOf(ds)) + '<br>' + tags + '</td></tr>';
+    }).join('');
+
+    var notes = p.shares.map(function (s) {
+      return '<div class="note"><div class="nh"><span class="chip' + (s.ver === 'kids' ? ' k' : '') + '">' + (s.ver === 'kids' ? '어린이' : '어른') + '</span>'
+        + esc(prettyDay(s.date)) + (s.ver === 'adult' && s.amens ? ' · 🙏 아멘 ' + s.amens : '') + '</div>'
+        + '<div class="nt">' + (s.mood ? esc(s.mood) + ' ' : '') + esc(s.text) + '</div>'
+        + (s.reply ? '<div class="nr">✉️ 목사님 답장 · ' + esc(s.reply) + '</div>' : '') + '</div>';
+    }).join('');
+
+    made.textContent = '';
+    body.innerHTML =
+        '<button class="back" id="backBtn">◀ 모든 사람 보기</button>'
+      + '<div class="phead"><h2 class="pname">' + esc(p.name) + '</h2>'
+      + (kinds.adult ? '<span class="chip">어른</span>' : '') + (kinds.kids ? '<span class="chip k">어린이</span>' : '') + '</div>'
+      + '<div class="psub">' + (dates.length ? '처음 ' + esc(prettyDay(dates[dates.length - 1])) + ' · 마지막 ' + esc(prettyDay(dates[0])) : '아직 읽음 기록이 없습니다') + '</div>'
+      + '<h2>한눈에</h2>' + cards(cardsList)
+      + '<h2>최근 석 달</h2><div class="months">' + months + '</div>'
+      + '<div class="legend"><span><i style="background:#8f4531"></i>어른 읽음</span><span><i style="background:#ffc93c"></i>어린이 도장</span></div>'
+      + '<h2>날마다</h2>' + (rows ? '<div class="scroll"><table class="dl"><thead><tr><th>날짜</th><th>본문 · 한 일</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+                                   : '<div class="empty">아직 기록이 없습니다.</div>')
+      + '<h2>나눈 글 ' + p.shares.length + '편</h2>' + (notes || '<div class="empty">아직 나눈 글이 없습니다.</div>');
   }
 
   function load(key, quiet) {
@@ -188,7 +334,7 @@ td.z{color:#c3b49c}
           return;
         }
         keep(key);
-        data = d; allDays = false;
+        data = d; allDays = false; person = null;
         lock.hidden = true; view.hidden = false;
         paint();
       })
@@ -207,7 +353,7 @@ td.z{color:#c3b49c}
   });
   document.getElementById('reload').addEventListener('click', function () { load(saved(), true); });
   document.getElementById('lockBtn').addEventListener('click', function () {
-    forget(); data = null; body.innerHTML = '';
+    forget(); data = null; person = null; body.innerHTML = '';
     view.hidden = true; lock.hidden = false; keyIn.value = ''; say('');
   });
 
