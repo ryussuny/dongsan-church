@@ -179,6 +179,44 @@ nav button.on{color:var(--brick-deep);font-weight:700}
 .catch-row .cp{font-size:14px;font-weight:700;color:var(--text)}
 .catch-row .cs{font-size:13px;color:var(--text2);line-height:1.7;margin-top:2px}
 .catch-row .go{margin-left:auto;flex:none;font-size:12px;color:var(--brick-deep);font-weight:700;padding-top:2px}
+/* 지금 이야기, 어디쯤일까 — 성경 큰 이야기 열 칸 가운데 오늘의 자리 */
+.wx-eras{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;align-items:center}
+.wx-e{text-align:center;font-size:15px;line-height:30px;border-radius:8px;background:var(--warm);opacity:.45;filter:grayscale(.6)}
+.wx-e.past{opacity:.7;filter:none}
+.wx-e.on{opacity:1;filter:none;background:var(--brick-deep);box-shadow:0 0 0 2px var(--gold);font-size:17px}
+.wx-lab{display:grid;grid-template-columns:repeat(10,1fr);margin-top:5px;font-size:11.5px;color:var(--brick-deep);font-weight:700}
+.wx-lab span{grid-row:1}
+.wx-now{margin-top:10px;font-size:14px;color:var(--text2);line-height:1.7}
+.wx-now b{color:var(--text)}
+.wx-bar{margin-top:8px;height:6px;border-radius:99px;background:var(--warm);overflow:hidden}
+.wx-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--brick));border-radius:99px}
+.wx-cap{margin-top:4px;font-size:11.5px;color:var(--text3)}
+/* 읽기 전 궁금증 */
+.hook{margin-bottom:14px;background:#fff6e6;border:1px dashed var(--gold);border-radius:12px;padding:11px 13px;
+  font-size:14px;color:var(--text2);line-height:1.75}
+.hook b{color:var(--brick-deep)}
+.hook .ans{margin-top:6px;color:var(--moss);font-weight:700}
+.hook button{margin-top:6px;background:none;border:1px solid var(--border);border-radius:999px;padding:4px 12px;
+  font-size:12.5px;font-family:inherit;color:var(--brick-deep);cursor:pointer}
+/* 식탁 질문 · 암송 구절 */
+.tq{font-family:'Gowun Batang',serif;font-size:16px;line-height:1.9;color:var(--text)}
+.tq-note{margin-top:6px;font-size:12px;color:var(--text3)}
+.memo{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)}
+.memo .h{font-size:12.5px;color:var(--brick-deep);font-weight:700;margin-bottom:4px}
+.memo .t{font-family:'Gowun Batang',serif;font-size:15px;line-height:1.9;color:var(--text2)}
+/* 한 주 돌아보기 */
+.rv-row{display:flex;gap:10px;padding:9px 0;border-top:1px dashed var(--border)}
+.rv-row:first-child{border-top:none}
+.rv-d{flex:none;width:34px;font-size:12px;color:var(--text3);padding-top:2px}
+.rv-t{font-size:14px;font-weight:700}
+.rv-l{font-size:13px;color:var(--text2);line-height:1.7}
+.rq{margin-top:12px;background:var(--warm);border-radius:12px;padding:14px}
+.rq-h{font-size:12px;color:var(--text3);margin-bottom:4px}
+.rq-q{font-size:15px;font-weight:700;margin-bottom:10px;line-height:1.6}
+.rq-c{display:block;width:100%;text-align:left;margin-bottom:7px;padding:11px 13px;border:1px solid var(--border);
+  border-radius:10px;background:#fff;font-family:inherit;font-size:14.5px;color:var(--text);cursor:pointer}
+.rq-c.ok{background:#e9f2e2;border-color:var(--moss);color:#3f5f30;font-weight:700}
+.rq-c.no{background:#fbeae6;border-color:#d9a393;color:#8f4531}
 </style>
 </head>
 <body>
@@ -202,6 +240,11 @@ nav button.on{color:var(--brick-deep);font-weight:700}
 
   <div class="hero" id="hero"></div>
 
+  <div class="card" id="whereCard" hidden>
+    <div class="st">🧭 지금 이야기, 어디쯤일까</div>
+    <div id="whereBox"></div>
+  </div>
+
   <div class="card" id="catchCard" hidden>
     <div class="st">🧺 놓친 말씀 이어 읽기</div>
     <div id="catchBox"></div>
@@ -212,6 +255,7 @@ nav button.on{color:var(--brick-deep);font-weight:700}
       <div class="fsbar"><button class="listen" id="listenBtn" onclick="listen()" hidden>🔊 듣기</button>
         <button onclick="setFont(-1)" aria-label="글자 작게">가－</button><button onclick="setFont(1)" aria-label="글자 크게">가＋</button></div>
     </div>
+    <div class="hook" id="hookBox" hidden></div>
     <div class="verse" id="verseBox">본문을 불러오는 중입니다…</div>
   </div>
 
@@ -226,6 +270,13 @@ nav button.on{color:var(--brick-deep);font-weight:700}
     <div class="pray" id="prayer"></div>
   </div>
 
+  <div class="card" id="tableCard">
+    <div class="st">🍽️ 오늘의 식탁 질문 <span class="right">어린이 화면에도 같은 물음</span></div>
+    <div class="tq" id="tableQ"></div>
+    <div class="tq-note">저녁 식탁에서 가족과 나눠 보세요. 아이들은 이 물음에 답하면 별을 하나 더 받습니다.</div>
+    <div class="memo" id="memoBox" hidden></div>
+  </div>
+
   <div class="card">
     <div class="st">✅ 오늘의 확인 <span class="right" id="streakTxt"></span></div>
     <button class="btn btn-main" id="confirmBtn" onclick="toggleConfirm()">오늘 말씀을 읽었습니다</button>
@@ -234,6 +285,12 @@ nav button.on{color:var(--brick-deep);font-weight:700}
       <button class="btn btn-sub" onclick="go('share')">💬 은혜 나눔</button>
     </div>
     <button class="btn btn-card" id="cardBtn" onclick="sendCard()">🌅 단톡방에 아침 말씀 카드 보내기</button>
+  </div>
+
+  <div class="card" id="reviewCard" hidden>
+    <div class="st">📚 이번 주 돌아보기 <span class="right" id="reviewRange"></span></div>
+    <div id="reviewList"></div>
+    <div class="rq" id="reviewQuiz"></div>
   </div>
 
   <div class="card">
@@ -363,6 +420,7 @@ nav button.on{color:var(--brick-deep);font-weight:700}
 <script src="word-data.js"></script>
 <script src="word-config.js"></script>
 <script src="word-core.js"></script>
+<script src="word-extra.js"></script>
 <script>
 var VER='adult';
 var viewDate=WordData.today();
@@ -401,6 +459,7 @@ function moveMonth(n){
 
 /* ---------- 오늘 ---------- */
 function renderToday(){
+  hookOpen=false;
   var d=day(),isToday=viewDate===WordData.today();
   var label=viewDate.replace(/-/g,'.')+' ('+WordData.weekday(viewDate)+')'+(isToday?' · 오늘':'');
   document.getElementById('dateLabel').textContent=label;
@@ -425,10 +484,88 @@ function renderToday(){
   if(exc)exc.style.display=d.explain?'':'none';}
   document.getElementById('verSrc').textContent='개역개정';
   WordVoice.stop();
+  document.getElementById('tableQ').textContent=WordExtra.table(d);
   renderVerses();
   refreshConfirmBtn();
   renderCatch();
+  renderWhere();
+  renderReview();
   loadFeed();
+}
+
+/* ---------- 지금 이야기, 어디쯤일까 ---------- */
+function renderWhere(){
+  var w=WordExtra.where(day()),card=document.getElementById('whereCard');
+  if(!w){card.hidden=true;return}
+  var start=Math.min(Math.max(w.era-1,0),7)+1,align=w.era===0?'left':(w.era===9?'right':'center');
+  document.getElementById('whereBox').innerHTML=
+    '<div class="wx-eras" role="img" aria-label="성경 큰 이야기 열 시대 가운데 '+wEsc(w.eras[w.era].n)+'">'+
+      w.eras.map(function(e,i){return '<span class="wx-e'+(i<w.era?' past':'')+(i===w.era?' on':'')+'" title="'+wEsc(e.n)+'">'+e.e+'</span>'}).join('')+'</div>'+
+    '<div class="wx-lab"><span style="grid-column:'+start+' / span 3;text-align:'+align+'">▲ '+wEsc(w.eras[w.era].n)+' 시대</span></div>'+
+    '<div class="wx-now"><b>'+wEsc(w.book)+' '+w.ch+'장</b>'+(w.story?' · '+wEsc(w.story):'')+'</div>'+
+    (w.total?'<div class="wx-bar"><i style="width:'+Math.max(3,Math.round(w.ch/w.total*100))+'%"></i></div>'+
+      '<div class="wx-cap">'+wEsc(w.book)+' '+w.total+'장 가운데 '+w.ch+'장</div>':'');
+  card.hidden=false;
+}
+
+/* ---------- 읽기 전 궁금증 ----------
+   본문 위에 물음 하나를 먼저 둔다. 답은 본문 안에 있고, 읽음 확인을 하면 열린다. */
+var hookOpen=false;
+function renderHook(){
+  var h=WordExtra.hook(day()),box=document.getElementById('hookBox');
+  if(!h){box.hidden=true;return}
+  var read=me.name&&WordStore.myConfirms(me.name,VER).some(function(c){return c.date===viewDate});
+  box.innerHTML='💭 <b>읽으며 찾아보세요</b> · '+wEsc(h.q)+
+    ((read||hookOpen)?'<div class="ans">✓ '+wEsc(h.a)+'</div>':'<br><button onclick="hookOpen=true;renderHook()">답 보기</button>');
+  box.hidden=false;
+}
+
+/* ---------- 이번 주 암송 구절 (어린이 화면과 같은 구절) ---------- */
+function renderMemo(){
+  var m=WordExtra.memory(viewDate,WordStore.custom()),box=document.getElementById('memoBox');
+  if(!m){box.hidden=true;return}
+  box.innerHTML='<div class="h">📌 이번 주 암송 구절 · '+wEsc(m.ref)+'</div><div class="t">'+wEsc(m.text)+'</div>'+
+    '<div class="tq-note">아이들은 날마다 낱말이 하나씩 가려지는 놀이로 외웁니다. 주일에 함께 외워 보세요.</div>';
+  box.hidden=false;
+}
+
+/* ---------- 한 주 돌아보기 (토요일·주일) ---------- */
+var rv={i:0,score:0,picked:-1};
+function renderReview(){
+  var card=document.getElementById('reviewCard');
+  if(!WordExtra.isReviewDay(viewDate)){card.hidden=true;return}
+  var wk=WordExtra.week(viewDate,WordStore.custom());
+  document.getElementById('reviewRange').textContent=wk[0].date.slice(5).replace('-','/')+' ~ '+wk[5].date.slice(5).replace('-','/');
+  document.getElementById('reviewList').innerHTML=wk.map(function(x){
+    return '<div class="rv-row"><div class="rv-d">'+WordData.weekday(x.date)+'</div><div>'+
+      '<div class="rv-t">'+wEsc(x.title)+' <span style="font-weight:400;color:var(--text3);font-size:12px">'+wEsc(x.passage)+'</span></div>'+
+      (x.line?'<div class="rv-l">'+wEsc(x.line)+'</div>':'')+'</div></div>';
+  }).join('');
+  rv={i:0,score:0,picked:-1,qs:wk.filter(function(x){return x.quiz}).map(function(x){return x.quiz})};
+  paintReviewQuiz();
+  card.hidden=false;
+}
+function paintReviewQuiz(){
+  var box=document.getElementById('reviewQuiz'),qs=rv.qs||[];
+  if(!qs.length){box.hidden=true;return}
+  box.hidden=false;
+  if(rv.i>=qs.length){
+    box.innerHTML='<div class="rq-q">복습 퀴즈 '+qs.length+'문제 가운데 '+rv.score+'문제를 맞히셨습니다 '+(rv.score===qs.length?'🎉':'🙏')+'</div>'+
+      '<button class="rq-c" onclick="rv.i=0;rv.score=0;rv.picked=-1;paintReviewQuiz()">다시 풀기</button>';
+    return;
+  }
+  var q=qs[rv.i];
+  box.innerHTML='<div class="rq-h">복습 퀴즈 '+(rv.i+1)+' / '+qs.length+'</div><div class="rq-q">'+wEsc(q.q)+'</div>'+
+    q.c.map(function(c,i){
+      var cls=rv.picked<0?'':(i===q.a?' ok':(i===rv.picked?' no':''));
+      return '<button class="rq-c'+cls+'" onclick="pickReview('+i+')">'+wEsc(c)+'</button>';
+    }).join('');
+}
+function pickReview(i){
+  if(rv.picked>=0)return;
+  var q=rv.qs[rv.i];rv.picked=i;if(i===q.a)rv.score++;
+  paintReviewQuiz();
+  setTimeout(function(){rv.i++;rv.picked=-1;paintReviewQuiz()},1100);
 }
 
 /* ---------- 🔊 듣기 ----------
@@ -484,6 +621,7 @@ function renderVerses(){
     var vs=WordBible.verses(d.passage,true);
     if(!vs.length){box.innerHTML='<span style="color:var(--text3)">'+wEsc(d.passage)+' 본문을 찾지 못했습니다.<br>성경책에서 직접 펴서 읽어 주세요.</span>';return}
     box.innerHTML=vs.map(function(v){return '<span class="vn">'+v.v+'</span>'+wEsc(v.t)}).join(' ');
+    renderWhere();renderMemo();
     var miss=WordBible.missing(d.passage);
     if(miss.length)box.innerHTML+='<div style="margin-top:12px;padding:10px 12px;background:var(--warm);border-radius:10px;'+
       'font-size:12.5px;font-family:\'Noto Sans KR\',sans-serif;color:var(--text2);line-height:1.7">'+
@@ -493,6 +631,7 @@ function renderVerses(){
 
 function refreshConfirmBtn(){
   var b=document.getElementById('confirmBtn');
+  renderHook();
   if(isFuture()){b.className='btn btn-sub';b.textContent='아직 오지 않은 날입니다';return}
   if(!me.name){b.className='btn btn-main';b.textContent='오늘 말씀을 읽었습니다';
     document.getElementById('streakTxt').textContent='';return}
