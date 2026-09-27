@@ -138,6 +138,54 @@ nav button.on{color:var(--sky);font-weight:700}
 .stamp .big-emo{font-size:96px;animation:pop .5s ease}
 .stamp .msg{font-size:24px;font-weight:700;margin-top:12px;color:var(--sky)}
 .stamp .sub{font-size:16px;color:var(--tx2);margin-top:6px}
+
+/* 성경 이야기 기차 — 열 시대 가운데 오늘의 자리 */
+.wx-eras{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;align-items:end}
+.wx-e{text-align:center;font-size:17px;line-height:34px;border-radius:12px;background:#eef6fd;opacity:.4;filter:grayscale(.7)}
+.wx-e.past{opacity:.75;filter:none}
+.wx-e.on{opacity:1;filter:none;background:var(--sun);font-size:24px;line-height:42px;box-shadow:0 4px 10px rgba(255,201,60,.45)}
+.wx-lab{display:grid;grid-template-columns:repeat(10,1fr);margin-top:6px;font-size:13px;font-weight:700;color:#8a6a1a}
+.wx-now{margin-top:10px;font-size:15.5px;color:var(--tx2);line-height:1.8}
+.wx-now b{color:var(--tx)}
+/* 빈칸 · 순서 퀴즈 */
+.qverse{background:#f7fbff;border:2px dashed var(--sky2);border-radius:16px;padding:14px;font-size:17px;line-height:2;margin-bottom:12px}
+.qverse .gap{display:inline-block;min-width:64px;border-bottom:3px solid var(--sky);color:var(--sky);font-weight:700;text-align:center}
+.qref{font-size:13px;color:var(--sky);font-weight:700;margin-top:4px}
+.ord{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:#f7fbff;border:2px solid var(--line);
+  border-radius:16px;padding:13px;font-family:inherit;font-size:16px;margin-bottom:9px;cursor:pointer;color:var(--tx);line-height:1.7}
+.ord .no{flex:none;width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--tx3)}
+.ord.on .no{background:var(--sky);border-color:var(--sky);color:#fff}
+.ord.ok{background:#e8f6e8;border-color:var(--grass)}
+.ord.ok .no{background:var(--grass);border-color:var(--grass);color:#fff}
+/* 식탁 질문 */
+.tq{font-size:18px;line-height:1.9;font-weight:700;color:#6b4f00;background:#fff8e6;border-radius:16px;padding:15px}
+/* 암송 놀이 */
+.mem{font-size:19px;line-height:2.3;font-weight:700;color:var(--tx)}
+.mw{display:inline-block;margin:0 2px;padding:0 8px;border-radius:10px;border:2px dashed var(--sky2);background:#f2f9ff;
+  color:transparent;font:inherit;cursor:pointer;line-height:1.6;vertical-align:1px}
+.mw.peek{color:var(--sky);border-style:solid}
+.memref{font-size:13px;color:var(--sky);font-weight:700;margin-top:4px}
+.memstep{font-size:13px;color:var(--tx3);margin-bottom:8px}
+/* 한 주 돌아보기 */
+.rv-row{display:flex;gap:10px;padding:10px 0;border-top:2px dashed var(--line)}
+.rv-row:first-child{border-top:none}
+.rv-d{flex:none;width:36px;height:36px;border-radius:12px;background:#fff3cd;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#7a5b00}
+.rv-t{font-size:16px;font-weight:700}
+.rv-l{font-size:15px;color:var(--tx2);line-height:1.7}
+.rq{margin-top:12px;background:#f7fbff;border-radius:18px;padding:14px}
+.rq-h{font-size:13px;color:var(--tx3)}
+/* 인물 도감 */
+.deck{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.pc{border:none;border-radius:16px;padding:10px 4px 8px;text-align:center;font-family:inherit;cursor:pointer;
+  background:linear-gradient(160deg,#fff3cd,#ffe29a);color:#6b4f00;box-shadow:0 3px 8px rgba(255,201,60,.3)}
+.pc .pe{display:block;font-size:30px;line-height:1.2}
+.pc .pn{display:block;font-size:13px;font-weight:700;margin-top:3px;line-height:1.3}
+.pc.lock{background:#eef3f8;color:var(--tx3);box-shadow:none}
+.pc.lock .pe{filter:grayscale(1);opacity:.35}
+.pc.lock .pn{font-size:11px;font-weight:400}
+.tease{font-size:14px;color:#8a6a1a;background:#fff8e6;border-radius:14px;padding:9px 12px;margin:4px 0 12px}
 </style>
 </head>
 <body>
@@ -154,6 +202,17 @@ nav button.on{color:var(--sky);font-weight:700}
 <!-- ===== 오늘 ===== -->
 <div class="pg on" id="pg-today">
   <div class="today-hero" id="hero"></div>
+
+  <div class="card" id="whereCard" hidden>
+    <div class="step y">🚂 성경 이야기 기차 · 지금 어디쯤일까?</div>
+    <div id="whereBox"></div>
+  </div>
+
+  <div class="card" id="reviewCard" hidden>
+    <div class="step p">📚 이번 주 돌아보기</div>
+    <div id="reviewList"></div>
+    <div class="rq" id="reviewQuiz"></div>
+  </div>
 
   <div class="card">
     <div class="step">1단계 · 말씀 읽기</div>
@@ -184,6 +243,24 @@ nav button.on{color:var(--sky);font-weight:700}
   </div>
 
   <div class="card">
+    <div class="step y">🍽️ 오늘의 식탁 질문</div>
+    <div class="tq" id="tableQ"></div>
+    <div style="font-size:14px;color:var(--tx2);margin:10px 0">저녁 먹을 때 엄마 아빠와 이야기해 보아요. 어른 화면에도 같은 질문이 나와요!</div>
+    <button class="big b-sun" id="tableBtn" onclick="doTable()">가족과 이야기했어요 🍽️</button>
+  </div>
+
+  <div class="card" id="memoCard" hidden>
+    <div class="step g">📌 이번 주 암송 구절</div>
+    <div class="memstep" id="memoStep"></div>
+    <div class="mem" id="memoText"></div>
+    <div class="memref" id="memoRef"></div>
+    <div class="row">
+      <button class="big b-soft" onclick="hearMemo()">🔊 들어 보기</button>
+      <button class="big b-soft" id="memoBtn" onclick="doneMemo()">🎖 다 외웠어요!</button>
+    </div>
+  </div>
+
+  <div class="card">
     <div class="step r">5단계 · 내 마음 나누기</div>
     <div style="font-size:16px;color:var(--tx2)">오늘 내 마음은 어때요?</div>
     <div class="moods" id="moods"></div>
@@ -195,6 +272,7 @@ nav button.on{color:var(--sky);font-weight:700}
   <div class="card" style="text-align:center">
     <div class="step">마지막 · 도장 찍기</div>
     <div class="stars" id="todayStars"></div>
+    <div class="tease" id="cardTease" hidden></div>
     <button class="big b-grass" id="stampBtn" onclick="doStamp()">오늘 말씀 읽었어요! 🖐️</button>
     <button class="big b-soft" style="margin-top:10px" onclick="parentCheck()">👨‍👩‍👧 부모님 확인</button>
     <div style="font-size:13px;color:var(--tx3);margin-top:10px" id="parentState"></div>
@@ -218,6 +296,11 @@ nav button.on{color:var(--sky);font-weight:700}
       <button class="big b-soft" onclick="moveMonth(1)">다음달 ▶</button>
     </div>
     <div class="cal" id="cal"></div>
+  </div>
+  <div class="card">
+    <div class="step y" id="deckTitle">🃏 성경 인물 도감</div>
+    <div style="font-size:14px;color:var(--tx2);margin-bottom:10px">말씀에 나오는 사람을 만난 날 도장을 찍으면 카드가 들어와요. 카드를 눌러 보세요!</div>
+    <div class="deck" id="deck"></div>
   </div>
   <div class="card">
     <div class="step g">받은 배지</div>
@@ -281,6 +364,7 @@ nav button.on{color:var(--sky);font-weight:700}
 <script src="word-data.js"></script>
 <script src="word-config.js"></script>
 <script src="word-core.js"></script>
+<script src="word-extra.js"></script>
 <script>
 var VER='kids';
 var viewDate=WordData.today();
@@ -313,7 +397,7 @@ function myRec(){
 function state(){
   var r=myRec()||{},p=pend();
   return {stamped:!!r.date,quizOk:!!(r.quizOk||p.quizOk),missionOk:!!(r.missionOk||p.missionOk),
-          mood:r.mood||p.mood||'',parent:r.parent||''};
+          table:!!(r.table||p.table),mood:r.mood||p.mood||'',parent:r.parent||''};
 }
 function sync(o){
   setPend(o);
@@ -328,10 +412,12 @@ function renderToday(){
     '<div class="ps">'+wEsc(d.passage)+'</div>'+
     '<div class="dt">'+viewDate.replace(/-/g,'.')+' ('+WordData.weekday(viewDate)+'요일)</div>';
   document.getElementById('story').textContent=k.summary;
+  document.getElementById('tableQ').textContent=WordExtra.table(d);
   document.getElementById('missionTx').textContent=k.mission;
   document.getElementById('keyVerse').innerHTML='<div class="t" id="kvText">말씀을 가져오는 중이에요…</div>'+
     '<div class="r">'+wEsc(k.verseRef)+'</div>';
   renderMoods();renderQuiz();renderProgress();applyFont();
+  renderWhere();renderReview();renderMemo();renderTease();
 
   WordBible.load().then(function(ok){
     var kv=document.getElementById('kvText'),full=document.getElementById('fullText');
@@ -339,6 +425,8 @@ function renderToday(){
     var one=WordBible.one(k.verseRef,true);
     kv.textContent=one||('성경책에서 '+k.verseRef+'을 펴서 읽어 보아요.');
     var vs=WordBible.verses(d.passage,true);
+    if(!state().quizOk)renderQuiz();         /* 빈칸·순서 퀴즈는 본문이 와야 만들 수 있다 */
+    renderWhere();renderMemo();
     full.innerHTML=vs.length?vs.map(function(v){return '<span class="vn">'+v.v+'</span>'+wEsc(v.t)}).join(' '):'성경책에서 함께 읽어요.';
     var miss=WordBible.missing(d.passage);
     if(miss.length)full.innerHTML+='<div style="margin-top:10px;padding:10px 12px;background:#fff8e6;border-radius:12px;'+
@@ -353,26 +441,170 @@ function renderMoods(){
 }
 function pickMood(m){sync({mood:m});renderMoods()}
 
+/* ---------- 3단계 퀴즈 ----------
+   요일마다 모양이 바뀐다. 월·목 빈칸 채우기, 수·토 순서 맞추기, 나머지는 고르기.
+   보기 순서는 날마다 섞여서 “늘 첫 번째가 정답”이 되지 않는다. */
+var curQ=null,ordPick=[];
 function renderQuiz(){
-  var q=day().kids.quiz,s=state();
-  document.getElementById('quizQ').textContent=q.q;
-  document.getElementById('quizC').innerHTML=q.c.map(function(c,i){
-    var cls=s.quizOk&&i===q.a?'choice ok':'choice';
-    return '<button class="'+cls+'" onclick="answer('+i+')">'+wEsc(c)+'</button>'}).join('');
+  var d=day(),s=state();
+  curQ=WordExtra.quiz(d,WordBible.ready?{keyText:WordBible.one(d.kids.verseRef,true),verses:WordBible.verses(d.passage,true)}:{});
+  ordPick=[];
+  var qEl=document.getElementById('quizQ'),cEl=document.getElementById('quizC');
+  if(curQ.type==='order'){
+    qEl.textContent='🔢 '+curQ.q;
+    paintOrder(s.quizOk);
+  }else{
+    qEl.innerHTML=curQ.type==='blank'
+      ? '🧩 '+wEsc(curQ.q)+'<div class="qverse">'+wEsc(curQ.before)+' <span class="gap">'+(s.quizOk?wEsc(curQ.c[curQ.a]):'？')+'</span> '+wEsc(curQ.after)+
+        '<div class="qref">'+wEsc(curQ.ref)+'</div></div>'
+      : wEsc(curQ.q);
+    cEl.innerHTML=curQ.c.map(function(c,i){
+      var cls=s.quizOk&&i===curQ.a?'choice ok':'choice';
+      return '<button class="'+cls+'" onclick="answer('+i+')">'+wEsc(c)+'</button>'}).join('');
+  }
   document.getElementById('quizMsg').textContent=s.quizOk?'⭐ 정답이에요! 참 잘했어요':'';
 }
+function solved(){
+  document.getElementById('quizMsg').textContent='⭐ 정답이에요! 참 잘했어요';
+  if(!state().quizOk){sync({quizOk:true});celebrate('⭐','정답이에요!','별 하나를 받았어요')}
+  renderProgress();
+}
 function answer(i){
-  var q=day().kids.quiz,btns=document.querySelectorAll('#quizC .choice');
-  if(i===q.a){
+  var btns=document.querySelectorAll('#quizC .choice');
+  if(i===curQ.a){
     btns[i].className='choice ok';
-    document.getElementById('quizMsg').textContent='⭐ 정답이에요! 참 잘했어요';
-    if(!state().quizOk){sync({quizOk:true});celebrate('⭐','정답이에요!','별 하나를 받았어요')}
-    renderProgress();
+    if(curQ.type==='blank'){var g=document.querySelector('#quizQ .gap');if(g)g.textContent=curQ.c[i]}
+    solved();
   }else{
     btns[i].className='choice no';
     document.getElementById('quizMsg').textContent='조금만 더 생각해 볼까요? 말씀을 다시 읽어 보아요';
     setTimeout(function(){btns[i].className='choice'},1200);
   }
+}
+function paintOrder(done){
+  var items=done?curQ.items.slice().sort(function(a,b){return a.k-b.k}):curQ.items;
+  document.getElementById('quizC').innerHTML=items.map(function(it,i){
+    var n=done?it.k+1:(ordPick.indexOf(i)+1);
+    return '<button class="ord'+(done?' ok':(n?' on':''))+'" onclick="pickOrder('+i+')">'+
+      '<span class="no">'+(n||'')+'</span><span>'+wEsc(it.t)+' <small style="color:var(--tx3)">('+it.v+'절)</small></span></button>';
+  }).join('');
+}
+function pickOrder(i){
+  if(state().quizOk)return;
+  var at=ordPick.indexOf(i);
+  if(at>=0){ordPick.splice(at,1);paintOrder(false);return}      /* 다시 누르면 번호를 뗀다 */
+  ordPick.push(i);paintOrder(false);
+  if(ordPick.length<curQ.items.length)return;
+  var right=ordPick.every(function(ix,n){return curQ.items[ix].k===n});
+  if(right){paintOrder(true);solved();return}
+  document.getElementById('quizMsg').textContent='앗, 순서가 조금 달라요. 절 번호를 힌트로 다시 해 보아요!';
+  setTimeout(function(){ordPick=[];paintOrder(false);document.getElementById('quizMsg').textContent=''},1300);
+}
+
+/* ---------- 식탁 질문 ---------- */
+function doTable(){
+  if(state().table){wToast('오늘은 벌써 이야기했어요 🍽️');return}
+  sync({table:true});celebrate('🍽️','가족과 이야기했어요!','별 하나를 받았어요');renderProgress();
+}
+
+/* ---------- 이번 주 암송 구절 ----------
+   월요일에는 다 보이고, 날마다 가려지는 낱말이 늘어나 주일에는 모두 숨는다.
+   가려진 칸을 누르면 잠깐 보였다가 다시 숨는다. */
+var memo=null;
+function renderMemo(){
+  memo=WordExtra.memory(viewDate,WordStore.custom());
+  var card=document.getElementById('memoCard');
+  if(!memo){card.hidden=true;return}
+  var hid=memo.words.filter(function(w){return w.hide}).length;
+  document.getElementById('memoStep').textContent=memo.step===0
+    ? '월요일은 전부 보여요. 소리 내어 세 번 읽어 보아요!'
+    : (hid===memo.words.length?'주일! 이제 모두 숨었어요. 외워서 말해 볼까요?':'오늘은 낱말 '+hid+'개가 숨었어요. 칸을 누르면 잠깐 보여요.');
+  document.getElementById('memoText').innerHTML=memo.words.map(function(w){
+    return w.hide?'<button class="mw" onclick="peek(this)">'+wEsc(w.w)+'</button>':wEsc(w.w);
+  }).join(' ');
+  document.getElementById('memoRef').textContent=memo.ref;
+  var done=WordExtra.memoryDone()[memo.week],b=document.getElementById('memoBtn');
+  b.textContent=done?'🎖 이번 주 구절을 외웠어요!':'🎖 다 외웠어요!';
+  b.className=done?'big b-done':'big b-soft';
+  card.hidden=false;
+}
+function peek(el){el.classList.add('peek');setTimeout(function(){el.classList.remove('peek')},1500)}
+function hearMemo(){if(memo)WordVoice.speak(memo.text+'. '+memo.ref)}
+function doneMemo(){
+  if(!memo)return;
+  if(WordExtra.memoryDone()[memo.week]){wToast('주일에 선생님께 들려 드려요 🎖');return}
+  WordExtra.markMemory(memo.week,memo.ref);
+  celebrate('🎖','말씀을 마음에 새겼어요!','주일에 교회에서 선생님께 들려 드려요');
+  renderMemo();
+}
+
+/* ---------- 성경 이야기 기차 ---------- */
+function renderWhere(){
+  var w=WordExtra.where(day()),card=document.getElementById('whereCard');
+  if(!w){card.hidden=true;return}
+  var start=Math.min(Math.max(w.era-1,0),7)+1,align=w.era===0?'left':(w.era===9?'right':'center');
+  document.getElementById('whereBox').innerHTML=
+    '<div class="wx-eras">'+w.eras.map(function(e,i){
+      return '<span class="wx-e'+(i<w.era?' past':'')+(i===w.era?' on':'')+'" title="'+wEsc(e.n)+'">'+e.e+'</span>'}).join('')+'</div>'+
+    '<div class="wx-lab"><span style="grid-column:'+start+' / span 3;text-align:'+align+'">▲ '+wEsc(w.eras[w.era].n)+' 시대</span></div>'+
+    '<div class="wx-now"><b>'+wEsc(w.book)+' '+w.ch+'장</b>'+(w.story?' · '+wEsc(w.story):'')+'</div>';
+  card.hidden=false;
+}
+
+/* ---------- 한 주 돌아보기 (토요일·주일) ---------- */
+var rv={i:0,score:0,picked:-1,qs:[]};
+function renderReview(){
+  var card=document.getElementById('reviewCard');
+  if(!WordExtra.isReviewDay(viewDate)){card.hidden=true;return}
+  var wk=WordExtra.week(viewDate,WordStore.custom());
+  document.getElementById('reviewList').innerHTML='<div style="font-size:15px;color:var(--tx2);margin-bottom:6px">이번 주에 읽은 이야기예요. 기억나나요?</div>'+
+    wk.map(function(x){
+      return '<div class="rv-row"><div class="rv-d">'+WordData.weekday(x.date)+'</div><div>'+
+        '<div class="rv-t">'+wEsc(x.title)+'</div>'+(x.line?'<div class="rv-l">'+wEsc(x.line)+'</div>':'')+'</div></div>';
+    }).join('');
+  rv={i:0,score:0,picked:-1,qs:wk.filter(function(x){return x.quiz}).map(function(x){return x.quiz})};
+  paintReview();
+  card.hidden=false;
+}
+function paintReview(){
+  var box=document.getElementById('reviewQuiz'),qs=rv.qs;
+  if(!qs.length){box.hidden=true;return}
+  box.hidden=false;
+  if(rv.i>=qs.length){
+    box.innerHTML='<div class="quiz-q" style="text-align:center">'+qs.length+'문제 가운데 '+rv.score+'문제 맞혔어요! '+(rv.score===qs.length?'🏆':'👏')+'</div>'+
+      '<button class="big b-soft" onclick="rv.i=0;rv.score=0;rv.picked=-1;paintReview()">다시 풀기</button>';
+    return;
+  }
+  var q=qs[rv.i];
+  box.innerHTML='<div class="rq-h">복습 퀴즈 '+(rv.i+1)+' / '+qs.length+'</div><div class="quiz-q">'+wEsc(q.q)+'</div>'+
+    q.c.map(function(c,i){
+      var cls=rv.picked<0?'choice':(i===q.a?'choice ok':(i===rv.picked?'choice no':'choice'));
+      return '<button class="'+cls+'" onclick="pickReview('+i+')">'+wEsc(c)+'</button>';
+    }).join('');
+}
+function pickReview(i){
+  if(rv.picked>=0)return;
+  var q=rv.qs[rv.i];rv.picked=i;if(i===q.a)rv.score++;
+  paintReview();
+  setTimeout(function(){
+    rv.i++;rv.picked=-1;paintReview();
+    if(rv.i>=rv.qs.length&&rv.score===rv.qs.length)celebrate('🏆','한 주를 다 기억했어요!','이번 주 말씀 박사예요');
+  },1100);
+}
+
+/* ---------- 인물 카드 ---------- */
+function myDates(){return me.name?WordStore.myConfirms(me.name,VER).map(function(c){return c.date}):[]}
+function renderTease(){
+  var t=document.getElementById('cardTease'),ks=WordExtra.cardsIn(day().passage);
+  var got=WordExtra.collected(myDates(),WordStore.custom());
+  var fresh=ks.filter(function(k){return !got[k.id]});
+  if(!fresh.length||state().stamped){t.hidden=true;return}
+  t.textContent='🃏 오늘 도장을 찍으면 「'+fresh.map(function(k){return k.n}).join('」 「')+'」 카드를 받아요!';
+  t.hidden=false;
+}
+function showCard(id){
+  var k=WordExtra.cards.filter(function(x){return x.id===id})[0];
+  if(k)celebrate(k.e,k.n,k.t);
 }
 
 function doMission(){
@@ -399,13 +631,19 @@ function doStamp(){
   if(WordData.locked(viewDate)){wToast('내일 말씀은 내일 새벽에 열려요');return}
   if(state().stamped){wToast('오늘은 이미 도장을 찍었어요 🌟');return}
   var p=pend();stamping=true;
-  WordStore.confirm({date:viewDate,name:me.name,ver:VER,quizOk:!!p.quizOk,missionOk:!!p.missionOk,mood:p.mood||''})
+  var before=WordExtra.collected(myDates(),WordStore.custom());
+  WordStore.confirm({date:viewDate,name:me.name,ver:VER,quizOk:!!p.quizOk,missionOk:!!p.missionOk,table:!!p.table,mood:p.mood||''})
     .then(function(){
       stamping=false;
       var st=wordStreak(me.name,VER);
       celebrate(day().kids.emoji,'도장 꾹! 참 잘했어요',
         st.grace.length&&st.days>1?'🕊 은혜의 하루로 이어져 연속 '+st.days+'일째예요':'연속 '+st.days+'일째 말씀을 읽었어요');
-      renderProgress();loadFeed();
+      var after=WordExtra.collected(myDates(),WordStore.custom());
+      var fresh=WordExtra.cards.filter(function(k){return after[k.id]&&!before[k.id]});
+      fresh.forEach(function(k,i){
+        setTimeout(function(){celebrate(k.e,'새 인물 카드 · '+k.n,k.t)},2000*(i+1));
+      });
+      renderProgress();renderTease();loadFeed();
     },function(){stamping=false});
 }
 
@@ -419,8 +657,11 @@ function parentCheck(){
 }
 
 function renderProgress(){
-  var s=state(),n=(s.stamped?1:0)+(s.quizOk?1:0)+(s.missionOk?1:0);
-  document.getElementById('todayStars').innerHTML=[0,1,2].map(function(i){
+  var s=state(),n=(s.stamped?1:0)+(s.quizOk?1:0)+(s.missionOk?1:0)+(s.table?1:0);
+  var tb=document.getElementById('tableBtn');
+  tb.className=s.table?'big b-done':'big b-sun';
+  tb.textContent=s.table?'✓ 가족과 이야기했어요':'가족과 이야기했어요 🍽️';
+  document.getElementById('todayStars').innerHTML=[0,1,2,3].map(function(i){
     return '<span class="'+(i<n?'pop':'')+'" style="opacity:'+(i<n?1:.25)+'">⭐</span>'}).join('');
   var b=document.getElementById('stampBtn');
   b.className=s.stamped?'big b-done':'big b-grass';
@@ -498,7 +739,7 @@ function moveMonth(n){
 function renderBoard(){
   var recs=me.name?WordStore.myConfirms(me.name,VER):[];
   var map={},stars=0;
-  recs.forEach(function(c){map[c.date]=c;stars+=1+(c.quizOk?1:0)+(c.missionOk?1:0)});
+  recs.forEach(function(c){map[c.date]=c;stars+=1+(c.quizOk?1:0)+(c.missionOk?1:0)+(c.table?1:0)});
   var st=me.name?wordStreak(me.name,VER):{days:0,total:0};
   document.getElementById('totalStars').textContent=stars;
   document.getElementById('totalDays').textContent=st.total;
@@ -526,6 +767,18 @@ function renderBoard(){
   if(st.days>=7)badges.push('🏅 일주일 연속 · 말씀 지킴이');
   if(st.total>=30)badges.push('👑 30일 · 말씀 왕관');
   if(stars>=50)badges.push('🌟 별 50개 · 반짝반짝');
+  var got=WordExtra.collected(recs.map(function(c){return c.date}),WordStore.custom()),gotN=Object.keys(got).length;
+  var memN=Object.keys(WordExtra.memoryDone()).length;
+  if(memN>=1)badges.push('📌 첫 암송 · 말씀 한 구절을 마음에 새겼어요');
+  if(memN>=4)badges.push('📜 암송 4주 · 말씀을 품은 어린이');
+  if(gotN>=10)badges.push('🃏 인물 카드 10장 · 성경 인물 탐험가');
+  if(gotN>=WordExtra.cards.length)badges.push('🏆 인물 도감 완성!');
+  document.getElementById('deckTitle').textContent='🃏 성경 인물 도감 · '+gotN+' / '+WordExtra.cards.length;
+  document.getElementById('deck').innerHTML=WordExtra.cards.map(function(k){
+    return got[k.id]
+      ? '<button class="pc" onclick="showCard(\''+k.id+'\')"><span class="pe">'+k.e+'</span><span class="pn">'+wEsc(k.n)+'</span></button>'
+      : '<button class="pc lock" onclick="wToast(\''+wEsc(WordExtra.cardHint(k))+'\')"><span class="pe">'+k.e+'</span><span class="pn">'+wEsc(WordExtra.cardHint(k))+'</span></button>';
+  }).join('');
   document.getElementById('badges').innerHTML=badges.length?badges.map(function(b){return '<div>'+b+'</div>'}).join(''):
     '<div style="color:var(--tx3)">말씀을 읽으면 배지를 받을 수 있어요!</div>';
 }
