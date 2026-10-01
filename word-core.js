@@ -225,15 +225,15 @@ function wAskName(opt,done){
     ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-labelledby','wNameT');
     ov.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(30,24,18,.45);'+
       'display:none;align-items:flex-end;justify-content:center;padding:0 12px calc(12px + env(safe-area-inset-bottom))';
-    ov.innerHTML='<form style="width:100%;max-width:440px;background:#fffaf2;border-radius:20px;padding:20px 18px 16px;'+
+    ov.innerHTML='<form style="width:100%;max-width:440px;background:var(--lt-fffaf2,#fffaf2);border-radius:20px;padding:20px 18px 16px;'+
       'box-shadow:0 12px 40px rgba(0,0,0,.25);font-family:inherit">'+
-      '<div id="wNameT" style="font-size:17px;font-weight:700;color:#3a2e22;margin-bottom:4px"></div>'+
+      '<div id="wNameT" style="font-size:17px;font-weight:700;color:var(--dt-3a2e22,#3a2e22);margin-bottom:4px"></div>'+
       '<div id="wNameS" style="font-size:13px;color:#8a795f;line-height:1.7;margin-bottom:12px"></div>'+
       '<input id="wNameIn" maxlength="12" autocomplete="name" style="width:100%;font-size:17px;padding:13px 14px;'+
-      'border:1px solid #e0cdae;border-radius:12px;background:#fff;color:#3a2e22;font-family:inherit;outline:none">'+
+      'border:1px solid var(--lt-e0cdae,#e0cdae);border-radius:12px;background:var(--lt-ffffff,#fff);color:var(--dt-3a2e22,#3a2e22);font-family:inherit;outline:none">'+
       '<div style="display:flex;gap:8px;margin-top:12px">'+
-      '<button type="button" id="wNameX" style="flex:none;padding:14px 16px;border:1px solid #e0cdae;border-radius:12px;'+
-      'background:#f4e6d3;color:#6b5a45;font-size:15px;font-family:inherit;cursor:pointer">나중에</button>'+
+      '<button type="button" id="wNameX" style="flex:none;padding:14px 16px;border:1px solid var(--lt-e0cdae,#e0cdae);border-radius:12px;'+
+      'background:var(--lt-f4e6d3,#f4e6d3);color:var(--dt-6b5a45,#6b5a45);font-size:15px;font-family:inherit;cursor:pointer">나중에</button>'+
       '<button type="submit" id="wNameOk" style="flex:1;padding:14px;border:none;border-radius:12px;color:#fff;'+
       'font-size:16px;font-weight:700;font-family:inherit;cursor:pointer"></button></div></form>';
     document.body.appendChild(ov);
