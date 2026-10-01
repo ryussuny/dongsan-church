@@ -87,6 +87,7 @@ const shareText = [
 /* ---------- today.html ---------- */
 const html = `<!DOCTYPE html><html lang="ko"><head>
 <meta charset="UTF-8">
+<script src="theme.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>오늘의 말씀 · ${esc(today.replace(/-/g, '.'))} — 동산감리교회</title>
 <meta name="description" content="${esc(day.passage)} ${esc(day.title)} — 동산감리교회 오늘의 말씀">
@@ -143,17 +144,17 @@ h1{font-family:'Gowun Batang',serif;font-size:17px;font-weight:700}
 .q b{color:var(--brick);flex:none}
 .pray{margin-top:12px;background:var(--warm);border-radius:12px;padding:14px;font-family:'Gowun Batang',serif;
  font-size:15.5px;color:var(--text2);line-height:1.95}
-.kids{background:#f2f9ff;border:1px solid #dfeef9;border-radius:18px;padding:20px;margin-bottom:14px}
-.kids .st{color:#2f6fa1}
-.kids .kv{background:#fff;border:2px dashed #7fc4f0;border-radius:16px;padding:16px;text-align:center;
- font-size:17px;font-weight:700;line-height:1.9;color:#2f4256}
+.kids{background:var(--lt-f2f9ff,#f2f9ff);border:1px solid var(--lt-dfeef9,#dfeef9);border-radius:18px;padding:20px;margin-bottom:14px}
+.kids .st{color:var(--dt-2f6fa1,#2f6fa1)}
+.kids .kv{background:var(--lt-ffffff,#fff);border:2px dashed #7fc4f0;border-radius:16px;padding:16px;text-align:center;
+ font-size:17px;font-weight:700;line-height:1.9;color:var(--dt-2f4256,#2f4256)}
 .kids .kvr{text-align:center;font-size:12.5px;color:var(--sky);font-weight:700;margin-top:8px}
 .kids .story{font-size:16px;color:#5b7186;margin-top:14px;line-height:1.95}
-.kids .mi{display:flex;gap:11px;align-items:center;background:#fff8e6;border-radius:14px;padding:14px;margin-top:14px}
+.kids .mi{display:flex;gap:11px;align-items:center;background:var(--lt-fff8e6,#fff8e6);border-radius:14px;padding:14px;margin-top:14px}
 .kids .mi .em{font-size:26px}
-.kids .mi .tx{font-size:15.5px;font-weight:700;color:#6b4f00}
-details{margin-top:14px;background:#fff;border-radius:14px;padding:14px}
-summary{cursor:pointer;font-size:15.5px;font-weight:700;color:#2f4256}
+.kids .mi .tx{font-size:15.5px;font-weight:700;color:var(--dt-6b4f00,#6b4f00)}
+details{margin-top:14px;background:var(--lt-ffffff,#fff);border-radius:14px;padding:14px}
+summary{cursor:pointer;font-size:15.5px;font-weight:700;color:var(--dt-2f4256,#2f4256)}
 details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
 .answer{margin-top:8px;font-size:14px;color:var(--moss);font-weight:700}
 .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
@@ -163,11 +164,11 @@ details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
 .b2{background:linear-gradient(135deg,#4aa3df,#7fc4f0);color:#fff}
 .b3{background:var(--warm);color:var(--text2);border-color:var(--border)}
 .foot{text-align:center;font-size:11.5px;color:var(--text3);line-height:2;margin-top:22px}
-@media print{header,.btns,.foot{display:none}body{background:#fff}.card,.kids{border:none;padding:0;margin-bottom:18px}}
+@media print{header,.btns,.foot{display:none}body{background:var(--lt-ffffff,#fff)}.card,.kids{border:none;padding:0;margin-bottom:18px}}
 /* 지난 말씀 알림 — 게시가 늦어 어제 것이 걸려 있을 때만 나온다.
    오늘 것이면 아예 그리지 않으므로 평소에는 보이지 않는다. */
 .stale{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;
-  background:#fff6e6;border:1px solid var(--gold);border-left:4px solid var(--gold);
+  background:var(--lt-fff6e6,#fff6e6);border:1px solid var(--gold);border-left:4px solid var(--gold);
   border-radius:12px;padding:12px 14px;margin:14px 0 0;font-size:13.5px;color:var(--text2)}
 .stale[hidden]{display:none}
 .stale b{color:var(--brick-deep)}
@@ -176,6 +177,13 @@ details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
 .explain{font-size:1rem;color:var(--text);word-break:keep-all}
 .explain p{line-height:2.0;margin:0 0 .95rem;text-align:justify;text-justify:inter-word}
 .explain p:last-child{margin-bottom:0}
+</style>
+<style id="dongsan-dark-v1">
+[data-theme="dark"]{color-scheme:dark;--cream:#16130f;--paper:#221d18;--warm:#2b241e;--border:#4a3f33;--text:#efe6d8;--text2:#cdbfa9;--text3:#a3927a;--moss:#8fb47a;
+--dt-2f4256:#c6c4bf;--dt-2f6fa1:#c6ced0;--dt-3a2e22:#c9c0b4;--dt-6b4f00:#d4c7ac;--dt-6b5a45:#d4cabc;--lt-dfeef9:#33322f;--lt-e0cdae:#342e26;--lt-f2f9ff:#363330;--lt-f4e6d3:#36312b;--lt-fff6e6:#37332d;--lt-fff8e6:#37332d;--lt-fffaf2:#37332f;--lt-ffffff:#373430;}
+[data-theme="dark"] #themeBtn{background:rgba(44,40,36,.94)!important;border-color:rgba(255,255,255,.18)!important}
+@media print{#themeBtn{display:none!important}}
+@media print{[data-theme="dark"]{color-scheme:light}}
 </style>
 </head>
 <body>
