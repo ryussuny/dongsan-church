@@ -76,6 +76,7 @@ const shareText = [
   '',
   verses.map(v => `${v.v} ${v.t}`).join(' '),
   '',
+  ...(day.remember ? ['📌 오늘 기억할 한 줄', day.remember, ''] : []),
   '🌿 묵상',
   ...day.adult.questions.map((q, i) => `${i + 1}. ${q}`),
   '',
@@ -175,8 +176,15 @@ details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
 .stale a{margin-left:auto;flex:none;background:var(--brick-deep);color:#fff;font-weight:700;
   border-radius:999px;padding:7px 15px;font-size:13px;white-space:nowrap}
 .explain{font-size:1rem;color:var(--text);word-break:keep-all}
-.explain p{line-height:2.0;margin:0 0 .95rem;text-align:justify;text-justify:inter-word}
+.explain p{line-height:2.0;margin:0 0 .95rem;text-align:left}
 .explain p:last-child{margin-bottom:0}
+.gospel{margin-top:14px;padding:12px 14px;border-radius:12px;background:#fbf3e7;border-left:3px solid var(--brick);
+  font-size:.95rem;line-height:1.9;color:var(--text2);word-break:keep-all}
+.gospel b{display:block;font-size:.8rem;color:var(--brick-deep);margin-bottom:2px}
+.remember{margin-top:12px;padding:14px 16px;border-radius:14px;background:linear-gradient(135deg,var(--brick-deep),var(--brick));
+  color:#fff;word-break:keep-all}
+.remember small{display:block;font-size:.75rem;opacity:.85;margin-bottom:3px}
+.remember div{font-family:'Gowun Batang',serif;font-size:1.08rem;font-weight:700;line-height:1.7}
 </style>
 <style id="dongsan-dark-v1">
 [data-theme="dark"]{color-scheme:dark;--cream:#16130f;--paper:#221d18;--warm:#2b241e;--border:#4a3f33;--text:#efe6d8;--text2:#cdbfa9;--text3:#a3927a;--moss:#8fb47a;
@@ -211,9 +219,11 @@ details ul{margin:10px 0 0 18px;font-size:15px;color:#5b7186;line-height:2}
     ${missing.length ? `<div class="note">📌 ${missing.join(', ')}절은 앱에 실린 본문 파일에 빠져 있어 표시하지 못했습니다. 성경책에서 함께 읽어 주세요.</div>` : ''}
   </div>
 
-  ${day.explain ? `<div class="card">
+  ${(day.explain || day.remember) ? `<div class="card">
     <div class="st">💡 오늘의 묵상</div>
-    <div class="explain">${day.explain.split(/\n{2,}/).map(t => `<p>${esc(t.trim())}</p>`).join('')}</div>
+    <div class="explain">${(day.explain || '').split(/\n{2,}/).filter(Boolean).map(t => `<p>${esc(t.trim())}</p>`).join('')}</div>
+    ${day.gospel ? `<div class="gospel"><b>✝️ 복음으로 보면</b>${esc(day.gospel)}</div>` : ''}
+    ${day.remember ? `<div class="remember"><small>📌 오늘 기억할 한 줄</small><div>${esc(day.remember)}</div></div>` : ''}
   </div>` : ''}
 
   <div class="card">
@@ -299,6 +309,7 @@ const snippet = verses.length
 const json = {
   date: today, weekday, source: day.source,
   passage: day.passage, title: day.title, theme: day.theme, verseSnippet: snippet,
+  remember: day.remember || '',
   adult: day.adult,
   kids: { verseRef: day.kids.verseRef, verse: kidVerse, emoji: day.kids.emoji,
           summary: day.kids.summary, mission: day.kids.mission, quiz: day.kids.quiz },
