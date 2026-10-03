@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="동산 말씀">
 <meta name="mobile-web-app-capable" content="yes">
 <title>오늘의 말씀 나눔 — 동산감리교회</title>
-<meta name="description" content="동산감리교회 성도들이 매일 같은 말씀을 읽고, 확인하고, 은혜를 나누는 앱입니다. 성인용과 어린이용 두 가지 버전.">
+<meta name="description" content="동산감리교회 오늘의 말씀. 누구나 이름 없이 읽고 들을 수 있습니다. 성인·큰 글씨·청년·어린이 화면과 묵상집.">
 <meta name="theme-color" content="#8f4531">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -33,6 +33,20 @@ a.card{display:block;border-radius:20px;padding:20px;margin-bottom:12px;color:#f
 a.card:active{transform:scale(.98)}
 a.adult{background:linear-gradient(135deg,#b3593f,#8f4531)}
 a.kids{background:linear-gradient(135deg,#4aa3df,#7fc4f0)}
+a.easy{background:linear-gradient(135deg,#5a4634,#7a5c40)}
+a.youth{background:linear-gradient(135deg,#3b2d6b,#7c5cff)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.grid a.card{margin-bottom:0;padding:16px}
+.grid .card .row{flex-direction:column;align-items:flex-start;gap:6px}
+.grid .card .emo{font-size:30px}
+.grid .card .ttl{font-size:17px}
+a.book{display:flex;align-items:center;gap:12px;border-radius:18px;padding:16px;margin-bottom:12px;text-decoration:none;
+  background:var(--lt-fffaf2,#fffaf2);border:1px solid var(--lt-e6d3b4,#e6d3b4);color:var(--dt-3a2e22,#3a2e22)}
+a.book .emo{font-size:30px}a.book b{display:block;font-size:16px}a.book span{font-size:12.5px;color:var(--dt-6b5a45,#6b5a45)}
+.welcome{background:var(--lt-fffaf2,#fffaf2);border:1px dashed var(--lt-e0cdae,#e0cdae);border-radius:16px;padding:14px 16px;margin-bottom:12px;font-size:13px;line-height:1.8;color:var(--dt-6b5a45,#6b5a45)}
+.welcome b{color:var(--dt-3a2e22,#3a2e22)}
+.welcome button{margin-top:8px;border:0;border-radius:12px;background:#8f4531;color:#fff;font:inherit;font-size:13.5px;font-weight:700;padding:10px 14px;cursor:pointer}
+.today .sr{font-size:11.5px;color:#8f4531;margin-top:4px;font-weight:700}
 .card .row{display:flex;align-items:center;gap:14px}
 .card .emo{font-size:38px}
 .card .ttl{font-size:19px;font-weight:700}
@@ -62,14 +76,34 @@ a.kids{background:linear-gradient(135deg,#4aa3df,#7fc4f0)}
   <a class="card adult" href="word-adult.html">
     <div class="row"><div class="emo">🙏</div>
       <div><div class="ttl">성인용</div>
-        <div class="desc">본문 전문 · 묵상 길잡이 · 읽음 확인 · 은혜 나눔<br>큰 글씨 지원</div></div></div>
+        <div class="desc">본문 전문 · 묵상 · 읽음 확인 · 은혜 나눔<br>글씨 크기 4단계</div></div></div>
   </a>
+
+  <div class="grid">
+    <a class="card easy" href="word-easy.html">
+      <div class="row"><div class="emo">👓</div><div><div class="ttl">큰 글씨</div><div class="desc">어르신께 · 버튼 하나로 듣기</div></div></div>
+    </a>
+    <a class="card youth" href="word-youth.html">
+      <div class="row"><div class="emo">🎧</div><div><div class="ttl">청년·청소년</div><div class="desc">3분 묵상 · 질문 · 도전</div></div></div>
+    </a>
+  </div>
 
   <a class="card kids" href="word-kids.html">
     <div class="row"><div class="emo">🧒</div>
       <div><div class="ttl">어린이용</div>
         <div class="desc">쉬운 말씀 · 읽어 주기 · 퀴즈와 미션<br>도장·스티커판</div></div></div>
   </a>
+
+  <a class="book" href="word-book.html">
+    <div class="emo">📖</div>
+    <div><b>묵상집 · 처음 신앙, 매일 한 걸음</b><span>어른용·어린이용 책을 넘겨 보고 인쇄할 수 있어요. 앱과 같은 날 같은 말씀입니다.</span></div>
+  </a>
+
+  <div class="welcome">
+    <b>처음 오셨나요?</b> 교회에 다니지 않아도 누구나 이름 없이 읽고 들을 수 있습니다.
+    읽음 확인과 나눔을 하실 때만 이름을 적습니다. 가족과 친구에게 이 주소를 보내 함께 읽어 보세요.<br>
+    <button onclick="shareSite()">📤 친구에게 보내기</button>
+  </div>
 
   <div class="foot">
     <a href="today.html">📄 오늘의 말씀 한 장으로 보기 (인쇄 · 카톡 공유)</a><br><br>
@@ -86,8 +120,17 @@ a.kids{background:linear-gradient(135deg,#4aa3df,#7fc4f0)}
   var d=WordData.forDate(WordData.today(),custom);
   document.getElementById('today').innerHTML=
     '<div class="d">'+d.date.replace(/-/g,'.')+' ('+WordData.weekday(d.date)+') 오늘의 말씀</div>'+
-    '<div class="p">'+d.passage+'</div><div class="t">'+d.title+'</div>';
+    '<div class="p">'+d.passage+'</div><div class="t">'+d.title+'</div>'+
+    (function(){var sr=WordData.series(d.date);return sr?'<div class="sr">'+sr.title+' · '+sr.day+'일째'+(d.feast?' · '+d.feast:'')+'</div>':(d.feast?'<div class="sr">'+d.feast+'</div>':'')})();
 })();
+</script>
+<script>
+function shareSite(){
+  var url='https://ryussuny.github.io/dongsan-church/word.html';
+  var t='📖 동산감리교회 오늘의 말씀\n날마다 같은 말씀을 함께 읽어요. 누구나 이름 없이 읽고 들을 수 있어요.\n'+url;
+  if(navigator.share){navigator.share({text:t}).catch(function(){});return}
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){alert('주소를 복사했습니다. 카톡에 붙여 넣으세요.')});
+}
 </script>
 <script>
 /* 앱처럼 쓰기 — 홈 화면에 추가하면 주소창 없이 열린다 */

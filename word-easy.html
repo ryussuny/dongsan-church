@@ -1,0 +1,185 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8">
+<script src="theme.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="favicon.png" type="image/png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="동산 말씀">
+<title>큰 글씨 말씀 — 동산감리교회</title>
+<meta name="description" content="글씨가 크고 누르기 쉬운 오늘의 말씀. 본문과 묵상을 읽고, 버튼 하나로 들을 수 있습니다.">
+<meta name="theme-color" content="#8f4531">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fbf6ee;--card:#ffffff;--ink:#231d17;--ink2:#4a3f33;--line:#e6d3b4;--brick:#8f4531;--brick2:#b3593f;--gold:#c99a3f;--soft:#fbf1e3;--ok:#3f7d3a;--fs:22px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#181512;--card:#24201b;--ink:#f3ece2;--ink2:#d6cbbb;--line:#433a30;--brick:#e09a7d;--brick2:#e7a487;--soft:#2c261f;--ok:#8cc47e}}
+:root[data-theme="dark"]{--bg:#181512;--card:#24201b;--ink:#f3ece2;--ink2:#d6cbbb;--line:#433a30;--brick:#e09a7d;--brick2:#e7a487;--soft:#2c261f;--ok:#8cc47e}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',sans-serif;font-size:var(--fs);line-height:1.75;word-break:keep-all;overflow-wrap:anywhere}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 60px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.top a{color:var(--brick);font-weight:700;text-decoration:none;font-size:18px;padding:8px 0}
+.date{text-align:center;margin:6px 0 14px}
+.date .d{font-size:1.35em;font-weight:700}
+.date .s{font-size:.72em;color:var(--ink2)}
+.nav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+button,.btn{font:inherit;font-size:20px;font-weight:700;border-radius:16px;border:2px solid var(--line);background:var(--card);color:var(--ink);
+  min-height:60px;padding:10px 14px;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;text-align:center}
+button:active,.btn:active{transform:scale(.98)}
+button.main{background:var(--brick);border-color:var(--brick);color:#fff;font-size:22px;min-height:68px;width:100%}
+:root[data-theme="dark"] button.main{color:#181512}
+button.done{background:var(--ok);border-color:var(--ok);color:#fff}
+button:disabled{opacity:.45}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px 18px;margin-bottom:14px}
+.lab{display:block;font-size:.68em;font-weight:700;color:var(--brick);letter-spacing:.04em;margin-bottom:6px}
+.ttl{font-family:'Gowun Batang',serif;font-size:1.3em;font-weight:700;line-height:1.4}
+.ref{color:var(--brick);font-weight:700;font-size:.85em;margin-top:2px}
+.fe{display:inline-block;background:var(--gold);color:#231d17;font-size:.62em;font-weight:700;border-radius:99px;padding:3px 12px;margin-bottom:6px}
+.bible{font-family:'Gowun Batang',serif;font-size:1.04em;line-height:1.95;margin-top:12px}
+.bible span{display:block;margin-bottom:6px}
+.bible b{font-family:'Noto Sans KR',sans-serif;color:var(--brick);font-size:.62em;margin-right:6px;vertical-align:.25em}
+.rem{background:var(--brick);color:#fff;border-radius:20px;padding:20px 18px;margin-bottom:14px;font-family:'Gowun Batang',serif;font-weight:700;font-size:1.08em;line-height:1.7}
+:root[data-theme="dark"] .rem{color:#181512}
+.rem .lab{color:inherit;opacity:.85;font-family:'Noto Sans KR',sans-serif}
+.med p{margin-bottom:12px}
+.gos{background:var(--soft);border-radius:14px;padding:14px 16px;margin-top:6px;font-family:'Gowun Batang',serif}
+.pr{font-family:'Gowun Batang',serif;font-weight:700}
+.foot{text-align:center;margin-top:20px;font-size:17px;line-height:2.2}
+.foot a{color:var(--brick);font-weight:700}
+.sizer{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+.sizer button{min-height:48px;min-width:56px;font-size:18px;padding:6px 10px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2f2a26;color:#fff;padding:12px 18px;border-radius:14px;font-size:18px;z-index:50}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a href="word.html">← 처음으로</a>
+    <div class="sizer"><button onclick="size(-2)" aria-label="글씨 작게">가−</button><button onclick="size(2)" aria-label="글씨 크게">가＋</button></div>
+  </div>
+
+  <div class="date"><div class="d" id="dLabel"></div><div class="s" id="dSeries"></div></div>
+  <div class="nav">
+    <button onclick="move(-1)">◀ 어제 말씀</button>
+    <button id="fwdBtn" onclick="move(1)">다음 말씀 ▶</button>
+  </div>
+
+  <button class="main" id="listenBtn" onclick="listen()">🔊 말씀 들려주세요</button>
+
+  <div class="card" style="margin-top:14px">
+    <div id="feast"></div>
+    <div class="ttl" id="ttl"></div>
+    <div class="ref" id="ref"></div>
+    <div class="bible" id="bible">말씀을 가져오는 중입니다…</div>
+  </div>
+
+  <div class="rem" id="remBox"><span class="lab">📌 오늘 기억할 한 줄</span><div id="rem"></div></div>
+
+  <div class="card" id="medCard">
+    <span class="lab">🌿 오늘의 묵상</span>
+    <div class="med" id="med"></div>
+    <div class="gos" id="gos"></div>
+  </div>
+
+  <div class="card">
+    <span class="lab">🙏 함께 드리는 기도</span>
+    <div class="pr" id="pr"></div>
+  </div>
+
+  <button class="main" id="readBtn" onclick="markRead()">✅ 오늘 말씀 읽었습니다</button>
+
+  <div class="row2">
+    <a class="btn" id="bookLink" href="word-book.html">📖 묵상집으로 보기</a>
+    <a class="btn" href="word-adult.html">더 많은 기능</a>
+  </div>
+
+  <div class="foot">
+    글씨는 위쪽 <b>가−</b> <b>가＋</b> 로 조절하세요.<br>
+    읽기와 듣기는 누구나 이름 없이 할 수 있습니다.<br>
+    <a href="index.html">동산감리교회 홈페이지</a>
+  </div>
+</div>
+
+<script src="word-data.js"></script>
+<script src="word-config.js"></script>
+<script src="word-core.js"></script>
+<script>
+var VER='adult',viewDate=WordData.today(),me=WordUser.get();
+var easyFs=(function(){try{return +localStorage.getItem('dongsan_easy_fs')||22}catch(e){return 22}})();
+document.documentElement.style.setProperty('--fs',easyFs+'px');
+function size(d){easyFs=Math.min(34,Math.max(18,easyFs+d));document.documentElement.style.setProperty('--fs',easyFs+'px');
+  try{localStorage.setItem('dongsan_easy_fs',easyFs)}catch(e){}}
+function day(){return WordData.forDate(viewDate,WordStore.custom())}
+function move(n){
+  var next=WordData.shift(viewDate,n);
+  if(WordData.locked(next)){wToast('내일 말씀은 내일 새벽 '+WordData.openHour+'시에 열립니다');return}
+  WordVoice.stop();viewDate=next;render();window.scrollTo(0,0);
+}
+function paras(t){return String(t||'').split(/\n\n+/).map(function(p){return '<p>'+wEsc(p)+'</p>'}).join('')}
+function render(){
+  var d=day(),isToday=viewDate===WordData.today(),w=WordData.weekday(viewDate),p=viewDate.split('-');
+  document.getElementById('dLabel').textContent=(+p[1])+'월 '+(+p[2])+'일 '+(w==='주일'?'주일':w+'요일')+(isToday?' · 오늘':'');
+  var sr=WordData.series(viewDate);
+  document.getElementById('dSeries').textContent=sr?(sr.title+' · '+sr.day+'일째'):(d.theme||'');
+  document.getElementById('fwdBtn').disabled=WordData.locked(WordData.shift(viewDate,1));
+  document.getElementById('feast').innerHTML=d.feast?'<span class="fe">'+wEsc(d.feast)+'</span>':'';
+  document.getElementById('ttl').textContent=d.title;
+  document.getElementById('ref').textContent=d.passage;
+  document.getElementById('remBox').style.display=d.remember?'':'none';
+  document.getElementById('rem').textContent=d.remember||'';
+  document.getElementById('medCard').style.display=d.explain?'':'none';
+  document.getElementById('med').innerHTML=paras(d.explain);
+  document.getElementById('gos').style.display=d.gospel?'':'none';
+  document.getElementById('gos').innerHTML=d.gospel?'<span class="lab">✝️ 복음으로 보면</span>'+wEsc(d.gospel):'';
+  document.getElementById('pr').textContent=d.adult.prayer;
+  document.getElementById('bookLink').href='word-book.html#'+viewDate;
+  document.getElementById('bookLink').style.display=sr?'':'none';
+  WordBible.load().then(function(ok){
+    var el=document.getElementById('bible');
+    var vs=ok?WordBible.verses(d.passage,true):[];
+    el.innerHTML=vs.length?vs.map(function(v){return '<span><b>'+v.v+'</b>'+wEsc(v.t)+'</span>'}).join(''):'성경책에서 '+wEsc(d.passage)+'을 펴서 읽어 주세요.';
+  });
+  refreshRead();
+}
+function listen(){
+  if(WordVoice.playing){WordVoice.stop();return}
+  var d=day(),parts=[d.title+'. '+d.passage+'.'];
+  if(WordBible.ready)parts.push(WordBible.plain(d.passage,true));
+  if(d.remember)parts.push('오늘 기억할 한 줄. '+d.remember);
+  if(d.explain)parts.push('오늘의 묵상. '+d.explain.replace(/\n+/g,' '));
+  if(d.gospel)parts.push('복음으로 보면. '+d.gospel);
+  parts.push('기도합니다. '+d.adult.prayer);
+  WordVoice.speak(parts,{rate:.86,onChange:function(on){
+    document.getElementById('listenBtn').textContent=on?'⏹ 그만 들을게요':'🔊 말씀 들려주세요'}});
+}
+function refreshRead(){
+  var b=document.getElementById('readBtn');
+  var done=me.name&&WordStore.myConfirms(me.name,VER).some(function(c){return c.date===viewDate});
+  b.className='main'+(done?' done':'');
+  b.textContent=done?'✓ 읽음 확인을 보냈습니다':'✅ 오늘 말씀 읽었습니다';
+  b.disabled=viewDate>WordData.today();
+}
+function markRead(){
+  if(!me.name){
+    wAskName({title:'성함을 알려 주세요',sub:'교회 읽음 기록에 이 이름이 적힙니다. 한 번만 적으시면 됩니다.'},function(n){
+      me=WordUser.set({name:n});markRead()});
+    return;
+  }
+  if(WordStore.myConfirms(me.name,VER).some(function(c){return c.date===viewDate})){wToast('이미 확인하셨습니다 🙏');return}
+  var b=document.getElementById('readBtn');b.disabled=true;b.textContent='보내는 중…';
+  WordStore.confirm({date:viewDate,name:me.name,ver:VER}).then(function(){
+    var s=wordStreak(me.name,VER);
+    wToast(s.days>1?'확인되었습니다 · 연속 '+s.days+'일째 🎉':'확인되었습니다. 은혜가 넘치시길 🙏');refreshRead();
+  },function(){wToast('보내지 못했습니다. 잠시 뒤 다시 눌러 주세요');refreshRead()});
+}
+if(!WordVoice.supported())document.getElementById('listenBtn').style.display='none';
+WordStore.init().then(render);
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+}
+</script>
+</body></html>

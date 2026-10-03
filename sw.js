@@ -11,7 +11,7 @@
    =========================================================== */
 var VERSION = 'dongsan-v1';
 var SHELL = [
-  'word.html', 'word-adult.html', 'word-kids.html',
+  'word.html', 'word-adult.html', 'word-kids.html', 'word-easy.html', 'word-youth.html', 'word-book.html',
   'word-core.js', 'word-data.js', 'word-config.js', 'word-extra.js',
   'icons/icon-192.png', 'icons/icon-512.png'
 ];

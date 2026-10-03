@@ -69,6 +69,9 @@ header .who{margin-left:auto;font-size:12px;background:rgba(255,255,255,.18);pad
 .hero .p{font-family:'Gowun Batang',serif;font-size:26px;font-weight:700;margin:6px 0 4px;position:relative}
 .hero .t{font-size:15px;color:#f0e2cb;position:relative}
 .hero .th{display:inline-block;margin-top:10px;font-size:11px;background:rgba(255,255,255,.16);padding:4px 10px;border-radius:999px;position:relative}
+.hero .fe{display:inline-block;margin:10px 0 0 6px;font-size:11px;background:#c99a3f;color:#2f2a26;font-weight:700;padding:4px 10px;border-radius:999px;position:relative}
+.hero .sr{display:block;margin-top:10px;font-size:11.5px;color:#e6d3b4;position:relative}
+.hero .sr a{color:#f0e2cb;text-decoration:underline;text-underline-offset:3px}
 
 .nav-date{display:flex;align-items:center;gap:8px;margin-bottom:12px}
 .nav-date button{flex:none;background:var(--paper);border:1px solid var(--border);border-radius:10px;
@@ -505,7 +508,10 @@ function renderToday(){
     '<div class="d">'+label+' <span class="badge-src">'+srcTxt+'</span></div>'+
     '<div class="p">'+wEsc(d.passage)+'</div>'+
     '<div class="t">'+wEsc(d.title)+'</div>'+
-    (d.theme?'<div class="th">'+wEsc(d.theme)+'</div>':'');
+    (d.theme?'<div class="th">'+wEsc(d.theme)+'</div>':'')+
+    (d.feast?'<span class="fe">'+wEsc(d.feast)+'</span>':'')+
+    (function(){var sr=WordData.series(viewDate);return sr?'<div class="sr">📖 '+wEsc(sr.title)+' · '+sr.day+'/'+sr.total+'일 · '+
+      '<a href="word-book.html#'+viewDate+'">묵상집으로 보기</a></div>':''})();
   document.getElementById('questions').innerHTML=d.adult.questions.map(function(q,i){
     return '<div class="q"><b>'+(i+1)+'.</b><div>'+wEsc(q)+'</div></div>'}).join('');
   document.getElementById('prayer').textContent='🙏 '+d.adult.prayer;

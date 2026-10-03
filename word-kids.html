@@ -271,6 +271,12 @@ nav button.on{color:var(--sky);font-weight:700}
     <button class="big b-sun" id="missionBtn" style="margin-top:12px" onclick="doMission()">미션 했어요!</button>
   </div>
 
+  <div class="card" style="display:none">
+    <div class="step y">🙏 오늘의 기도</div>
+    <div class="tq" id="kidPrayer"></div>
+    <div style="font-size:14px;color:var(--tx2);margin-top:8px">두 손 모으고 소리 내어 따라 해 보아요. 끝에는 ‘예수님 이름으로 기도합니다. 아멘!’</div>
+  </div>
+
   <div class="card">
     <div class="step y">🍽️ 오늘의 식탁 질문</div>
     <div class="tq" id="tableQ"></div>
@@ -439,7 +445,10 @@ function renderToday(){
   document.getElementById('hero').innerHTML=
     '<div class="emo">'+k.emoji+'</div><div class="ttl">'+wEsc(d.title)+'</div>'+
     '<div class="ps">'+wEsc(d.passage)+'</div>'+
-    '<div class="dt">'+viewDate.replace(/-/g,'.')+' ('+(WordData.weekday(viewDate)==='주일'?'주일':WordData.weekday(viewDate)+'요일')+')</div>';
+    '<div class="dt">'+viewDate.replace(/-/g,'.')+' ('+(WordData.weekday(viewDate)==='주일'?'주일':WordData.weekday(viewDate)+'요일')+')'+
+    (d.feast?' · '+wEsc(d.feast):'')+'</div>';
+  var kp=document.getElementById('kidPrayer');
+  if(kp){kp.parentNode.style.display=d.kidPrayer?'':'none';kp.textContent=d.kidPrayer||''}
   document.getElementById('story').textContent=k.summary;
   document.getElementById('tableQ').textContent=WordExtra.table(d);
   document.getElementById('missionTx').textContent=k.mission;
