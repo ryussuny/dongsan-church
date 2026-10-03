@@ -21,6 +21,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(170deg,var
 .wrap{width:100%;max-width:440px}
 .top{text-align:center;margin-bottom:26px}
 .cross{font-size:34px;color:#c99a3f}
+.logo{display:block;width:min(260px,72vw);height:auto;margin:0 auto 6px}
+.lg-d{display:none}
+[data-theme="dark"] .lg-l{display:none}[data-theme="dark"] .lg-d{display:block}
 h1{font-family:'Gowun Batang',serif;font-size:26px;margin:8px 0 4px}
 .sub{font-size:13px;color:#8a795f}
 .verse{font-family:'Gowun Batang',serif;font-size:14px;color:var(--dt-6b5a45,#6b5a45);margin-top:14px;line-height:1.9}
@@ -65,9 +68,10 @@ a.book .emo{font-size:30px}a.book b{display:block;font-size:16px}a.book span{fon
 <body>
 <div class="wrap">
   <div class="top">
-    <div class="cross">✝</div>
+    <img class="logo lg-l" src="assets/logo/dongsan-logo.png" alt="동산감리교회 — 하나님의 은혜가 흐르는 물댄동산" width="776" height="211">
+    <img class="logo lg-d" src="assets/logo/dongsan-logo-white.png" alt="" aria-hidden="true" width="776" height="211">
     <h1>오늘의 말씀 나눔</h1>
-    <div class="sub">동산감리교회 · 하나님과 함께 이웃과 함께</div>
+    <div class="sub">하나님과 함께 이웃과 함께</div>
     <div class="verse">“주의 말씀은 내 발에 등이요<br>내 길에 빛입니다” (시편 119:105)</div>
   </div>
 

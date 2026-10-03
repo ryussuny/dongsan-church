@@ -75,6 +75,10 @@ h2.dttl{font-family:'Gowun Batang',serif;font-size:17pt;line-height:1.3;margin:.
 .cover .sub{font-size:10.5pt;color:#f4e6d3;margin-top:3mm}
 .cover .per{font-size:9.5pt;color:#e6d3b4;letter-spacing:.06em}
 .cover .ch{font-family:'Gowun Batang',serif;font-size:13pt;font-weight:700}
+.logo-w,.logo-c{display:block;height:15mm;width:auto;margin:0 auto}
+.cover .logo-w{height:16mm}
+.small .logo-c{height:10mm;margin:0 0 2mm}
+.spread .blogo{height:9mm;width:auto;display:block;margin-bottom:3mm}
 .cover .ed{display:inline-block;margin-top:3mm;border:1pt solid rgba(255,255,255,.5);border-radius:99px;padding:.6mm 4mm;font-size:9pt}
 .cover.kid{background:linear-gradient(160deg,#3d8fca,#7fc4f0 60%,#ffe08a)}
 .cover.kid h1{font-family:'Gowun Dodum',sans-serif;font-size:26pt}
@@ -227,12 +231,12 @@ function evenStart(){if((pages.length+1)%2===1)filler('기도 노트')}
 function adultBook(){
   pg('cover','<div class="inner"><div><div class="mk">✝</div><div class="per">'+'2026. 10. 16 — 12. 28 · 74일 아침 묵상'+'</div></div>'+
     '<div><h1>'+esc(S.title)+'</h1><div class="sub">'+esc(S.sub)+'</div><div class="ed">어른 묵상집</div></div>'+
-    '<div class="ch">동산감리교회</div></div>',{toc:'표지'});
+    '<div class="ch"><img class="logo-w" src="assets/logo/dongsan-logo-white.png" alt="동산감리교회"></div></div>',{toc:'표지'});
   pg('','<div class="inner"><div style="margin-top:auto"><h3 class="st">이 책의 주인</h3>'+
     '<div class="prompt">이름</div><div class="lines" style="flex:none;height:9mm"></div>'+
     '<div class="prompt">시작한 날</div><div class="lines" style="flex:none;height:9mm"></div>'+
     '<div class="prompt">함께 읽는 가족·속회</div><div class="lines" style="flex:none;height:18mm"></div></div>'+
-    '<div class="small" style="margin-top:10mm">성경 본문은 『성경전서 개역개정판』(대한성서공회)을 사용했습니다.<br>'+
+    '<div class="small" style="margin-top:10mm"><img class="logo-c" style="margin:0 0 3mm" src="assets/logo/dongsan-logo.png" alt="동산감리교회">성경 본문은 『성경전서 개역개정판』(대한성서공회)을 사용했습니다.<br>'+
     '동산감리교회 · 강원도 태백시 계산4길 25 · 주일예배 오전 9:00 / 11:00</div></div>');
   pg('','<div class="inner"><h3 class="st">들어가며</h3><div class="med">'+
     '<p>신앙은 한 번의 큰 결심보다 날마다 하나님 앞에 앉는 작은 걸음으로 자랍니다. 「처음 신앙, 매일 한 걸음」은 예수님을 막 믿기 시작한 분, 그리고 신앙의 기초를 다시 세우고 싶은 분을 위해 엮은 74일 아침 묵상입니다.</p>'+
@@ -304,7 +308,7 @@ function adultBook(){
 function kidsBook(){
   pg('cover kid','<div class="inner"><div><div class="mk">🌈</div><div class="per">2026. 10. 16 — 12. 28</div></div>'+
     '<div><h1>어린이 말씀 묵상집</h1><div class="sub" style="font-size:13pt;font-family:\'Gowun Dodum\'">'+esc(S.title)+'</div><div class="ed">74일 동안 하루 5분</div></div>'+
-    '<div class="ch">동산감리교회</div></div>',{toc:'표지'});
+    '<div class="ch"><img class="logo-w" src="assets/logo/dongsan-logo-white.png" alt="동산감리교회"></div></div>',{toc:'표지'});
   pg('k','<div class="inner"><div style="text-align:center;margin-top:6mm"><div style="font-size:28pt">😊</div><h3 class="st" style="font-family:\'Gowun Dodum\'">이 책의 주인</h3></div>'+
     '<div class="box">이름 <div class="lines" style="flex:none;height:9mm"></div></div>'+
     '<div class="box">나이 · 학년 <div class="lines" style="flex:none;height:9mm"></div></div>'+
@@ -348,7 +352,7 @@ function kidsBook(){
   });
   pg('k','<div class="inner"><div class="cert"><div style="font-size:30pt">🏅</div><h3>말씀 완주 증서</h3>'+
     '<div style="font-size:12pt;line-height:2">이름 ______________<br>위 어린이는 74일 동안 날마다 말씀을 읽고<br>‘처음 신앙, 매일 한 걸음’을 끝까지 걸었기에<br>이 증서를 드립니다.</div>'+
-    '<div style="margin-top:8mm;font-size:11pt">2026년 12월 28일<br><b>동산감리교회</b></div></div></div>',{toc:'완주 증서'});
+    '<div style="margin-top:8mm;font-size:11pt">2026년 12월 28일</div><div style="margin-top:4mm"><img class="logo-c" src="assets/logo/dongsan-logo.png" alt="동산감리교회"></div></div></div>',{toc:'완주 증서'});
   while(pages.length%4)filler();
 }
 /* 퀴즈 보기 순서 — 앱과 같은 섞기 (정답이 늘 첫째가 되지 않게) */
@@ -363,7 +367,7 @@ var Q=new URLSearchParams(location.search),PRESS=Q.get('press')==='1',COVER=Q.ge
 function titlePage(){
   pages[0]={cls:'titlep',html:'<div class="inner"><div style="font-size:24pt;color:var(--gold)">'+(BOOK==='kids'?'🌈':'✝')+'</div>'+
     '<h1>'+(BOOK==='kids'?'어린이 말씀 묵상집<br>':'')+esc(S.title)+'</h1><div class="sub">'+esc(S.sub)+'</div>'+
-    '<div class="sub">2026. 10. 16 — 12. 28</div><div class="ch">동산감리교회</div></div>',date:'',toc:'속표지'};
+    '<div class="sub">2026. 10. 16 — 12. 28</div><div class="ch"><img class="logo-c" style="height:18mm" src="assets/logo/dongsan-logo.png" alt="동산감리교회"></div></div>',date:'',toc:'속표지'};
 }
 function coverSpread(){
   var kid=BOOK==='kids',W=3+148+SPINE+148+3;
@@ -373,7 +377,8 @@ function coverSpread(){
       '하루 5분, 말씀을 읽고 이야기와 퀴즈와 미션으로 하나님을 알아 가는 74일. 어른 묵상집, 앱과 같은 날 같은 말씀이라 저녁 식탁에서 온 가족이 함께 이야기할 수 있어요.':
       '신앙은 한 번의 큰 결심보다 날마다 하나님 앞에 앉는 작은 걸음으로 자랍니다. 하나님, 사람과 죄, 예수님의 십자가와 부활, 은혜와 믿음, 말씀과 기도, 성령, 교회와 성례, 섬김과 전도, 그리고 대림절과 성탄까지 — 처음 믿는 분과 신앙의 기초를 다시 세우고 싶은 분을 위한 74일 아침 묵상입니다.')+'</div>'+
     '<div class="bv">“이것들이 아침마다 새로우니 주의 성실하심이 크시도소이다”<div style="font-size:8pt;opacity:.85;margin-top:1mm">예레미야애가 3:23</div></div>'+
-    '<div class="bq">'+qr+'<div>같은 날 같은 말씀을 앱으로도 읽고 들을 수 있습니다.<br>동산감리교회 · 강원도 태백시 계산4길 25<br>성경 본문: 성경전서 개역개정판(대한성서공회)</div></div></div>';
+    '<div style="margin-top:auto"><img class="blogo" src="assets/logo/dongsan-logo-white.png" alt="동산감리교회"></div>'+
+    '<div class="bq" style="margin-top:0">'+qr+'<div>같은 날 같은 말씀을 앱으로도 읽고 들을 수 있습니다.<br>동산감리교회 · 강원도 태백시 계산4길 25<br>성경 본문: 성경전서 개역개정판(대한성서공회)</div></div></div>';
   var spineTxt=SPINE>=6?(kid?'어린이 말씀 묵상집 · ':'')+esc(S.title)+'  ·  동산감리교회':'';
   var fs=Math.max(5,Math.min(10,SPINE*0.75));
   pages=[{cls:'',html:'',date:'',toc:'표지'}];
@@ -382,6 +387,7 @@ function coverSpread(){
     '<div class="spine" style="left:151mm;width:'+SPINE+'mm"><span style="font-size:'+fs+'pt">'+spineTxt+'</span></div>'+
     '<div class="face front cover'+(kid?' kid':'')+'" style="background:none">'+front+'</div></section></div>';
 }
+function imgsReady(){return Promise.all([].map.call(document.images,function(im){return im.complete?0:new Promise(function(r){im.onload=im.onerror=r})}))}
 function pageSize(sz){var st=document.createElement('style');st.textContent='@page{size:'+sz+';margin:0}';document.head.appendChild(st)}
 /* 확인용 안내선 — 인쇄소에 넘기는 파일에는 넣지 않는다 */
 function drawGuide(W){
@@ -521,11 +527,11 @@ function start(){
   document.getElementById('bookTtl').textContent=BOOK==='kids'?'어린이 말씀 묵상집':S.title;
   document.getElementById('pdfLink').href='book/first-faith-'+(BOOK==='kids'?'kids':'adult')+'.pdf';
   render().then(function(){
-    if(COVER){window.BOOK_READY=true;return}
+    if(COVER){imgsReady().then(function(){window.BOOK_READY=true});return}
     var m=h.match(/\d{4}-\d{2}-\d{2}/);
     if(m&&findDate(m[0])>=0)jumpTo(findDate(m[0]));
     else if(q.get('print')!=='1')goToday();
-    window.BOOK_READY=true;
+    imgsReady().then(function(){window.BOOK_READY=true});
   });
 }
 Promise.all([WordBible.load(),document.fonts?document.fonts.ready:Promise.resolve()]).then(function(r){
