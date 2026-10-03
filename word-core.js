@@ -363,8 +363,10 @@ var WordShare=(function(){
     var t='🌅 '+(+p[1])+'월 '+(+p[2])+'일 '+WordData.weekday(day.date)+(WordData.weekday(day.date)==='주일'?'':'요일')+' · 오늘의 말씀\n'+
       day.passage+'\n「'+day.title+'」';
     if(verse)t+='\n\n“'+verse+'”'+(verseRef?' ('+verseRef+')':'');
+    /* 기억할 한 줄이 있는 날은 그것을, 없으면 묵상 물음 하나를 */
     var q=day.adult&&day.adult.questions&&day.adult.questions[0];
-    if(q)t+='\n\n💭 '+q;
+    if(day.remember)t+='\n\n📌 '+day.remember;
+    else if(q)t+='\n\n💭 '+q;
     t+='\n\n👉 오늘 말씀 읽기 (어른·어린이)\n'+SITE+'word.html';
     return t;
   }

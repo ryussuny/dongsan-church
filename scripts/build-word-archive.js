@@ -98,6 +98,8 @@ for (let d = start; d <= today; d = shift(d, 1)) {
     theme: day.theme || '',
     scripture: text,
     explain: day.explain || '',
+    gospel: day.gospel || '',
+    remember: day.remember || '',
     questions: day.adult.questions,
     prayer: day.adult.prayer,
     kidsSummary: day.kids.summary,
