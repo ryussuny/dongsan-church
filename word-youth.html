@@ -1,0 +1,270 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8">
+<script src="theme.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="favicon.png" type="image/png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="동산 말씀">
+<title>청년·청소년 말씀 — 동산감리교회</title>
+<meta name="description" content="하루 3분, 오늘의 말씀과 질문 하나, 도전 하나. 동산감리교회 청년·청소년을 위한 아침 묵상.">
+<meta name="theme-color" content="#1d1b2a">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f4fb;--card:#ffffff;--ink:#1d1b2a;--ink2:#545068;--ink3:#8a87a0;--line:#e4e1ef;--acc:#ff6b4a;--acc2:#7c5cff;--mint:#19b38a;--soft:#f1eefc;--fs:16px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121119;--card:#1c1a26;--ink:#f1effa;--ink2:#c7c3da;--ink3:#8f8ba6;--line:#2e2b3d;--soft:#24213a}}
+:root[data-theme="dark"]{--bg:#121119;--card:#1c1a26;--ink:#f1effa;--ink2:#c7c3da;--ink3:#8f8ba6;--line:#2e2b3d;--soft:#24213a}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',sans-serif;font-size:var(--fs);line-height:1.7;word-break:keep-all;overflow-wrap:anywhere}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px 70px}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px}
+.top a{color:var(--ink2);text-decoration:none;font-size:14px;font-weight:500}
+.tag{font-size:12px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--acc),var(--acc2));padding:4px 10px;border-radius:99px}
+.day{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 12px}
+.day button{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:18px;width:44px;height:44px;border-radius:14px;cursor:pointer}
+.day button:disabled{opacity:.35}
+.day .c{text-align:center;flex:1}
+.day .d{font-weight:900;font-size:17px}
+.day .s{font-size:12.5px;color:var(--ink3)}
+.hero{border-radius:24px;padding:22px 20px 18px;color:#fff;background:linear-gradient(140deg,#1d1b2a 0%,#3b2d6b 55%,#7c5cff 100%);position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;right:-50px;bottom:-60px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,74,.55),transparent 70%)}
+.hero .ref{font-size:12.5px;opacity:.8;font-weight:700;letter-spacing:.04em;position:relative}
+.hero .ttl{font-size:21px;font-weight:900;margin:2px 0 12px;position:relative;line-height:1.4}
+.hero .v{font-family:'Gowun Batang',serif;font-size:18px;font-weight:700;line-height:1.8;position:relative}
+.hero .vr{font-size:12.5px;opacity:.8;margin-top:8px;position:relative}
+.hero .fe{display:inline-block;background:var(--acc);font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:99px;margin-bottom:8px;position:relative}
+.acts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 16px}
+.acts button{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:13.5px;font-weight:700;border-radius:14px;min-height:46px;cursor:pointer}
+.sec{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px}
+.sec h3{font-size:13px;font-weight:900;letter-spacing:.05em;color:var(--acc2);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sec p{margin-bottom:10px}
+.sec p:last-child{margin-bottom:0}
+details summary{cursor:pointer;font-weight:700;color:var(--ink2);list-style:none}
+details summary::before{content:'▸ ';color:var(--acc2)}
+details[open] summary::before{content:'▾ '}
+.bible{font-family:'Gowun Batang',serif;font-size:1.02em;line-height:1.9;margin-top:10px}
+.bible b{font-family:'Noto Sans KR',sans-serif;font-size:.65em;color:var(--acc2);margin-right:4px;vertical-align:.25em}
+.gos{background:var(--soft);border-radius:14px;padding:12px 14px;margin-top:10px;font-size:.96em}
+.one{border-radius:20px;padding:18px;margin-bottom:12px;background:linear-gradient(90deg,var(--acc),#ff9a5c);color:#fff;font-weight:900;font-size:1.08em;line-height:1.6}
+.one small{display:block;font-size:12px;opacity:.9;font-weight:700;margin-bottom:4px}
+.q{font-weight:700;font-size:1.04em}
+textarea{width:100%;min-height:96px;margin-top:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:14px;padding:12px;font:inherit;font-size:15px;resize:vertical}
+.row{display:flex;gap:8px;margin-top:8px}
+.row button,.chal button{flex:1;border:0;border-radius:14px;min-height:46px;font:inherit;font-weight:700;font-size:14.5px;cursor:pointer}
+.b1{background:var(--ink);color:var(--bg)}
+.b2{background:var(--soft);color:var(--ink)}
+.chal{display:flex;gap:12px;align-items:center}
+.chal .t{flex:1;font-weight:700}
+.chal button{flex:none;min-width:96px;background:var(--mint);color:#fff}
+.chal button.done{background:var(--soft);color:var(--mint)}
+.streak{font-size:12.5px;color:var(--ink3);margin-top:8px}
+.read{width:100%;border:0;border-radius:18px;min-height:56px;font:inherit;font-weight:900;font-size:16px;color:#fff;cursor:pointer;
+  background:linear-gradient(90deg,var(--acc2),var(--acc))}
+.read.done{background:var(--mint)}
+.foot{text-align:center;font-size:13px;color:var(--ink3);margin-top:18px;line-height:2}
+.foot a{color:var(--ink2);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a href="word.html">← 말씀</a><span class="tag">청년 · 청소년</span></div>
+  <div class="day">
+    <button onclick="move(-1)" aria-label="어제">‹</button>
+    <div class="c"><div class="d" id="dLabel"></div><div class="s" id="dSeries"></div></div>
+    <button id="fwdBtn" onclick="move(1)" aria-label="다음 날">›</button>
+  </div>
+
+  <div class="hero" id="hero"></div>
+  <div class="acts">
+    <button id="listenBtn" onclick="listen()">🔊 듣기</button>
+    <button onclick="saveImage()">🖼 이미지</button>
+    <button onclick="shareText()">📤 공유</button>
+  </div>
+
+  <div class="sec">
+    <details id="bibleBox"><summary id="bibleSum">오늘 본문 전체 읽기</summary><div class="bible" id="bible">불러오는 중…</div></details>
+  </div>
+
+  <div class="sec" id="medSec">
+    <h3>⏱ 3분 묵상</h3>
+    <div id="med"></div>
+    <div class="gos" id="gos"></div>
+  </div>
+
+  <div class="one" id="oneBox"><small>📌 오늘의 한 줄</small><div id="one"></div></div>
+
+  <div class="sec">
+    <h3>💭 오늘의 질문</h3>
+    <div class="q" id="yq"></div>
+    <textarea id="note" placeholder="떠오르는 생각을 적어 보세요. 이 기기에만 저장됩니다." oninput="saveNote()"></textarea>
+    <div class="row">
+      <button class="b2" onclick="postNote(this)">교회 나눔에 올리기</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3>🔥 오늘의 도전</h3>
+    <div class="chal"><div class="t" id="ya"></div><button id="chalBtn" onclick="toggleChal()">했어요</button></div>
+    <div class="streak" id="chalStreak"></div>
+  </div>
+
+  <button class="read" id="readBtn" onclick="markRead()">✓ 오늘 말씀 읽었어요</button>
+
+  <div class="foot">
+    <a id="bookLink" href="word-book.html">📖 묵상집으로 보기</a> · <a href="word-adult.html">어른용 화면</a><br>
+    읽고 듣는 것은 누구나 이름 없이 할 수 있어요. 친구에게 이 주소를 보내 주세요.<br>
+    <a href="index.html">동산감리교회</a>
+  </div>
+</div>
+
+<script src="word-data.js"></script>
+<script src="word-config.js"></script>
+<script src="word-core.js"></script>
+<script>
+var VER='adult',viewDate=WordData.today(),me=WordUser.get();
+var KN='dongsan_youth_notes',KC='dongsan_youth_challenge';
+function load(k){try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return {}}}
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function day(){return WordData.forDate(viewDate,WordStore.custom())}
+function move(n){
+  var next=WordData.shift(viewDate,n);
+  if(WordData.locked(next)){wToast('내일 말씀은 내일 새벽 '+WordData.openHour+'시에 열려요');return}
+  WordVoice.stop();viewDate=next;render();window.scrollTo(0,0);
+}
+function paras(t){return String(t||'').split(/\n\n+/).map(function(p){return '<p>'+wEsc(p)+'</p>'}).join('')}
+/* 시리즈 밖의 날은 어른 묵상 질문과 누구나 할 수 있는 도전으로 채운다 */
+function youth(d){
+  if(d.youth)return d.youth;
+  return {q:(d.adult.questions&&d.adult.questions[0])||'오늘 말씀에서 가장 마음에 남은 한 문장은 무엇인가요?',
+          a:'오늘 말씀 한 구절을 잠금 화면이나 메모장에 적어 두고 세 번 다시 읽기'};
+}
+function keyVerse(d){return WordBible.ready?WordBible.one(d.kids.verseRef,true):''}
+function render(){
+  var d=day(),p=viewDate.split('-'),w=WordData.weekday(viewDate),isToday=viewDate===WordData.today();
+  document.getElementById('dLabel').textContent=(+p[1])+'월 '+(+p[2])+'일 '+(w==='주일'?'주일':w+'요일')+(isToday?' · 오늘':'');
+  var sr=WordData.series(viewDate);
+  document.getElementById('dSeries').textContent=sr?('Day '+sr.day+'/'+sr.total+' · '+sr.title):(d.theme||'');
+  document.getElementById('fwdBtn').disabled=WordData.locked(WordData.shift(viewDate,1));
+  drawHero(d);
+  document.getElementById('medSec').style.display=d.explain?'':'none';
+  document.getElementById('med').innerHTML=paras(d.explain);
+  document.getElementById('gos').style.display=d.gospel?'':'none';
+  document.getElementById('gos').innerHTML=d.gospel?'<b>✝ 복음으로 보면</b><br>'+wEsc(d.gospel):'';
+  document.getElementById('oneBox').style.display=d.remember?'':'none';
+  document.getElementById('one').textContent=d.remember||'';
+  var y=youth(d);
+  document.getElementById('yq').textContent=y.q;
+  document.getElementById('ya').textContent=y.a;
+  document.getElementById('note').value=load(KN)[viewDate]||'';
+  document.getElementById('bibleSum').textContent='오늘 본문 전체 읽기 · '+d.passage;
+  document.getElementById('bookLink').href='word-book.html#'+viewDate;
+  WordBible.load().then(function(){
+    drawHero(d);
+    var vs=WordBible.verses(d.passage,true);
+    document.getElementById('bible').innerHTML=vs.length?vs.map(function(v){return '<b>'+v.v+'</b>'+wEsc(v.t)}).join(' '):'성경에서 '+wEsc(d.passage)+'을 찾아 읽어 보세요.';
+  });
+  refreshChal();refreshRead();
+}
+function drawHero(d){
+  var v=keyVerse(d);
+  document.getElementById('hero').innerHTML=(d.feast?'<span class="fe">'+wEsc(d.feast)+'</span>':'')+
+    '<div class="ref">'+wEsc(d.passage)+'</div><div class="ttl">'+wEsc(d.title)+'</div>'+
+    (v?'<div class="v">“'+wEsc(v)+'”</div><div class="vr">'+wEsc(d.kids.verseRef)+'</div>':'');
+}
+function listen(){
+  if(WordVoice.playing){WordVoice.stop();return}
+  var d=day(),parts=[d.title+'. '+d.passage+'.'];
+  if(WordBible.ready)parts.push(WordBible.plain(d.passage,true));
+  if(d.explain)parts.push(d.explain.replace(/\n+/g,' '));
+  if(d.remember)parts.push('오늘의 한 줄. '+d.remember);
+  WordVoice.speak(parts,{rate:1,onChange:function(on){document.getElementById('listenBtn').textContent=on?'⏹ 멈춤':'🔊 듣기'}});
+}
+function saveNote(){var n=load(KN),t=document.getElementById('note').value;if(t)n[viewDate]=t;else delete n[viewDate];store(KN,n)}
+function postNote(btn){
+  var t=document.getElementById('note').value.trim();
+  if(!t){wToast('먼저 생각을 적어 주세요');return}
+  if(!me.name){wAskName({title:'이름을 알려 주세요',sub:'교회 나눔에 이 이름이 적혀요. 한 번만 적으면 돼요.'},function(n){me=WordUser.set({name:n});postNote(btn)});return}
+  wOnce(btn,'올리는 중…',function(){
+    return WordStore.share({date:viewDate,name:me.name,ver:VER,text:'💭 '+youth(day()).q+'\n'+t}).then(function(){wToast('나눔에 올렸어요 🙌')});
+  });
+}
+function chalStreak(){
+  var c=load(KC),n=0,d=WordData.today();
+  if(!c[d])d=WordData.shift(d,-1);
+  while(c[d]){n++;d=WordData.shift(d,-1)}
+  return n;
+}
+function refreshChal(){
+  var c=load(KC),done=!!c[viewDate],b=document.getElementById('chalBtn');
+  b.className=done?'done':'';b.textContent=done?'✓ 완료':'했어요';
+  var n=chalStreak(),total=Object.keys(c).length;
+  document.getElementById('chalStreak').textContent=total?('지금까지 '+total+'번 도전했어요'+(n>1?' · 연속 '+n+'일 🔥':'')):'작은 도전 하나가 하루를 바꿔요.';
+}
+function toggleChal(){
+  if(viewDate>WordData.today())return;
+  var c=load(KC);if(c[viewDate])delete c[viewDate];else{c[viewDate]=1;wToast('멋져요! 🔥')}
+  store(KC,c);refreshChal();
+}
+function refreshRead(){
+  var b=document.getElementById('readBtn');
+  var done=me.name&&WordStore.myConfirms(me.name,VER).some(function(c){return c.date===viewDate});
+  b.className='read'+(done?' done':'');b.textContent=done?'✓ 읽음 확인 완료':'✓ 오늘 말씀 읽었어요';
+}
+function markRead(){
+  if(!me.name){wAskName({title:'이름을 알려 주세요',sub:'교회 읽음 기록에 이 이름이 적혀요.'},function(n){me=WordUser.set({name:n});markRead()});return}
+  if(WordStore.myConfirms(me.name,VER).some(function(c){return c.date===viewDate})){wToast('이미 확인했어요 🙌');return}
+  WordStore.confirm({date:viewDate,name:me.name,ver:VER}).then(function(){
+    var s=wordStreak(me.name,VER);wToast(s.days>1?'연속 '+s.days+'일째 🔥':'확인했어요 🙌');refreshRead();
+  },function(){wToast('보내지 못했어요. 잠시 뒤 다시 눌러 주세요')});
+}
+function shareText(){
+  var d=day(),v=keyVerse(d),t='📖 '+d.passage+' · '+d.title;
+  if(v)t+='\n\n“'+v+'” ('+d.kids.verseRef+')';
+  if(d.remember)t+='\n\n📌 '+d.remember;
+  t+='\n\n💭 '+youth(d).q+'\n\n👉 https://ryussuny.github.io/dongsan-church/word-youth.html';
+  WordShare.send(t);
+}
+/* 인스타 스토리에 올리기 좋은 세로 이미지 (1080×1920) */
+function wrapLines(ctx,text,max){
+  var out=[],line='';
+  String(text).split(' ').forEach(function(w){
+    var t=line?line+' '+w:w;
+    if(ctx.measureText(t).width>max&&line){out.push(line);line=w}else line=t;
+  });
+  if(line)out.push(line);return out;
+}
+function saveImage(){
+  var d=day();
+  WordBible.load().then(function(){return document.fonts?document.fonts.load('bold 60px "Gowun Batang"','가'):null}).then(function(){
+    var v=keyVerse(d)||d.title,c=document.createElement('canvas');c.width=1080;c.height=1920;
+    var x=c.getContext('2d'),g=x.createLinearGradient(0,0,1080,1920);
+    g.addColorStop(0,'#1d1b2a');g.addColorStop(.55,'#3b2d6b');g.addColorStop(1,'#7c5cff');x.fillStyle=g;x.fillRect(0,0,1080,1920);
+    var r=x.createRadialGradient(900,1650,0,900,1650,520);r.addColorStop(0,'rgba(255,107,74,.6)');r.addColorStop(1,'rgba(255,107,74,0)');x.fillStyle=r;x.fillRect(0,0,1080,1920);
+    x.fillStyle='rgba(255,255,255,.75)';x.font='700 38px "Noto Sans KR",sans-serif';x.fillText(d.passage,90,330);
+    x.fillStyle='#fff';x.font='900 60px "Noto Sans KR",sans-serif';
+    wrapLines(x,d.title,900).forEach(function(l,i){x.fillText(l,90,420+i*76)});
+    x.font='700 64px "Gowun Batang",serif';
+    var lines=wrapLines(x,'“'+v+'”',900),y=Math.max(700,1060-lines.length*52);
+    lines.forEach(function(l,i){x.fillText(l,90,y+i*104)});
+    x.fillStyle='rgba(255,255,255,.8)';x.font='700 36px "Noto Sans KR",sans-serif';
+    x.fillText(d.kids.verseRef,90,y+lines.length*104+40);
+    if(d.remember){x.font='700 40px "Noto Sans KR",sans-serif';x.fillStyle='#ffd2c6';
+      wrapLines(x,'📌 '+d.remember,900).forEach(function(l,i){x.fillText(l,90,1580+i*56)})}
+    x.fillStyle='rgba(255,255,255,.6)';x.font='500 32px "Noto Sans KR",sans-serif';x.fillText('동산감리교회 · 오늘의 말씀',90,1800);
+    c.toBlob(function(b){
+      var f=new File([b],'dongsan-word-'+viewDate+'.png',{type:'image/png'});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f]}).catch(function(){});return}
+      var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=f.name;a.click();wToast('이미지를 저장했어요');
+    },'image/png');
+  });
+}
+if(!WordVoice.supported())document.getElementById('listenBtn').style.display='none';
+WordStore.init().then(render);
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+}
+</script>
+</body></html>
