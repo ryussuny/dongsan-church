@@ -75,10 +75,11 @@ h2.dttl{font-family:'Gowun Batang',serif;font-size:17pt;line-height:1.3;margin:.
 .cover .sub{font-size:10.5pt;color:#f4e6d3;margin-top:3mm}
 .cover .per{font-size:9.5pt;color:#e6d3b4;letter-spacing:.06em}
 .cover .ch{font-family:'Gowun Batang',serif;font-size:13pt;font-weight:700}
-.logo-w,.logo-c{display:block;height:15mm;width:auto;margin:0 auto}
-.cover .logo-w{height:16mm}
-.small .logo-c{height:10mm;margin:0 0 2mm}
-.spread .blogo{height:9mm;width:auto;display:block;margin-bottom:3mm}
+.logo-w,.logo-c{display:block;height:7mm;width:auto;margin:0 auto}
+.cover .logo-w{height:7.5mm;opacity:.95}
+.small .logo-c{height:6mm;margin:0 0 2mm}
+.spread .blogo{height:5.5mm;width:auto;display:block;margin-bottom:3mm;opacity:.95}
+.titlep .foot-logo{position:absolute;left:0;right:0;bottom:16mm}
 .cover .ed{display:inline-block;margin-top:3mm;border:1pt solid rgba(255,255,255,.5);border-radius:99px;padding:.6mm 4mm;font-size:9pt}
 .cover.kid{background:linear-gradient(160deg,#3d8fca,#7fc4f0 60%,#ffe08a)}
 .cover.kid h1{font-family:'Gowun Dodum',sans-serif;font-size:26pt}
@@ -367,7 +368,7 @@ var Q=new URLSearchParams(location.search),PRESS=Q.get('press')==='1',COVER=Q.ge
 function titlePage(){
   pages[0]={cls:'titlep',html:'<div class="inner"><div style="font-size:24pt;color:var(--gold)">'+(BOOK==='kids'?'🌈':'✝')+'</div>'+
     '<h1>'+(BOOK==='kids'?'어린이 말씀 묵상집<br>':'')+esc(S.title)+'</h1><div class="sub">'+esc(S.sub)+'</div>'+
-    '<div class="sub">2026. 10. 16 — 12. 28</div><div class="ch"><img class="logo-c" style="height:18mm" src="assets/logo/dongsan-logo.png" alt="동산감리교회"></div></div>',date:'',toc:'속표지'};
+    '<div class="sub">2026. 10. 16 — 12. 28</div></div><div class="foot-logo"><img class="logo-c" src="assets/logo/dongsan-logo.png" alt="동산감리교회"></div>',date:'',toc:'속표지'};
 }
 function coverSpread(){
   var kid=BOOK==='kids',W=3+148+SPINE+148+3;
