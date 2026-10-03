@@ -4,6 +4,7 @@
    준비:  npm i playwright-core   (크롬은 이미 깔린 것을 쓴다)
    실행:  CHROME=/path/to/chrome node scripts/build-book.js
           (CHROME 을 비우면 playwright 기본 크롬을 찾는다)
+   인쇄소용 파일은 만든 뒤 꼭  python3 scripts/finish-print.py  로 쪽 크기·재단 크기를 mm 단위로 맞춘다.
    FONT_ROUTE=모듈경로 를 주면 그 모듈이 글꼴 요청을 대신 내준다(프록시가 불안정한 환경용). */
 const http = require('http');
 const fs = require('fs');
@@ -53,23 +54,33 @@ function serve() {
     await page.close();
   }
   /* 인쇄소에 넘기는 파일: 내지(사방 3mm 도련 154×216mm)와 표지 펼침면(뒷표지+책등+앞표지).
-     책등 두께는 인쇄소가 쪽수·종이로 계산해 준 값으로 바꾼다: SPINE_ADULT=11 SPINE_KIDS=5.5 */
-  const spine = { adult: parseFloat(process.env.SPINE_ADULT || '10'), kids: parseFloat(process.env.SPINE_KIDS || '5') };
-  fs.mkdirSync(path.join(ROOT, 'book', 'print'), { recursive: true });
+     책등 두께는 인쇄소가 쪽수·종이로 계산해 주는 값이라, 흔한 두께마다 미리 만들어 둔다.
+     다른 두께가 필요하면 SPINE_ADULT=11.2 SPINE_KIDS=5.3 처럼 주고 다시 돌린다. */
+  const list = v => (process.env['SPINE_' + v.toUpperCase()] ? [parseFloat(process.env['SPINE_' + v.toUpperCase()])]
+                     : (v === 'adult' ? [9, 9.5, 10, 10.5, 11, 11.5, 12] : [4.5, 5, 5.5, 6]));
+  const PRINT = path.join(ROOT, 'book', 'print');
+  fs.mkdirSync(path.join(PRINT, 'cover'), { recursive: true });
+  const ready = async page => { await page.waitForFunction('window.BOOK_READY===true', null, { timeout: 120000 }); await page.evaluate(() => document.fonts.ready); };
   for (const v of ['adult', 'kids']) {
     const page = await ctx.newPage();
     await page.goto(base + 'word-book.html?print=1&press=1&v=' + v, { waitUntil: 'load' });
-    await page.waitForFunction('window.BOOK_READY===true', null, { timeout: 120000 });
-    await page.evaluate(() => document.fonts.ready);
-    const inner = path.join(ROOT, 'book', 'print', 'first-faith-' + v + '-inner.pdf');
-    await page.pdf({ path: inner, width: '154mm', height: '216mm', printBackground: true, preferCSSPageSize: false });
-    await page.goto(base + 'word-book.html?print=1&cover=1&spine=' + spine[v] + '&v=' + v, { waitUntil: 'load' });
-    await page.waitForFunction('window.BOOK_READY===true', null, { timeout: 120000 });
-    await page.evaluate(() => document.fonts.ready);
-    const W = 3 + 148 + spine[v] + 148 + 3;
-    const cover = path.join(ROOT, 'book', 'print', 'first-faith-' + v + '-cover.pdf');
-    await page.pdf({ path: cover, width: W + 'mm', height: '216mm', printBackground: true, preferCSSPageSize: false });
-    console.log(v, '인쇄소용 내지·표지(책등 ' + spine[v] + 'mm, 펼침 ' + W + '×216mm) →', path.relative(ROOT, inner), path.relative(ROOT, cover));
+    await ready(page);
+    const n = await page.evaluate(() => pages.length);
+    const inner = path.join(PRINT, 'first-faith-' + v + '-inner.pdf');
+    await page.pdf({ path: inner, printBackground: true, preferCSSPageSize: true });
+    console.log(v, '내지', n + '쪽 154×216mm →', path.relative(ROOT, inner));
+    for (const sp of list(v)) {
+      const W = +(3 + 148 + sp + 148 + 3).toFixed(1);
+      const tag = String(sp).replace('.', '_');
+      await page.goto(base + 'word-book.html?print=1&cover=1&spine=' + sp + '&v=' + v, { waitUntil: 'load' });
+      await ready(page);
+      const out = path.join(PRINT, 'cover', 'first-faith-' + v + '-cover-spine' + tag + 'mm.pdf');
+      await page.pdf({ path: out, printBackground: true, preferCSSPageSize: true });
+      await page.goto(base + 'word-book.html?print=1&cover=1&guide=1&spine=' + sp + '&v=' + v, { waitUntil: 'load' });
+      await ready(page);
+      await page.pdf({ path: out.replace('.pdf', '-확인용.pdf'), printBackground: true, preferCSSPageSize: true });
+      console.log(v, '표지 책등', sp + 'mm', W + '×216mm');
+    }
     await page.close();
   }
   await browser.close();

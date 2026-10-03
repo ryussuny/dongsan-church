@@ -151,7 +151,14 @@ h3.st{font-family:'Gowun Batang',serif;font-size:15pt;margin-bottom:3mm;color:va
 .spread .bv{margin-top:8mm;padding:4mm;border:.8pt solid rgba(255,255,255,.5);border-radius:3mm;font-family:'Gowun Batang',serif;font-size:10pt;line-height:1.75}
 .spread .bq{display:flex;gap:4mm;align-items:center;margin-top:auto;font-size:8.5pt;line-height:1.6}
 .spread .bq svg{width:22mm;height:22mm;background:#fff;padding:1.4mm;border-radius:1.4mm;flex:none}
-@media print{.press .slot{padding:3mm}.cover-only .slot{padding:0}}
+@media print{
+  .press .slot{width:154mm!important;height:216mm!important;padding:3mm;box-sizing:border-box;overflow:hidden}
+  .cover-only .slot{padding:0;overflow:hidden}
+}
+/* 확인용 표지: 재단선(빨강 점선)·책등선(파랑 점선)·안전선(초록 점선) */
+.guide .gl{position:absolute;top:0;bottom:0;border-left:.5pt dashed;pointer-events:none}
+.guide .gh{position:absolute;left:0;right:0;border-top:.5pt dashed;pointer-events:none}
+.guide .gtag{position:absolute;font:600 6.5pt 'Noto Sans KR',sans-serif;background:#fff;color:#c00;padding:.3mm 1mm;border-radius:.6mm}
 /* ---------- 인쇄 ---------- */
 @page{size:148mm 210mm;margin:0}
 @media print{
@@ -375,15 +382,28 @@ function coverSpread(){
     '<div class="spine" style="left:151mm;width:'+SPINE+'mm"><span style="font-size:'+fs+'pt">'+spineTxt+'</span></div>'+
     '<div class="face front cover'+(kid?' kid':'')+'" style="background:none">'+front+'</div></section></div>';
 }
+function pageSize(sz){var st=document.createElement('style');st.textContent='@page{size:'+sz+';margin:0}';document.head.appendChild(st)}
+/* 확인용 안내선 — 인쇄소에 넘기는 파일에는 넣지 않는다 */
+function drawGuide(W){
+  var sp=document.querySelector('.spread');sp.classList.add('guide');
+  var L=function(x,c,t){sp.insertAdjacentHTML('beforeend','<div class="gl" style="left:'+x+'mm;border-color:'+c+'"></div>'+(t?'<div class="gtag" style="left:'+(x+.6)+'mm;top:'+(t[1])+'mm;color:'+c+'">'+t[0]+'</div>':''))};
+  var H=function(y,c){sp.insertAdjacentHTML('beforeend','<div class="gh" style="top:'+y+'mm;border-color:'+c+'"></div>')};
+  L(3,'#d00',['재단',8]);L(W-3,'#d00');H(3,'#d00');H(213,'#d00');
+  L(151,'#06c',['책등 '+SPINE+'mm',14]);L(151+SPINE,'#06c');
+  L(8,'#090',['안전',20]);L(146,'#090');L(156+SPINE,'#090');L(W-8,'#090');H(8,'#090');H(208,'#090');
+}
 function render(){
   pages=[];
   if(BOOK==='kids')kidsBook();else adultBook();
   if(COVER){
     document.body.classList.add('cover-only');
+    var W=3+148+SPINE+148+3;
+    pageSize(W+'mm 216mm');
     document.getElementById('stage').innerHTML=coverSpread();
+    if(Q.get('guide')==='1')drawGuide(W);
     return document.fonts?document.fonts.ready:Promise.resolve();
   }
-  if(PRESS){document.body.classList.add('press');titlePage()}
+  if(PRESS){document.body.classList.add('press');pageSize('154mm 216mm');titlePage()}
   var st=document.getElementById('stage');
   st.innerHTML=pages.map(function(p,i){
     var side=(i+1)%2?'odd':'even';
