@@ -50,6 +50,14 @@ button:disabled{opacity:.45}
 .foot a{color:var(--brick);font-weight:700}
 .sizer{display:flex;gap:8px;align-items:center;justify-content:flex-end}
 .sizer button{min-height:48px;min-width:56px;font-size:18px;padding:6px 10px}
+.give{text-align:center}
+.give .lab{text-align:left}
+.give-b{font-size:.85em;font-weight:700;color:var(--ink2)}
+.give-n{font-family:'Gowun Batang',serif;font-size:min(1.3em,8vw);white-space:nowrap;font-weight:700;letter-spacing:.02em;line-height:1.4;margin:2px 0}
+.give-w{font-size:.85em;color:var(--ink2)}
+.give-w b{color:var(--ink)}
+.give button{width:100%;margin-top:12px}
+.give-note{font-size:.72em;color:var(--ink2);line-height:1.7;margin-top:12px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2f2a26;color:#fff;padding:12px 18px;border-radius:14px;font-size:18px;z-index:50}
 </style>
 </head>
@@ -93,6 +101,15 @@ button:disabled{opacity:.45}
   <div class="row2">
     <a class="btn" id="bookLink" href="word-book.html">📖 묵상집으로 보기</a>
     <a class="btn" href="word-adult.html">더 많은 기능</a>
+  </div>
+
+  <div class="card give" id="offering">
+    <span class="lab">💝 온라인 헌금하기</span>
+    <div class="give-b">농협</div>
+    <div class="give-n" id="giveNum">301-5581-6453-41</div>
+    <div class="give-w">예금주 <b>동산교회</b></div>
+    <button onclick="copyGive()">📋 계좌번호 복사</button>
+    <div class="give-note">보내실 때 받는 분 통장 표시에 이름과 헌금 종류를 적어 주세요. (예: 홍길동 감사)</div>
   </div>
 
   <div class="foot">
@@ -173,6 +190,11 @@ function markRead(){
     var s=wordStreak(me.name,VER);
     wToast(s.days>1?'확인되었습니다 · 연속 '+s.days+'일째 🎉':'확인되었습니다. 은혜가 넘치시길 🙏');refreshRead();
   },function(){wToast('보내지 못했습니다. 잠시 뒤 다시 눌러 주세요');refreshRead()});
+}
+function copyGive(){
+  var n=document.getElementById('giveNum').textContent.trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(n).then(function(){wToast('계좌번호를 복사했습니다')},function(){prompt('계좌번호',n)});
+  else prompt('계좌번호',n);
 }
 if(!WordVoice.supported())document.getElementById('listenBtn').style.display='none';
 WordStore.init().then(render);
