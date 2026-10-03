@@ -345,6 +345,8 @@ GitHub Pages 정적 호스팅이라 `/api/…` 는 존재할 수 없다.
 
 - 읽고 듣는 것은 교회 밖 누구나 이름 없이 할 수 있다. 읽음 확인·나눔을 할 때만 이름을 묻는다.
 - 인쇄용 PDF: `book/first-faith-adult.pdf`, `book/first-faith-kids.pdf`.
+- 인쇄소 제출용: `book/print/` — 내지(154×216mm, 도련 3mm), `cover/` 표지 펼침면(책등 두께별), `인쇄사양서.pdf`.
+  다시 만들 때: `node scripts/build-book.js` 다음 `python3 scripts/finish-print.py`.
   묵상 글을 고치면 `node scripts/build-book.js` 로 다시 만든다(playwright-core 필요).
 - 묵상 글의 “ ” 안은 개역개정 원문 그대로(`dongsan_bible.js` 와 글자 대조), ‘ ’ 는 풀어 쓴 말.
 - 추수감사주일은 매년 11월 첫째 주일이다.
