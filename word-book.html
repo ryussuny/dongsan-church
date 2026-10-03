@@ -132,6 +132,26 @@ h3.st{font-family:'Gowun Batang',serif;font-size:15pt;margin-bottom:3mm;color:va
 .k .stk div{aspect-ratio:1;border:1pt dashed #b9cfe0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7.5pt;color:#8aa9c0}
 .cert{border:2pt solid var(--gold);border-radius:4mm;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8mm}
 .cert h3{font-family:'Gowun Batang',serif;font-size:24pt;color:var(--brick);margin:3mm 0 6mm}
+/* ---------- 인쇄소에 넘기는 파일 ----------
+   ?press=1 : 내지만. 사방 3mm 도련(재단 여백)을 둔 154×216mm, 1쪽은 표지 대신 속표지
+   ?cover=1&spine=10 : 표지 펼침면(뒷표지·책등·앞표지, 사방 3mm 도련) */
+.titlep .inner{justify-content:center;text-align:center}
+.titlep h1{font-family:'Gowun Batang',serif;font-size:24pt;line-height:1.4;color:var(--ink)}
+.titlep .sub{color:var(--ink2);margin-top:3mm}
+.titlep .ch{margin-top:30mm;font-family:'Gowun Batang',serif;font-weight:700;color:var(--brick)}
+.spread{position:relative;height:216mm;overflow:hidden;color:#fff;background:linear-gradient(160deg,#3a2e22,#8f4531 60%,#b3593f)}
+.spread.kid{background:linear-gradient(160deg,#3d8fca,#7fc4f0 60%,#ffe08a)}
+.spread .face{position:absolute;top:0;height:216mm;width:151mm}
+.spread .face .inner{left:17mm;right:17mm;top:25mm;bottom:25mm}
+.spread .back{left:0}.spread .back .inner{left:17mm;right:14mm}
+.spread .front{right:0}.spread .front .inner{left:14mm;right:17mm}
+.spread .spine{position:absolute;top:0;height:216mm;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.12)}
+.spread .spine span{writing-mode:vertical-rl;font-family:'Gowun Batang',serif;font-weight:700;white-space:nowrap;letter-spacing:.06em}
+.spread .blurb{font-family:'Gowun Batang',serif;font-size:10pt;line-height:1.85}
+.spread .bv{margin-top:8mm;padding:4mm;border:.8pt solid rgba(255,255,255,.5);border-radius:3mm;font-family:'Gowun Batang',serif;font-size:10pt;line-height:1.75}
+.spread .bq{display:flex;gap:4mm;align-items:center;margin-top:auto;font-size:8.5pt;line-height:1.6}
+.spread .bq svg{width:22mm;height:22mm;background:#fff;padding:1.4mm;border-radius:1.4mm;flex:none}
+@media print{.press .slot{padding:3mm}.cover-only .slot{padding:0}}
 /* ---------- 인쇄 ---------- */
 @page{size:148mm 210mm;margin:0}
 @media print{
@@ -332,9 +352,38 @@ function WordExtra_shuffle(arr,key){
 }
 
 /* ---------- 그리기와 글자 맞추기 ---------- */
+var Q=new URLSearchParams(location.search),PRESS=Q.get('press')==='1',COVER=Q.get('cover')==='1',SPINE=parseFloat(Q.get('spine')||'10');
+function titlePage(){
+  pages[0]={cls:'titlep',html:'<div class="inner"><div style="font-size:24pt;color:var(--gold)">'+(BOOK==='kids'?'🌈':'✝')+'</div>'+
+    '<h1>'+(BOOK==='kids'?'어린이 말씀 묵상집<br>':'')+esc(S.title)+'</h1><div class="sub">'+esc(S.sub)+'</div>'+
+    '<div class="sub">2026. 10. 16 — 12. 28</div><div class="ch">동산감리교회</div></div>',date:'',toc:'속표지'};
+}
+function coverSpread(){
+  var kid=BOOK==='kids',W=3+148+SPINE+148+3;
+  var front=pages[0].html,qr=kid?QR_KIDS:QR_ADULT;
+  var back='<div class="inner" style="display:flex;flex-direction:column">'+
+    '<div class="blurb">'+(kid?
+      '하루 5분, 말씀을 읽고 이야기와 퀴즈와 미션으로 하나님을 알아 가는 74일. 어른 묵상집, 앱과 같은 날 같은 말씀이라 저녁 식탁에서 온 가족이 함께 이야기할 수 있어요.':
+      '신앙은 한 번의 큰 결심보다 날마다 하나님 앞에 앉는 작은 걸음으로 자랍니다. 하나님, 사람과 죄, 예수님의 십자가와 부활, 은혜와 믿음, 말씀과 기도, 성령, 교회와 성례, 섬김과 전도, 그리고 대림절과 성탄까지 — 처음 믿는 분과 신앙의 기초를 다시 세우고 싶은 분을 위한 74일 아침 묵상입니다.')+'</div>'+
+    '<div class="bv">“이것들이 아침마다 새로우니 주의 성실하심이 크시도소이다”<div style="font-size:8pt;opacity:.85;margin-top:1mm">예레미야애가 3:23</div></div>'+
+    '<div class="bq">'+qr+'<div>같은 날 같은 말씀을 앱으로도 읽고 들을 수 있습니다.<br>동산감리교회 · 강원도 태백시 계산4길 25<br>성경 본문: 성경전서 개역개정판(대한성서공회)</div></div></div>';
+  var spineTxt=SPINE>=6?(kid?'어린이 말씀 묵상집 · ':'')+esc(S.title)+'  ·  동산감리교회':'';
+  var fs=Math.max(5,Math.min(10,SPINE*0.75));
+  pages=[{cls:'',html:'',date:'',toc:'표지'}];
+  return '<div class="slot cur"><section class="page spread'+(kid?' kid':'')+'" style="width:'+W+'mm">'+
+    '<div class="face back">'+back+'</div>'+
+    '<div class="spine" style="left:151mm;width:'+SPINE+'mm"><span style="font-size:'+fs+'pt">'+spineTxt+'</span></div>'+
+    '<div class="face front cover'+(kid?' kid':'')+'" style="background:none">'+front+'</div></section></div>';
+}
 function render(){
   pages=[];
   if(BOOK==='kids')kidsBook();else adultBook();
+  if(COVER){
+    document.body.classList.add('cover-only');
+    document.getElementById('stage').innerHTML=coverSpread();
+    return document.fonts?document.fonts.ready:Promise.resolve();
+  }
+  if(PRESS){document.body.classList.add('press');titlePage()}
   var st=document.getElementById('stage');
   st.innerHTML=pages.map(function(p,i){
     var side=(i+1)%2?'odd':'even';
@@ -452,6 +501,7 @@ function start(){
   document.getElementById('bookTtl').textContent=BOOK==='kids'?'어린이 말씀 묵상집':S.title;
   document.getElementById('pdfLink').href='book/first-faith-'+(BOOK==='kids'?'kids':'adult')+'.pdf';
   render().then(function(){
+    if(COVER){window.BOOK_READY=true;return}
     var m=h.match(/\d{4}-\d{2}-\d{2}/);
     if(m&&findDate(m[0])>=0)jumpTo(findDate(m[0]));
     else if(q.get('print')!=='1')goToday();
