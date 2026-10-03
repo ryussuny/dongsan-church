@@ -239,6 +239,14 @@ nav button.on{color:var(--brick-deep);font-weight:700}
   border-radius:10px;background:var(--lt-ffffff,#fff);font-family:inherit;font-size:14.5px;color:var(--text);cursor:pointer}
 .rq-c.ok{background:var(--lt-e9f2e2,#e9f2e2);border-color:var(--moss);color:var(--dt-3f5f30,#3f5f30);font-weight:700}
 .rq-c.no{background:var(--lt-fbeae6,#fbeae6);border-color:#d9a393;color:var(--dt-8f4531,#8f4531)}
+.give{text-align:center}
+.give .st{text-align:left}
+.give-b{font-size:14px;font-weight:700;color:var(--text2)}
+.give-n{font-family:'Gowun Batang',serif;font-size:24px;font-weight:700;color:var(--text);letter-spacing:.02em;margin:2px 0}
+.give-w{font-size:13.5px;color:var(--text2)}
+.give-w b{color:var(--text)}
+.give .btn{margin-top:10px}
+.give-note{font-size:12px;color:var(--text3);line-height:1.7;margin-top:10px}
 </style>
 <style id="dongsan-dark-v1">
 [data-theme="dark"]{color-scheme:dark;--cream:#16130f;--paper:#221d18;--warm:#2b241e;--border:#4a3f33;--text:#efe6d8;--text2:#cdbfa9;--text3:#a3927a;--moss:#8fb47a;
@@ -332,6 +340,15 @@ nav button.on{color:var(--brick-deep);font-weight:700}
     <textarea id="shareText" placeholder="오늘 말씀에서 받은 은혜, 기도 제목을 자유롭게 적어 주세요."></textarea>
     <div class="row2"><button class="btn btn-main" onclick="postShare(1,this)">나눔 올리기</button></div>
     <div class="shnote" id="shareNote1"></div>
+  </div>
+
+  <div class="card give" id="offering">
+    <div class="st">💝 온라인 헌금하기</div>
+    <div class="give-b">농협</div>
+    <div class="give-n" id="giveNum">301-5581-6453-41</div>
+    <div class="give-w">예금주 <b>동산교회</b></div>
+    <button class="btn btn-sub" onclick="copyGive(this)">계좌번호 복사</button>
+    <div class="give-note">보내실 때 받는 분 통장 표시에 이름과 헌금 종류를 적어 주세요. (예: 홍길동 감사)</div>
   </div>
 </div>
 
@@ -734,6 +751,12 @@ function toggleConfirm(){
   },done);
 }
 
+function copyGive(btn){
+  var n=document.getElementById('giveNum').textContent.trim();
+  var done=function(){var b=btn.textContent;btn.textContent='복사했습니다';setTimeout(function(){btn.textContent=b},1600)};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(n).then(done,function(){prompt('계좌번호',n)});
+  else prompt('계좌번호',n);
+}
 function shareToday(){
   var d=day();
   var body=WordBible.ready?WordBible.plain(d.passage,true).slice(0,400):'';
