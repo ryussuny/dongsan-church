@@ -239,14 +239,12 @@ nav button.on{color:var(--brick-deep);font-weight:700}
   border-radius:10px;background:var(--lt-ffffff,#fff);font-family:inherit;font-size:14.5px;color:var(--text);cursor:pointer}
 .rq-c.ok{background:var(--lt-e9f2e2,#e9f2e2);border-color:var(--moss);color:var(--dt-3f5f30,#3f5f30);font-weight:700}
 .rq-c.no{background:var(--lt-fbeae6,#fbeae6);border-color:#d9a393;color:var(--dt-8f4531,#8f4531)}
-.give{text-align:center}
-.give .st{text-align:left}
-.give-b{font-size:14px;font-weight:700;color:var(--text2)}
-.give-n{font-family:'Gowun Batang',serif;font-size:24px;font-weight:700;color:var(--text);letter-spacing:.02em;margin:2px 0}
-.give-w{font-size:13.5px;color:var(--text2)}
-.give-w b{color:var(--text)}
-.give .btn{margin-top:10px}
-.give-note{font-size:12px;color:var(--text3);line-height:1.7;margin-top:10px}
+.give{display:flex;align-items:center;gap:10px;background:var(--paper);border:1px dashed var(--border);border-radius:12px;
+  padding:9px 12px;margin-bottom:64px;font-size:12.5px;color:var(--text2);line-height:1.5}
+.give-t{flex:1;min-width:0}
+.give-t b{color:var(--text);font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.give button{flex:none;border:1px solid var(--border);border-radius:8px;background:var(--warm);color:var(--text2);
+  font-family:inherit;font-size:12px;font-weight:700;padding:6px 10px;cursor:pointer}
 </style>
 <style id="dongsan-dark-v1">
 [data-theme="dark"]{color-scheme:dark;--cream:#16130f;--paper:#221d18;--warm:#2b241e;--border:#4a3f33;--text:#efe6d8;--text2:#cdbfa9;--text3:#a3927a;--moss:#8fb47a;
@@ -342,13 +340,9 @@ nav button.on{color:var(--brick-deep);font-weight:700}
     <div class="shnote" id="shareNote1"></div>
   </div>
 
-  <div class="card give" id="offering">
-    <div class="st">💝 온라인 헌금하기</div>
-    <div class="give-b">농협</div>
-    <div class="give-n" id="giveNum">301-5581-6453-41</div>
-    <div class="give-w">예금주 <b>동산교회</b></div>
-    <button class="btn btn-sub" onclick="copyGive(this)">계좌번호 복사</button>
-    <div class="give-note">보내실 때 받는 분 통장 표시에 이름과 헌금 종류를 적어 주세요. (예: 홍길동 감사)</div>
+  <div class="give" id="offering">
+    <div class="give-t">💝 온라인 헌금하기 · 농협 <b id="giveNum">301-5581-6453-41</b> (동산교회)</div>
+    <button onclick="copyGive(this)">복사</button>
   </div>
 </div>
 
