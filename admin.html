@@ -42,15 +42,48 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .pastor-chip{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px;border-radius:8px;background:var(--white);border:1px solid var(--border);min-width:58px;cursor:pointer;font-size:9px}
 .pastor-chip.active{border-color:var(--gold);background:#FFFBF0}
 .pastor-chip .pi{font-size:20px}
+/* PIN 잠금 — 풀기 전에는 잠금 화면 말고는 아무것도 보이지 않는다 */
+html.locked body>*:not(#lock){display:none!important}
+#lock{display:none;position:fixed;inset:0;z-index:1000;background:var(--navy);color:var(--white);
+  flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+html.locked #lock{display:flex}
+#lock h2{font-family:'Noto Serif KR',serif;font-size:18px;margin:8px 0 4px}
+#lock .lk-sub{font-size:12px;color:var(--gold-light);line-height:1.7;margin-bottom:18px;min-height:20px}
+#lock .lk-dots{display:flex;gap:12px;margin-bottom:22px}
+#lock .lk-dots span{width:14px;height:14px;border-radius:50%;border:2px solid var(--gold-light)}
+#lock .lk-dots span.on{background:var(--gold)}
+#lock .lk-pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px}
+#lock .lk-pad button{height:60px;border-radius:30px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);
+  color:var(--white);font-size:22px;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
+#lock .lk-pad button:active{background:rgba(201,168,76,.35)}
+#lock .lk-pad .lk-s{font-size:13px}
+#lock .lk-links{margin-top:22px;display:flex;gap:18px;font-size:12px}
+#lock .lk-links a,#lock .lk-links button{color:var(--gold-light);background:none;border:none;font:inherit;cursor:pointer;text-decoration:underline}
+#lock.shake .lk-dots{animation:lkshake .35s}
+@keyframes lkshake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 </style>
+<script>try{document.documentElement.classList.add('locked')}catch(e){}</script>
 </head>
 <body>
+
+<!-- PIN 잠금 화면 -->
+<div id="lock" role="dialog" aria-modal="true" aria-labelledby="lkTitle">
+  <div style="color:var(--gold);font-size:22px">&#10013;</div>
+  <h2 id="lkTitle">동산교회 관리자</h2>
+  <div class="lk-sub" id="lkSub">비밀번호(PIN)를 눌러 주세요</div>
+  <div class="lk-dots" id="lkDots" aria-hidden="true"></div>
+  <div class="lk-pad" id="lkPad"></div>
+  <div class="lk-links">
+    <a href="word-adult.html">← 말씀 앱으로</a>
+    <button type="button" id="lkForgot" onclick="lockForgot()">PIN을 잊었어요</button>
+  </div>
+</div>
 
 <div class="header">
   <div><div style="color:var(--gold);font-size:12px">&#10013;</div><h1>동산교회 관리자</h1></div>
   <div style="display:flex;gap:6px;align-items:center">
     <span id="clock" style="font-size:11px;color:var(--gold-light)"></span>
-    <span class="badge">ADMIN</span>
+    <button type="button" onclick="lockNow()" aria-label="잠그기" style="background:none;border:1px solid rgba(201,168,76,.4);color:var(--gold-light);border-radius:10px;font-size:11px;padding:2px 8px;cursor:pointer">🔒 잠금</button>
   </div>
 </div>
 
@@ -210,6 +243,69 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 const P='dongsan_';
 const S={get(k,d){try{const v=localStorage.getItem(P+k);return v?JSON.parse(v):d}catch{return d}},set(k,v){localStorage.setItem(P+k,JSON.stringify(v))}};
 const BRIDGE='http://localhost:5555';
+
+/* ===== PIN 잠금 =====
+   PIN 은 이 기기에만 해시로 남긴다. 한 번 풀면 탭을 닫거나 5분 넘게 다른 앱에 가 있기 전까지 열려 있다.
+   잊으면 이 기기의 교인 명단·상담 기록을 지운 뒤에만 새로 정할 수 있다. */
+const PIN_LEN=4;
+let lkMode='enter',lkBuf='',lkFirst='',lkFails=0,lkWaitUntil=0,lkHiddenAt=0;
+async function pinHash(p){
+  try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('dongsan-admin:'+p));
+    return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}
+  catch(e){return 'plain:'+p}
+}
+function lockDraw(msg){
+  const sub={enter:'비밀번호(PIN) 4자리를 눌러 주세요',new1:'처음 쓰시는군요. 새 PIN 4자리를 정해 주세요',new2:'한 번 더 눌러 주세요'}[lkMode];
+  document.getElementById('lkSub').textContent=msg||sub;
+  document.getElementById('lkDots').innerHTML=Array.from({length:PIN_LEN},(_,i)=>`<span class="${i<lkBuf.length?'on':''}"></span>`).join('');
+  document.getElementById('lkForgot').style.display=lkMode==='enter'?'':'none';
+}
+function lockShake(msg){const l=document.getElementById('lock');l.classList.remove('shake');void l.offsetWidth;l.classList.add('shake');lkBuf='';lockDraw(msg)}
+function lockOpen(){
+  try{sessionStorage.setItem('dongsan_adminOpen','1')}catch(e){}
+  document.documentElement.classList.remove('locked');lkBuf='';
+}
+function lockNow(){
+  try{sessionStorage.removeItem('dongsan_adminOpen')}catch(e){}
+  lkMode=S.get('adminPin','')?'enter':'new1';lkBuf='';lockDraw();
+  document.documentElement.classList.add('locked');
+}
+async function lockKey(k){
+  if(Date.now()<lkWaitUntil){lockDraw('잠시 뒤에 다시 눌러 주세요 ('+Math.ceil((lkWaitUntil-Date.now())/1000)+'초)');return}
+  if(k==='del'){lkBuf=lkBuf.slice(0,-1);lockDraw();return}
+  if(lkBuf.length>=PIN_LEN)return;
+  lkBuf+=k;lockDraw();
+  if(lkBuf.length<PIN_LEN)return;
+  const pin=lkBuf;
+  if(lkMode==='new1'){lkFirst=pin;lkMode='new2';lkBuf='';setTimeout(()=>lockDraw(),150);return}
+  if(lkMode==='new2'){
+    if(pin!==lkFirst){lkMode='new1';lkFirst='';lockShake('두 번 누른 PIN이 달라요. 처음부터 다시 정해 주세요');return}
+    S.set('adminPin',await pinHash(pin));lkMode='enter';lockOpen();notify('PIN을 정했습니다');return;
+  }
+  if(await pinHash(pin)===S.get('adminPin','')){lkFails=0;lockOpen();return}
+  lkFails++;
+  if(lkFails>=5){lkFails=0;lkWaitUntil=Date.now()+30000;lockShake('5번 틀렸습니다. 30초 뒤에 다시 눌러 주세요');return}
+  lockShake('PIN이 맞지 않습니다 ('+lkFails+'/5)');
+}
+function lockForgot(){
+  if(!confirm('PIN을 새로 정하려면 이 기기에 저장된 교인 명단과 상담 기록을 모두 지워야 합니다.\n지우고 새 PIN을 정할까요?'))return;
+  ['members','counsels','adminPin'].forEach(k=>{try{localStorage.removeItem(P+k)}catch(e){}});
+  lkMode='new1';lkBuf='';lockDraw();
+}
+(function(){
+  document.getElementById('lkPad').innerHTML=['1','2','3','4','5','6','7','8','9','','0','del'].map(k=>
+    k===''?'<span></span>':`<button type="button" class="${k==='del'?'lk-s':''}" onclick="lockKey('${k}')" aria-label="${k==='del'?'지우기':k}">${k==='del'?'지우기':k}</button>`).join('');
+  document.addEventListener('keydown',e=>{
+    if(!document.documentElement.classList.contains('locked'))return;
+    if(/^[0-9]$/.test(e.key))lockKey(e.key);else if(e.key==='Backspace')lockKey('del');
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){lkHiddenAt=Date.now();return}
+    if(lkHiddenAt&&Date.now()-lkHiddenAt>5*60*1000&&!window.COUNSEL_LIVE)lockNow();
+  });
+  let open=false;try{open=sessionStorage.getItem('dongsan_adminOpen')==='1'}catch(e){}
+  if(S.get('adminPin','')&&open)lockOpen();else lockNow();
+})();
 
 const PASTORS=[
   {n:"김요한",r:"예배·찬양",i:"🎵",bg:"#EEEDFE",s:"당신은 동산교회 예배·찬양 담당 부목사 김요한입니다. 한국어로 간결하게 답하세요."},
