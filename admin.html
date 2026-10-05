@@ -59,6 +59,33 @@ html.locked #lock{display:flex}
 #lock .lk-pad .lk-s{font-size:13px}
 #lock .lk-links{margin-top:22px;display:flex;gap:18px;font-size:12px}
 #lock .lk-links a,#lock .lk-links button{color:var(--gold-light);background:none;border:none;font:inherit;cursor:pointer;text-decoration:underline}
+/* 상담 기록 */
+.cs-l{display:block;font-size:10px;color:var(--text-light);margin:8px 0 3px}
+.cs-consent{display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;margin:12px 0 6px;padding:10px;background:#FFF8E7;border-radius:8px;border:1px solid var(--border)}
+.cs-consent input{margin-top:3px;width:18px;height:18px;flex:none}
+.cs-note{font-size:10.5px;color:var(--text-mid);line-height:1.7;margin-bottom:8px}
+.cs-big{width:100%;justify-content:center;padding:14px;font-size:14px}
+.cs-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;font-size:13px}
+.cs-state{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:#E8F5E9;color:var(--success)}
+.cs-state.off{background:#F1EFE8;color:var(--text-mid)}
+.cs-timer{font-variant-numeric:tabular-nums;font-size:12px;color:var(--text-mid)}
+.cs-spk{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.cs-spk button{padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--white);font-family:inherit;font-size:13px;font-weight:600;color:var(--text-mid);cursor:pointer}
+.cs-spk button.on{background:var(--navy);border-color:var(--navy);color:var(--white)}
+.cs-lines{height:230px;overflow-y:auto;background:var(--cream);border-radius:8px;padding:8px 10px;font-size:12.5px;line-height:1.7}
+.cs-lines .ln{margin-bottom:4px}.cs-lines .ln b{font-size:10px;margin-right:4px;color:var(--gold-dark)}
+.cs-lines .ln.p b{color:var(--navy-light)}
+.cs-lines .im{color:var(--text-light)}
+.cs-type{display:flex;gap:6px;margin-top:8px}.cs-type .btn{white-space:nowrap;flex:none}
+.cs-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.cs-btns .btn{flex:1;justify-content:center;padding:10px 8px}
+.cs-auto{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text-mid);margin-top:8px}
+.cs-fb{border-left:3px solid var(--gold);background:#FFFBF0;border-radius:0 8px 8px 0;padding:8px 10px;margin-bottom:8px;font-size:12.5px;line-height:1.75;white-space:pre-wrap}
+.cs-fb .t{display:block;font-size:10px;color:var(--text-light);margin-bottom:2px}
+.cs-fb.alert{border-left-color:var(--danger);background:#FDECEA}
+.cs-empty{font-size:11px;color:var(--text-light);text-align:center;padding:16px}
+.cs-sec{margin-bottom:10px;font-size:12.5px;line-height:1.75}.cs-sec h4{font-size:11px;color:var(--gold-dark);margin-bottom:2px}
+.cs-sec ul{margin-left:18px}
+.cs-risk{background:#FDECEA;border:1px solid #f3b8b1;color:#8a2a20;border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:10px}
 #lock.shake .lk-dots{animation:lkshake .35s}
 @keyframes lkshake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 </style>
@@ -93,7 +120,8 @@ html.locked #lock{display:flex}
   <div id="adminAlerts" class="cd"></div>
   <div class="cd"><div class="st">빠른 실행</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
-      <div onclick="go('chat')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">💬</div><div style="font-size:9px;color:var(--text-mid)">AI 상담</div></div>
+      <div onclick="go('counsel',document.querySelector('.nb[data-pg=counsel]'))" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">🎧</div><div style="font-size:9px;color:var(--text-mid)">상담 기록</div></div>
+      <div onclick="go('chat')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">💬</div><div style="font-size:9px;color:var(--text-mid)">AI 부목사</div></div>
       <div onclick="go('members')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">👥</div><div style="font-size:9px;color:var(--text-mid)">교인관리</div></div>
       <div onclick="go('word')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">📖</div><div style="font-size:9px;color:var(--text-mid)">오늘말씀</div></div>
       <div onclick="go('bulletin')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">📰</div><div style="font-size:9px;color:var(--text-mid)">주보</div></div>
@@ -130,6 +158,81 @@ html.locked #lock{display:flex}
   <div style="font-size:10px;color:var(--text-light);line-height:1.6;margin-bottom:8px">🔒 교인 명단은 이 기기에만 저장되고 홈페이지·인터넷에는 올라가지 않습니다.</div>
   <div id="memberZoneChips" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px"></div>
   <div id="adminMemberList"></div>
+</div>
+
+<!-- COUNSEL — 상담을 들으며 받아 적고, AI 가 곁에서 조언하고, 마치면 정리해 이 기기에 남긴다 -->
+<div class="pg" id="pg-counsel">
+  <div class="cd" id="csResume" style="display:none"></div>
+
+  <div class="cd" id="csSetup">
+    <div class="st">🎧 상담 기록</div>
+    <label class="cs-l" for="csMember">성도</label>
+    <input id="csMember" class="inp" list="csMemberList" placeholder="이름 (명단에서 고르거나 직접 적기)" maxlength="20" autocomplete="off">
+    <datalist id="csMemberList"></datalist>
+    <label class="cs-l" for="csTopic">주제</label>
+    <select id="csTopic" class="inp">
+      <option>신앙·기도</option><option>가정·부부</option><option>자녀·교육</option><option>건강·질병</option>
+      <option>관계·갈등</option><option>경제·직장</option><option>슬픔·상실</option><option>진로·결정</option>
+      <option>새가족</option><option>기타</option>
+    </select>
+    <label class="cs-consent"><input type="checkbox" id="csConsent"><span>성도님께 상담 내용을 <b>받아 적고 AI 도움을 받는 것</b>에 대해 동의를 받았습니다.</span></label>
+    <div class="cs-note">
+      · 말소리는 휴대폰의 음성 인식(안드로이드는 구글, 아이폰은 애플)으로 글자가 됩니다. 녹음 파일은 남기지 않습니다.<br>
+      · 조언과 정리를 위해 <b>대화 글만</b> AI(Anthropic)로 보냅니다. 성도님 이름과 전화번호는 보내지 않습니다.<br>
+      · 기록은 이 기기에만 저장됩니다.
+    </div>
+    <div id="csSupport" class="cs-note" style="color:var(--danger)"></div>
+    <button class="btn btn-g cs-big" onclick="counselStart()">🎙 상담 시작</button>
+  </div>
+
+  <div id="csLive" style="display:none">
+    <div class="cd">
+      <div class="cs-head">
+        <div><b id="csWho"></b> <span id="csTopicLbl" class="chip" style="background:var(--cream);border:1px solid var(--border)"></span></div>
+        <div><span id="csState" class="cs-state"></span> <span id="csTimer" class="cs-timer">0:00</span></div>
+      </div>
+      <div class="cs-spk" role="group" aria-label="지금 말하는 사람">
+        <button type="button" id="csSpkM" onclick="counselSpeaker('성도')">🙋 성도 말</button>
+        <button type="button" id="csSpkP" onclick="counselSpeaker('목사')">🧑‍💼 목사 말</button>
+      </div>
+      <div id="csLines" class="cs-lines" aria-live="polite"></div>
+      <div class="cs-type">
+        <input id="csTypeIn" class="inp" placeholder="직접 적기 (듣기가 놓친 말)" maxlength="500">
+        <button class="btn btn-o" onclick="counselTyped()">추가</button>
+      </div>
+      <div class="cs-btns">
+        <button class="btn btn-o" id="csPause" onclick="counselPause()">⏸ 잠시 멈춤</button>
+        <button class="btn btn-n" id="csAsk" onclick="counselFeedback(true)">💡 지금 조언</button>
+        <button class="btn btn-g" onclick="counselFinish()">⏹ 마치기</button>
+      </div>
+      <label class="cs-auto"><input type="checkbox" id="csAuto" checked> 대화가 쌓이면 1분마다 저절로 조언 받기</label>
+    </div>
+    <div class="cd">
+      <div class="st">💡 곁에서 드리는 조언 <span style="font-size:10px;color:var(--text-light);font-weight:400">— 목사님만 보시는 화면</span></div>
+      <div id="csFeedback"><div class="cs-empty">대화가 조금 쌓이면 여기에 조언이 나옵니다.</div></div>
+    </div>
+  </div>
+
+  <div class="cd" id="csDone" style="display:none">
+    <div class="st">📝 상담 정리</div>
+    <div id="csSummary"></div>
+    <label class="cs-l" for="csNote">목사님 메모</label>
+    <textarea id="csNote" class="inp" style="min-height:70px" placeholder="기억해 둘 일, 다음에 물어볼 것"></textarea>
+    <label class="cs-auto"><input type="checkbox" id="csKeepLines" checked> 받아 적은 대화 원문도 함께 저장</label>
+    <div class="cs-btns">
+      <button class="btn btn-o" id="csReSum" onclick="counselSummarize()">✨ 다시 정리</button>
+      <button class="btn btn-n" style="flex:1;justify-content:center" onclick="counselSave()">저장</button>
+      <button class="btn btn-o" onclick="counselDiscard()">버리기</button>
+    </div>
+  </div>
+
+  <div class="cd" id="csView" style="display:none"></div>
+
+  <div class="cd">
+    <div class="st">📁 지난 상담 <span id="csCount" style="font-size:11px;color:var(--text-light);font-weight:400"></span></div>
+    <input id="csSearch" class="inp" placeholder="이름·주제 검색" oninput="counselList()" style="margin-bottom:6px">
+    <div id="csList"></div>
+  </div>
 </div>
 
 <!-- CHAT -->
@@ -248,7 +351,7 @@ html.locked #lock{display:flex}
 <nav class="bottom-nav">
   <button class="nb active" onclick="go('home',this)"><span class="ni">🏠</span>홈</button>
   <button class="nb" onclick="go('members',this)"><span class="ni">👥</span>교인</button>
-  <button class="nb" onclick="go('chat',this)"><span class="ni">💬</span>상담</button>
+  <button class="nb" data-pg="counsel" onclick="go('counsel',this)"><span class="ni">🎧</span>상담</button>
   <button class="nb" onclick="go('word',this)"><span class="ni">📖</span>말씀</button>
   <button class="nb" onclick="go('sermon',this)"><span class="ni">📜</span>설교</button>
   <button class="nb" onclick="go('settings',this)"><span class="ni">⚙️</span>더보기</button>
@@ -341,7 +444,7 @@ const PASTORS=[
 function notify(m){const e=document.getElementById('notif');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500)}
 function go(p,btn){document.querySelectorAll('.pg').forEach(e=>e.classList.remove('active'));document.getElementById('pg-'+p).classList.add('active');
   if(btn){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
-  if(p==='sermon')renderSermonAdmin();if(p==='home')renderHome();if(p==='members')renderAdminMembers();if(p==='word')renderWord();if(p==='attendance')renderAtt();if(p==='visit')renderVisits();if(p==='settings')renderSettings();if(p==='chat')renderChat();
+  if(p==='sermon')renderSermonAdmin();if(p==='home')renderHome();if(p==='members')renderAdminMembers();if(p==='word')renderWord();if(p==='attendance')renderAtt();if(p==='visit')renderVisits();if(p==='settings')renderSettings();if(p==='chat')renderChat();if(p==='counsel')renderCounsel();
 }
 
 async function callAI(sys,msg){
@@ -577,9 +680,9 @@ function saveVisit(){
 function renderSettings(){
   document.getElementById('adminApiKey').value=S.get('apiKey','');
   const m=S.get('members',[]),s=S.get('sermons',[]),v=S.get('visits',[]);
-  document.getElementById('adminDataStats').innerHTML=`교인 ${m.length}명 · 설교 ${s.length}편 · 심방 ${v.length}건 · 출석 ${S.get('attendance',[]).length}회`}
+  document.getElementById('adminDataStats').innerHTML=`교인 ${m.length}명 · 설교 ${s.length}편 · 심방 ${v.length}건 · 상담 ${S.get('counsels',[]).length}건 · 출석 ${S.get('attendance',[]).length}회`}
 function exportAll(){
-  const d={exportedAt:new Date().toISOString(),members:S.get('members',[]),sermons:S.get('sermons',[]),visits:S.get('visits',[]),prayers:S.get('prayers',[]),events:S.get('events',[]),attendance:S.get('attendance',[])};
+  const d={exportedAt:new Date().toISOString(),members:S.get('members',[]),sermons:S.get('sermons',[]),visits:S.get('visits',[]),counsels:S.get('counsels',[]),prayers:S.get('prayers',[]),events:S.get('events',[]),attendance:S.get('attendance',[])};
   const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`동산교회_관리자백업_${new Date().toISOString().slice(0,10)}.json`;a.click();notify('백업 다운로드')}
 
 // Meeting
@@ -660,5 +763,6 @@ function sermonDownload(){
   }
 }catch(e){}})();
 </script>
+<script src="admin-counsel.js"></script>
 </body>
 </html>
