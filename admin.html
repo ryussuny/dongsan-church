@@ -42,15 +42,75 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .pastor-chip{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px;border-radius:8px;background:var(--white);border:1px solid var(--border);min-width:58px;cursor:pointer;font-size:9px}
 .pastor-chip.active{border-color:var(--gold);background:#FFFBF0}
 .pastor-chip .pi{font-size:20px}
+/* PIN 잠금 — 풀기 전에는 잠금 화면 말고는 아무것도 보이지 않는다 */
+html.locked body>*:not(#lock){display:none!important}
+#lock{display:none;position:fixed;inset:0;z-index:1000;background:var(--navy);color:var(--white);
+  flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+html.locked #lock{display:flex}
+#lock h2{font-family:'Noto Serif KR',serif;font-size:18px;margin:8px 0 4px}
+#lock .lk-sub{font-size:12px;color:var(--gold-light);line-height:1.7;margin-bottom:18px;min-height:20px}
+#lock .lk-dots{display:flex;gap:12px;margin-bottom:22px}
+#lock .lk-dots span{width:14px;height:14px;border-radius:50%;border:2px solid var(--gold-light)}
+#lock .lk-dots span.on{background:var(--gold)}
+#lock .lk-pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px}
+#lock .lk-pad button{height:60px;border-radius:30px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);
+  color:var(--white);font-size:22px;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
+#lock .lk-pad button:active{background:rgba(201,168,76,.35)}
+#lock .lk-pad .lk-s{font-size:13px}
+#lock .lk-links{margin-top:22px;display:flex;gap:18px;font-size:12px}
+#lock .lk-links a,#lock .lk-links button{color:var(--gold-light);background:none;border:none;font:inherit;cursor:pointer;text-decoration:underline}
+/* 상담 기록 */
+.cs-l{display:block;font-size:10px;color:var(--text-light);margin:8px 0 3px}
+.cs-consent{display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;margin:12px 0 6px;padding:10px;background:#FFF8E7;border-radius:8px;border:1px solid var(--border)}
+.cs-consent input{margin-top:3px;width:18px;height:18px;flex:none}
+.cs-note{font-size:10.5px;color:var(--text-mid);line-height:1.7;margin-bottom:8px}
+.cs-big{width:100%;justify-content:center;padding:14px;font-size:14px}
+.cs-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;font-size:13px}
+.cs-state{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:#E8F5E9;color:var(--success)}
+.cs-state.off{background:#F1EFE8;color:var(--text-mid)}
+.cs-timer{font-variant-numeric:tabular-nums;font-size:12px;color:var(--text-mid)}
+.cs-spk{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.cs-spk button{padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--white);font-family:inherit;font-size:13px;font-weight:600;color:var(--text-mid);cursor:pointer}
+.cs-spk button.on{background:var(--navy);border-color:var(--navy);color:var(--white)}
+.cs-lines{height:230px;overflow-y:auto;background:var(--cream);border-radius:8px;padding:8px 10px;font-size:12.5px;line-height:1.7}
+.cs-lines .ln{margin-bottom:4px}.cs-lines .ln b{font-size:10px;margin-right:4px;color:var(--gold-dark)}
+.cs-lines .ln.p b{color:var(--navy-light)}
+.cs-lines .im{color:var(--text-light)}
+.cs-type{display:flex;gap:6px;margin-top:8px}.cs-type .btn{white-space:nowrap;flex:none}
+.cs-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.cs-btns .btn{flex:1;justify-content:center;padding:10px 8px}
+.cs-auto{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text-mid);margin-top:8px}
+.cs-fb{border-left:3px solid var(--gold);background:#FFFBF0;border-radius:0 8px 8px 0;padding:8px 10px;margin-bottom:8px;font-size:12.5px;line-height:1.75;white-space:pre-wrap}
+.cs-fb .t{display:block;font-size:10px;color:var(--text-light);margin-bottom:2px}
+.cs-fb.alert{border-left-color:var(--danger);background:#FDECEA}
+.cs-empty{font-size:11px;color:var(--text-light);text-align:center;padding:16px}
+.cs-sec{margin-bottom:10px;font-size:12.5px;line-height:1.75}.cs-sec h4{font-size:11px;color:var(--gold-dark);margin-bottom:2px}
+.cs-sec ul{margin-left:18px}
+.cs-risk{background:#FDECEA;border:1px solid #f3b8b1;color:#8a2a20;border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:10px}
+#lock.shake .lk-dots{animation:lkshake .35s}
+@keyframes lkshake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 </style>
+<script>try{document.documentElement.classList.add('locked')}catch(e){}</script>
 </head>
 <body>
+
+<!-- PIN 잠금 화면 -->
+<div id="lock" role="dialog" aria-modal="true" aria-labelledby="lkTitle">
+  <div style="color:var(--gold);font-size:22px">&#10013;</div>
+  <h2 id="lkTitle">동산교회 관리자</h2>
+  <div class="lk-sub" id="lkSub">비밀번호(PIN)를 눌러 주세요</div>
+  <div class="lk-dots" id="lkDots" aria-hidden="true"></div>
+  <div class="lk-pad" id="lkPad"></div>
+  <div class="lk-links">
+    <a href="word-adult.html">← 말씀 앱으로</a>
+    <button type="button" id="lkForgot" onclick="lockForgot()">PIN을 잊었어요</button>
+  </div>
+</div>
 
 <div class="header">
   <div><div style="color:var(--gold);font-size:12px">&#10013;</div><h1>동산교회 관리자</h1></div>
   <div style="display:flex;gap:6px;align-items:center">
     <span id="clock" style="font-size:11px;color:var(--gold-light)"></span>
-    <span class="badge">ADMIN</span>
+    <button type="button" onclick="lockNow()" aria-label="잠그기" style="background:none;border:1px solid rgba(201,168,76,.4);color:var(--gold-light);border-radius:10px;font-size:11px;padding:2px 8px;cursor:pointer">🔒 잠금</button>
   </div>
 </div>
 
@@ -60,7 +120,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   <div id="adminAlerts" class="cd"></div>
   <div class="cd"><div class="st">빠른 실행</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
-      <div onclick="go('chat')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">💬</div><div style="font-size:9px;color:var(--text-mid)">AI 상담</div></div>
+      <div onclick="go('counsel',document.querySelector('.nb[data-pg=counsel]'))" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">🎧</div><div style="font-size:9px;color:var(--text-mid)">상담 기록</div></div>
+      <div onclick="go('chat')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">💬</div><div style="font-size:9px;color:var(--text-mid)">AI 부목사</div></div>
       <div onclick="go('members')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">👥</div><div style="font-size:9px;color:var(--text-mid)">교인관리</div></div>
       <div onclick="go('word')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">📖</div><div style="font-size:9px;color:var(--text-mid)">오늘말씀</div></div>
       <div onclick="go('bulletin')" style="text-align:center;padding:10px 4px;background:var(--cream);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><div style="font-size:20px">📰</div><div style="font-size:9px;color:var(--text-mid)">주보</div></div>
@@ -76,9 +137,102 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 
 <!-- MEMBERS -->
 <div class="pg" id="pg-members">
-  <div style="display:flex;gap:6px;margin-bottom:10px"><input id="mSearch" class="inp" placeholder="교인 검색..." style="flex:1" oninput="renderAdminMembers()"><button class="btn btn-n" onclick="addMemberMobile()">+등록</button></div>
+  <div style="display:flex;gap:6px;margin-bottom:8px"><input id="mSearch" class="inp" placeholder="이름·전화·구역 검색" style="flex:1" oninput="renderAdminMembers()"><button class="btn btn-n" onclick="memberFormOpen()">+ 등록</button></div>
+  <div style="display:flex;gap:6px;margin-bottom:10px">
+    <button class="btn btn-o" style="flex:1;justify-content:center" onclick="document.getElementById('mFile').click()">📥 명단·심방계획 가져오기 (엑셀)</button>
+    <button class="btn btn-o" onclick="memberExportCsv()">내보내기</button>
+  </div>
+  <input id="mFile" type="file" accept=".xlsx,.csv,.txt,.json,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="memberImport(this)">
+  <div id="memberForm" class="cd" style="display:none">
+    <div class="st">교인 등록</div>
+    <input id="mfName" class="inp" placeholder="이름 (필수)" style="margin-bottom:6px" maxlength="20">
+    <input id="mfPhone" class="inp" placeholder="전화번호 예) 010-1234-5678" inputmode="tel" style="margin-bottom:6px" maxlength="20">
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <input id="mfRole" class="inp" placeholder="직분 (권사·집사…)" maxlength="10">
+      <input id="mfZone" class="inp" placeholder="구역·속회" maxlength="12">
+    </div>
+    <label style="font-size:10px;color:var(--text-light)">생일 (선택)</label>
+    <input id="mfBirth" type="date" class="inp" style="margin-bottom:8px">
+    <div style="display:flex;gap:6px"><button class="btn btn-n" style="flex:1;justify-content:center" onclick="memberSave()">저장</button><button class="btn btn-o" onclick="memberFormClose()">닫기</button></div>
+  </div>
+  <div style="font-size:10px;color:var(--text-light);line-height:1.6;margin-bottom:8px">🔒 교인 명단은 이 기기에만 저장되고 홈페이지·인터넷에는 올라가지 않습니다.</div>
   <div id="memberZoneChips" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px"></div>
   <div id="adminMemberList"></div>
+</div>
+
+<!-- COUNSEL — 상담을 들으며 받아 적고, AI 가 곁에서 조언하고, 마치면 정리해 이 기기에 남긴다 -->
+<div class="pg" id="pg-counsel">
+  <div class="cd" id="csResume" style="display:none"></div>
+
+  <div class="cd" id="csSetup">
+    <div class="st">🎧 상담 기록</div>
+    <label class="cs-l" for="csMember">성도</label>
+    <input id="csMember" class="inp" list="csMemberList" placeholder="이름 (명단에서 고르거나 직접 적기)" maxlength="20" autocomplete="off">
+    <datalist id="csMemberList"></datalist>
+    <label class="cs-l" for="csTopic">주제</label>
+    <select id="csTopic" class="inp">
+      <option>신앙·기도</option><option>가정·부부</option><option>자녀·교육</option><option>건강·질병</option>
+      <option>관계·갈등</option><option>경제·직장</option><option>슬픔·상실</option><option>진로·결정</option>
+      <option>새가족</option><option>기타</option>
+    </select>
+    <label class="cs-consent"><input type="checkbox" id="csConsent"><span>성도님께 상담 내용을 <b>받아 적고 AI 도움을 받는 것</b>에 대해 동의를 받았습니다.</span></label>
+    <div class="cs-note">
+      · 말소리는 휴대폰의 음성 인식(안드로이드는 구글, 아이폰은 애플)으로 글자가 됩니다. 녹음 파일은 남기지 않습니다.<br>
+      · 조언과 정리를 위해 <b>대화 글만</b> AI(Anthropic)로 보냅니다. 성도님 이름과 전화번호는 보내지 않습니다.<br>
+      · 기록은 이 기기에만 저장됩니다.
+    </div>
+    <div id="csSupport" class="cs-note" style="color:var(--danger)"></div>
+    <button class="btn btn-g cs-big" onclick="counselStart()">🎙 상담 시작</button>
+  </div>
+
+  <div id="csLive" style="display:none">
+    <div class="cd">
+      <div class="cs-head">
+        <div><b id="csWho"></b> <span id="csTopicLbl" class="chip" style="background:var(--cream);border:1px solid var(--border)"></span></div>
+        <div><span id="csState" class="cs-state"></span> <span id="csTimer" class="cs-timer">0:00</span></div>
+      </div>
+      <div class="cs-spk" role="group" aria-label="지금 말하는 사람">
+        <button type="button" id="csSpkM" onclick="counselSpeaker('성도')">🙋 성도 말</button>
+        <button type="button" id="csSpkP" onclick="counselSpeaker('목사')">🧑‍💼 목사 말</button>
+      </div>
+      <div id="csLines" class="cs-lines" aria-live="polite"></div>
+      <div class="cs-type">
+        <input id="csTypeIn" class="inp" placeholder="직접 적기 (듣기가 놓친 말)" maxlength="500">
+        <button class="btn btn-o" onclick="counselTyped()">추가</button>
+      </div>
+      <div class="cs-btns">
+        <button class="btn btn-o" id="csPause" onclick="counselPause()">⏸ 잠시 멈춤</button>
+        <button class="btn btn-n" id="csAsk" onclick="counselFeedback(true)">💡 지금 조언</button>
+        <button class="btn btn-g" onclick="counselFinish()">⏹ 마치기</button>
+      </div>
+      <label class="cs-auto"><input type="checkbox" id="csAuto" checked> 대화가 쌓이면 1분마다 저절로 조언 받기</label>
+    </div>
+    <div class="cd">
+      <div class="st">💡 곁에서 드리는 조언 <span style="font-size:10px;color:var(--text-light);font-weight:400">— 목사님만 보시는 화면</span></div>
+      <div id="csFeedback"><div class="cs-empty">대화가 조금 쌓이면 여기에 조언이 나옵니다.</div></div>
+    </div>
+  </div>
+
+  <div class="cd" id="csDone" style="display:none">
+    <div class="st">📝 상담 정리</div>
+    <div id="csSummary"></div>
+    <label class="cs-l" for="csNote">목사님 메모</label>
+    <textarea id="csNote" class="inp" style="min-height:70px" placeholder="기억해 둘 일, 다음에 물어볼 것"></textarea>
+    <label class="cs-auto"><input type="checkbox" id="csKeepLines" checked> 받아 적은 대화 원문도 함께 저장</label>
+    <div class="cs-btns">
+      <button class="btn btn-o" id="csReSum" onclick="counselSummarize()">✨ 다시 정리</button>
+      <button class="btn btn-n" style="flex:1;justify-content:center" onclick="counselSave()">저장</button>
+      <button class="btn btn-o" onclick="counselDiscard()">버리기</button>
+    </div>
+  </div>
+
+  <div class="cd" id="csView" style="display:none"></div>
+
+  <div class="cd">
+    <div class="st">📁 지난 상담 <span id="csCount" style="font-size:11px;color:var(--text-light);font-weight:400"></span></div>
+    <input id="csSearch" class="inp" placeholder="이름·주제 검색" oninput="counselList()" style="margin-bottom:6px">
+    <div id="csList"></div>
+  </div>
 </div>
 
 <!-- CHAT -->
@@ -167,11 +321,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 
 <!-- VISIT -->
 <div class="pg" id="pg-visit">
+  <div class="cd" id="visitPlan"></div>
   <div class="cd">
     <div class="st">심방 기록</div>
     <input type="date" id="vDate" class="inp" style="margin-bottom:6px">
     <input id="vTarget" class="inp" placeholder="대상자" style="margin-bottom:6px">
-    <select id="vType" class="inp" style="margin-bottom:6px"><option>가정심방</option><option>병원심방</option><option>신규심방</option><option>위로심방</option></select>
+    <select id="vType" class="inp" style="margin-bottom:6px"><option>가정심방</option><option>전화심방</option><option>병원심방</option><option>신규심방</option><option>위로심방</option></select>
     <textarea id="vNote" class="inp" placeholder="내용..." style="min-height:60px;margin-bottom:6px"></textarea>
     <button class="btn btn-n" onclick="saveVisit()" style="width:100%">저장</button>
   </div>
@@ -183,6 +338,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   <div class="cd">
     <div class="st">API Key</div>
     <div style="display:flex;gap:6px"><input id="adminApiKey" type="password" class="inp" placeholder="sk-ant-..." style="flex:1"><button class="btn btn-n" onclick="S.set('apiKey',document.getElementById('adminApiKey').value.trim());notify('저장됨')">저장</button></div>
+  </div>
+  <div class="cd">
+    <div class="st">🤖 자비스 (교회 PC 목회 시스템)</div>
+    <div style="font-size:11px;color:var(--text-mid);line-height:1.7;margin-bottom:8px">
+      자비스는 교회 PC 안에서 돌아갑니다. <b>교회 PC 의 브라우저</b>에서 이 관리자 앱을 열 때만 연결됩니다.
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:6px"><input id="jvAddr" class="inp" placeholder="http://localhost:4000" style="flex:1"><button class="btn btn-n" onclick="jarvisSave()">저장</button></div>
+    <div style="display:flex;gap:6px"><button class="btn btn-o" style="flex:1;justify-content:center" onclick="jarvisCheck()">연결 확인</button><a class="btn btn-o" id="jvOpen" target="_blank" rel="noopener" style="flex:1;justify-content:center;text-decoration:none">자비스 열기 ↗</a></div>
+    <div id="jvState" style="font-size:11px;margin-top:6px;color:var(--text-mid)"></div>
   </div>
   <div class="cd">
     <div class="st">데이터</div>
@@ -197,7 +361,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 <nav class="bottom-nav">
   <button class="nb active" onclick="go('home',this)"><span class="ni">🏠</span>홈</button>
   <button class="nb" onclick="go('members',this)"><span class="ni">👥</span>교인</button>
-  <button class="nb" onclick="go('chat',this)"><span class="ni">💬</span>상담</button>
+  <button class="nb" data-pg="counsel" onclick="go('counsel',this)"><span class="ni">🎧</span>상담</button>
   <button class="nb" onclick="go('word',this)"><span class="ni">📖</span>말씀</button>
   <button class="nb" onclick="go('sermon',this)"><span class="ni">📜</span>설교</button>
   <button class="nb" onclick="go('settings',this)"><span class="ni">⚙️</span>더보기</button>
@@ -210,6 +374,69 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 const P='dongsan_';
 const S={get(k,d){try{const v=localStorage.getItem(P+k);return v?JSON.parse(v):d}catch{return d}},set(k,v){localStorage.setItem(P+k,JSON.stringify(v))}};
 const BRIDGE='http://localhost:5555';
+
+/* ===== PIN 잠금 =====
+   PIN 은 이 기기에만 해시로 남긴다. 한 번 풀면 탭을 닫거나 5분 넘게 다른 앱에 가 있기 전까지 열려 있다.
+   잊으면 이 기기의 교인 명단·상담 기록을 지운 뒤에만 새로 정할 수 있다. */
+const PIN_LEN=4;
+let lkMode='enter',lkBuf='',lkFirst='',lkFails=0,lkWaitUntil=0,lkHiddenAt=0;
+async function pinHash(p){
+  try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('dongsan-admin:'+p));
+    return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}
+  catch(e){return 'plain:'+p}
+}
+function lockDraw(msg){
+  const sub={enter:'비밀번호(PIN) 4자리를 눌러 주세요',new1:'처음 쓰시는군요. 새 PIN 4자리를 정해 주세요',new2:'한 번 더 눌러 주세요'}[lkMode];
+  document.getElementById('lkSub').textContent=msg||sub;
+  document.getElementById('lkDots').innerHTML=Array.from({length:PIN_LEN},(_,i)=>`<span class="${i<lkBuf.length?'on':''}"></span>`).join('');
+  document.getElementById('lkForgot').style.display=lkMode==='enter'?'':'none';
+}
+function lockShake(msg){const l=document.getElementById('lock');l.classList.remove('shake');void l.offsetWidth;l.classList.add('shake');lkBuf='';lockDraw(msg)}
+function lockOpen(){
+  try{sessionStorage.setItem('dongsan_adminOpen','1')}catch(e){}
+  document.documentElement.classList.remove('locked');lkBuf='';
+}
+function lockNow(){
+  try{sessionStorage.removeItem('dongsan_adminOpen')}catch(e){}
+  lkMode=S.get('adminPin','')?'enter':'new1';lkBuf='';lockDraw();
+  document.documentElement.classList.add('locked');
+}
+async function lockKey(k){
+  if(Date.now()<lkWaitUntil){lockDraw('잠시 뒤에 다시 눌러 주세요 ('+Math.ceil((lkWaitUntil-Date.now())/1000)+'초)');return}
+  if(k==='del'){lkBuf=lkBuf.slice(0,-1);lockDraw();return}
+  if(lkBuf.length>=PIN_LEN)return;
+  lkBuf+=k;lockDraw();
+  if(lkBuf.length<PIN_LEN)return;
+  const pin=lkBuf;
+  if(lkMode==='new1'){lkFirst=pin;lkMode='new2';lkBuf='';setTimeout(()=>lockDraw(),150);return}
+  if(lkMode==='new2'){
+    if(pin!==lkFirst){lkMode='new1';lkFirst='';lockShake('두 번 누른 PIN이 달라요. 처음부터 다시 정해 주세요');return}
+    S.set('adminPin',await pinHash(pin));lkMode='enter';lockOpen();notify('PIN을 정했습니다');return;
+  }
+  if(await pinHash(pin)===S.get('adminPin','')){lkFails=0;lockOpen();return}
+  lkFails++;
+  if(lkFails>=5){lkFails=0;lkWaitUntil=Date.now()+30000;lockShake('5번 틀렸습니다. 30초 뒤에 다시 눌러 주세요');return}
+  lockShake('PIN이 맞지 않습니다 ('+lkFails+'/5)');
+}
+function lockForgot(){
+  if(!confirm('PIN을 새로 정하려면 이 기기에 저장된 교인 명단과 상담 기록을 모두 지워야 합니다.\n지우고 새 PIN을 정할까요?'))return;
+  ['members','counsels','adminPin'].forEach(k=>{try{localStorage.removeItem(P+k)}catch(e){}});
+  lkMode='new1';lkBuf='';lockDraw();
+}
+(function(){
+  document.getElementById('lkPad').innerHTML=['1','2','3','4','5','6','7','8','9','','0','del'].map(k=>
+    k===''?'<span></span>':`<button type="button" class="${k==='del'?'lk-s':''}" onclick="lockKey('${k}')" aria-label="${k==='del'?'지우기':k}">${k==='del'?'지우기':k}</button>`).join('');
+  document.addEventListener('keydown',e=>{
+    if(!document.documentElement.classList.contains('locked'))return;
+    if(/^[0-9]$/.test(e.key))lockKey(e.key);else if(e.key==='Backspace')lockKey('del');
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){lkHiddenAt=Date.now();return}
+    if(lkHiddenAt&&Date.now()-lkHiddenAt>5*60*1000&&!window.COUNSEL_LIVE)lockNow();
+  });
+  let open=false;try{open=sessionStorage.getItem('dongsan_adminOpen')==='1'}catch(e){}
+  if(S.get('adminPin','')&&open)lockOpen();else lockNow();
+})();
 
 const PASTORS=[
   {n:"김요한",r:"예배·찬양",i:"🎵",bg:"#EEEDFE",s:"당신은 동산교회 예배·찬양 담당 부목사 김요한입니다. 한국어로 간결하게 답하세요."},
@@ -227,7 +454,7 @@ const PASTORS=[
 function notify(m){const e=document.getElementById('notif');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500)}
 function go(p,btn){document.querySelectorAll('.pg').forEach(e=>e.classList.remove('active'));document.getElementById('pg-'+p).classList.add('active');
   if(btn){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
-  if(p==='sermon')renderSermonAdmin();if(p==='home')renderHome();if(p==='members')renderAdminMembers();if(p==='word')renderWord();if(p==='attendance')renderAtt();if(p==='visit')renderVisits();if(p==='settings')renderSettings();if(p==='chat')renderChat();
+  if(p==='sermon')renderSermonAdmin();if(p==='home')renderHome();if(p==='members')renderAdminMembers();if(p==='word')renderWord();if(p==='attendance')renderAtt();if(p==='visit')renderVisits();if(p==='settings')renderSettings();if(p==='chat')renderChat();if(p==='counsel')renderCounsel();
 }
 
 async function callAI(sys,msg){
@@ -255,7 +482,9 @@ function renderHome(){
   document.getElementById('adminAlerts').innerHTML=`<div class="st">📌 알림</div>
     <div style="font-size:11px;display:flex;flex-direction:column;gap:6px">
       <div style="padding:6px 8px;background:${hasWord?'#E8F5E9':'#FFF3E0'};border-radius:6px">${hasWord?'✅ 오늘의 말씀 준비됨':'⚠️ 오늘의 말씀 미생성'}</div>
-      ${birthdays.length?`<div style="padding:6px 8px;background:#FFF8E7;border-radius:6px">🎂 이번달 생일 ${birthdays.length}명</div>`:''}
+      ${(()=>{const w=typeof planThisWeek==='function'&&planThisWeek();if(!w)return '';
+        return `<div style="padding:6px 8px;background:${w.done>=w.total?'#E8F5E9':'#EEF3FB'};border-radius:6px;cursor:pointer" onclick="go('visit')">📞 ${esc(w.week)} 전화심방 ${w.done}/${w.total}명 완료${w.todo.length?' · 남은 분: '+esc(w.todo.slice(0,6).join(', ')):''}</div>`})()}
+      ${birthdays.length?`<div style="padding:6px 8px;background:#FFF8E7;border-radius:6px">🎂 이번 달 생일 ${birthdays.length}명 · ${birthdays.sort((a,b)=>a.birthday.slice(8).localeCompare(b.birthday.slice(8))).slice(0,10).map(x=>esc(x.name)+' '+(+x.birthday.slice(8))+'일'+(x.lunar?'(음)':'')).join(', ')}</div>`:''}
     </div>`;
 
   const events=S.get('events',[]);
@@ -266,14 +495,144 @@ function renderHome(){
 }
 
 // MEMBERS
-function renderAdminMembers(){
-  const m=S.get('members',[]);const q=(document.getElementById('mSearch')?.value||'').toLowerCase();
-  const zones=[...new Set(m.map(x=>x.zone).filter(x=>x))];
-  document.getElementById('memberZoneChips').innerHTML=zones.map(z=>{const c=m.filter(x=>x.zone===z).length;return `<span class="chip" style="background:var(--cream);border:1px solid var(--border);cursor:pointer" onclick="document.getElementById('mSearch').value='${z}';renderAdminMembers()">${z} ${c}</span>`}).join('');
-  const filtered=m.filter(x=>!q||x.name.toLowerCase().includes(q)||(x.zone||'').toLowerCase().includes(q)||(x.phone||'').includes(q)||(x.role||'').toLowerCase().includes(q));
-  document.getElementById('adminMemberList').innerHTML=filtered.slice(0,50).map(x=>`<div class="list-item"><div><div class="name">${x.name} ${x.role?`<span class="chip" style="background:#FFF8E7;color:var(--gold-dark)">${x.role}</span>`:''}</div><div class="sub">${x.phone||''} ${x.zone||''} ${x.birthday?'🎂'+x.birthday.slice(5):''}</div></div></div>`).join('')||'<div style="text-align:center;color:var(--text-light);padding:30px">교인이 없습니다</div>';
+/* 명단은 파일에서 들어오므로 화면에 넣을 때는 반드시 글자로만 넣는다 */
+function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function phoneDigits(p){return String(p||'').replace(/\D/g,'')}
+function phoneFmt(p){
+  const d=phoneDigits(p);if(!d)return '';
+  if(/^01\d{8,9}$/.test(d))return d.length===10?d.replace(/(\d{3})(\d{3})(\d{4})/,'$1-$2-$3'):d.replace(/(\d{3})(\d{4})(\d{4})/,'$1-$2-$3');
+  if(/^02\d{7,8}$/.test(d))return d.replace(/^(02)(\d{3,4})(\d{4})$/,'$1-$2-$3');
+  if(/^0\d{9,10}$/.test(d))return d.replace(/^(0\d{2})(\d{3,4})(\d{4})$/,'$1-$2-$3');
+  return String(p).trim();
 }
-function addMemberMobile(){notify('PC 시스템에서 등록하세요')}
+function birthFmt(b){
+  const s=String(b||'').trim();if(!s)return '';
+  if(/^\d{8}$/.test(s))return s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8);
+  let m=s.match(/^(\d{4})[.\-/년\s]*(\d{1,2})[.\-/월\s]*(\d{1,2})/);if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  m=s.match(/^(\d{1,2})[.\-/월\s]+(\d{1,2})/);if(m)return '0000-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0');
+  return '';
+}
+let memberOpen=null;
+function renderAdminMembers(){
+  const m=S.get('members',[]);
+  if(m.some(x=>!x.id)){m.forEach(x=>{if(!x.id)x.id=memberNewId()});S.set('members',m)} // 예전 PC 시스템에서 온 명단에는 id 가 없다
+  const q=(document.getElementById('mSearch')?.value||'').trim().toLowerCase();const qd=phoneDigits(q);
+  const groups=[...new Set(m.flatMap(x=>(x.group||'').split(', ')).filter(x=>x))];
+  const zones=[...new Set(m.map(x=>x.zone).filter(x=>x))].sort();
+  const chips=[...groups.map(g=>({k:g,n:m.filter(x=>(x.group||'').split(', ').includes(g)).length})),...zones.map(z=>({k:z,n:m.filter(x=>x.zone===z).length}))];
+  if(m.some(x=>x.care))chips.push({k:'집중돌봄',n:m.filter(x=>x.care).length});
+  document.getElementById('memberZoneChips').innerHTML=(m.length?`<span class="chip" style="background:var(--navy);color:#fff;cursor:pointer" data-chip="-1">전체 ${m.length}명</span>`:'')+
+    chips.map((c,i)=>`<span class="chip" style="background:var(--cream);border:1px solid var(--border);cursor:pointer" data-chip="${i}">${esc(c.k)} ${c.n}</span>`).join('');
+  document.querySelectorAll('#memberZoneChips [data-chip]').forEach(el=>el.onclick=()=>{const c=chips[+el.dataset.chip];document.getElementById('mSearch').value=c?c.k:'';renderAdminMembers()});
+  const hit=x=>[x.name,x.zone,x.role,x.group,x.area,x.address,x.note,x.grade,x.care?'집중돌봄':''].some(v=>(v||'').toLowerCase().includes(q));
+  const filtered=m.filter(x=>!q||hit(x)||(qd.length>=3&&phoneDigits(x.phone).includes(qd)))
+    .sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko'));
+  const counsels=S.get('counsels',[]),yr=new Date().getFullYear();
+  document.getElementById('adminMemberList').innerHTML=filtered.slice(0,200).map(x=>{
+    const tel=phoneDigits(x.phone),open=memberOpen===x.id,bd=x.birthday&&x.birthday.length>=10?x.birthday:'';
+    const age=bd&&bd.slice(0,4)!=='0000'?yr-(+bd.slice(0,4))-((new Date().toISOString().slice(5,10)<bd.slice(5))?1:0):(x.age||'');
+    const cs=counsels.filter(c=>c.memberId===x.id).length;
+    const row=(k,v)=>v?`<div style="display:flex;gap:8px"><span style="flex:none;width:44px;color:var(--text-light)">${k}</span><span>${v}</span></div>`:'';
+    return `<div class="list-item" style="flex-direction:column;align-items:stretch;cursor:pointer" data-mid="${esc(x.id)}">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div><div class="name">${esc(x.name)} ${x.role?`<span class="chip" style="background:#FFF8E7;color:var(--gold-dark)">${esc(x.role)}</span>`:''}${x.care?' <span class="chip" style="background:#FDECEA;color:#B23A2E">집중돌봄</span>':''}</div>
+          <div class="sub">${esc(phoneFmt(x.phone))} ${esc(x.zone||x.grade||'')} ${bd?'🎂'+esc(bd.slice(5))+(x.lunar?'(음)':''):''}</div></div>
+        ${tel?`<a href="tel:${tel}" onclick="event.stopPropagation()" class="btn btn-o" style="text-decoration:none;padding:6px 10px" aria-label="${esc(x.name)}에게 전화">📞</a>`:''}
+      </div>
+      ${open?`<div style="font-size:11.5px;line-height:1.8;color:var(--text-mid);background:var(--cream);border-radius:8px;padding:8px 10px;margin-top:8px">
+        ${row('구분',esc(x.group||''))}${row('성별',esc(x.gender||''))}${row('나이',age?esc(age)+'세':'')}${row('생일',bd?esc(bd.slice(0,4)==='0000'?bd.slice(5):bd)+(x.lunar?' (음력)':''):'')}
+        ${row('학년',esc(x.grade||''))}${row('속회',esc(x.zone||''))}${row('지역',esc(x.area||''))}${row('주소',esc(x.address||''))}${row('비고',esc(x.note||''))}${row('상담',cs?cs+'건':'')}
+      </div>`:''}
+      ${open?`<div style="display:flex;gap:6px;margin-top:8px" onclick="event.stopPropagation()">
+        ${tel?`<a class="btn btn-o" style="text-decoration:none" href="sms:${tel}">💬 문자</a>`:''}
+        <button class="btn btn-o" onclick="counselStartFor('${esc(x.id)}')">🎧 상담 시작</button>
+        <button class="btn btn-o" style="margin-left:auto;color:var(--danger)" onclick="memberDelete('${esc(x.id)}')">삭제</button></div>`:''}
+    </div>`}).join('')||`<div style="text-align:center;color:var(--text-light);padding:30px;font-size:12px;line-height:1.8">${m.length?'찾는 교인이 없습니다':'아직 교인 명단이 없습니다.<br>「📥 명단 가져오기」로 엑셀 명단을 넣거나 「+ 등록」을 누르세요.'}</div>`;
+  if(filtered.length>200)document.getElementById('adminMemberList').innerHTML+=`<div style="text-align:center;color:var(--text-light);padding:10px;font-size:11px">${filtered.length-200}명 더 있습니다 — 검색으로 찾아 주세요</div>`;
+  document.querySelectorAll('#adminMemberList [data-mid]').forEach(el=>el.onclick=()=>{memberOpen=memberOpen===el.dataset.mid?null:el.dataset.mid;renderAdminMembers()});
+}
+function memberFormOpen(){document.getElementById('memberForm').style.display='block';document.getElementById('mfName').focus()}
+function memberFormClose(){document.getElementById('memberForm').style.display='none';['mfName','mfPhone','mfRole','mfZone','mfBirth'].forEach(id=>document.getElementById(id).value='')}
+function memberNewId(){return 'm'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function memberSave(){
+  const v=id=>document.getElementById(id).value.trim();
+  const name=v('mfName');if(!name){notify('이름을 적어 주세요');return}
+  const m=S.get('members',[]),phone=phoneFmt(v('mfPhone'));
+  if(m.some(x=>x.name===name&&phoneDigits(x.phone)===phoneDigits(phone))){notify('이미 등록된 분입니다');return}
+  m.push({id:memberNewId(),name,phone,role:v('mfRole'),zone:v('mfZone'),birthday:v('mfBirth'),addedAt:new Date().toISOString()});
+  S.set('members',m);memberFormClose();renderAdminMembers();notify(name+' 등록됨');
+}
+function memberDelete(id){
+  const m=S.get('members',[]),x=m.find(y=>y.id===id);if(!x)return;
+  if(!confirm(x.name+' 님을 명단에서 지울까요?'))return;
+  S.set('members',m.filter(y=>y.id!==id));memberOpen=null;renderAdminMembers();notify('지웠습니다');
+}
+/* CSV 한 줄씩 — 따옴표 안의 쉼표·줄바꿈을 지킨다 */
+function parseCsv(text){
+  text=text.replace(/^﻿/,'');
+  const first=text.split(/\r?\n/)[0]||'',delim=(first.split('\t').length>first.split(',').length)?'\t':',';
+  const rows=[];let row=[],cell='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){cell+='"';i++}else q=false}else cell+=c;continue}
+    if(c==='"')q=true;else if(c===delim){row.push(cell);cell=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);rows.push(row);row=[];cell=''}
+    else cell+=c;
+  }
+  if(cell||row.length){row.push(cell);rows.push(row)}
+  return rows.filter(r=>r.some(x=>x.trim()));
+}
+const MEMBER_COLS={name:/^(이름|성명|성도명|교인명|name)$/i,phone:/(전화|휴대|핸드폰|연락처|phone|mobile|tel)/i,role:/(직분|role)/i,zone:/(구역|속회|소그룹|교구|zone)/i,birthday:/(생일|생년월일|birth)/i};
+function membersFromRows(rows){
+  if(!rows.length)return [];
+  const head=rows[0].map(h=>h.trim()),map={};
+  head.forEach((h,i)=>{for(const k in MEMBER_COLS)if(map[k]==null&&MEMBER_COLS[k].test(h)){map[k]=i;break}});
+  let body=rows.slice(1);
+  if(map.name==null){ // 머리줄이 없는 명단: 첫 칸 이름, 전화번호처럼 생긴 칸을 전화로 본다
+    body=rows;map.name=0;const r=rows[0];const pi=r.findIndex((c,i)=>i>0&&/^0\d{1,2}[-\s.]?\d{3,4}[-\s.]?\d{4}$/.test(c.trim()));if(pi>0)map.phone=pi;
+  }
+  return body.map(r=>({name:(r[map.name]||'').trim(),phone:map.phone!=null?phoneFmt(r[map.phone]):'',role:map.role!=null?(r[map.role]||'').trim():'',
+    zone:map.zone!=null?(r[map.zone]||'').trim():'',birthday:map.birthday!=null?birthFmt(r[map.birthday]):''})).filter(x=>x.name&&x.name.length<=20);
+}
+function memberMerge(list,source){
+  const m=S.get('members',[]);let added=0,updated=0;
+  list.forEach(n=>{
+    const pd=phoneDigits(n.phone);
+    const old=m.find(x=>x.name===n.name&&(!pd||!phoneDigits(x.phone)||phoneDigits(x.phone)===pd));
+    if(old){let ch=false;Object.keys(n).forEach(k=>{if(k==='name')return;
+        if(k==='group'&&n.group&&old.group&&!old.group.split(', ').includes(n.group)){old.group+=', '+n.group;ch=true;return}
+        if(n[k]&&!old[k]){old[k]=n[k];ch=true}});if(ch)updated++}
+    else{m.push(Object.assign({id:memberNewId(),addedAt:new Date().toISOString(),source},n));added++}
+  });
+  S.set('members',m);return {added,updated,total:m.length};
+}
+function memberImport(input){
+  const f=input.files&&input.files[0];input.value='';if(!f)return;
+  if(/\.xlsx$/i.test(f.name)){careImportXlsx(f);return}
+  if(/\.xls$/i.test(f.name)){alert('옛 엑셀 형식(.xls)은 바로 읽지 못합니다.\n엑셀에서 「다른 이름으로 저장 → Excel 통합 문서(.xlsx)」로 저장한 뒤 골라 주세요.');return}
+  const rd=new FileReader();
+  rd.onload=()=>{
+    let list=[];
+    try{
+      const t=String(rd.result);
+      if(/\.json$/i.test(f.name)||/^\s*[\[{]/.test(t)){const j=JSON.parse(t);const arr=Array.isArray(j)?j:(j.members||[]);
+        list=arr.map(x=>({name:String(x.name||x.이름||x.성명||'').trim(),phone:phoneFmt(x.phone||x.전화||x.휴대폰||x.연락처||''),role:String(x.role||x.직분||'').trim(),zone:String(x.zone||x.구역||'').trim(),birthday:birthFmt(x.birthday||x.생일||'')})).filter(x=>x.name)}
+      else list=membersFromRows(parseCsv(t));
+    }catch(e){notify('파일을 읽지 못했습니다');return}
+    if(!list.length){alert('명단을 찾지 못했습니다.\n첫 줄에 「이름, 전화번호, 직분, 구역, 생일」 같은 제목이 있는 CSV 파일인지 확인해 주세요.');return}
+    if(!confirm(list.length+'명을 찾았습니다. 이 기기의 교인 명단에 넣을까요?\n(같은 이름·전화번호는 한 번만 들어갑니다)'))return;
+    const r=memberMerge(list,'file');renderAdminMembers();
+    notify(`새로 ${r.added}명${r.updated?' · 보완 '+r.updated+'명':''} · 전체 ${r.total}명`);
+  };
+  rd.onerror=()=>notify('파일을 읽지 못했습니다');
+  rd.readAsText(f,'utf-8');
+}
+function memberExportCsv(){
+  const m=S.get('members',[]);if(!m.length){notify('명단이 없습니다');return}
+  const q=v=>/[",\n]/.test(v)?'"'+String(v).replace(/"/g,'""')+'"':String(v||'');
+  const csv='﻿이름,전화번호,직분,구역,생일\n'+m.map(x=>[x.name,x.phone,x.role,x.zone,x.birthday].map(q).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`동산교회_교인명단_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
 
 // CHAT
 let curP=null,chatH=[];
@@ -335,8 +694,9 @@ function saveAtt(){
 // VISITS
 function renderVisits(){
   document.getElementById('vDate').value=new Date().toISOString().slice(0,10);
+  if(typeof renderVisitPlan==='function')renderVisitPlan();
   const visits=S.get('visits',[]).sort((a,b)=>b.date.localeCompare(a.date));
-  document.getElementById('adminVisitList').innerHTML=visits.slice(0,15).map(v=>`<div class="list-item"><div><div class="name">${v.target} <span class="chip" style="background:var(--cream);border:1px solid var(--border)">${v.type}</span></div><div class="sub">${v.date} ${v.note?v.note.slice(0,30):''}</div></div></div>`).join('')||'<div style="text-align:center;color:var(--text-light);padding:20px">기록 없음</div>';
+  document.getElementById('adminVisitList').innerHTML=visits.slice(0,15).map(v=>`<div class="list-item"><div><div class="name">${esc(v.target)} <span class="chip" style="background:var(--cream);border:1px solid var(--border)">${esc(v.type)}</span></div><div class="sub">${esc(v.date)} ${v.note?esc(v.note.slice(0,30)):''}</div></div></div>`).join('')||'<div style="text-align:center;color:var(--text-light);padding:20px">기록 없음</div>';
 }
 function saveVisit(){
   const d=document.getElementById('vDate').value,t=document.getElementById('vTarget').value.trim(),tp=document.getElementById('vType').value,n=document.getElementById('vNote').value.trim();
@@ -346,12 +706,29 @@ function saveVisit(){
   renderVisits();notify('심방 기록 저장됨')}
 
 // SETTINGS
+/* 자비스 — 지금은 주소를 기억하고 열어 주기·연결 확인까지. 자료를 주고받는 방식은 자비스 쪽을 확인한 뒤 붙인다 */
+function jarvisAddr(){return (S.get('jarvisAddr','')||'http://localhost:4000').replace(/\/+$/,'')}
+function jarvisSave(){
+  const v=document.getElementById('jvAddr').value.trim();
+  if(v&&!/^https?:\/\/[^\s]+$/i.test(v)){notify('http:// 로 시작하는 주소를 적어 주세요');return}
+  S.set('jarvisAddr',v);renderSettings();notify('저장했습니다');
+}
+async function jarvisCheck(){
+  const st=document.getElementById('jvState'),a=jarvisAddr();st.textContent='확인 중…';
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),4000);
+  try{await fetch(a,{mode:'no-cors',cache:'no-store',signal:ctl.signal});st.innerHTML='✅ 자비스가 응답합니다 ('+esc(a)+')'}
+  catch(e){st.innerHTML='❌ 연결되지 않습니다. 교회 PC 에서 자비스가 켜져 있는지, 이 화면을 교회 PC 에서 열었는지 확인해 주세요.'}
+  finally{clearTimeout(t)}
+}
 function renderSettings(){
+  document.getElementById('jvAddr').value=S.get('jarvisAddr','');
+  document.getElementById('jvAddr').placeholder='http://localhost:4000';
+  document.getElementById('jvOpen').href=jarvisAddr();
   document.getElementById('adminApiKey').value=S.get('apiKey','');
   const m=S.get('members',[]),s=S.get('sermons',[]),v=S.get('visits',[]);
-  document.getElementById('adminDataStats').innerHTML=`교인 ${m.length}명 · 설교 ${s.length}편 · 심방 ${v.length}건 · 출석 ${S.get('attendance',[]).length}회`}
+  document.getElementById('adminDataStats').innerHTML=`교인 ${m.length}명 · 설교 ${s.length}편 · 심방 ${v.length}건 · 상담 ${S.get('counsels',[]).length}건 · 출석 ${S.get('attendance',[]).length}회`}
 function exportAll(){
-  const d={exportedAt:new Date().toISOString(),members:S.get('members',[]),sermons:S.get('sermons',[]),visits:S.get('visits',[]),prayers:S.get('prayers',[]),events:S.get('events',[]),attendance:S.get('attendance',[])};
+  const d={exportedAt:new Date().toISOString(),members:S.get('members',[]),sermons:S.get('sermons',[]),visits:S.get('visits',[]),counsels:S.get('counsels',[]),prayers:S.get('prayers',[]),events:S.get('events',[]),attendance:S.get('attendance',[])};
   const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`동산교회_관리자백업_${new Date().toISOString().slice(0,10)}.json`;a.click();notify('백업 다운로드')}
 
 // Meeting
@@ -432,5 +809,9 @@ function sermonDownload(){
   }
 }catch(e){}})();
 </script>
+<script src="admin-counsel.js"></script>
+<script src="admin-xlsx.js"></script>
+<script src="admin-care.js"></script>
+<script>renderHome()</script>
 </body>
 </html>
