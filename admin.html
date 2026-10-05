@@ -109,7 +109,25 @@ html.locked #lock{display:flex}
 
 <!-- MEMBERS -->
 <div class="pg" id="pg-members">
-  <div style="display:flex;gap:6px;margin-bottom:10px"><input id="mSearch" class="inp" placeholder="교인 검색..." style="flex:1" oninput="renderAdminMembers()"><button class="btn btn-n" onclick="addMemberMobile()">+등록</button></div>
+  <div style="display:flex;gap:6px;margin-bottom:8px"><input id="mSearch" class="inp" placeholder="이름·전화·구역 검색" style="flex:1" oninput="renderAdminMembers()"><button class="btn btn-n" onclick="memberFormOpen()">+ 등록</button></div>
+  <div style="display:flex;gap:6px;margin-bottom:10px">
+    <button class="btn btn-o" style="flex:1;justify-content:center" onclick="document.getElementById('mFile').click()">📥 명단 가져오기 (엑셀 CSV)</button>
+    <button class="btn btn-o" onclick="memberExportCsv()">내보내기</button>
+  </div>
+  <input id="mFile" type="file" accept=".csv,.txt,.json,text/csv,application/json" style="display:none" onchange="memberImport(this)">
+  <div id="memberForm" class="cd" style="display:none">
+    <div class="st">교인 등록</div>
+    <input id="mfName" class="inp" placeholder="이름 (필수)" style="margin-bottom:6px" maxlength="20">
+    <input id="mfPhone" class="inp" placeholder="전화번호 예) 010-1234-5678" inputmode="tel" style="margin-bottom:6px" maxlength="20">
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <input id="mfRole" class="inp" placeholder="직분 (권사·집사…)" maxlength="10">
+      <input id="mfZone" class="inp" placeholder="구역·속회" maxlength="12">
+    </div>
+    <label style="font-size:10px;color:var(--text-light)">생일 (선택)</label>
+    <input id="mfBirth" type="date" class="inp" style="margin-bottom:8px">
+    <div style="display:flex;gap:6px"><button class="btn btn-n" style="flex:1;justify-content:center" onclick="memberSave()">저장</button><button class="btn btn-o" onclick="memberFormClose()">닫기</button></div>
+  </div>
+  <div style="font-size:10px;color:var(--text-light);line-height:1.6;margin-bottom:8px">🔒 교인 명단은 이 기기에만 저장되고 홈페이지·인터넷에는 올라가지 않습니다.</div>
   <div id="memberZoneChips" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px"></div>
   <div id="adminMemberList"></div>
 </div>
@@ -362,14 +380,128 @@ function renderHome(){
 }
 
 // MEMBERS
-function renderAdminMembers(){
-  const m=S.get('members',[]);const q=(document.getElementById('mSearch')?.value||'').toLowerCase();
-  const zones=[...new Set(m.map(x=>x.zone).filter(x=>x))];
-  document.getElementById('memberZoneChips').innerHTML=zones.map(z=>{const c=m.filter(x=>x.zone===z).length;return `<span class="chip" style="background:var(--cream);border:1px solid var(--border);cursor:pointer" onclick="document.getElementById('mSearch').value='${z}';renderAdminMembers()">${z} ${c}</span>`}).join('');
-  const filtered=m.filter(x=>!q||x.name.toLowerCase().includes(q)||(x.zone||'').toLowerCase().includes(q)||(x.phone||'').includes(q)||(x.role||'').toLowerCase().includes(q));
-  document.getElementById('adminMemberList').innerHTML=filtered.slice(0,50).map(x=>`<div class="list-item"><div><div class="name">${x.name} ${x.role?`<span class="chip" style="background:#FFF8E7;color:var(--gold-dark)">${x.role}</span>`:''}</div><div class="sub">${x.phone||''} ${x.zone||''} ${x.birthday?'🎂'+x.birthday.slice(5):''}</div></div></div>`).join('')||'<div style="text-align:center;color:var(--text-light);padding:30px">교인이 없습니다</div>';
+/* 명단은 파일에서 들어오므로 화면에 넣을 때는 반드시 글자로만 넣는다 */
+function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function phoneDigits(p){return String(p||'').replace(/\D/g,'')}
+function phoneFmt(p){
+  const d=phoneDigits(p);if(!d)return '';
+  if(/^01\d{8,9}$/.test(d))return d.length===10?d.replace(/(\d{3})(\d{3})(\d{4})/,'$1-$2-$3'):d.replace(/(\d{3})(\d{4})(\d{4})/,'$1-$2-$3');
+  if(/^02\d{7,8}$/.test(d))return d.replace(/^(02)(\d{3,4})(\d{4})$/,'$1-$2-$3');
+  if(/^0\d{9,10}$/.test(d))return d.replace(/^(0\d{2})(\d{3,4})(\d{4})$/,'$1-$2-$3');
+  return String(p).trim();
 }
-function addMemberMobile(){notify('PC 시스템에서 등록하세요')}
+function birthFmt(b){
+  const s=String(b||'').trim();if(!s)return '';
+  let m=s.match(/^(\d{4})[.\-/년\s]*(\d{1,2})[.\-/월\s]*(\d{1,2})/);if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  m=s.match(/^(\d{1,2})[.\-/월\s]+(\d{1,2})/);if(m)return '0000-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0');
+  return '';
+}
+let memberOpen=null;
+function renderAdminMembers(){
+  const m=S.get('members',[]);
+  if(m.some(x=>!x.id)){m.forEach(x=>{if(!x.id)x.id=memberNewId()});S.set('members',m)} // 예전 PC 시스템에서 온 명단에는 id 가 없다
+  const q=(document.getElementById('mSearch')?.value||'').trim().toLowerCase();const qd=phoneDigits(q);
+  const zones=[...new Set(m.map(x=>x.zone).filter(x=>x))];
+  document.getElementById('memberZoneChips').innerHTML=(m.length?`<span class="chip" style="background:var(--navy);color:#fff">전체 ${m.length}명</span>`:'')+
+    zones.map((z,i)=>`<span class="chip" style="background:var(--cream);border:1px solid var(--border);cursor:pointer" data-zone="${i}">${esc(z)} ${m.filter(x=>x.zone===z).length}</span>`).join('');
+  document.querySelectorAll('#memberZoneChips [data-zone]').forEach(el=>el.onclick=()=>{document.getElementById('mSearch').value=zones[+el.dataset.zone];renderAdminMembers()});
+  const filtered=m.filter(x=>!q||(x.name||'').toLowerCase().includes(q)||(x.zone||'').toLowerCase().includes(q)||(qd.length>=3&&phoneDigits(x.phone).includes(qd))||(x.role||'').toLowerCase().includes(q))
+    .sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko'));
+  document.getElementById('adminMemberList').innerHTML=filtered.slice(0,200).map(x=>{
+    const tel=phoneDigits(x.phone),open=memberOpen===x.id;
+    return `<div class="list-item" style="flex-direction:column;align-items:stretch;cursor:pointer" data-mid="${esc(x.id)}">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div><div class="name">${esc(x.name)} ${x.role?`<span class="chip" style="background:#FFF8E7;color:var(--gold-dark)">${esc(x.role)}</span>`:''}</div>
+          <div class="sub">${esc(phoneFmt(x.phone))} ${esc(x.zone||'')} ${x.birthday&&x.birthday.length>=10?'🎂'+esc(x.birthday.slice(5)):''}</div></div>
+        ${tel?`<a href="tel:${tel}" onclick="event.stopPropagation()" class="btn btn-o" style="text-decoration:none;padding:6px 10px" aria-label="${esc(x.name)}에게 전화">📞</a>`:''}
+      </div>
+      ${open?`<div style="display:flex;gap:6px;margin-top:8px" onclick="event.stopPropagation()">
+        ${tel?`<a class="btn btn-o" style="text-decoration:none" href="sms:${tel}">💬 문자</a>`:''}
+        <button class="btn btn-o" onclick="counselStartFor('${esc(x.id)}')">🎧 상담 시작</button>
+        <button class="btn btn-o" style="margin-left:auto;color:var(--danger)" onclick="memberDelete('${esc(x.id)}')">삭제</button></div>`:''}
+    </div>`}).join('')||`<div style="text-align:center;color:var(--text-light);padding:30px;font-size:12px;line-height:1.8">${m.length?'찾는 교인이 없습니다':'아직 교인 명단이 없습니다.<br>「📥 명단 가져오기」로 엑셀 명단을 넣거나 「+ 등록」을 누르세요.'}</div>`;
+  if(filtered.length>200)document.getElementById('adminMemberList').innerHTML+=`<div style="text-align:center;color:var(--text-light);padding:10px;font-size:11px">${filtered.length-200}명 더 있습니다 — 검색으로 찾아 주세요</div>`;
+  document.querySelectorAll('#adminMemberList [data-mid]').forEach(el=>el.onclick=()=>{memberOpen=memberOpen===el.dataset.mid?null:el.dataset.mid;renderAdminMembers()});
+}
+function memberFormOpen(){document.getElementById('memberForm').style.display='block';document.getElementById('mfName').focus()}
+function memberFormClose(){document.getElementById('memberForm').style.display='none';['mfName','mfPhone','mfRole','mfZone','mfBirth'].forEach(id=>document.getElementById(id).value='')}
+function memberNewId(){return 'm'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function memberSave(){
+  const v=id=>document.getElementById(id).value.trim();
+  const name=v('mfName');if(!name){notify('이름을 적어 주세요');return}
+  const m=S.get('members',[]),phone=phoneFmt(v('mfPhone'));
+  if(m.some(x=>x.name===name&&phoneDigits(x.phone)===phoneDigits(phone))){notify('이미 등록된 분입니다');return}
+  m.push({id:memberNewId(),name,phone,role:v('mfRole'),zone:v('mfZone'),birthday:v('mfBirth'),addedAt:new Date().toISOString()});
+  S.set('members',m);memberFormClose();renderAdminMembers();notify(name+' 등록됨');
+}
+function memberDelete(id){
+  const m=S.get('members',[]),x=m.find(y=>y.id===id);if(!x)return;
+  if(!confirm(x.name+' 님을 명단에서 지울까요?'))return;
+  S.set('members',m.filter(y=>y.id!==id));memberOpen=null;renderAdminMembers();notify('지웠습니다');
+}
+/* CSV 한 줄씩 — 따옴표 안의 쉼표·줄바꿈을 지킨다 */
+function parseCsv(text){
+  text=text.replace(/^﻿/,'');
+  const first=text.split(/\r?\n/)[0]||'',delim=(first.split('\t').length>first.split(',').length)?'\t':',';
+  const rows=[];let row=[],cell='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){cell+='"';i++}else q=false}else cell+=c;continue}
+    if(c==='"')q=true;else if(c===delim){row.push(cell);cell=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);rows.push(row);row=[];cell=''}
+    else cell+=c;
+  }
+  if(cell||row.length){row.push(cell);rows.push(row)}
+  return rows.filter(r=>r.some(x=>x.trim()));
+}
+const MEMBER_COLS={name:/^(이름|성명|성도명|교인명|name)$/i,phone:/(전화|휴대|핸드폰|연락처|phone|mobile|tel)/i,role:/(직분|role)/i,zone:/(구역|속회|소그룹|교구|zone)/i,birthday:/(생일|생년월일|birth)/i};
+function membersFromRows(rows){
+  if(!rows.length)return [];
+  const head=rows[0].map(h=>h.trim()),map={};
+  head.forEach((h,i)=>{for(const k in MEMBER_COLS)if(map[k]==null&&MEMBER_COLS[k].test(h)){map[k]=i;break}});
+  let body=rows.slice(1);
+  if(map.name==null){ // 머리줄이 없는 명단: 첫 칸 이름, 전화번호처럼 생긴 칸을 전화로 본다
+    body=rows;map.name=0;const r=rows[0];const pi=r.findIndex((c,i)=>i>0&&/^0\d{1,2}[-\s.]?\d{3,4}[-\s.]?\d{4}$/.test(c.trim()));if(pi>0)map.phone=pi;
+  }
+  return body.map(r=>({name:(r[map.name]||'').trim(),phone:map.phone!=null?phoneFmt(r[map.phone]):'',role:map.role!=null?(r[map.role]||'').trim():'',
+    zone:map.zone!=null?(r[map.zone]||'').trim():'',birthday:map.birthday!=null?birthFmt(r[map.birthday]):''})).filter(x=>x.name&&x.name.length<=20);
+}
+function memberMerge(list,source){
+  const m=S.get('members',[]);let added=0,updated=0;
+  list.forEach(n=>{
+    const pd=phoneDigits(n.phone);
+    const old=m.find(x=>x.name===n.name&&(!pd||!phoneDigits(x.phone)||phoneDigits(x.phone)===pd));
+    if(old){let ch=false;['phone','role','zone','birthday'].forEach(k=>{if(n[k]&&!old[k]){old[k]=n[k];ch=true}});if(ch)updated++}
+    else{m.push(Object.assign({id:memberNewId(),addedAt:new Date().toISOString(),source},n));added++}
+  });
+  S.set('members',m);return {added,updated,total:m.length};
+}
+function memberImport(input){
+  const f=input.files&&input.files[0];input.value='';if(!f)return;
+  if(/\.xlsx?$/i.test(f.name)){alert('엑셀 파일은 「다른 이름으로 저장 → CSV UTF-8(쉼표로 분리)」로 저장한 뒤 그 파일을 골라 주세요.');return}
+  const rd=new FileReader();
+  rd.onload=()=>{
+    let list=[];
+    try{
+      const t=String(rd.result);
+      if(/\.json$/i.test(f.name)||/^\s*[\[{]/.test(t)){const j=JSON.parse(t);const arr=Array.isArray(j)?j:(j.members||[]);
+        list=arr.map(x=>({name:String(x.name||x.이름||x.성명||'').trim(),phone:phoneFmt(x.phone||x.전화||x.휴대폰||x.연락처||''),role:String(x.role||x.직분||'').trim(),zone:String(x.zone||x.구역||'').trim(),birthday:birthFmt(x.birthday||x.생일||'')})).filter(x=>x.name)}
+      else list=membersFromRows(parseCsv(t));
+    }catch(e){notify('파일을 읽지 못했습니다');return}
+    if(!list.length){alert('명단을 찾지 못했습니다.\n첫 줄에 「이름, 전화번호, 직분, 구역, 생일」 같은 제목이 있는 CSV 파일인지 확인해 주세요.');return}
+    if(!confirm(list.length+'명을 찾았습니다. 이 기기의 교인 명단에 넣을까요?\n(같은 이름·전화번호는 한 번만 들어갑니다)'))return;
+    const r=memberMerge(list,'file');renderAdminMembers();
+    notify(`새로 ${r.added}명${r.updated?' · 보완 '+r.updated+'명':''} · 전체 ${r.total}명`);
+  };
+  rd.onerror=()=>notify('파일을 읽지 못했습니다');
+  rd.readAsText(f,'utf-8');
+}
+function memberExportCsv(){
+  const m=S.get('members',[]);if(!m.length){notify('명단이 없습니다');return}
+  const q=v=>/[",\n]/.test(v)?'"'+String(v).replace(/"/g,'""')+'"':String(v||'');
+  const csv='﻿이름,전화번호,직분,구역,생일\n'+m.map(x=>[x.name,x.phone,x.role,x.zone,x.birthday].map(q).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`동산교회_교인명단_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
 
 // CHAT
 let curP=null,chatH=[];
