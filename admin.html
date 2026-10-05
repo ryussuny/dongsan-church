@@ -139,10 +139,10 @@ html.locked #lock{display:flex}
 <div class="pg" id="pg-members">
   <div style="display:flex;gap:6px;margin-bottom:8px"><input id="mSearch" class="inp" placeholder="이름·전화·구역 검색" style="flex:1" oninput="renderAdminMembers()"><button class="btn btn-n" onclick="memberFormOpen()">+ 등록</button></div>
   <div style="display:flex;gap:6px;margin-bottom:10px">
-    <button class="btn btn-o" style="flex:1;justify-content:center" onclick="document.getElementById('mFile').click()">📥 명단 가져오기 (엑셀 CSV)</button>
+    <button class="btn btn-o" style="flex:1;justify-content:center" onclick="document.getElementById('mFile').click()">📥 명단·심방계획 가져오기 (엑셀)</button>
     <button class="btn btn-o" onclick="memberExportCsv()">내보내기</button>
   </div>
-  <input id="mFile" type="file" accept=".csv,.txt,.json,text/csv,application/json" style="display:none" onchange="memberImport(this)">
+  <input id="mFile" type="file" accept=".xlsx,.csv,.txt,.json,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="memberImport(this)">
   <div id="memberForm" class="cd" style="display:none">
     <div class="st">교인 등록</div>
     <input id="mfName" class="inp" placeholder="이름 (필수)" style="margin-bottom:6px" maxlength="20">
@@ -321,11 +321,12 @@ html.locked #lock{display:flex}
 
 <!-- VISIT -->
 <div class="pg" id="pg-visit">
+  <div class="cd" id="visitPlan"></div>
   <div class="cd">
     <div class="st">심방 기록</div>
     <input type="date" id="vDate" class="inp" style="margin-bottom:6px">
     <input id="vTarget" class="inp" placeholder="대상자" style="margin-bottom:6px">
-    <select id="vType" class="inp" style="margin-bottom:6px"><option>가정심방</option><option>병원심방</option><option>신규심방</option><option>위로심방</option></select>
+    <select id="vType" class="inp" style="margin-bottom:6px"><option>가정심방</option><option>전화심방</option><option>병원심방</option><option>신규심방</option><option>위로심방</option></select>
     <textarea id="vNote" class="inp" placeholder="내용..." style="min-height:60px;margin-bottom:6px"></textarea>
     <button class="btn btn-n" onclick="saveVisit()" style="width:100%">저장</button>
   </div>
@@ -472,7 +473,9 @@ function renderHome(){
   document.getElementById('adminAlerts').innerHTML=`<div class="st">📌 알림</div>
     <div style="font-size:11px;display:flex;flex-direction:column;gap:6px">
       <div style="padding:6px 8px;background:${hasWord?'#E8F5E9':'#FFF3E0'};border-radius:6px">${hasWord?'✅ 오늘의 말씀 준비됨':'⚠️ 오늘의 말씀 미생성'}</div>
-      ${birthdays.length?`<div style="padding:6px 8px;background:#FFF8E7;border-radius:6px">🎂 이번달 생일 ${birthdays.length}명</div>`:''}
+      ${(()=>{const w=typeof planThisWeek==='function'&&planThisWeek();if(!w)return '';
+        return `<div style="padding:6px 8px;background:${w.done>=w.total?'#E8F5E9':'#EEF3FB'};border-radius:6px;cursor:pointer" onclick="go('visit')">📞 ${esc(w.week)} 전화심방 ${w.done}/${w.total}명 완료${w.todo.length?' · 남은 분: '+esc(w.todo.slice(0,6).join(', ')):''}</div>`})()}
+      ${birthdays.length?`<div style="padding:6px 8px;background:#FFF8E7;border-radius:6px">🎂 이번 달 생일 ${birthdays.length}명 · ${birthdays.sort((a,b)=>a.birthday.slice(8).localeCompare(b.birthday.slice(8))).slice(0,10).map(x=>esc(x.name)+' '+(+x.birthday.slice(8))+'일'+(x.lunar?'(음)':'')).join(', ')}</div>`:''}
     </div>`;
 
   const events=S.get('events',[]);
@@ -495,6 +498,7 @@ function phoneFmt(p){
 }
 function birthFmt(b){
   const s=String(b||'').trim();if(!s)return '';
+  if(/^\d{8}$/.test(s))return s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8);
   let m=s.match(/^(\d{4})[.\-/년\s]*(\d{1,2})[.\-/월\s]*(\d{1,2})/);if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
   m=s.match(/^(\d{1,2})[.\-/월\s]+(\d{1,2})/);if(m)return '0000-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0');
   return '';
@@ -504,20 +508,32 @@ function renderAdminMembers(){
   const m=S.get('members',[]);
   if(m.some(x=>!x.id)){m.forEach(x=>{if(!x.id)x.id=memberNewId()});S.set('members',m)} // 예전 PC 시스템에서 온 명단에는 id 가 없다
   const q=(document.getElementById('mSearch')?.value||'').trim().toLowerCase();const qd=phoneDigits(q);
-  const zones=[...new Set(m.map(x=>x.zone).filter(x=>x))];
-  document.getElementById('memberZoneChips').innerHTML=(m.length?`<span class="chip" style="background:var(--navy);color:#fff">전체 ${m.length}명</span>`:'')+
-    zones.map((z,i)=>`<span class="chip" style="background:var(--cream);border:1px solid var(--border);cursor:pointer" data-zone="${i}">${esc(z)} ${m.filter(x=>x.zone===z).length}</span>`).join('');
-  document.querySelectorAll('#memberZoneChips [data-zone]').forEach(el=>el.onclick=()=>{document.getElementById('mSearch').value=zones[+el.dataset.zone];renderAdminMembers()});
-  const filtered=m.filter(x=>!q||(x.name||'').toLowerCase().includes(q)||(x.zone||'').toLowerCase().includes(q)||(qd.length>=3&&phoneDigits(x.phone).includes(qd))||(x.role||'').toLowerCase().includes(q))
+  const groups=[...new Set(m.flatMap(x=>(x.group||'').split(', ')).filter(x=>x))];
+  const zones=[...new Set(m.map(x=>x.zone).filter(x=>x))].sort();
+  const chips=[...groups.map(g=>({k:g,n:m.filter(x=>(x.group||'').split(', ').includes(g)).length})),...zones.map(z=>({k:z,n:m.filter(x=>x.zone===z).length}))];
+  if(m.some(x=>x.care))chips.push({k:'집중돌봄',n:m.filter(x=>x.care).length});
+  document.getElementById('memberZoneChips').innerHTML=(m.length?`<span class="chip" style="background:var(--navy);color:#fff;cursor:pointer" data-chip="-1">전체 ${m.length}명</span>`:'')+
+    chips.map((c,i)=>`<span class="chip" style="background:var(--cream);border:1px solid var(--border);cursor:pointer" data-chip="${i}">${esc(c.k)} ${c.n}</span>`).join('');
+  document.querySelectorAll('#memberZoneChips [data-chip]').forEach(el=>el.onclick=()=>{const c=chips[+el.dataset.chip];document.getElementById('mSearch').value=c?c.k:'';renderAdminMembers()});
+  const hit=x=>[x.name,x.zone,x.role,x.group,x.area,x.address,x.note,x.grade,x.care?'집중돌봄':''].some(v=>(v||'').toLowerCase().includes(q));
+  const filtered=m.filter(x=>!q||hit(x)||(qd.length>=3&&phoneDigits(x.phone).includes(qd)))
     .sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko'));
+  const counsels=S.get('counsels',[]),yr=new Date().getFullYear();
   document.getElementById('adminMemberList').innerHTML=filtered.slice(0,200).map(x=>{
-    const tel=phoneDigits(x.phone),open=memberOpen===x.id;
+    const tel=phoneDigits(x.phone),open=memberOpen===x.id,bd=x.birthday&&x.birthday.length>=10?x.birthday:'';
+    const age=bd&&bd.slice(0,4)!=='0000'?yr-(+bd.slice(0,4))-((new Date().toISOString().slice(5,10)<bd.slice(5))?1:0):(x.age||'');
+    const cs=counsels.filter(c=>c.memberId===x.id).length;
+    const row=(k,v)=>v?`<div style="display:flex;gap:8px"><span style="flex:none;width:44px;color:var(--text-light)">${k}</span><span>${v}</span></div>`:'';
     return `<div class="list-item" style="flex-direction:column;align-items:stretch;cursor:pointer" data-mid="${esc(x.id)}">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <div><div class="name">${esc(x.name)} ${x.role?`<span class="chip" style="background:#FFF8E7;color:var(--gold-dark)">${esc(x.role)}</span>`:''}</div>
-          <div class="sub">${esc(phoneFmt(x.phone))} ${esc(x.zone||'')} ${x.birthday&&x.birthday.length>=10?'🎂'+esc(x.birthday.slice(5)):''}</div></div>
+        <div><div class="name">${esc(x.name)} ${x.role?`<span class="chip" style="background:#FFF8E7;color:var(--gold-dark)">${esc(x.role)}</span>`:''}${x.care?' <span class="chip" style="background:#FDECEA;color:#B23A2E">집중돌봄</span>':''}</div>
+          <div class="sub">${esc(phoneFmt(x.phone))} ${esc(x.zone||x.grade||'')} ${bd?'🎂'+esc(bd.slice(5))+(x.lunar?'(음)':''):''}</div></div>
         ${tel?`<a href="tel:${tel}" onclick="event.stopPropagation()" class="btn btn-o" style="text-decoration:none;padding:6px 10px" aria-label="${esc(x.name)}에게 전화">📞</a>`:''}
       </div>
+      ${open?`<div style="font-size:11.5px;line-height:1.8;color:var(--text-mid);background:var(--cream);border-radius:8px;padding:8px 10px;margin-top:8px">
+        ${row('구분',esc(x.group||''))}${row('성별',esc(x.gender||''))}${row('나이',age?esc(age)+'세':'')}${row('생일',bd?esc(bd.slice(0,4)==='0000'?bd.slice(5):bd)+(x.lunar?' (음력)':''):'')}
+        ${row('학년',esc(x.grade||''))}${row('속회',esc(x.zone||''))}${row('지역',esc(x.area||''))}${row('주소',esc(x.address||''))}${row('비고',esc(x.note||''))}${row('상담',cs?cs+'건':'')}
+      </div>`:''}
       ${open?`<div style="display:flex;gap:6px;margin-top:8px" onclick="event.stopPropagation()">
         ${tel?`<a class="btn btn-o" style="text-decoration:none" href="sms:${tel}">💬 문자</a>`:''}
         <button class="btn btn-o" onclick="counselStartFor('${esc(x.id)}')">🎧 상담 시작</button>
@@ -574,14 +590,17 @@ function memberMerge(list,source){
   list.forEach(n=>{
     const pd=phoneDigits(n.phone);
     const old=m.find(x=>x.name===n.name&&(!pd||!phoneDigits(x.phone)||phoneDigits(x.phone)===pd));
-    if(old){let ch=false;['phone','role','zone','birthday'].forEach(k=>{if(n[k]&&!old[k]){old[k]=n[k];ch=true}});if(ch)updated++}
+    if(old){let ch=false;Object.keys(n).forEach(k=>{if(k==='name')return;
+        if(k==='group'&&n.group&&old.group&&!old.group.split(', ').includes(n.group)){old.group+=', '+n.group;ch=true;return}
+        if(n[k]&&!old[k]){old[k]=n[k];ch=true}});if(ch)updated++}
     else{m.push(Object.assign({id:memberNewId(),addedAt:new Date().toISOString(),source},n));added++}
   });
   S.set('members',m);return {added,updated,total:m.length};
 }
 function memberImport(input){
   const f=input.files&&input.files[0];input.value='';if(!f)return;
-  if(/\.xlsx?$/i.test(f.name)){alert('엑셀 파일은 「다른 이름으로 저장 → CSV UTF-8(쉼표로 분리)」로 저장한 뒤 그 파일을 골라 주세요.');return}
+  if(/\.xlsx$/i.test(f.name)){careImportXlsx(f);return}
+  if(/\.xls$/i.test(f.name)){alert('옛 엑셀 형식(.xls)은 바로 읽지 못합니다.\n엑셀에서 「다른 이름으로 저장 → Excel 통합 문서(.xlsx)」로 저장한 뒤 골라 주세요.');return}
   const rd=new FileReader();
   rd.onload=()=>{
     let list=[];
@@ -666,8 +685,9 @@ function saveAtt(){
 // VISITS
 function renderVisits(){
   document.getElementById('vDate').value=new Date().toISOString().slice(0,10);
+  if(typeof renderVisitPlan==='function')renderVisitPlan();
   const visits=S.get('visits',[]).sort((a,b)=>b.date.localeCompare(a.date));
-  document.getElementById('adminVisitList').innerHTML=visits.slice(0,15).map(v=>`<div class="list-item"><div><div class="name">${v.target} <span class="chip" style="background:var(--cream);border:1px solid var(--border)">${v.type}</span></div><div class="sub">${v.date} ${v.note?v.note.slice(0,30):''}</div></div></div>`).join('')||'<div style="text-align:center;color:var(--text-light);padding:20px">기록 없음</div>';
+  document.getElementById('adminVisitList').innerHTML=visits.slice(0,15).map(v=>`<div class="list-item"><div><div class="name">${esc(v.target)} <span class="chip" style="background:var(--cream);border:1px solid var(--border)">${esc(v.type)}</span></div><div class="sub">${esc(v.date)} ${v.note?esc(v.note.slice(0,30)):''}</div></div></div>`).join('')||'<div style="text-align:center;color:var(--text-light);padding:20px">기록 없음</div>';
 }
 function saveVisit(){
   const d=document.getElementById('vDate').value,t=document.getElementById('vTarget').value.trim(),tp=document.getElementById('vType').value,n=document.getElementById('vNote').value.trim();
@@ -764,5 +784,8 @@ function sermonDownload(){
 }catch(e){}})();
 </script>
 <script src="admin-counsel.js"></script>
+<script src="admin-xlsx.js"></script>
+<script src="admin-care.js"></script>
+<script>renderHome()</script>
 </body>
 </html>
