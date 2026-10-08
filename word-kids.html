@@ -59,6 +59,7 @@ header .who{margin-left:auto;background:rgba(255,255,255,.25);padding:7px 13px;b
 .today-hero .ttl{font-size:22px;font-weight:700;color:var(--dt-6b4f00,#6b4f00);margin-top:6px}
 .today-hero .ps{font-size:14px;color:#8a6a1a;margin-top:4px}
 .today-hero .dt{font-size:12px;color:#a98422;margin-top:8px}
+.today-hero .bookln{display:inline-block;margin-top:12px;padding:9px 16px;border-radius:999px;background:rgba(255,255,255,.75);color:#6b4f00;font-size:14px;font-weight:700;text-decoration:none}
 
 .keyverse{background:var(--lt-f7fbff,#f7fbff);border:2px dashed var(--sky2);border-radius:18px;padding:16px;text-align:center}
 .keyverse .t{font-size:20px;line-height:1.9;font-weight:700;color:var(--tx)}
@@ -376,6 +377,7 @@ nav button.on{color:var(--sky);font-weight:700}
       · “읽어 주기”를 누르면 말씀을 소리로 들려줍니다.<br>
       · 미션은 가정에서 함께 해 주실 때 가장 큰 열매를 맺습니다.
     </div>
+    <a class="big b-sun" href="word-book.html?v=kids" style="margin-top:12px;text-decoration:none">📖 어린이 묵상집 (책으로 보기 · 인쇄)</a>
     <div class="row" style="margin-top:12px">
       <a class="big b-soft" href="word-adult.html">🙏 성인용 앱</a>
       <a class="big b-soft" href="index.html">⛪ 교회 홈</a>
@@ -446,7 +448,8 @@ function renderToday(){
     '<div class="emo">'+k.emoji+'</div><div class="ttl">'+wEsc(d.title)+'</div>'+
     '<div class="ps">'+wEsc(d.passage)+'</div>'+
     '<div class="dt">'+viewDate.replace(/-/g,'.')+' ('+(WordData.weekday(viewDate)==='주일'?'주일':WordData.weekday(viewDate)+'요일')+')'+
-    (d.feast?' · '+wEsc(d.feast):'')+'</div>';
+    (d.feast?' · '+wEsc(d.feast):'')+'</div>'+
+    (function(){var sr=WordData.series(viewDate);return sr?'<a class="bookln" href="word-book.html?v=kids#'+viewDate+'">📖 어린이 묵상집으로 보기 · '+sr.day+'일째</a>':''})();
   var kp=document.getElementById('kidPrayer');
   if(kp){kp.parentNode.style.display=d.kidPrayer?'':'none';kp.textContent=d.kidPrayer||''}
   document.getElementById('story').textContent=k.summary;
