@@ -112,7 +112,7 @@ textarea{width:100%;min-height:96px;margin-top:10px;border:1px solid var(--line)
   <button class="read" id="readBtn" onclick="markRead()">✓ 오늘 말씀 읽었어요</button>
 
   <div class="foot">
-    <a id="bookLink" href="word-book.html">📖 묵상집으로 보기</a> · <a href="word-adult.html">어른용 화면</a><br>
+    <span id="bookWrap"><a id="bookLink" href="word-book.html">📖 묵상집으로 보기</a> · </span><a href="word-adult.html">어른용 화면</a><br>
     읽고 듣는 것은 누구나 이름 없이 할 수 있어요. 친구에게 이 주소를 보내 주세요.<br>
     <a href="index.html">동산감리교회</a>
   </div>
@@ -158,7 +158,8 @@ function render(){
   document.getElementById('ya').textContent=y.a;
   document.getElementById('note').value=load(KN)[viewDate]||'';
   document.getElementById('bibleSum').textContent='오늘 본문 전체 읽기 · '+d.passage;
-  document.getElementById('bookLink').href='word-book.html#'+viewDate;
+  document.getElementById('bookLink').href='word-book.html?v=adult#'+viewDate;
+  document.getElementById('bookWrap').style.display=WordData.series(viewDate)?'':'none';
   WordBible.load().then(function(){
     drawHero(d);
     var vs=WordBible.verses(d.passage,true);

@@ -14,4 +14,5 @@
 - 데이터: `word-data.js` (WORD_PLAN 읽기표, WORD_SERIES/WORD_PLAN_FIRST 주제 시리즈, WORD_CYCLE 순환)
 - 주간 암송: `word-extra.js` 의 MEMORY (월요일 날짜 → 구절)
 - 묵상집(인쇄·책 보기): `word-book.html` — 앱과 같은 데이터를 쓴다.
+  묵상 글·본문을 고치면 `node scripts/build-book-bible.js`(묵상집 전용 작은 성경 `book-bible.js`) → `node scripts/build-book.js` 순서로 다시 만든다. `book-bible.js` 가 낡아도 묵상집은 전체 성경으로 열린다.
 - 묵상 글에서 “ ” 안은 개역개정 원문 그대로, ‘ ’ 는 풀어 쓴 말이다. 인용을 고치면 `dongsan_bible.js` 원문과 글자를 대조한다.

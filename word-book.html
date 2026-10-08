@@ -422,9 +422,9 @@ function render(){
     .then(function(){return document.fonts?document.fonts.ready:null})
     .then(function(){
       st.classList.remove('preload');
-      st.classList.add('measure');
-      fitAll();
-      st.classList.remove('measure');
+      /* 인쇄·인쇄소 파일은 모든 쪽을 미리 맞춘다. 화면에서는 보이는 쪽부터 맞추고 나머지는 틈틈이 맞춘다 (휴대폰에서 빨리 열리도록) */
+      if(PRESS||Q.get('print')==='1')fitPages(pages.map(function(_,i){return i}));
+      else fitIdle();
       var toc=document.getElementById('toc');
       toc.innerHTML=pages.map(function(p,i){return p.toc?'<option value="'+i+'">'+esc(p.toc)+'</option>':''}).join('');
       layout();
@@ -432,11 +432,33 @@ function render(){
 }
 function over(el){return el.scrollHeight>el.clientHeight+1}
 function setFs(el,v){el.style.fontSize=v+'pt'}
-function fitAll(){
-  /* 한 쪽(또는 펼친 두 쪽)씩만 화면에 올려 재야 빠르다 — 전부 올리면 쪽마다 문서 전체를 다시 잰다 */
+/* 쪽 글자 크기 맞추기 — i 번째 쪽들만 (이미 맞춘 쪽은 건너뜀) */
+var fitGen=0;
+function fitPages(list){
+  var st=document.getElementById('stage'),todo=list.filter(function(i){return pages[i]&&pages[i].fit&&!pages[i].fitted});
+  if(!todo.length)return;
+  st.classList.add('measure');
   var slots=document.querySelectorAll('#stage .slot');
-  pages.forEach(function(p,i){
-    if(!p.fit)return;
+  todo.forEach(function(i){fitOne(slots,i);pages[i].fitted=true});
+  st.classList.remove('measure');
+}
+function fitAll(){fitPages(pages.map(function(_,i){return i}))}
+/* 남은 쪽은 브라우저가 한가할 때 몇 쪽씩 */
+function fitIdle(){
+  var gen=++fitGen,i=0;
+  var idle=window.requestIdleCallback||function(f){return setTimeout(function(){f({timeRemaining:function(){return 8}})},30)};
+  (function step(dl){
+    if(gen!==fitGen)return;
+    var n=0;
+    while(i<pages.length&&(n<2||dl.timeRemaining()>6)){fitPages([i]);i++;n++}
+    if(i<pages.length)idle(step);
+  })({timeRemaining:function(){return 0}});
+}
+window.addEventListener('beforeprint',fitAll);
+function fitOne(slots,i){
+  /* 한 쪽(또는 펼친 두 쪽)씩만 화면에 올려 재야 빠르다 — 전부 올리면 쪽마다 문서 전체를 다시 잰다 */
+  var p=pages[i];
+  {
     var on=[slots[i]];if(p.fit==='med'&&slots[i-1])on.push(slots[i-1]);
     on.forEach(function(s){s.classList.add('m')});
     var inner=slots[i].querySelector('.inner');
@@ -444,18 +466,20 @@ function fitAll(){
       /* 묵상 쪽이 넘치면 질문·기도를 왼쪽(본문) 쪽 아래로 옮긴다 */
       var fs=p.base;setFs(inner,fs);
       var memo=inner.querySelector('.memo');
-      if(over(inner)||memo.getBoundingClientRect().height<14*3.78){
+      if(over(inner)||hRaw(memo)<14*3.78){
         var left=slots[i-1]&&slots[i-1].querySelector('.slotq');
         var qa=inner.querySelector('.qwrap');
         if(left&&qa){left.appendChild(qa);fitText(slots[i-1].querySelector('.inner'),pages[i-1])}
       }
       while(over(inner)&&fs>p.min){fs-=.2;setFs(inner,fs)}
-      if(memo.getBoundingClientRect().height<12*3.78)memo.classList.add('off');
+      if(hRaw(memo)<12*3.78)memo.classList.add('off');
     }else if(p.fit==='text')fitText(inner,p);
     else{var f=p.base;setFs(inner,f);while(over(inner)&&f>p.min){f-=.2;setFs(inner,f)}}
     on.forEach(function(s){s.classList.remove('m')});
-  });
+  }
 }
+/* 화면에서는 쪽을 줄여(scale) 보여 주므로, 잴 때는 줄이기 전 높이로 되돌려 잰다 */
+function hRaw(el){var h=el.getBoundingClientRect().height,pg=el.closest('.page'),m=pg&&/scale\(([\d.]+)\)/.exec(pg.style.transform||'');return m?h/parseFloat(m[1]):h}
 function fitText(inner,p){var f=p.base;setFs(inner,f);while(over(inner)&&f>p.min){f-=.2;setFs(inner,f)}}
 
 /* ---------- 넘겨 보기 ---------- */
@@ -475,6 +499,7 @@ function layout(){
 function span(i){if(!spread||i===0)return [i,i];var a=i%2?i:i-1;return [a,Math.min(a+1,pages.length-1)]}
 function show(){
   var ab=span(cur),a=ab[0],b=ab[1];cur=a;
+  fitPages([a-1,a,b,b+1,b+2]); // 보이는 쪽과 바로 옆 쪽은 지금 맞춘다
   var sl=document.querySelectorAll('#stage .slot');
   sl.forEach(function(s,i){s.classList.toggle('cur',i===a||i===b)});
   document.getElementById('pgNo').textContent=(a+1)+(b!==a?'–'+(b+1):'')+' / '+pages.length;
@@ -503,7 +528,11 @@ function setBook(b){
   document.getElementById('pdfLink').href='book/first-faith-'+(b==='kids'?'kids':'adult')+'.pdf';
   try{localStorage.setItem('dongsan_book_ver',b)}catch(e){}
   var keep=pages[cur]&&pages[cur].date;
-  render().then(function(){
+  fitGen++; // 앞 책의 남은 맞추기를 멈춘다
+  /* 책을 엮는 동안 화면이 멈춘 것처럼 보이지 않게, 안내를 먼저 그린 뒤 엮는다 */
+  document.getElementById('stage').innerHTML='<div class="loading">'+(b==='kids'?'어린이 묵상집':'어른 묵상집')+'을 엮는 중입니다…</div>';
+  document.getElementById('pgNo').textContent='–';
+  new Promise(function(r){requestAnimationFrame(function(){setTimeout(r,30)})}).then(render).then(function(){
     var i=keep?findDate(keep.replace(/r$/,'')):-1;
     if(i>=0)jumpTo(i);else{cur=0;show()}
   });
@@ -519,6 +548,8 @@ var rT=null;window.addEventListener('resize',function(){clearTimeout(rT);rT=setT
 
 /* 주소 뒤에 #2026-11-01 이 있으면 그날 쪽을, #kids 가 있으면 어린이 책을 연다 */
 function start(){
+  /* 「← 말씀」은 들어온 화면(어린이 앱·큰 글씨 등)으로 돌아간다 */
+  try{var rf=new URL(document.referrer);if(rf.origin===location.origin&&/\/word(-[a-z]+)?\.html$/.test(rf.pathname))document.querySelector('.bar .back').href=rf.pathname.split('/').pop()}catch(e){}
   var h=decodeURIComponent(location.hash.slice(1)),q=new URLSearchParams(location.search);
   var b=q.get('v')||(h.indexOf('kids')>=0?'kids':'');
   if(!b){try{b=localStorage.getItem('dongsan_book_ver')||''}catch(e){}}
@@ -535,7 +566,18 @@ function start(){
     imgsReady().then(function(){window.BOOK_READY=true});
   });
 }
-Promise.all([WordBible.load(),document.fonts?document.fonts.ready:Promise.resolve()]).then(function(r){
+/* 성경 전체(4.8MB) 대신 묵상집에 쓰는 장만 담은 book-bible.js 를 먼저 읽는다 (scripts/build-book-bible.js 가 만든다).
+   그 파일이 없거나, 묵상 본문이 바뀌어 빠진 장이 있으면 전체 성경을 읽는다. */
+function loadScript(src){return new Promise(function(res){var s=document.createElement('script');s.src=src;s.onload=function(){res(true)};s.onerror=function(){res(false)};document.head.appendChild(s)})}
+function bookBible(){
+  if(new URLSearchParams(location.search).get('fullbible')==='1')return WordBible.load();
+  return loadScript('book-bible.js').then(function(ok){
+    if(ok&&typeof BIBLE_DATA!=='undefined'&&days().every(function(d){var x=info(d);return !x||WordBible.verses(x.passage).length}))return WordBible.load();
+    try{delete window.BIBLE_DATA}catch(e){}window.BIBLE_DATA=undefined;
+    return loadScript('dongsan_bible.js').then(function(){return WordBible.load()});
+  });
+}
+Promise.all([bookBible(),document.fonts?document.fonts.ready:Promise.resolve()]).then(function(r){
   if(!r[0]){document.getElementById('loading').textContent='성경 본문을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.';return}
   var fonts=['10pt "Gowun Batang"','bold 10pt "Gowun Batang"','10pt "Gowun Dodum"','10pt "Noto Sans KR"','bold 10pt "Noto Sans KR"'];
   return Promise.all(fonts.map(function(f){return document.fonts?document.fonts.load(f,'가나다').catch(function(){}):0})).then(start);

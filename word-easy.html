@@ -151,7 +151,7 @@ function render(){
   document.getElementById('gos').style.display=d.gospel?'':'none';
   document.getElementById('gos').innerHTML=d.gospel?'<span class="lab">✝️ 복음으로 보면</span>'+wEsc(d.gospel):'';
   document.getElementById('pr').textContent=d.adult.prayer;
-  document.getElementById('bookLink').href='word-book.html#'+viewDate;
+  document.getElementById('bookLink').href='word-book.html?v=adult#'+viewDate;
   document.getElementById('bookLink').style.display=sr?'':'none';
   WordBible.load().then(function(ok){
     var el=document.getElementById('bible');

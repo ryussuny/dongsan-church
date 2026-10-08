@@ -528,7 +528,7 @@ function renderToday(){
     (d.theme?'<div class="th">'+wEsc(d.theme)+'</div>':'')+
     (d.feast?'<span class="fe">'+wEsc(d.feast)+'</span>':'')+
     (function(){var sr=WordData.series(viewDate);return sr?'<div class="sr">📖 '+wEsc(sr.title)+' · '+sr.day+'/'+sr.total+'일 · '+
-      '<a href="word-book.html#'+viewDate+'">묵상집으로 보기</a></div>':''})();
+      '<a href="word-book.html?v=adult#'+viewDate+'">묵상집으로 보기</a></div>':''})();
   document.getElementById('questions').innerHTML=d.adult.questions.map(function(q,i){
     return '<div class="q"><b>'+(i+1)+'.</b><div>'+wEsc(q)+'</div></div>'}).join('');
   document.getElementById('prayer').textContent='🙏 '+d.adult.prayer;

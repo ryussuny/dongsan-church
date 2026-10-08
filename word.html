@@ -43,9 +43,11 @@ a.youth{background:linear-gradient(135deg,#3b2d6b,#7c5cff)}
 .grid .card .row{flex-direction:column;align-items:flex-start;gap:6px}
 .grid .card .emo{font-size:30px}
 .grid .card .ttl{font-size:17px}
-a.book{display:flex;align-items:center;gap:12px;border-radius:18px;padding:16px;margin-bottom:12px;text-decoration:none;
+a.book,div.book{display:flex;align-items:center;gap:12px;border-radius:18px;padding:16px;margin-bottom:12px;text-decoration:none;
   background:var(--lt-fffaf2,#fffaf2);border:1px solid var(--lt-e6d3b4,#e6d3b4);color:var(--dt-3a2e22,#3a2e22)}
-a.book .emo{font-size:30px}a.book b{display:block;font-size:16px}a.book span{font-size:12.5px;color:var(--dt-6b5a45,#6b5a45)}
+a.book .emo,.book .emo{font-size:30px}.book b{display:block;font-size:16px}.book span{font-size:12.5px;color:var(--dt-6b5a45,#6b5a45)}
+.book .bk2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.book .bk2 a{display:block;text-align:center;padding:10px 6px;border-radius:12px;background:var(--lt-f4e6d3,#f4e6d3);color:var(--dt-8f4531,#8f4531);font-weight:700;font-size:14px;text-decoration:none}
 .welcome{background:var(--lt-fffaf2,#fffaf2);border:1px dashed var(--lt-e0cdae,#e0cdae);border-radius:16px;padding:14px 16px;margin-bottom:12px;font-size:13px;line-height:1.8;color:var(--dt-6b5a45,#6b5a45)}
 .welcome b{color:var(--dt-3a2e22,#3a2e22)}
 .welcome button{margin-top:8px;border:0;border-radius:12px;background:#8f4531;color:#fff;font:inherit;font-size:13.5px;font-weight:700;padding:10px 14px;cursor:pointer}
@@ -97,10 +99,11 @@ a.book .emo{font-size:30px}a.book b{display:block;font-size:16px}a.book span{fon
         <div class="desc">쉬운 말씀 · 읽어 주기 · 퀴즈와 미션<br>도장·스티커판</div></div></div>
   </a>
 
-  <a class="book" href="word-book.html">
+  <div class="book">
     <div class="emo">📖</div>
-    <div><b>묵상집 · 처음 신앙, 매일 한 걸음</b><span>어른용·어린이용 책을 넘겨 보고 인쇄할 수 있어요. 앱과 같은 날 같은 말씀입니다.</span></div>
-  </a>
+    <div style="flex:1"><b>묵상집 · 처음 신앙, 매일 한 걸음</b><span>책으로 넘겨 보고 인쇄할 수 있어요. 앱과 같은 날 같은 말씀입니다.</span>
+      <div class="bk2"><a href="word-book.html?v=adult">🙏 어른용</a><a href="word-book.html?v=kids">🧒 어린이용</a></div></div>
+  </div>
 
   <div class="welcome">
     <b>처음 오셨나요?</b> 교회에 다니지 않아도 누구나 이름 없이 읽고 들을 수 있습니다.
