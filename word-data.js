@@ -604,6 +604,8 @@ var WordData=(function(){
 
   /* 아직 열리지 않은 날인가 */
   function locked(ds){ return String(ds) > today(); }
+  /* 묵상집은 시리즈 첫날 새벽(OPEN_HOUR)에 열린다 */
+  function bookOpen(){ return typeof WORD_SERIES === 'undefined' || today() >= WORD_SERIES.from; }
   function dayIndex(ds){var p=String(ds).split('-');return Math.floor(Date.UTC(+p[0],+p[1]-1,+p[2])/MS)}
   function shift(ds,n){var d=new Date((dayIndex(ds)+n)*MS);return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate())}
   function weekday(ds){return ['주일','월','화','수','목','금','토'][new Date(dayIndex(ds)*MS).getUTCDay()]}
@@ -723,7 +725,7 @@ var WordData=(function(){
             total:dayIndex(S.to)-dayIndex(S.from)+1,week:w,weekNo:wi+1,weeks:S.weeks};
   }
 
-  return {today:today,locked:locked,openHour:OPEN_HOUR,pad:pad,dayIndex:dayIndex,shift:shift,weekday:weekday,
+  return {today:today,locked:locked,bookOpen:bookOpen,openHour:OPEN_HOUR,pad:pad,dayIndex:dayIndex,shift:shift,weekday:weekday,
           parseRef:parseRef,refSpans:refSpans,forDate:forDate,monthList:monthList,recent:recent,series:series};
 })();
 

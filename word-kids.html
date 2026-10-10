@@ -377,7 +377,7 @@ nav button.on{color:var(--sky);font-weight:700}
       · “읽어 주기”를 누르면 말씀을 소리로 들려줍니다.<br>
       · 미션은 가정에서 함께 해 주실 때 가장 큰 열매를 맺습니다.
     </div>
-    <a class="big b-sun" href="word-book.html?v=kids" style="margin-top:12px;text-decoration:none">📖 어린이 묵상집 (책으로 보기 · 인쇄)</a>
+    <a class="big b-sun" id="kidsBookBtn" href="word-book.html?v=kids" style="margin-top:12px;text-decoration:none">📖 어린이 묵상집 (책으로 보기 · 인쇄)</a>
     <div class="row" style="margin-top:12px">
       <a class="big b-soft" href="word-adult.html">🙏 성인용 앱</a>
       <a class="big b-soft" href="index.html">⛪ 교회 홈</a>
@@ -877,6 +877,9 @@ function openDay(ds){
 
 /* ---------- 부모님 ---------- */
 function renderParent(){
+  var kb=document.getElementById('kidsBookBtn');
+  if(kb&&!WordData.bookOpen()){var p=WORD_SERIES.from.split('-');kb.removeAttribute('href');kb.style.opacity='.6';
+    kb.textContent='📖 어린이 묵상집은 '+(+p[1])+'월 '+(+p[2])+'일에 열려요'}
   document.getElementById('nameInput').value=me.name||'';
   document.getElementById('fontSel').value=String(me.kidFont||17);
   var st=me.name?wordStreak(me.name,VER):{doneMap:{}};

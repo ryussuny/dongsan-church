@@ -37,6 +37,11 @@ body{font-family:'Noto Sans KR',sans-serif;color:var(--ink);word-break:keep-all;
 .slot.cur{display:block}
 .slot>.page{transform-origin:0 0;position:absolute;left:0;top:0}
 .loading{color:var(--ink3);text-align:center;padding:60px 20px;font-size:14px}
+.locked{max-width:420px;margin:40px auto;padding:32px 24px;text-align:center;background:var(--paper,#fffaf2);border:1px solid var(--line,#e6d3b4);border-radius:20px;color:var(--ink,#2f2a26);line-height:1.8}
+.locked .lk-ic{font-size:44px}.locked h2{font-family:'Gowun Batang',serif;font-size:20px;margin:6px 0 10px}
+.locked p{font-size:15px}.locked .lk-s{font-size:13px;color:var(--ink3,#8a795f);margin-top:8px}
+.locked .lk-d{display:inline-block;margin:10px 0 2px;padding:4px 16px;border-radius:999px;background:#8f4531;color:#fff;font-weight:700;font-size:18px}
+.locked .lk-b{display:inline-block;margin-top:16px;padding:12px 20px;border-radius:14px;background:#8f4531;color:#fff;font-weight:700;text-decoration:none}
 .hint{text-align:center;color:var(--ink3);font-size:12px;padding:0 12px 30px}
 .preload .slot{display:block!important;position:absolute;left:-9999px;top:0}
 .measure .slot{display:none!important}
@@ -577,7 +582,24 @@ function bookBible(){
     return loadScript('dongsan_bible.js').then(function(){return WordBible.load()});
   });
 }
-Promise.all([bookBible(),document.fonts?document.fonts.ready:Promise.resolve()]).then(function(r){
+/* 묵상집은 시리즈 첫날 새벽에 연다. 인쇄·인쇄소 파일을 만들 때(print·press·cover)와 목사님 미리 보기(?preview=1)는 예외 */
+function bookLocked(){return !WordData.bookOpen()&&!(PRESS||COVER||Q.get('print')==='1'||Q.get('preview')==='1')}
+function showLocked(){
+  var p=S.from.split('-'),wd=WordData.weekday(S.from),left=WordData.dayIndex(S.from)-WordData.dayIndex(WordData.today());
+  ['.bar .tools','.bar .tabs','#hint'].forEach(function(s){var e=document.querySelector(s);if(e)e.style.display='none'});
+  document.getElementById('bookTtl').textContent=BOOK==='kids'?'어린이 말씀 묵상집':S.title;
+  document.getElementById('stage').innerHTML='<div class="locked"><div class="lk-ic">📖</div>'+
+    '<h2>'+esc(S.title)+'</h2>'+
+    '<p>묵상집은 <b>'+(+p[1])+'월 '+(+p[2])+'일('+wd+') 새벽 '+WordData.openHour+'시</b>에 열립니다.</p>'+
+    (left>0?'<div class="lk-d">D-'+left+'</div>':'')+
+    '<p class="lk-s">그때까지는 「오늘의 말씀」으로 날마다 말씀을 읽어 주세요.</p>'+
+    '<a class="lk-b" href="'+(BOOK==='kids'?'word-kids.html':'word.html')+'">'+(BOOK==='kids'?'🧒 어린이 말씀으로':'📖 오늘의 말씀으로')+'</a></div>';
+}
+if(bookLocked()){
+  try{BOOK=(new URLSearchParams(location.search).get('v')||localStorage.getItem('dongsan_book_ver'))==='kids'?'kids':'adult'}catch(e){}
+  if(location.hash.indexOf('kids')>=0)BOOK='kids';
+  showLocked();
+}else Promise.all([bookBible(),document.fonts?document.fonts.ready:Promise.resolve()]).then(function(r){
   if(!r[0]){document.getElementById('loading').textContent='성경 본문을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.';return}
   var fonts=['10pt "Gowun Batang"','bold 10pt "Gowun Batang"','10pt "Gowun Dodum"','10pt "Noto Sans KR"','bold 10pt "Noto Sans KR"'];
   return Promise.all(fonts.map(function(f){return document.fonts?document.fonts.load(f,'가나다').catch(function(){}):0})).then(start);
