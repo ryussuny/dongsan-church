@@ -48,7 +48,7 @@ body{font-family:'Noto Sans KR',sans-serif;color:var(--ink);word-break:keep-all;
 .measure .slot.m{display:block!important;position:absolute;left:-9999px;top:0;box-shadow:none}
 /* ---------- 책 한 쪽 (A5) ---------- */
 .page{width:148mm;height:210mm;background:var(--paper);color:var(--ink);overflow:hidden;position:relative}
-.inner{position:absolute;left:14mm;right:14mm;top:13mm;bottom:15mm;display:flex;flex-direction:column;overflow:hidden;font-size:10.5pt;line-height:1.72}
+.inner{position:absolute;left:14mm;right:14mm;top:13mm;bottom:15mm;display:flex;flex-direction:column;overflow:hidden;font-size:10pt;line-height:1.72}
 .pno{position:absolute;bottom:7mm;font-size:7.5pt;color:var(--ink3);font-family:'Noto Sans KR',sans-serif;letter-spacing:.04em}
 .page.even .pno{left:14mm}.page.odd .pno{right:14mm;text-align:right}
 .serif{font-family:'Gowun Batang',serif}
@@ -72,6 +72,7 @@ h2.dttl{font-family:'Gowun Batang',serif;font-size:17pt;line-height:1.3;margin:.
 .memo{flex:1;min-height:0;display:flex;flex-direction:column;margin-top:2.4mm}
 .memo .ln{flex:1;background:repeating-linear-gradient(to bottom,transparent 0,transparent 8.4mm,#d9c7a8 8.4mm,#d9c7a8 calc(8.4mm + .5pt))}
 .memo.off{display:none}
+.cont{font-size:8pt;color:var(--ink3);margin:-1.4mm 0 2.4mm}
 /* 앞뒤 쪽 */
 .cover{background:linear-gradient(160deg,#3a2e22,#8f4531 70%,#b3593f);color:#fff}
 .cover .inner{justify-content:space-between;text-align:center;top:22mm;bottom:22mm}
@@ -213,7 +214,8 @@ h3.st{font-family:'Gowun Batang',serif;font-size:15pt;margin-bottom:3mm;color:va
 <script>
 /* 설교 묵상집 — 동산교회 강단에서 전한 설교를 하루 한 편 묵상으로 엮은 책들.
    데이터: sermon-book-data.js (SERMON_BOOKS) · 성경: sermon-book-bible.js (없으면 dongsan_bible.js)
-   주소: sermon-book.html?b=romans | philippians | gospel   (#12 → 12일째 쪽)
+   주소: sermon-book.html?b=romans | philippians   (#12 → 12일째 쪽)
+   글씨 크기는 모든 쪽이 같다(10pt). 본문·묵상이 한 쪽에 다 들어가지 않으면 줄이지 않고 다음 쪽으로 이어 싣는다.
    인쇄용: ?print=1&b=romans  (scripts/build-sermon-book.js 가 PDF 로 만든다) */
 var Q=new URLSearchParams(location.search);
 var ORDER=Object.keys(SERMON_BOOKS),BK=null,S=null,pages=[],cur=0,spread=false,scale=1;
@@ -224,7 +226,32 @@ function paras(t){return String(t).split(/\n\n+/).map(function(p){return '<p>'+e
 function partOf(i){var n=0,p=null;S.parts.forEach(function(x,k){if(x.from<=i+1){p=x;n=k+1}});return {p:p,n:n}}
 
 /* ---------- 쪽 만들기 ---------- */
-function pg(cls,html,opt){opt=opt||{};pages.push({cls:cls,html:html,key:opt.key||'',toc:opt.toc||'',fit:opt.fit||null,base:opt.base,min:opt.min})}
+function pg(cls,html,opt){opt=opt||{};pages.push({cls:cls,html:html,key:opt.key||'',toc:opt.toc||''})}
+/* 같은 크기의 빈 쪽에 내용을 하나씩 넣어 보며 넘치면 다음 쪽으로 넘긴다 */
+var MZ=null;
+function blank(head){
+  if(!MZ){MZ=document.createElement('div');MZ.style.cssText='position:absolute;left:-9999px;top:0;visibility:hidden';document.body.appendChild(MZ)}
+  MZ.innerHTML='<section class="page odd"><div class="inner">'+head+'</div></section>';return MZ.querySelector('.inner');
+}
+function fits(inner){return inner.scrollHeight<=inner.clientHeight+1}
+function node(html){var d=document.createElement('div');d.innerHTML=html;return d.firstChild}
+/* 블록(쪽 안의 덩어리)을 차례로 싣는다. box:'bible'·'med' 는 같은 상자 안에 이어 붙인다 */
+function flow(head,cont,items){
+  var out=[],inner=blank(head),box=null,boxKind=null;
+  function boxFor(k){if(boxKind===k&&box)return box;box=node('<div class="'+k+'"></div>');boxKind=k;inner.appendChild(box);return box}
+  function newPage(){out.push(inner.innerHTML);inner=blank(cont);box=null;boxKind=null}
+  items.forEach(function(it){
+    var host=it.box?boxFor(it.box):inner,el=node(it.html);
+    if(!it.box){box=null;boxKind=null}
+    host.appendChild(el);
+    if(!fits(inner)){
+      host.removeChild(el);if(it.box&&!host.childNodes.length)inner.removeChild(host);
+      newPage();(it.box?boxFor(it.box):inner).appendChild(el);if(!it.box){box=null;boxKind=null}
+    }
+  });
+  return {pages:out,inner:inner,tryAdd:function(html){var el=node(html);inner.appendChild(el);if(fits(inner))return true;inner.removeChild(el);return false},
+    done:function(){out.push(inner.innerHTML);return out}};
+}
 function filler(kind){pg('','<div class="inner"><h3 class="st">'+(kind||'메모')+'</h3><div class="lines"></div></div>')}
 function evenStart(){if((pages.length+1)%2===1)filler('기도 노트')}
 function colophon(){
@@ -246,7 +273,7 @@ function build(){
     '<div style="margin-top:10mm"><img class="logo-c" style="margin:0 0 3mm" src="assets/logo/dongsan-logo.png" alt="동산감리교회">'+colophon()+'</div></div>');
   pg('','<div class="inner"><h3 class="st">들어가며</h3><div class="med">'+S.intro.map(function(p){return '<p>'+esc(p)+'</p>'}).join('')+'</div>'+
     '<div class="rem" style="margin-top:auto"><span class="lab">이 책의 첫 말씀</span>“'+esc(verseText(S.key))+'”<div style="font-size:8pt;font-weight:400;margin-top:1mm">'+esc(S.key)+'</div></div>'+
-    '<div class="small" style="text-align:right;margin-top:3mm">동산감리교회 담임목사 <b>류선희</b></div></div>',{toc:'들어가며',fit:'plain',base:10.5,min:8.2});
+    '<div class="small" style="text-align:right;margin-top:3mm">동산감리교회 담임목사 <b>류선희</b></div></div>',{toc:'들어가며'});
   pg('','<div class="inner"><h3 class="st">하루 15분, 이렇게 읽어요</h3><ol class="steps">'+
     '<li>조용히 기도로 시작합니다. ‘주님, 오늘 말씀으로 저를 만나 주세요.’</li>'+
     '<li>왼쪽 쪽의 성경 본문을 천천히, 할 수 있으면 소리 내어 읽습니다.</li>'+
@@ -255,7 +282,7 @@ function build(){
     '<li>‘오늘 한 걸음’을 실천하고, 기도로 마친 뒤 떠오른 생각을 ‘나의 묵상’ 칸에 적습니다.</li></ol>'+
     '<div class="small">이 책은 날짜가 아니라 ‘일째’로 엮었습니다. 아무 날에나 시작해 하루 한 편씩 읽으면 됩니다. 하루를 놓쳤다면 자책하지 말고 다음 날 다시 펼치십시오.</div>'+
     '<div class="small" style="margin-top:3mm">마당(부)마다 첫 면에 암송 구절이 있습니다. 그 마당을 마칠 때까지 외워 보세요.</div>'+
-    '<div class="small" style="margin-top:4mm"><b>표기 안내</b> · 묵상 글에서 “ ” 안의 성경 말씀은 개역개정판 그대로 옮겼습니다. ‘ ’ 안은 쉽게 풀어 쓴 말입니다. 본문이 긴 날은 핵심 단락을 싣고 설교 본문 전체를 함께 적었습니다.</div></div>',{toc:'사용법',fit:'plain',base:10.5,min:8.6});
+    '<div class="small" style="margin-top:4mm"><b>표기 안내</b> · 묵상 글에서 “ ” 안의 성경 말씀은 개역개정판 그대로 옮겼습니다. ‘ ’ 안은 쉽게 풀어 쓴 말입니다. 본문이 긴 날은 핵심 단락을 싣고 설교 본문 전체를 함께 적었습니다.</div></div>',{toc:'사용법'});
   /* 읽기표 */
   var per=34,chunks=[];for(var i=0;i<N;i+=per)chunks.push(i);
   chunks.forEach(function(st,k){
@@ -263,7 +290,7 @@ function build(){
     for(var i=st;i<Math.min(N,st+per);i++){var d=S.days[i],pp=partOf(i);
       if(pp.p!==last){rows+='<tr class="wk"><td colspan="3">'+pp.n+'마당 · '+esc(pp.p.th)+'</td></tr>';last=pp.p}
       rows+='<tr><td class="d">□ '+(i+1)+'일</td><td class="t">'+esc(d.t)+'</td><td class="r">'+esc(d.p)+'</td></tr>'}
-    pg('','<div class="inner"><h3 class="st" style="font-size:12pt;margin-bottom:2mm">'+N+'일 읽기표'+(chunks.length>1?' '+(k+1)+'/'+chunks.length:'')+'</h3><table class="plan">'+rows+'</table></div>',{toc:k?'':'읽기표',fit:'plain',base:8.8,min:7.2});
+    pg('','<div class="inner"><h3 class="st" style="font-size:12pt;margin-bottom:2mm">'+N+'일 읽기표'+(chunks.length>1?' '+(k+1)+'/'+chunks.length:'')+'</h3><table class="plan">'+rows+'</table></div>',{toc:k?'':'읽기표'});
   });
   /* 마당과 날 */
   S.parts.forEach(function(P,k){
@@ -272,28 +299,37 @@ function build(){
     pg('','<div class="inner"><div class="wkno">'+n+'<span style="font-size:15pt">마당</span></div><div class="wkth">'+esc(P.th)+'</div>'+
       '<div class="med"><p>'+esc(P.intro)+'</p></div><div class="wklist">'+list.map(function(i){var d=S.days[i];
         return '<div><span class="d">'+(i+1)+'일째</span><span>'+esc(d.t)+'</span><span class="r">'+esc(d.p)+'</span></div>'}).join('')+'</div></div>',
-      {toc:n+'마당 · '+P.th,key:'p'+n,fit:'plain',base:10.5,min:8});
+      {toc:n+'마당 · '+P.th,key:'p'+n});
     pg('','<div class="inner"><span class="lab">'+n+'마당 암송 구절</span><div class="mv"><div class="q">“'+esc(verseText(P.mv))+'”</div><div class="r">'+esc(P.mv)+'</div></div>'+
-      '<div class="prompt">이 마당을 읽으며 드릴 기도 제목</div><div class="lines" style="flex:1;min-height:40mm"></div></div>',{fit:'plain',base:10.5,min:9});
+      '<div class="prompt">이 마당을 읽으며 드릴 기도 제목</div><div class="lines" style="flex:1;min-height:40mm"></div></div>');
     list.forEach(function(i){
       var o=S.days[i],idx=i+1,rd=o.r||o.p;
       var hd='<div class="hd"><span><b>'+idx+'일째</b> · 읽은 날 &nbsp;&nbsp;월 &nbsp;&nbsp;일</span><span>'+n+'마당 · '+esc(P.th)+'</span></div>';
       var qa='<div class="qa"><span class="lab">생각과 나눔</span><ol>'+o.qs.map(function(q){return '<li>'+esc(q)+'</li>'}).join('')+'</ol>'+
              (o.go?'<span class="lab">오늘 한 걸음</span><div class="pr" style="margin-bottom:1.6mm">'+esc(o.go)+'</div>':'')+
              '<span class="lab">기도</span><div class="pr">'+esc(o.pr)+'</div></div>';
-      evenStart();
-      pg('even day-l','<div class="inner">'+hd+'<h2 class="dttl">'+esc(o.t)+'</h2>'+
-        '<div class="ref">'+esc(rd)+(o.r?' <span style="font-weight:400;color:var(--ink3)">· 설교 본문 '+esc(o.p)+'</span>':'')+'</div>'+
-        '<div class="bible">'+bibleHtml(rd)+'</div><div class="slotq"></div></div>',{key:'d'+idx,toc:idx+'일 '+o.t,fit:'text',base:11,min:8.4});
-      pg('odd day-r','<div class="inner">'+hd.replace('<b>'+idx+'일째</b>','<b>묵상</b>')+
-        '<div class="med">'+paras(o.ex)+'</div><div class="gos"><span class="lab">✝ 복음으로 보면</span>'+esc(o.gs)+'</div>'+
-        '<div class="rem"><span class="lab">📌 오늘 기억할 한 줄</span>'+esc(o.mm)+'</div><div class="qwrap">'+qa+'</div>'+
-        '<div class="memo"><span class="lab">나의 묵상</span><div class="ln"></div></div></div>',{key:'d'+idx+'r',fit:'med',base:10.6,min:8.4});
+      // 날마다 빈 쪽 없이 바로 이어 싣는다 (본문이 긴 날은 3쪽이 되기도 한다)
+      var ref='<div class="ref">'+esc(rd)+(o.r?' <span style="font-weight:400;color:var(--ink3)">· 설교 본문 '+esc(o.p)+'</span>':'')+'</div>';
+      var B=flow(hd+'<h2 class="dttl">'+esc(o.t)+'</h2>'+ref,hd+'<div class="cont">'+esc(rd)+' (이어서)</div>',
+        WordBible.verses(rd,true).map(function(v){return {box:'bible',html:'<span><sup>'+v.v+'</sup>'+esc(v.t)+' </span>'}}));
+      var qaLeft=B.tryAdd(qa);
+      B.done().forEach(function(h,k){pg('day-l','<div class="inner">'+h+'</div>',k?{}:{key:'d'+idx,toc:idx+'일 '+o.t})});
+      var mh=hd.replace('<b>'+idx+'일째</b>','<b>묵상</b>');
+      var items=String(o.ex).split(/\n\n+/).map(function(p){return {box:'med',html:'<p>'+esc(p)+'</p>'}});
+      items.push({html:'<div class="gos"><span class="lab">✝ 복음으로 보면</span>'+esc(o.gs)+'</div>'});
+      items.push({html:'<div class="rem"><span class="lab">📌 오늘 기억할 한 줄</span>'+esc(o.mm)+'</div>'});
+      if(!qaLeft)items.push({html:qa});
+      var M=flow(mh,mh,items);
+      /* 남은 자리가 넉넉하면 ‘나의 묵상’ 칸을 둔다 */
+      if(M.tryAdd('<div class="memo" style="flex:none;height:22mm"><span class="lab">나의 묵상</span><div class="ln"></div></div>')){
+        var m=M.inner.lastChild;m.style.flex='';m.style.height='';
+      }
+      M.done().forEach(function(h,k){pg('day-r','<div class="inner">'+h+'</div>',k?{}:{key:'d'+idx+'r'})});
     });
   });
   evenStart();
   pg('','<div class="inner"><h3 class="st">암송 구절 모음</h3><div class="vlist">'+S.parts.map(function(P,k){
-    return '<div><span class="r">'+(k+1)+'마당 · '+esc(P.mv)+'</span><div class="t">'+esc(verseText(P.mv))+'</div></div>'}).join('')+'</div></div>',{toc:'암송 구절 모음',fit:'plain',base:10.4,min:8});
+    return '<div><span class="r">'+(k+1)+'마당 · '+esc(P.mv)+'</span><div class="t">'+esc(verseText(P.mv))+'</div></div>'}).join('')+'</div></div>',{toc:'암송 구절 모음'});
   pg('','<div class="inner"><h3 class="st">'+N+'일을 마치며</h3>'+
     '<div class="prompt">가장 마음에 남은 말씀</div><div class="lines"></div>'+
     '<div class="prompt">이 책을 읽으며 새롭게 만난 하나님</div><div class="lines"></div>'+
@@ -314,55 +350,10 @@ function render(){
     .then(function(){return document.fonts?document.fonts.ready:null})
     .then(function(){
       st.classList.remove('preload');
-      if(Q.get('print')==='1')fitPages(pages.map(function(_,i){return i}));else fitIdle();
       document.getElementById('toc').innerHTML=pages.map(function(p,i){return p.toc?'<option value="'+i+'">'+esc(p.toc)+'</option>':''}).join('');
       layout();
     });
 }
-function over(el){return el.scrollHeight>el.clientHeight+1}
-function setFs(el,v){el.style.fontSize=v+'pt'}
-var fitGen=0;
-function fitPages(list){
-  var st=document.getElementById('stage'),todo=list.filter(function(i){return pages[i]&&pages[i].fit&&!pages[i].fitted});
-  if(!todo.length)return;
-  st.classList.add('measure');
-  var slots=document.querySelectorAll('#stage .slot');
-  todo.forEach(function(i){fitOne(slots,i);pages[i].fitted=true});
-  st.classList.remove('measure');
-}
-function fitAll(){fitPages(pages.map(function(_,i){return i}))}
-function fitIdle(){
-  var gen=++fitGen,i=0;
-  var idle=window.requestIdleCallback||function(f){return setTimeout(function(){f({timeRemaining:function(){return 8}})},30)};
-  (function step(dl){
-    if(gen!==fitGen)return;
-    var n=0;
-    while(i<pages.length&&(n<2||dl.timeRemaining()>6)){fitPages([i]);i++;n++}
-    if(i<pages.length)idle(step);
-  })({timeRemaining:function(){return 0}});
-}
-window.addEventListener('beforeprint',fitAll);
-function fitOne(slots,i){
-  var p=pages[i],on=[slots[i]];if(p.fit==='med'&&slots[i-1])on.push(slots[i-1]);
-  on.forEach(function(s){s.classList.add('m')});
-  var inner=slots[i].querySelector('.inner');
-  if(p.fit==='med'){
-    /* 묵상 쪽이 넘치면 질문·기도를 왼쪽(본문) 쪽 아래로 옮긴다 */
-    var fs=p.base;setFs(inner,fs);
-    var memo=inner.querySelector('.memo');
-    if(over(inner)||hRaw(memo)<14*3.78){
-      var left=slots[i-1]&&slots[i-1].querySelector('.slotq'),qa=inner.querySelector('.qwrap');
-      if(left&&qa&&!pages[i-1].tight){left.appendChild(qa);fitText(slots[i-1].querySelector('.inner'),pages[i-1])}
-    }
-    while(over(inner)&&fs>p.min){fs-=.2;setFs(inner,fs)}
-    if(hRaw(memo)<12*3.78)memo.classList.add('off');
-  }else fitText(inner,p);
-  if(p.fit==='text'&&parseFloat(inner.style.fontSize)<9.4)p.tight=true; // 본문이 긴 쪽에는 질문을 옮기지 않는다
-  on.forEach(function(s){s.classList.remove('m')});
-}
-function hRaw(el){var h=el.getBoundingClientRect().height,pg=el.closest('.page'),m=pg&&/scale\(([\d.]+)\)/.exec(pg.style.transform||'');return m?h/parseFloat(m[1]):h}
-function fitText(inner,p){var f=p.base;setFs(inner,f);while(over(inner)&&f>p.min){f-=.2;setFs(inner,f)}}
-
 /* ---------- 넘겨 보기 ---------- */
 var PW=148*96/25.4,PH=210*96/25.4;
 function layout(){
@@ -378,7 +369,6 @@ function layout(){
 function span(i){if(!spread||i===0)return [i,i];var a=i%2?i:i-1;return [a,Math.min(a+1,pages.length-1)]}
 function show(){
   var ab=span(cur),a=ab[0],b=ab[1];cur=a;
-  fitPages([a-1,a,b,b+1,b+2]);
   document.querySelectorAll('#stage .slot').forEach(function(s,i){s.classList.toggle('cur',i===a||i===b)});
   document.getElementById('pgNo').textContent=(a+1)+(b!==a?'–'+(b+1):'')+' / '+pages.length;
   var toc=document.getElementById('toc'),best=null;
@@ -398,7 +388,7 @@ function tabs(){
 }
 function setBook(b,keep){
   if(!SERMON_BOOKS[b])b=ORDER[0];
-  BK=b;S=SERMON_BOOKS[b];tabs();fitGen++;
+  BK=b;S=SERMON_BOOKS[b];tabs();
   try{localStorage.setItem('dongsan_sbook',b)}catch(e){}
   history.replaceState(null,'',location.pathname+'?b='+b+(Q.get('print')==='1'?'&print=1':''));
   document.getElementById('stage').innerHTML='<div class="loading">'+esc(S.title)+'을(를) 엮는 중입니다…</div>';
