@@ -1,0 +1,442 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8">
+<script src="theme.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.png" type="image/png">
+<title>설교 묵상집 — 동산감리교회</title>
+<meta name="description" content="동산교회 강단에서 전한 로마서·빌립보서·복음의 기초 설교를 하루 한 편 말씀 묵상으로 엮은 책. 책처럼 넘겨 보고 인쇄할 수 있습니다.">
+<meta name="theme-color" content="#8f4531">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--brick:#8f4531;--brick2:#b3593f;--gold:#c99a3f;--ink:#2f2a26;--ink2:#5a4b3c;--ink3:#8a795f;--paper:#fffdf8;--line:#e6d3b4;--cream:#fbf3e7;
+  --sky:#3d8fca;--sun:#f0b429;--leaf:#5f9e4f;--desk:#ece3d6}
+:root:not([data-theme="light"]){color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--desk:#1f1b17}}
+:root[data-theme="dark"]{--desk:#1f1b17}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--desk)}
+body{font-family:'Noto Sans KR',sans-serif;color:var(--ink);word-break:keep-all;overflow-wrap:anywhere}
+/* ---------- 화면: 책 넘겨 보기 ---------- */
+.bar{position:sticky;top:0;z-index:5;background:#2f2a26;color:#f4e6d3;padding:10px 12px 8px}
+.bar .row{display:flex;align-items:center;gap:8px;max-width:1200px;margin:0 auto}
+.bar a.back{color:#e6d3b4;text-decoration:none;font-size:13px;white-space:nowrap}
+.bar .ttl{flex:1;min-width:0;font-family:'Gowun Batang',serif;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs{display:flex;gap:4px;background:rgba(255,255,255,.08);border-radius:999px;padding:3px}
+.tabs button{border:0;background:transparent;color:#e6d3b4;font:inherit;font-size:13px;padding:6px 11px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.tabs button.on{background:#f4e6d3;color:#2f2a26;font-weight:700}
+.tools{display:flex;align-items:center;gap:6px;flex-wrap:wrap;max-width:1200px;margin:8px auto 0}
+.tools button,.tools select,.tools a{font:inherit;font-size:13px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#f4e6d3;
+  border-radius:10px;padding:7px 10px;cursor:pointer;text-decoration:none;min-height:36px}
+.tools select{max-width:46vw}
+.tools select option{color:#2f2a26}
+.tools .pg{font-size:12.5px;color:#e6d3b4;min-width:64px;text-align:center}
+.tools .sp{flex:1}
+.stage{display:flex;justify-content:center;gap:10px;padding:14px 12px 40px}
+.slot{display:none;position:relative;box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:3px;overflow:hidden;background:#fff}
+.slot.cur{display:block}
+.slot>.page{transform-origin:0 0;position:absolute;left:0;top:0}
+.loading{color:var(--ink3);text-align:center;padding:60px 20px;font-size:14px}
+.locked{max-width:420px;margin:40px auto;padding:32px 24px;text-align:center;background:var(--paper,#fffaf2);border:1px solid var(--line,#e6d3b4);border-radius:20px;color:var(--ink,#2f2a26);line-height:1.8}
+.locked .lk-ic{font-size:44px}.locked h2{font-family:'Gowun Batang',serif;font-size:20px;margin:6px 0 10px}
+.locked p{font-size:15px}.locked .lk-s{font-size:13px;color:var(--ink3,#8a795f);margin-top:8px}
+.locked .lk-d{display:inline-block;margin:10px 0 2px;padding:4px 16px;border-radius:999px;background:#8f4531;color:#fff;font-weight:700;font-size:18px}
+.locked .lk-b{display:inline-block;margin-top:16px;padding:12px 20px;border-radius:14px;background:#8f4531;color:#fff;font-weight:700;text-decoration:none}
+.hint{text-align:center;color:var(--ink3);font-size:12px;padding:0 12px 30px}
+.preload .slot{display:block!important;position:absolute;left:-9999px;top:0}
+.measure .slot{display:none!important}
+.measure .slot.m{display:block!important;position:absolute;left:-9999px;top:0;box-shadow:none}
+/* ---------- 책 한 쪽 (A5) ---------- */
+.page{width:148mm;height:210mm;background:var(--paper);color:var(--ink);overflow:hidden;position:relative}
+.inner{position:absolute;left:14mm;right:14mm;top:13mm;bottom:15mm;display:flex;flex-direction:column;overflow:hidden;font-size:10.5pt;line-height:1.72}
+.pno{position:absolute;bottom:7mm;font-size:7.5pt;color:var(--ink3);font-family:'Noto Sans KR',sans-serif;letter-spacing:.04em}
+.page.even .pno{left:14mm}.page.odd .pno{right:14mm;text-align:right}
+.serif{font-family:'Gowun Batang',serif}
+.hd{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-size:7.8pt;color:var(--ink3);letter-spacing:.03em;
+  border-bottom:.6pt solid var(--line);padding-bottom:1.6mm;margin-bottom:3.4mm;line-height:1.4}
+.hd b{color:var(--brick);font-weight:700}
+.fe{display:inline-block;background:var(--gold);color:#2f2a26;font-size:7.6pt;font-weight:700;border-radius:99px;padding:.4mm 2.6mm;margin-bottom:1.6mm;line-height:1.5}
+h2.dttl{font-family:'Gowun Batang',serif;font-size:17pt;line-height:1.3;margin:.5mm 0 1mm}
+.ref{font-size:9pt;color:var(--brick);font-weight:700;margin-bottom:3mm}
+.bible{font-family:'Gowun Batang',serif;text-align:left}
+.bible sup{font-family:'Noto Sans KR',sans-serif;font-size:.6em;color:var(--brick);font-weight:700;margin-right:.6mm;vertical-align:.45em}
+.lab{display:block;font-family:'Noto Sans KR',sans-serif;font-size:8pt;font-weight:700;color:var(--brick);letter-spacing:.04em;margin-bottom:.8mm}
+.med p{font-family:'Gowun Batang',serif;margin-bottom:1.6mm}
+.gos{background:#fbf3e7;border-left:1.4pt solid var(--brick);border-radius:0 2mm 2mm 0;padding:2mm 3mm;margin:2mm 0;font-family:'Gowun Batang',serif}
+.rem{background:var(--brick);color:#fff;border-radius:2.4mm;padding:2.4mm 3.4mm;margin:2mm 0;font-family:'Gowun Batang',serif;font-weight:700}
+.rem .lab{color:#f4e6d3}
+.qa{margin-top:2.2mm}
+.qa ol{padding-left:4.6mm;margin:.6mm 0 1.6mm}
+.qa li{margin-bottom:.6mm}
+.qa .pr{font-family:'Gowun Batang',serif}
+.memo{flex:1;min-height:0;display:flex;flex-direction:column;margin-top:2.4mm}
+.memo .ln{flex:1;background:repeating-linear-gradient(to bottom,transparent 0,transparent 8.4mm,#d9c7a8 8.4mm,#d9c7a8 calc(8.4mm + .5pt))}
+.memo.off{display:none}
+/* 앞뒤 쪽 */
+.cover{background:linear-gradient(160deg,#3a2e22,#8f4531 70%,#b3593f);color:#fff}
+.cover .inner{justify-content:space-between;text-align:center;top:22mm;bottom:22mm}
+.cover .mk{font-size:30pt;color:#e9c77d}
+.cover h1{font-family:'Gowun Batang',serif;font-size:27pt;line-height:1.35;margin-top:4mm}
+.cover .sub{font-size:10.5pt;color:#f4e6d3;margin-top:3mm}
+.cover .per{font-size:9.5pt;color:#e6d3b4;letter-spacing:.06em}
+.cover .ch{font-family:'Gowun Batang',serif;font-size:13pt;font-weight:700}
+.logo-w,.logo-c{display:block;height:7mm;width:auto;margin:0 auto}
+.cover .logo-w{height:7.5mm;opacity:.95}
+.small .logo-c{height:6mm;margin:0 0 2mm}
+.spread .blogo{height:5.5mm;width:auto;display:block;margin-bottom:3mm;opacity:.95}
+.titlep .foot-logo{position:absolute;left:0;right:0;bottom:16mm}
+.cover .ed{display:inline-block;margin-top:3mm;border:1pt solid rgba(255,255,255,.5);border-radius:99px;padding:.6mm 4mm;font-size:9pt}
+.cover.kid{background:linear-gradient(160deg,#3d8fca,#7fc4f0 60%,#ffe08a)}
+.cover.kid h1{font-family:'Gowun Dodum',sans-serif;font-size:26pt}
+h3.st{font-family:'Gowun Batang',serif;font-size:15pt;margin-bottom:3mm;color:var(--ink)}
+.small{font-size:8.6pt;color:var(--ink2)}
+.colo{font-size:8.2pt;line-height:1.75;color:var(--ink2);border-top:.4pt solid var(--line,#d9c7a8);padding-top:2.4mm}
+.colo .ct{font-family:'Gowun Batang',serif;font-weight:700;color:var(--ink);font-size:9pt;margin-bottom:1mm}
+.colo .ct span{font-weight:400;color:var(--ink2);font-size:8.2pt}
+.colo span{display:inline-block;width:15mm;color:var(--ink3,#9b8a72)}
+.colo .ct span{display:inline;width:auto}
+.steps{list-style:none;counter-reset:s}
+.steps li{counter-increment:s;position:relative;padding-left:8mm;margin-bottom:2mm}
+.steps li::before{content:counter(s);position:absolute;left:0;top:.5mm;width:5.4mm;height:5.4mm;border-radius:50%;background:var(--brick);color:#fff;
+  font-size:8pt;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
+.qr{display:flex;gap:4mm;align-items:center;background:#fbf3e7;border-radius:3mm;padding:3mm;margin-top:3mm}
+.qr svg{width:24mm;height:24mm;flex:none;background:#fff;padding:1.4mm;border-radius:1.4mm}
+.plan{width:100%;border-collapse:collapse;font-size:7.6pt;line-height:1.35}
+.plan td{padding:.75mm 1mm;border-bottom:.4pt solid #eadbc3;vertical-align:top}
+.plan td.d{white-space:nowrap;color:var(--ink3);width:16mm}
+.plan td.r{white-space:nowrap;color:var(--brick);text-align:right}
+.plan tr.wk td{background:#fbf3e7;color:var(--brick);font-weight:700;padding-top:1.2mm}
+.plan tr.sun td.t{font-weight:700}
+.wkno{font-family:'Gowun Batang',serif;font-size:40pt;font-weight:700;color:var(--brick);line-height:1}
+.wkth{font-family:'Gowun Batang',serif;font-size:19pt;line-height:1.35;margin:3mm 0 4mm}
+.wklist{margin-top:4mm;border-top:.6pt solid var(--line)}
+.wklist div{display:flex;gap:2mm;padding:1.4mm 0;border-bottom:.4pt solid #eadbc3;font-size:8.8pt;line-height:1.45}
+.wklist .d{color:var(--ink3);width:17mm;flex:none}.wklist .r{margin-left:auto;color:var(--brick);white-space:nowrap;padding-left:2mm}
+.mv{margin:14mm 0 10mm;text-align:center}
+.mv .q{font-family:'Gowun Batang',serif;font-size:15pt;line-height:1.8;font-weight:700}
+.mv .r{color:var(--brick);font-weight:700;margin-top:3mm;font-size:10pt}
+.lines{flex:1;min-height:20mm;background:repeating-linear-gradient(to bottom,transparent 0,transparent 8.4mm,#d9c7a8 8.4mm,#d9c7a8 calc(8.4mm + .5pt))}
+.prompt{font-family:'Gowun Batang',serif;font-weight:700;margin-top:3mm}
+.prompt+.lines{flex:none;height:26mm}
+.vlist div{padding:1.6mm 0;border-bottom:.4pt solid #eadbc3}
+.vlist .r{color:var(--brick);font-weight:700;font-size:8.4pt}
+.vlist .t{font-family:'Gowun Batang',serif}
+/* 어린이 쪽 */
+.k .inner{font-family:'Gowun Dodum','Noto Sans KR',sans-serif;font-size:11.5pt;line-height:1.6;top:11mm;bottom:13mm;left:12mm;right:12mm}
+.k .khd{display:flex;align-items:center;gap:3mm;margin-bottom:2.4mm}
+.k .emo{width:13mm;height:13mm;border-radius:50%;background:#e8f3fb;display:flex;align-items:center;justify-content:center;font-size:19pt;flex:none}
+.k .kd{font-size:8.5pt;color:var(--ink3)}
+.k .kt{font-size:15.5pt;font-weight:700;line-height:1.3;font-family:'Noto Sans KR',sans-serif}
+.k .kv{background:#e8f3fb;border-radius:3mm;padding:2.4mm 3.4mm;margin-bottom:2.4mm}
+.k .kv .vt{font-family:'Gowun Batang',serif;font-weight:700}
+.k .kv .vr{font-size:8.4pt;color:var(--sky);font-weight:700;margin-top:.8mm}
+.k .box{border:.8pt solid #d8e6f0;border-radius:3mm;padding:2mm 3.2mm;margin-bottom:2.2mm}
+.k .box b.h{display:block;font-family:'Noto Sans KR',sans-serif;font-size:8.6pt;color:var(--sky);margin-bottom:.4mm}
+.k .box.sun{border-color:#f6dc9a;background:#fff9ea}.k .box.sun b.h{color:#b07d00}
+.k .box.leaf{border-color:#cfe5c6;background:#f4faf1}.k .box.leaf b.h{color:var(--leaf)}
+.k .ch{display:flex;flex-wrap:wrap;gap:1.4mm 4mm;margin-top:.6mm}
+.k .ch span::before{content:'○ ';color:var(--sky)}
+.k .chk::before{content:'□ ';font-family:'Noto Sans KR',sans-serif}
+.k .draw{flex:1;min-height:15mm;border:1pt dashed #b9cfe0;border-radius:3mm;position:relative;margin-top:.4mm}
+.k .draw small{position:absolute;left:3mm;top:2mm;font-size:8pt;color:#8aa9c0}
+.k .foot{display:flex;align-items:center;gap:3mm;margin-top:2mm;font-size:8.4pt;color:var(--ink2)}
+.k .foot .stamp{margin-left:auto;width:15mm;height:15mm;border:1pt dashed #e0a43a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7pt;color:#c08a2a;text-align:center;line-height:1.2}
+.k .ans{position:absolute;left:0;right:0;bottom:5.2mm;text-align:center;font-size:6.8pt;color:#b8a98f;transform:rotate(180deg)}
+.k.wkp .wkno{color:var(--sky)}
+.k .stk{display:grid;grid-template-columns:repeat(7,1fr);gap:2mm;margin-top:4mm}
+.k .stk div{aspect-ratio:1;border:1pt dashed #b9cfe0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7.5pt;color:#8aa9c0}
+.cert{border:2pt solid var(--gold);border-radius:4mm;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8mm}
+.cert h3{font-family:'Gowun Batang',serif;font-size:24pt;color:var(--brick);margin:3mm 0 6mm}
+/* ---------- 인쇄소에 넘기는 파일 ----------
+   ?press=1 : 내지만. 사방 3mm 도련(재단 여백)을 둔 154×216mm, 1쪽은 표지 대신 속표지
+   ?cover=1&spine=10 : 표지 펼침면(뒷표지·책등·앞표지, 사방 3mm 도련) */
+.titlep .inner{justify-content:center;text-align:center}
+.titlep h1{font-family:'Gowun Batang',serif;font-size:24pt;line-height:1.4;color:var(--ink)}
+.titlep .sub{color:var(--ink2);margin-top:3mm}
+.titlep .ch{margin-top:30mm;font-family:'Gowun Batang',serif;font-weight:700;color:var(--brick)}
+.spread{position:relative;height:216mm;overflow:hidden;color:#fff;background:linear-gradient(160deg,#3a2e22,#8f4531 60%,#b3593f)}
+.spread.kid{background:linear-gradient(160deg,#3d8fca,#7fc4f0 60%,#ffe08a)}
+.spread .face{position:absolute;top:0;height:216mm;width:151mm}
+.spread .face .inner{left:17mm;right:17mm;top:25mm;bottom:25mm}
+.spread .back{left:0}.spread .back .inner{left:17mm;right:14mm}
+.spread .front{right:0}.spread .front .inner{left:14mm;right:17mm}
+.spread .spine{position:absolute;top:0;height:216mm;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.12)}
+.spread .spine span{writing-mode:vertical-rl;font-family:'Gowun Batang',serif;font-weight:700;white-space:nowrap;letter-spacing:.06em}
+.spread .blurb{font-family:'Gowun Batang',serif;font-size:10pt;line-height:1.85}
+.spread .bv{margin-top:8mm;padding:4mm;border:.8pt solid rgba(255,255,255,.5);border-radius:3mm;font-family:'Gowun Batang',serif;font-size:10pt;line-height:1.75}
+.spread .bq{display:flex;gap:4mm;align-items:center;margin-top:auto;font-size:8.5pt;line-height:1.6}
+.spread .bq svg{width:22mm;height:22mm;background:#fff;padding:1.4mm;border-radius:1.4mm;flex:none}
+@media print{
+  .press .slot{width:154mm!important;height:216mm!important;padding:3mm;box-sizing:border-box;overflow:hidden}
+  .cover-only .slot{padding:0;overflow:hidden}
+}
+/* 확인용 표지: 재단선(빨강 점선)·책등선(파랑 점선)·안전선(초록 점선) */
+.guide .gl{position:absolute;top:0;bottom:0;border-left:.5pt dashed;pointer-events:none}
+.guide .gh{position:absolute;left:0;right:0;border-top:.5pt dashed;pointer-events:none}
+.guide .gtag{position:absolute;font:600 6.5pt 'Noto Sans KR',sans-serif;background:#fff;color:#c00;padding:.3mm 1mm;border-radius:.6mm}
+/* ---------- 인쇄 ---------- */
+@page{size:148mm 210mm;margin:0}
+@media print{
+  html,body{background:#fff}
+  .bar,.hint,#themeBtn{display:none!important}
+  .stage{display:block;padding:0}
+  .slot{display:block!important;width:auto!important;height:auto!important;box-shadow:none;border-radius:0;overflow:visible;break-after:page;page-break-after:always}
+  .slot>.page{position:relative;transform:none!important}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="row">
+    <a class="back" href="word.html">← 말씀</a>
+    <div class="ttl" id="bookTtl">설교 묵상집</div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+  </div>
+  <div class="tools">
+    <button onclick="flip(-1)" aria-label="앞 쪽">◀</button>
+    <span class="pg" id="pgNo">–</span>
+    <button onclick="flip(1)" aria-label="다음 쪽">▶</button>
+    <select id="toc" onchange="jumpTo(this.value)" aria-label="목차"></select>
+    <span class="sp"></span>
+    <button onclick="window.print()">🖨 인쇄</button>
+    <a id="pdfLink" href="#" target="_blank" rel="noopener">PDF</a>
+  </div>
+</div>
+<div class="stage" id="stage"><div class="loading" id="loading">성경 본문과 묵상을 책으로 엮는 중입니다…</div></div>
+<div class="hint">화면을 옆으로 밀거나 ◀ ▶ 를 눌러 넘겨 보세요. 마지막으로 읽던 쪽을 기억해 두었다가 다시 열어 드립니다.</div>
+
+<script src="word-data.js"></script>
+<script src="word-config.js"></script>
+<script src="word-core.js"></script>
+<script src="sermon-book-data.js"></script>
+<script>
+/* 설교 묵상집 — 동산교회 강단에서 전한 설교를 하루 한 편 묵상으로 엮은 책들.
+   데이터: sermon-book-data.js (SERMON_BOOKS) · 성경: sermon-book-bible.js (없으면 dongsan_bible.js)
+   주소: sermon-book.html?b=romans | philippians | gospel   (#12 → 12일째 쪽)
+   인쇄용: ?print=1&b=romans  (scripts/build-sermon-book.js 가 PDF 로 만든다) */
+var Q=new URLSearchParams(location.search);
+var ORDER=Object.keys(SERMON_BOOKS),BK=null,S=null,pages=[],cur=0,spread=false,scale=1;
+function esc(s){return wEsc(s)}
+function bibleHtml(passage){return WordBible.verses(passage,true).map(function(v){return '<sup>'+v.v+'</sup>'+esc(v.t)}).join(' ')}
+function verseText(ref){return WordBible.plain(ref,true)}
+function paras(t){return String(t).split(/\n\n+/).map(function(p){return '<p>'+esc(p)+'</p>'}).join('')}
+function partOf(i){var n=0,p=null;S.parts.forEach(function(x,k){if(x.from<=i+1){p=x;n=k+1}});return {p:p,n:n}}
+
+/* ---------- 쪽 만들기 ---------- */
+function pg(cls,html,opt){opt=opt||{};pages.push({cls:cls,html:html,key:opt.key||'',toc:opt.toc||'',fit:opt.fit||null,base:opt.base,min:opt.min})}
+function filler(kind){pg('','<div class="inner"><h3 class="st">'+(kind||'메모')+'</h3><div class="lines"></div></div>')}
+function evenStart(){if((pages.length+1)%2===1)filler('기도 노트')}
+function colophon(){
+  return '<div class="colo"><div class="ct">'+esc(S.title)+' <span>· '+esc(S.short)+' 묵상집</span></div>'+
+    '<div><span>설교</span>류선희 (동산감리교회 담임목사)</div>'+
+    '<div><span>펴낸 곳</span>동산감리교회 (기독교대한감리회 동부연회 태백지방)</div>'+
+    '<div><span>주소</span>강원특별자치도 태백시 계산4길 25</div>'+
+    '<div><span>성경 본문</span>『성경전서 개역개정판』(대한성서공회)</div></div>';
+}
+function build(){
+  var N=S.days.length;
+  pg('cover','<div class="inner"><div><div class="mk">✝</div><div class="per">'+esc(S.short)+' · '+N+'일 말씀 묵상</div></div>'+
+    '<div><h1>'+esc(S.title)+'</h1><div class="sub">'+esc(S.sub)+'</div><div class="ed">동산교회 강단의 말씀으로 엮은 묵상집</div></div>'+
+    '<div class="ch"><img class="logo-w" src="assets/logo/dongsan-logo-white.png" alt="동산감리교회"></div></div>',{toc:'표지'});
+  pg('','<div class="inner"><div style="margin-top:auto"><h3 class="st">이 책의 주인</h3>'+
+    '<div class="prompt">이름</div><div class="lines" style="flex:none;height:9mm"></div>'+
+    '<div class="prompt">시작한 날</div><div class="lines" style="flex:none;height:9mm"></div>'+
+    '<div class="prompt">함께 읽는 가족·속회</div><div class="lines" style="flex:none;height:18mm"></div></div>'+
+    '<div style="margin-top:10mm"><img class="logo-c" style="margin:0 0 3mm" src="assets/logo/dongsan-logo.png" alt="동산감리교회">'+colophon()+'</div></div>');
+  pg('','<div class="inner"><h3 class="st">들어가며</h3><div class="med">'+S.intro.map(function(p){return '<p>'+esc(p)+'</p>'}).join('')+'</div>'+
+    '<div class="rem" style="margin-top:auto"><span class="lab">이 책의 첫 말씀</span>“'+esc(verseText(S.key))+'”<div style="font-size:8pt;font-weight:400;margin-top:1mm">'+esc(S.key)+'</div></div>'+
+    '<div class="small" style="text-align:right;margin-top:3mm">동산감리교회 담임목사 <b>류선희</b></div></div>',{toc:'들어가며',fit:'plain',base:10.5,min:8.2});
+  pg('','<div class="inner"><h3 class="st">하루 15분, 이렇게 읽어요</h3><ol class="steps">'+
+    '<li>조용히 기도로 시작합니다. ‘주님, 오늘 말씀으로 저를 만나 주세요.’</li>'+
+    '<li>왼쪽 쪽의 성경 본문을 천천히, 할 수 있으면 소리 내어 읽습니다.</li>'+
+    '<li>오른쪽 쪽의 묵상을 읽고 ‘복음으로 보면’에서 예수님을 만납니다.</li>'+
+    '<li>‘오늘 기억할 한 줄’을 마음에 새기고 질문에 답해 봅니다.</li>'+
+    '<li>‘오늘 한 걸음’을 실천하고, 기도로 마친 뒤 떠오른 생각을 ‘나의 묵상’ 칸에 적습니다.</li></ol>'+
+    '<div class="small">이 책은 날짜가 아니라 ‘일째’로 엮었습니다. 아무 날에나 시작해 하루 한 편씩 읽으면 됩니다. 하루를 놓쳤다면 자책하지 말고 다음 날 다시 펼치십시오.</div>'+
+    '<div class="small" style="margin-top:3mm">마당(부)마다 첫 면에 암송 구절이 있습니다. 그 마당을 마칠 때까지 외워 보세요.</div>'+
+    '<div class="small" style="margin-top:4mm"><b>표기 안내</b> · 묵상 글에서 “ ” 안의 성경 말씀은 개역개정판 그대로 옮겼습니다. ‘ ’ 안은 쉽게 풀어 쓴 말입니다. 본문이 긴 날은 핵심 단락을 싣고 설교 본문 전체를 함께 적었습니다.</div></div>',{toc:'사용법',fit:'plain',base:10.5,min:8.6});
+  /* 읽기표 */
+  var per=34,chunks=[];for(var i=0;i<N;i+=per)chunks.push(i);
+  chunks.forEach(function(st,k){
+    var rows='',last=null;
+    for(var i=st;i<Math.min(N,st+per);i++){var d=S.days[i],pp=partOf(i);
+      if(pp.p!==last){rows+='<tr class="wk"><td colspan="3">'+pp.n+'마당 · '+esc(pp.p.th)+'</td></tr>';last=pp.p}
+      rows+='<tr><td class="d">□ '+(i+1)+'일</td><td class="t">'+esc(d.t)+'</td><td class="r">'+esc(d.p)+'</td></tr>'}
+    pg('','<div class="inner"><h3 class="st" style="font-size:12pt;margin-bottom:2mm">'+N+'일 읽기표'+(chunks.length>1?' '+(k+1)+'/'+chunks.length:'')+'</h3><table class="plan">'+rows+'</table></div>',{toc:k?'':'읽기표',fit:'plain',base:8.8,min:7.2});
+  });
+  /* 마당과 날 */
+  S.parts.forEach(function(P,k){
+    var n=k+1,to=(S.parts[k+1]?S.parts[k+1].from-1:N),list=[];for(var i=P.from-1;i<to;i++)list.push(i);
+    evenStart();
+    pg('','<div class="inner"><div class="wkno">'+n+'<span style="font-size:15pt">마당</span></div><div class="wkth">'+esc(P.th)+'</div>'+
+      '<div class="med"><p>'+esc(P.intro)+'</p></div><div class="wklist">'+list.map(function(i){var d=S.days[i];
+        return '<div><span class="d">'+(i+1)+'일째</span><span>'+esc(d.t)+'</span><span class="r">'+esc(d.p)+'</span></div>'}).join('')+'</div></div>',
+      {toc:n+'마당 · '+P.th,key:'p'+n,fit:'plain',base:10.5,min:8});
+    pg('','<div class="inner"><span class="lab">'+n+'마당 암송 구절</span><div class="mv"><div class="q">“'+esc(verseText(P.mv))+'”</div><div class="r">'+esc(P.mv)+'</div></div>'+
+      '<div class="prompt">이 마당을 읽으며 드릴 기도 제목</div><div class="lines" style="flex:1;min-height:40mm"></div></div>',{fit:'plain',base:10.5,min:9});
+    list.forEach(function(i){
+      var o=S.days[i],idx=i+1,rd=o.r||o.p;
+      var hd='<div class="hd"><span><b>'+idx+'일째</b> · 읽은 날 &nbsp;&nbsp;월 &nbsp;&nbsp;일</span><span>'+n+'마당 · '+esc(P.th)+'</span></div>';
+      var qa='<div class="qa"><span class="lab">생각과 나눔</span><ol>'+o.qs.map(function(q){return '<li>'+esc(q)+'</li>'}).join('')+'</ol>'+
+             (o.go?'<span class="lab">오늘 한 걸음</span><div class="pr" style="margin-bottom:1.6mm">'+esc(o.go)+'</div>':'')+
+             '<span class="lab">기도</span><div class="pr">'+esc(o.pr)+'</div></div>';
+      evenStart();
+      pg('even day-l','<div class="inner">'+hd+'<h2 class="dttl">'+esc(o.t)+'</h2>'+
+        '<div class="ref">'+esc(rd)+(o.r?' <span style="font-weight:400;color:var(--ink3)">· 설교 본문 '+esc(o.p)+'</span>':'')+'</div>'+
+        '<div class="bible">'+bibleHtml(rd)+'</div><div class="slotq"></div></div>',{key:'d'+idx,toc:idx+'일 '+o.t,fit:'text',base:11,min:8.4});
+      pg('odd day-r','<div class="inner">'+hd.replace('<b>'+idx+'일째</b>','<b>묵상</b>')+
+        '<div class="med">'+paras(o.ex)+'</div><div class="gos"><span class="lab">✝ 복음으로 보면</span>'+esc(o.gs)+'</div>'+
+        '<div class="rem"><span class="lab">📌 오늘 기억할 한 줄</span>'+esc(o.mm)+'</div><div class="qwrap">'+qa+'</div>'+
+        '<div class="memo"><span class="lab">나의 묵상</span><div class="ln"></div></div></div>',{key:'d'+idx+'r',fit:'med',base:10.6,min:8.4});
+    });
+  });
+  evenStart();
+  pg('','<div class="inner"><h3 class="st">암송 구절 모음</h3><div class="vlist">'+S.parts.map(function(P,k){
+    return '<div><span class="r">'+(k+1)+'마당 · '+esc(P.mv)+'</span><div class="t">'+esc(verseText(P.mv))+'</div></div>'}).join('')+'</div></div>',{toc:'암송 구절 모음',fit:'plain',base:10.4,min:8});
+  pg('','<div class="inner"><h3 class="st">'+N+'일을 마치며</h3>'+
+    '<div class="prompt">가장 마음에 남은 말씀</div><div class="lines"></div>'+
+    '<div class="prompt">이 책을 읽으며 새롭게 만난 하나님</div><div class="lines"></div>'+
+    '<div class="prompt">앞으로 이어 갈 신앙의 한 걸음</div><div class="lines"></div>'+
+    '<div class="small" style="margin-top:3mm">“'+esc(verseText(S.end))+'” ('+esc(S.end)+')</div></div>',{toc:'마치며'});
+  while(pages.length%4)filler('메모');
+}
+
+function render(){
+  pages=[];build();
+  var st=document.getElementById('stage');
+  st.innerHTML=pages.map(function(p,i){
+    var side=(i+1)%2?'odd':'even';
+    return '<div class="slot" data-i="'+i+'"><section class="page '+side+' '+p.cls+'">'+p.html+
+      (p.cls.indexOf('cover')<0?'<div class="pno">'+(i+1)+' · '+esc(S.title)+'</div>':'')+'</section></div>'}).join('');
+  st.classList.add('preload');
+  return new Promise(function(res){requestAnimationFrame(function(){res()})})
+    .then(function(){return document.fonts?document.fonts.ready:null})
+    .then(function(){
+      st.classList.remove('preload');
+      if(Q.get('print')==='1')fitPages(pages.map(function(_,i){return i}));else fitIdle();
+      document.getElementById('toc').innerHTML=pages.map(function(p,i){return p.toc?'<option value="'+i+'">'+esc(p.toc)+'</option>':''}).join('');
+      layout();
+    });
+}
+function over(el){return el.scrollHeight>el.clientHeight+1}
+function setFs(el,v){el.style.fontSize=v+'pt'}
+var fitGen=0;
+function fitPages(list){
+  var st=document.getElementById('stage'),todo=list.filter(function(i){return pages[i]&&pages[i].fit&&!pages[i].fitted});
+  if(!todo.length)return;
+  st.classList.add('measure');
+  var slots=document.querySelectorAll('#stage .slot');
+  todo.forEach(function(i){fitOne(slots,i);pages[i].fitted=true});
+  st.classList.remove('measure');
+}
+function fitAll(){fitPages(pages.map(function(_,i){return i}))}
+function fitIdle(){
+  var gen=++fitGen,i=0;
+  var idle=window.requestIdleCallback||function(f){return setTimeout(function(){f({timeRemaining:function(){return 8}})},30)};
+  (function step(dl){
+    if(gen!==fitGen)return;
+    var n=0;
+    while(i<pages.length&&(n<2||dl.timeRemaining()>6)){fitPages([i]);i++;n++}
+    if(i<pages.length)idle(step);
+  })({timeRemaining:function(){return 0}});
+}
+window.addEventListener('beforeprint',fitAll);
+function fitOne(slots,i){
+  var p=pages[i],on=[slots[i]];if(p.fit==='med'&&slots[i-1])on.push(slots[i-1]);
+  on.forEach(function(s){s.classList.add('m')});
+  var inner=slots[i].querySelector('.inner');
+  if(p.fit==='med'){
+    /* 묵상 쪽이 넘치면 질문·기도를 왼쪽(본문) 쪽 아래로 옮긴다 */
+    var fs=p.base;setFs(inner,fs);
+    var memo=inner.querySelector('.memo');
+    if(over(inner)||hRaw(memo)<14*3.78){
+      var left=slots[i-1]&&slots[i-1].querySelector('.slotq'),qa=inner.querySelector('.qwrap');
+      if(left&&qa&&!pages[i-1].tight){left.appendChild(qa);fitText(slots[i-1].querySelector('.inner'),pages[i-1])}
+    }
+    while(over(inner)&&fs>p.min){fs-=.2;setFs(inner,fs)}
+    if(hRaw(memo)<12*3.78)memo.classList.add('off');
+  }else fitText(inner,p);
+  if(p.fit==='text'&&parseFloat(inner.style.fontSize)<9.4)p.tight=true; // 본문이 긴 쪽에는 질문을 옮기지 않는다
+  on.forEach(function(s){s.classList.remove('m')});
+}
+function hRaw(el){var h=el.getBoundingClientRect().height,pg=el.closest('.page'),m=pg&&/scale\(([\d.]+)\)/.exec(pg.style.transform||'');return m?h/parseFloat(m[1]):h}
+function fitText(inner,p){var f=p.base;setFs(inner,f);while(over(inner)&&f>p.min){f-=.2;setFs(inner,f)}}
+
+/* ---------- 넘겨 보기 ---------- */
+var PW=148*96/25.4,PH=210*96/25.4;
+function layout(){
+  var W=window.innerWidth,H=window.innerHeight-(document.querySelector('.bar').offsetHeight)-60;
+  spread=W>=900;
+  scale=spread?Math.min((W-48)/(2*PW),H/PH):Math.min((W-24)/PW,Math.max(H,420)/PH);
+  scale=Math.max(.3,Math.min(scale,1.6));
+  document.querySelectorAll('#stage .slot').forEach(function(s){
+    s.style.width=(PW*scale)+'px';s.style.height=(PH*scale)+'px';s.firstChild.style.transform='scale('+scale+')';
+  });
+  show();
+}
+function span(i){if(!spread||i===0)return [i,i];var a=i%2?i:i-1;return [a,Math.min(a+1,pages.length-1)]}
+function show(){
+  var ab=span(cur),a=ab[0],b=ab[1];cur=a;
+  fitPages([a-1,a,b,b+1,b+2]);
+  document.querySelectorAll('#stage .slot').forEach(function(s,i){s.classList.toggle('cur',i===a||i===b)});
+  document.getElementById('pgNo').textContent=(a+1)+(b!==a?'–'+(b+1):'')+' / '+pages.length;
+  var toc=document.getElementById('toc'),best=null;
+  [].forEach.call(toc.options,function(o){if(+o.value<=b)best=o.value});
+  if(best!==null)toc.value=best;
+  try{if(pages[a]&&pages[a].key)localStorage.setItem('dongsan_sbook_'+BK,pages[a].key.replace(/r$/,''))}catch(e){}
+}
+function flip(d){var ab=span(cur);cur=d>0?ab[1]+1:ab[0]-1;cur=Math.max(0,Math.min(pages.length-1,cur));show()}
+function jumpTo(i){cur=+i;show()}
+function findKey(k){for(var i=0;i<pages.length;i++)if(pages[i].key===k)return i;return -1}
+function goLast(){var k='';try{k=localStorage.getItem('dongsan_sbook_'+BK)||''}catch(e){}var i=k?findKey(k):-1;jumpTo(i>=0?i:0)}
+function tabs(){
+  document.getElementById('tabs').innerHTML=ORDER.map(function(b){return '<button class="'+(b===BK?'on':'')+'" onclick="setBook(\''+b+'\')">'+esc(SERMON_BOOKS[b].short)+'</button>'}).join('');
+  document.getElementById('bookTtl').textContent=S.title;
+  document.title='묵상집 · '+S.title+' — 동산감리교회';
+  document.getElementById('pdfLink').href='book/sermon-'+BK+'.pdf';
+}
+function setBook(b,keep){
+  if(!SERMON_BOOKS[b])b=ORDER[0];
+  BK=b;S=SERMON_BOOKS[b];tabs();fitGen++;
+  try{localStorage.setItem('dongsan_sbook',b)}catch(e){}
+  history.replaceState(null,'',location.pathname+'?b='+b+(Q.get('print')==='1'?'&print=1':''));
+  document.getElementById('stage').innerHTML='<div class="loading">'+esc(S.title)+'을(를) 엮는 중입니다…</div>';
+  document.getElementById('pgNo').textContent='–';
+  return new Promise(function(r){requestAnimationFrame(function(){setTimeout(r,30)})}).then(render).then(function(){
+    var m=keep&&keep.match(/^\d+$/);
+    if(m&&findKey('d'+keep)>=0)jumpTo(findKey('d'+keep));
+    else if(Q.get('print')!=='1')goLast();else{cur=0;show()}
+  });
+}
+document.addEventListener('keydown',function(e){if(e.key==='ArrowRight')flip(1);if(e.key==='ArrowLeft')flip(-1)});
+(function(){var x0=null,y0=0,st=document.getElementById('stage');
+  st.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;y0=e.touches[0].clientY},{passive:true});
+  st.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;
+    if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy))flip(dx<0?1:-1);x0=null},{passive:true});
+})();
+var rT=null;window.addEventListener('resize',function(){clearTimeout(rT);rT=setTimeout(layout,150)});
+
+function loadScript(src){return new Promise(function(res){var s=document.createElement('script');s.src=src;s.onload=function(){res(true)};s.onerror=function(){res(false)};document.head.appendChild(s)})}
+/* 묵상집에 쓰는 장만 담은 sermon-book-bible.js 를 먼저 읽고, 빠진 본문이 있으면 전체 성경을 읽는다 */
+function allRefs(){var r=[];ORDER.forEach(function(b){var B=SERMON_BOOKS[b];r.push(B.key,B.end);B.parts.forEach(function(p){r.push(p.mv)});B.days.forEach(function(d){r.push(d.r||d.p)})});return r}
+function bookBible(){
+  if(Q.get('fullbible')==='1')return WordBible.load();
+  return loadScript('sermon-book-bible.js').then(function(ok){
+    if(ok&&typeof BIBLE_DATA!=='undefined'&&allRefs().every(function(x){return WordBible.verses(x).length}))return WordBible.load();
+    try{delete window.BIBLE_DATA}catch(e){}window.BIBLE_DATA=undefined;
+    return loadScript('dongsan_bible.js').then(function(){return WordBible.load()});
+  });
+}
+Promise.all([bookBible(),document.fonts?document.fonts.ready:Promise.resolve()]).then(function(r){
+  if(!r[0]){document.getElementById('loading').textContent='성경 본문을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.';return}
+  var fonts=['10pt "Gowun Batang"','bold 10pt "Gowun Batang"','10pt "Noto Sans KR"','bold 10pt "Noto Sans KR"'];
+  return Promise.all(fonts.map(function(f){return document.fonts?document.fonts.load(f,'가나다').catch(function(){}):0})).then(function(){
+    var b=Q.get('b');if(!b){try{b=localStorage.getItem('dongsan_sbook')||''}catch(e){}}
+    return setBook(b,decodeURIComponent(location.hash.slice(1)));
+  }).then(function(){
+    return Promise.all([].map.call(document.images,function(im){return im.complete?0:new Promise(function(r){im.onload=im.onerror=r})}));
+  }).then(function(){window.BOOK_READY=true});
+});
+</script>
+</body></html>
