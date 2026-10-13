@@ -378,35 +378,37 @@ var WordShare=(function(){
    그래서 절이나 문장 단위로 잘라 차례로 읽는다.
    onChange 는 읽기 시작·끝날 때 버튼 모양을 바꾸라고 부른다. */
 var WordVoice=(function(){
-  var on=false,queue=[],hook=null;
+  var on=false,queue=[],hook=null,onItem=null;
   function supported(){return 'speechSynthesis' in window}
   function set(v){on=v;if(hook)try{hook(v)}catch(e){}}
   function pieces(t){
     var out=[];
-    (Array.isArray(t)?t:[t]).forEach(function(x){
+    (Array.isArray(t)?t:[t]).forEach(function(x,i){
       (String(x||'').match(/[^.!?]+[.!?]*/g)||[]).forEach(function(s){  /* 문장마다 끊는다 */
         s=s.trim();
-        while(s.length>180){var cut=s.lastIndexOf(' ',180);if(cut<60)cut=180;out.push(s.slice(0,cut));s=s.slice(cut).trim()}
-        if(s)out.push(s);
+        while(s.length>180){var cut=s.lastIndexOf(' ',180);if(cut<60)cut=180;out.push({s:s.slice(0,cut),i:i});s=s.slice(cut).trim()}
+        if(s)out.push({s:s,i:i});
       });
     });
     return out;
   }
   function next(){
     if(!on)return;
-    var s=queue.shift();
-    if(!s){set(false);return}
-    var u=new SpeechSynthesisUtterance(s);
+    var q=queue.shift();
+    if(!q){set(false);return}
+    if(onItem)try{onItem(q.i)}catch(e){}
+    var u=new SpeechSynthesisUtterance(q.s);
     u.lang='ko-KR';u.rate=rate;u.pitch=pitch;
     u.onend=next;u.onerror=function(){queue=[];set(false)};
     window.speechSynthesis.speak(u);
   }
   var rate=.92,pitch=1.05;
-  /* t: 글 하나 또는 글 목록. o: {rate,pitch,onChange} */
+  /* t: 글 하나 또는 글 목록. o: {rate,pitch,onChange,onItem}
+     onItem(i) 는 목록의 i 번째 글을 읽기 시작할 때 부른다 (지금 읽는 절 표시용). */
   function speak(t,o){
     if(!supported()){wToast('이 기기는 읽어 주기를 지원하지 않습니다');return}
     stop();o=o||{};
-    rate=o.rate||.92;pitch=o.pitch||1.05;hook=o.onChange||null;
+    rate=o.rate||.92;pitch=o.pitch||1.05;hook=o.onChange||null;onItem=o.onItem||null;
     queue=pieces(t);set(true);next();
   }
   function stop(){queue=[];if(supported())window.speechSynthesis.cancel();if(on)set(false)}

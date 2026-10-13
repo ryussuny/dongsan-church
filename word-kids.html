@@ -28,9 +28,11 @@ header{position:sticky;top:0;z-index:50;background:linear-gradient(135deg,var(--
   color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px}
 header .mark{width:38px;height:38px;border-radius:14px;background:rgba(255,255,255,.25);display:flex;
   align-items:center;justify-content:center;font-size:20px;flex:none}
-header h1{font-size:18px;font-weight:700}
-header .sub{font-size:11px;opacity:.9}
-header .who{margin-left:auto;background:rgba(255,255,255,.25);padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer}
+header .ht{min-width:0}
+@media (max-width:350px){header{gap:7px;padding:12px}header .who{padding:6px 10px;font-size:12px}}
+header h1{font-size:18px;font-weight:700;white-space:nowrap}
+header .sub{font-size:11px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .who{margin-left:auto;flex:none;white-space:nowrap;max-width:8.5em;overflow:hidden;text-overflow:ellipsis;background:rgba(255,255,255,.25);padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer}
 /* 오늘 몇 명이 함께 읽었나 — 주소를 넣기 전에는 자리도 차지하지 않는다 */
 .visitors{display:flex;align-items:center;flex-wrap:wrap;gap:6px;
   padding:10px 16px 0;font-size:12.5px;color:var(--tx3)}
@@ -53,6 +55,27 @@ header .who{margin-left:auto;background:rgba(255,255,255,.25);padding:7px 13px;b
 .step.g{background:var(--grass)}
 .step.p{background:var(--grape)}
 .step.r{background:var(--berry)}
+/* 끝낸 단계 — 이름표에 ✓, 카드 테두리는 연두 */
+.card{transition:box-shadow .3s}
+.card.done{box-shadow:0 0 0 2px var(--grass),0 4px 14px rgba(111,195,111,.18)}
+.card.done>.step::after{content:' ✓';font-weight:900}
+/* 오늘의 길 — 다섯 걸음 */
+.road{background:var(--card);border-radius:22px;padding:12px 12px 10px;margin-bottom:14px;box-shadow:0 4px 14px rgba(74,163,223,.12)}
+.road-h{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:700;color:var(--tx2);margin:0 4px 8px}
+.road-h b{color:var(--sky);font-size:15px}
+.road-s{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;position:relative}
+.road-s button{position:relative;z-index:1;border:none;background:none;font-family:inherit;cursor:pointer;padding:0;color:var(--tx3);font-size:12px;font-weight:700}
+.road-s .dot{display:flex;align-items:center;justify-content:center;width:44px;height:44px;margin:0 auto 3px;border-radius:50%;
+  background:var(--lt-eef6fd,#eef6fd);font-size:21px;filter:grayscale(.85);opacity:.72;transition:all .3s}
+.road-s button.ok{color:var(--dt-2f6b2f,#3f8a3f)}
+.road-s button.ok .dot{background:var(--lt-e8f6e8,#e8f6e8);box-shadow:0 0 0 2px var(--grass);filter:none;opacity:1}
+.road-s button.next .dot{filter:none;opacity:1;box-shadow:0 0 0 2px var(--sky2);animation:roadPing 1.8s infinite}
+@keyframes roadPing{50%{box-shadow:0 0 0 5px rgba(127,196,240,.35)}}
+@media (prefers-reduced-motion:reduce){.road-s button.next .dot{animation:none}}
+.road-s::before{content:'';position:absolute;left:10%;right:10%;top:21px;height:3px;border-radius:3px;background:var(--line)}
+.road-done{text-align:center;font-size:15px;font-weight:700;color:var(--dt-2f6b2f,#3f8a3f);margin-top:8px}
+/* 🌙 단추는 머리글 안에 */
+#themeSlot #themeBtn{width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.25);font-size:16px;line-height:1;cursor:pointer;flex:none}
 
 .today-hero{background:linear-gradient(160deg,var(--lt-ffe9a8,#ffe9a8),var(--lt-ffd166,#ffd166));border-radius:26px;padding:22px 18px;text-align:center;margin-bottom:14px}
 .today-hero .emo{font-size:60px;line-height:1}
@@ -66,8 +89,20 @@ header .who{margin-left:auto;background:rgba(255,255,255,.25);padding:7px 13px;b
 .keyverse .r{font-size:13px;color:var(--sky);margin-top:8px;font-weight:700}
 
 .story{font-size:18px;line-height:2;color:var(--tx2)}
-.full{display:none;margin-top:12px;background:var(--lt-f7fbff,#f7fbff);border-radius:14px;padding:14px;font-size:16px;line-height:2;color:var(--tx2)}
-.vn{display:inline-block;color:var(--sky);font-weight:700;font-size:13px;margin-right:3px}
+.full{display:none;margin-top:12px;background:var(--lt-f7fbff,#f7fbff);border-radius:18px;padding:12px 10px 14px;color:var(--tx2)}
+.full-bar{display:flex;align-items:center;gap:8px;margin:0 4px 8px}
+.full-bar .ft{flex:1;font-size:13px;color:var(--tx3)}
+.full-bar button{border:none;border-radius:999px;background:var(--sky);color:#fff;font-family:inherit;font-size:14px;font-weight:700;padding:8px 14px;cursor:pointer}
+.full-bar button.on{background:var(--berry)}
+/* 전체 본문 — 절마다 한 줄, 번호는 동그라미. 읽어 주는 절은 노랗게 */
+#fullText{font-size:17px;line-height:1.9}
+.kl{display:block;position:relative;padding:6px 8px 6px 38px;border-radius:14px;transition:background-color .2s,box-shadow .2s}
+.kl .vn{position:absolute;left:4px;top:.5em;width:26px;height:26px;border-radius:50%;background:var(--lt-e3f1fb,#e3f1fb);color:var(--sky);
+  font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;line-height:26px;text-align:center}
+.kl.now{background:var(--lt-fff3cd,#fff3cd);box-shadow:0 0 0 2px var(--sun);color:var(--tx)}
+.kl.now .vn{background:var(--sun);color:#5a4200}
+.kch{font-size:13px;font-weight:700;color:var(--sky);margin:10px 8px 4px}
+.kch:first-child{margin-top:0}
 
 .big{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:18px;border:none;
   border-radius:18px;font-family:inherit;font-size:19px;font-weight:700;cursor:pointer;transition:transform .12s}
@@ -202,8 +237,18 @@ nav button.on{color:var(--sky);font-weight:700}
 </style>
 <style id="dongsan-dark-v1">
 [data-theme="dark"]{color-scheme:dark;--bg:#101820;--card:#1a2633;--line:#2b3b4c;--tx:#e6eef6;--tx2:#b4c5d4;--tx3:#8ea2b4;
---dt-2f6b2f:#bfd3cb;--dt-3a2e22:#c9c0b4;--dt-6b4f00:#cccdc1;--dt-6b5a45:#d4cabc;--dt-7a5b00:#d0cfc1;--dt-8a3b4a:#d3c8d1;--dt-a34a4a:#d9cbd1;--lt-e0cdae:#342e26;--lt-e8f6e8:#2f3a42;--lt-eaf6ea:#2f3a42;--lt-eef3f8:#303944;--lt-eef6fd:#303a44;--lt-f2f8fd:#303a44;--lt-f2f9ff:#303a44;--lt-f4e6d3:#36312b;--lt-f7fbff:#313a44;--lt-ffd166:#323532;--lt-ffe29a:#323738;--lt-ffe6a3:#323839;--lt-ffe9a8:#32383a;--lt-ffeef0:#323943;--lt-fff3cd:#32393e;--lt-fff3f5:#323943;--lt-fff8e1:#323a41;--lt-fff8e6:#323a41;--lt-fffaf2:#37332f;--lt-ffffff:#323b44;}
+--dt-2f6b2f:#a9dba9;--lt-e3f1fb:#25415a;--dt-3a2e22:#c9c0b4;--dt-6b4f00:#cccdc1;--dt-6b5a45:#d4cabc;--dt-7a5b00:#d0cfc1;--dt-8a3b4a:#d3c8d1;--dt-a34a4a:#d9cbd1;--lt-e0cdae:#342e26;--lt-e8f6e8:#2f3a42;--lt-eaf6ea:#2f3a42;--lt-eef3f8:#303944;--lt-eef6fd:#303a44;--lt-f2f8fd:#303a44;--lt-f2f9ff:#303a44;--lt-f4e6d3:#36312b;--lt-f7fbff:#313a44;--lt-ffd166:#323532;--lt-ffe29a:#323738;--lt-ffe6a3:#323839;--lt-ffe9a8:#32383a;--lt-ffeef0:#323943;--lt-fff3cd:#32393e;--lt-fff3f5:#323943;--lt-fff8e1:#323a41;--lt-fff8e6:#323a41;--lt-fffaf2:#37332f;--lt-ffffff:#323b44;}
 [data-theme="dark"] #themeBtn{background:rgba(44,40,36,.94)!important;border-color:rgba(255,255,255,.18)!important}
+[data-theme="dark"] #themeSlot #themeBtn{background:rgba(0,0,0,.22)!important}
+[data-theme="dark"] header{background:linear-gradient(135deg,#1f5f8a,#2d77a8)}
+[data-theme="dark"] .today-hero{background:linear-gradient(160deg,#3b3422,#2c2819)}
+[data-theme="dark"] .today-hero .ttl{color:#ffe08a}
+[data-theme="dark"] .today-hero .ps,[data-theme="dark"] .today-hero .dt,[data-theme="dark"] .wx-lab,[data-theme="dark"] .tease{color:#d9c27a}
+[data-theme="dark"] .today-hero .bookln{background:rgba(255,255,255,.1);color:#ffe08a}
+[data-theme="dark"] .road-s .dot{opacity:.75}
+[data-theme="dark"] .kl .vn{background:#25415a;color:#9fd3f7}
+[data-theme="dark"] .kl.now .vn{color:#3a2c00}
+[data-theme="dark"] .card.done{box-shadow:0 0 0 2px #4f9a4f}
 @media print{#themeBtn{display:none!important}}
 @media print{[data-theme="dark"]{color-scheme:light}}
 </style>
@@ -212,8 +257,9 @@ nav button.on{color:var(--sky);font-weight:700}
 
 <header>
   <div class="mark">🕊️</div>
-  <div><h1>오늘의 말씀</h1><div class="sub">동산감리교회 어린이</div></div>
+  <div class="ht"><h1>오늘의 말씀</h1><div class="sub">동산감리교회 어린이</div></div>
   <div class="who" id="who" onclick="go('parent')">이름 정하기</div>
+  <span id="themeSlot"></span>
 </header>
 
 <!-- 어느 탭에 있든 보이도록 화면(.pg) 바깥에 둔다 -->
@@ -222,6 +268,8 @@ nav button.on{color:var(--sky);font-weight:700}
 <!-- ===== 오늘 ===== -->
 <div class="pg on" id="pg-today">
   <div class="today-hero" id="hero"></div>
+
+  <div class="road" id="road" aria-label="오늘의 길"></div>
 
   <div class="card" id="replyCard" hidden>
     <div class="step r">💌 목사님의 답장</div>
@@ -244,14 +292,17 @@ nav button.on{color:var(--sky);font-weight:700}
     <div class="rq" id="reviewQuiz"></div>
   </div>
 
-  <div class="card">
+  <div class="card" id="readCard">
     <div class="step">1단계 · 말씀 읽기</div>
     <div class="keyverse" id="keyVerse"></div>
     <div class="row">
-      <button class="big b-soft" onclick="readAloud()">🔊 읽어 주기</button>
-      <button class="big b-soft" onclick="toggleFull()">📖 전체 보기</button>
+      <button class="big b-soft" id="readBtn" onclick="readAloud()">🔊 읽어 주기</button>
+      <button class="big b-soft" id="fullBtn" onclick="toggleFull()" aria-expanded="false">📖 전체 보기</button>
     </div>
-    <div class="full" id="fullText">말씀을 가져오는 중이에요…</div>
+    <div class="full" id="fullWrap">
+      <div class="full-bar"><span class="ft" id="fullRef"></span><button id="fullRead" onclick="readFull()">🔊 따라 읽기</button></div>
+      <div id="fullText">말씀을 가져오는 중이에요…</div>
+    </div>
   </div>
 
   <div class="card">
@@ -266,7 +317,7 @@ nav button.on{color:var(--sky);font-weight:700}
     <div class="quiz-msg" id="quizMsg"></div>
   </div>
 
-  <div class="card">
+  <div class="card" id="missionCard">
     <div class="step p">4단계 · 오늘의 미션</div>
     <div class="mission"><div class="em">🎯</div><div class="tx" id="missionTx"></div></div>
     <button class="big b-sun" id="missionBtn" style="margin-top:12px" onclick="doMission()">미션 했어요!</button>
@@ -278,7 +329,7 @@ nav button.on{color:var(--sky);font-weight:700}
     <div style="font-size:14px;color:var(--tx2);margin-top:8px">두 손 모으고 소리 내어 따라 해 보아요. 끝에는 ‘예수님 이름으로 기도합니다. 아멘!’</div>
   </div>
 
-  <div class="card">
+  <div class="card" id="tableCard">
     <div class="step y">🍽️ 오늘의 식탁 질문</div>
     <div class="tq" id="tableQ"></div>
     <div style="font-size:14px;color:var(--tx2);margin:10px 0">저녁 먹을 때 엄마 아빠와 이야기해 보아요. 어른 화면에도 같은 질문이 나와요!</div>
@@ -305,7 +356,7 @@ nav button.on{color:var(--sky);font-weight:700}
     <div class="privnote">🔒 내가 쓴 글은 <b>목사님만</b> 보셔요. 홈페이지에 올라가지 않아요.</div>
   </div>
 
-  <div class="card" style="text-align:center">
+  <div class="card" id="stampCard" style="text-align:center">
     <div class="step">마지막 · 도장 찍기</div>
     <div class="stars" id="todayStars"></div>
     <div class="tease" id="cardTease" hidden></div>
@@ -462,13 +513,16 @@ function renderToday(){
 
   WordBible.load().then(function(ok){
     var kv=document.getElementById('kvText'),full=document.getElementById('fullText');
-    if(!ok){kv.textContent='성경책에서 '+k.verseRef+'을 펴서 읽어 보아요.';full.textContent='';return}
+    if(!ok){kv.textContent='성경책에서 '+k.verseRef+'을 펴서 읽어 보아요.';full.textContent='';CUR_VS=[];return}
     var one=WordBible.one(k.verseRef,true);
     kv.textContent=one||('성경책에서 '+k.verseRef+'을 펴서 읽어 보아요.');
     var vs=WordBible.verses(d.passage,true);
     if(!state().quizOk)renderQuiz();         /* 빈칸·순서 퀴즈는 본문이 와야 만들 수 있다 */
     renderWhere();renderMemo();
-    full.innerHTML=vs.length?vs.map(function(v){return '<span class="vn">'+v.v+'</span>'+wEsc(v.t)}).join(' '):'성경책에서 함께 읽어요.';
+    CUR_VS=vs;
+    document.getElementById('fullRef').textContent=d.passage+' · 개역개정';
+    full.innerHTML=vs.length?kidVerses(vs):'성경책에서 함께 읽어요.';
+    applyFont();
     var miss=WordBible.missing(d.passage);
     if(miss.length)full.innerHTML+='<div style="margin-top:10px;padding:10px 12px;background:var(--lt-fff8e6,#fff8e6);border-radius:12px;'+
       'font-size:14px;color:var(--dt-6b4f00,#6b4f00);line-height:1.7">📌 '+miss.join(', ')+'절은 앱에 없어요. 성경책을 펴서 함께 읽어 보아요!</div>';
@@ -741,7 +795,9 @@ function parentCheck(){
 }
 
 function renderProgress(){
-  var s=state(),n=(s.stamped?1:0)+(s.quizOk?1:0)+(s.missionOk?1:0)+(s.table?1:0);
+  var s=state();
+  renderRoad({read:s.stamped||!!pend().read,quizOk:s.quizOk,missionOk:s.missionOk,table:s.table,stamped:s.stamped});
+  var n=(s.stamped?1:0)+(s.quizOk?1:0)+(s.missionOk?1:0)+(s.table?1:0);
   var tb=document.getElementById('tableBtn');
   tb.className=s.table?'big b-done':'big b-sun';
   tb.textContent=s.table?'✓ 가족과 이야기했어요':'가족과 이야기했어요 🍽️';
@@ -764,15 +820,66 @@ function celebrate(emo,msg,sub){
   setTimeout(function(){ov.classList.remove('on')},1800);
 }
 
+/* ---------- 1단계 본문 ---------- */
+var CUR_VS=[];
+function kidVerses(vs){
+  var multi=vs.some(function(v){return String(v.v).indexOf(':')>0}),last=null;
+  return vs.map(function(v,i){
+    var s=String(v.v),ch=multi?s.split(':')[0]:null,n=multi?s.split(':')[1]:s,h='';
+    if(ch&&ch!==last){h='<div class="kch">'+ch+'장</div>';last=ch}
+    return h+'<span class="kl" data-i="'+i+'"><span class="vn">'+n+'</span>'+wEsc(v.t)+'</span>';
+  }).join('');
+}
+/* 오늘 말씀을 읽었다 — 전체 보기를 열거나 읽어 주기를 들으면 「오늘의 길」 첫 걸음이 켜진다 */
+function markRead(){if(!pend().read){setPend({read:true});renderProgress()}}
 function toggleFull(){
-  var f=document.getElementById('fullText');
-  f.style.display=f.style.display==='block'?'none':'block';
+  var f=document.getElementById('fullWrap'),open=f.style.display!=='block';
+  f.style.display=open?'block':'none';
+  var b=document.getElementById('fullBtn');b.textContent=open?'📕 접기':'📖 전체 보기';b.setAttribute('aria-expanded',open?'true':'false');
+  if(open)markRead();else if(WordVoice.playing&&FULL_READING)WordVoice.stop();
+}
+function voiceBtns(on,which){
+  var a=document.getElementById('readBtn'),f=document.getElementById('fullRead');
+  a.textContent=on&&which==='short'?'⏹ 그만 읽기':'🔊 읽어 주기';
+  f.textContent=on&&which==='full'?'⏹ 그만':'🔊 따라 읽기';f.classList.toggle('on',on&&which==='full');
 }
 function readAloud(){
-  if(WordVoice.playing){WordVoice.stop();wToast('그만 읽을게요');return}
+  if(WordVoice.playing){WordVoice.stop();return}
   var d=day(),kv=document.getElementById('kvText').textContent;
-  WordVoice.speak(d.title+'. '+kv+' '+d.kids.summary);
-  wToast('말씀을 읽어 드릴게요 🔊');
+  FULL_READING=false;markRead();
+  WordVoice.speak(d.title+'. '+kv+' '+d.kids.summary,{onChange:function(on){voiceBtns(on,'short')}});
+}
+/* 따라 읽기 — 한 절씩 소리 내어 읽고, 지금 읽는 절을 노랗게 비춘다 */
+var FULL_READING=false;
+function hiVerse(i){
+  var now=null;
+  document.querySelectorAll('#fullText .kl').forEach(function(e){var on=+e.dataset.i===i;e.classList.toggle('now',on);if(on)now=e});
+  if(now){var r=now.getBoundingClientRect();if(r.top<70||r.bottom>window.innerHeight-90)now.scrollIntoView({block:'center',behavior:'smooth'})}
+}
+function readFull(){
+  if(WordVoice.playing&&FULL_READING){WordVoice.stop();return}
+  if(!CUR_VS.length){wToast('말씀을 가져오는 중이에요');return}
+  FULL_READING=true;markRead();
+  WordVoice.speak(CUR_VS.map(function(v){return v.t}),{rate:.88,onItem:hiVerse,
+    onChange:function(on){voiceBtns(on,'full');if(!on){FULL_READING=false;hiVerse(-1)}}});
+}
+
+/* ---------- 오늘의 길 ---------- */
+var ROAD=[{k:'read',e:'📖',n:'읽기',to:'readCard'},{k:'quizOk',e:'🧩',n:'퀴즈',to:'quizCard'},{k:'missionOk',e:'🎯',n:'미션',to:'missionCard'},
+          {k:'table',e:'🍽️',n:'식탁',to:'tableCard'},{k:'stamped',e:'🖐️',n:'도장',to:'stampCard'}];
+function renderRoad(s){
+  var done=ROAD.map(function(r){return !!s[r.k]}),n=done.filter(Boolean).length,next=done.indexOf(false);
+  document.getElementById('road').innerHTML='<div class="road-h"><span>👣 오늘의 길</span><b>'+n+' / '+ROAD.length+'</b></div>'+
+    '<div class="road-s">'+ROAD.map(function(r,i){
+      return '<button class="'+(done[i]?'ok':(i===next?'next':''))+'" onclick="toCard(\''+r.to+'\')" aria-label="'+r.n+(done[i]?' 했어요':' 아직')+'">'+
+        '<span class="dot">'+(done[i]?'✅':r.e)+'</span>'+r.n+'</button>'}).join('')+'</div>'+
+    (n===ROAD.length?'<div class="road-done">🎉 오늘의 길을 다 걸었어요!</div>':'');
+  ROAD.forEach(function(r,i){var c=document.getElementById(r.to);if(c)c.classList.toggle('done',done[i])});
+}
+function toCard(id){
+  var c=document.getElementById(id);if(!c)return;
+  var y=c.getBoundingClientRect().top+window.scrollY-70;
+  window.scrollTo({top:y,behavior:'smooth'});
 }
 
 function postKidShare(btn){
@@ -870,6 +977,7 @@ function renderBoard(){
 }
 function openDay(ds){
   if(WordData.locked(ds)){wToast('내일 말씀은 내일 새벽에 열려요');return}
+  if(WordVoice.playing)WordVoice.stop();
   viewDate=ds;renderToday();loadFeed();
   document.querySelectorAll('nav button').forEach(function(b,i){b.classList.toggle('on',i===0)});
   go('today');
@@ -905,6 +1013,7 @@ function applyFont(){
   var f=me.kidFont||17;
   document.querySelectorAll('.story,.ftext').forEach(function(e){e.style.fontSize=f+'px'});
   document.querySelectorAll('.keyverse .t').forEach(function(e){e.style.fontSize=(f+3)+'px'});
+  var ft=document.getElementById('fullText');if(ft)ft.style.fontSize=f+'px';
 }
 
 /* ---------- 시작 ---------- */
