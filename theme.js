@@ -44,7 +44,10 @@
     var b = document.createElement('button');
     b.id = 'themeBtn';
     b.type = 'button';
-    b.style.cssText = 'position:fixed;right:14px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:60;' +
+    /* 화면에 #themeSlot 자리가 있으면 그 안(머리글 등)에 작게 넣는다 — 떠 있는 단추가 글을 가리지 않게.
+       모양은 그 화면의 CSS(#themeSlot #themeBtn)가 정한다. */
+    var slot = document.getElementById('themeSlot');
+    if (!slot) b.style.cssText = 'position:fixed;right:14px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:60;' +
       'width:44px;height:44px;border-radius:50%;border:1px solid rgba(0,0,0,.12);background:rgba(255,255,255,.92);' +
       'box-shadow:0 2px 10px rgba(0,0,0,.18);font-size:20px;line-height:1;cursor:pointer;' +
       '-webkit-tap-highlight-color:transparent';
@@ -52,7 +55,7 @@
       try { localStorage.setItem(KEY, isDark() ? 'light' : 'dark'); } catch (e) {}
       apply();
     });
-    document.body.appendChild(b);
+    (slot || document.body).appendChild(b);
     apply();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addButton);

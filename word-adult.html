@@ -29,6 +29,7 @@
   --brick:#b3593f;--brick-deep:#8f4531;--moss:#5f7d4d;--gold:#c99a3f;
   --cream:#fbf3e7;--paper:#fffaf2;--warm:#f4e6d3;--border:#e6d3b4;
   --text:#3a2e22;--text2:#6b5a45;--text3:#9b8a72;--fs:17px;
+  --gold-ink:#a77a22;--hl:rgba(233,196,106,.38);--hl-line:rgba(201,154,63,.55);--hl-soft:rgba(233,196,106,.14);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text);
@@ -58,9 +59,9 @@ header .who{margin-left:auto;font-size:12px;background:rgba(255,255,255,.18);pad
 
 .pg{display:none;padding:14px}
 .pg.on{display:block}
-.card{background:var(--paper);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;
-  box-shadow:0 2px 10px rgba(143,69,49,.05)}
-.st{font-size:13px;font-weight:700;color:var(--brick-deep);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.card{background:var(--paper);border:1px solid var(--border);border-radius:18px;padding:16px 16px 17px;margin-bottom:14px;
+  box-shadow:0 1px 2px rgba(60,40,20,.04),0 6px 18px rgba(143,69,49,.05)}
+.st{font-size:13.5px;font-weight:700;color:var(--brick-deep);margin-bottom:12px;display:flex;align-items:center;gap:6px;letter-spacing:.01em}
 .st .right{margin-left:auto;font-size:11px;font-weight:400;color:var(--text3)}
 
 .hero{background:linear-gradient(135deg,#2f2a26,#4a3a2c);color:#fff;border-radius:18px;padding:20px;margin-bottom:12px;position:relative;overflow:hidden}
@@ -82,9 +83,53 @@ header .who{margin-left:auto;font-size:12px;background:rgba(255,255,255,.18);pad
 .plan-row.lock{opacity:.42}
 .plan-row.lock .plan-chk::before{content:'🔒';font-size:11px}
 
-.verse{font-family:'Gowun Batang',serif;font-size:var(--fs);line-height:2.05;color:var(--text)}
-.vn{display:inline-block;min-width:20px;color:var(--brick);font-weight:700;font-size:.78em;
-  font-family:'Noto Sans KR',sans-serif;margin-right:3px;vertical-align:1px}
+/* ---------- 성경 본문: 절마다 한 줄 (기본) · 이어 읽기 ---------- */
+.verse{font-family:'Gowun Batang',serif;font-size:var(--fs);line-height:1.95;color:var(--text);
+  letter-spacing:-.005em;word-break:keep-all;overflow-wrap:break-word;text-wrap:pretty}
+.verse .vv{display:block;position:relative;padding:.18em 0 .18em 1.75em;border-radius:6px;cursor:pointer;
+  transition:background-color .15s}
+.verse .vn{position:absolute;left:0;top:.62em;width:1.35em;text-align:right;font-family:'Noto Sans KR',sans-serif;
+  font-size:.6em;line-height:1;font-weight:700;color:var(--gold-ink);font-variant-numeric:tabular-nums}
+.verse .vch{font-family:'Noto Sans KR',sans-serif;font-size:.72em;font-weight:700;color:var(--brick-deep);
+  letter-spacing:.06em;margin:.9em 0 .3em;padding-bottom:.25em;border-bottom:1px solid var(--border)}
+.verse .vch:first-child{margin-top:0}
+.verse.flow{text-align:start}
+.verse.flow .vv{display:inline;padding:0 .1em;border-radius:3px}
+.verse.flow .vn{position:static;display:inline;width:auto;vertical-align:.55em;margin:0 .22em 0 .1em}
+.verse .vv.sel{background:var(--hl);box-shadow:inset 0 -.12em 0 var(--hl-line)}
+@media (hover:hover){.verse .vv:hover{background:var(--hl-soft)}}
+.vtools{display:flex;align-items:center;gap:4px;margin:-2px 0 14px;flex-wrap:wrap}
+.vtools .sp{flex:1}
+.vtools button{height:30px;padding:0 7px;border:1px solid var(--border);background:var(--warm);border-radius:9px;
+  font-family:inherit;font-size:12.5px;color:var(--text2);cursor:pointer;white-space:nowrap}
+.vtools button[aria-pressed="true"]{background:var(--brick-deep);border-color:var(--brick-deep);color:#fff}
+.vtools .listen.on{background:var(--brick-deep);border-color:var(--brick-deep);color:#fff}
+@media (max-width:379px){.vtools{gap:3px}.vtools button{padding:0 5px;font-size:12px}}
+.vhint{margin-top:12px;font-size:11.5px;color:var(--text3);text-align:center}
+.vcard{padding:18px 18px 14px}
+/* 고른 절 막대 */
+.selbar{position:fixed;left:12px;right:12px;bottom:calc(70px + env(safe-area-inset-bottom));z-index:70;max-width:520px;margin:0 auto;
+  display:flex;align-items:center;gap:6px;padding:8px 8px 8px 14px;border-radius:14px;background:#2f2a26;color:#fff;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:13px}
+.selbar[hidden]{display:none}
+.selbar span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.selbar button{border:none;background:rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:8px 12px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+/* 크게 읽기 */
+.focus{position:fixed;inset:0;z-index:90;background:var(--paper);display:flex;flex-direction:column}
+.focus[hidden]{display:none}
+.fc-bar{display:flex;align-items:center;gap:6px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;border-bottom:1px solid var(--border);background:var(--paper)}
+.fc-bar button{flex:none;height:34px;min-width:34px;padding:0 10px;border:1px solid var(--border);background:var(--warm);border-radius:10px;
+  font-family:inherit;font-size:13px;color:var(--text2);cursor:pointer}
+.fc-h{flex:1;min-width:0;text-align:center;line-height:1.35}
+.fc-h b{display:block;font-family:'Gowun Batang',serif;font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-h span{font-size:11.5px;color:var(--text3)}
+.fc-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:22px 20px calc(40px + env(safe-area-inset-bottom))}
+.fc-body .verse{max-width:640px;margin:0 auto;font-size:calc(var(--fs) * 1.18);line-height:2.05}
+.fc-end{text-align:center;margin:26px 0 8px;font-family:'Gowun Batang',serif;color:var(--text3);font-size:14px;letter-spacing:.2em}
+/* 머리글 안의 밝기 단추 */
+#themeSlot{flex:none;display:flex}
+#themeSlot #themeBtn,[data-theme="dark"] #themeSlot #themeBtn{width:32px;height:32px;border-radius:50%;border:none!important;
+  background:rgba(255,255,255,.18)!important;font-size:15px;line-height:1;cursor:pointer;box-shadow:none}
 .fsbar{display:flex;gap:6px;margin-left:auto}
 .fsbar button{width:30px;height:26px;border:1px solid var(--border);background:var(--warm);border-radius:8px;
   font-size:12px;cursor:pointer;color:var(--text2)}
@@ -247,6 +292,7 @@ nav button.on{color:var(--brick-deep);font-weight:700}
   font-family:inherit;font-size:12px;font-weight:700;padding:6px 10px;cursor:pointer}
 </style>
 <style id="dongsan-dark-v1">
+[data-theme="dark"]{--gold-ink:#d9b26a;--hl:rgba(217,178,106,.24);--hl-line:rgba(217,178,106,.5);--hl-soft:rgba(217,178,106,.1)}
 [data-theme="dark"]{color-scheme:dark;--cream:#16130f;--paper:#221d18;--warm:#2b241e;--border:#4a3f33;--text:#efe6d8;--text2:#cdbfa9;--text3:#a3927a;--moss:#8fb47a;
 --dt-3a2e22:#c9c0b4;--dt-3f5f30:#cacbb7;--dt-4c6b3a:#cdcdb9;--dt-6b5a45:#d4cabc;--dt-8f4531:#dbc5b7;--lt-cfdcc3:#313029;--lt-e0cdae:#342e26;--lt-e7f0dc:#34322c;--lt-e9f2e2:#35322d;--lt-eef3e8:#35322d;--lt-f4e6d3:#36312b;--lt-fbeae6:#37312d;--lt-fdfaf4:#37332f;--lt-fff6e6:#37332d;--lt-fffaf2:#37332f;--lt-ffffff:#373430;}
 [data-theme="dark"] #themeBtn{background:rgba(44,40,36,.94)!important;border-color:rgba(255,255,255,.18)!important}
@@ -260,6 +306,7 @@ nav button.on{color:var(--brick-deep);font-weight:700}
   <div class="mark">✝</div>
   <div><h1>오늘의 말씀 나눔</h1><div class="sub">동산감리교회 · 성인용</div></div>
   <div class="who" id="who" onclick="go('set')">이름 설정</div>
+  <span id="themeSlot"></span>
 </header>
 
 <!-- 어느 탭에 있든 보이도록 화면(.pg) 바깥에 둔다 -->
@@ -290,13 +337,18 @@ nav button.on{color:var(--brick-deep);font-weight:700}
     <div id="catchBox"></div>
   </div>
 
-  <div class="card">
-    <div class="st">📖 오늘의 본문 <span class="right" id="verSrc"></span>
-      <div class="fsbar"><button class="listen" id="listenBtn" onclick="listen()" hidden>🔊 듣기</button>
-        <button onclick="setFont(-1)" aria-label="글자 작게">가－</button><button onclick="setFont(1)" aria-label="글자 크게">가＋</button></div>
+  <div class="card vcard">
+    <div class="st">📖 오늘의 본문 <span class="right" id="verSrc"></span></div>
+    <div class="vtools" role="toolbar" aria-label="본문 읽기 도구">
+      <button class="listen" id="listenBtn" onclick="listen()" hidden>🔊 듣기</button>
+      <button id="modeBtn" onclick="toggleReadMode()" aria-pressed="false">¶ 이어 읽기</button>
+      <span class="sp"></span>
+      <button onclick="setFont(-1)" aria-label="글자 작게">가－</button><button onclick="setFont(1)" aria-label="글자 크게">가＋</button>
+      <button onclick="openFocus()" aria-label="본문만 크게 읽기">⤢ 크게</button>
     </div>
     <div class="hook" id="hookBox" hidden></div>
     <div class="verse" id="verseBox">본문을 불러오는 중입니다…</div>
+    <div class="vhint">절을 누르면 표시되고, 고른 절을 복사하거나 나눌 수 있어요.</div>
   </div>
 
   <div class="card" id="explainCard">
@@ -458,6 +510,22 @@ nav button.on{color:var(--brick-deep);font-weight:700}
       <a href="index.html" style="color:var(--brick-deep);font-weight:700">교회 홈페이지 →</a>
     </div>
   </div>
+</div>
+
+<!-- 고른 절 — 복사·나누기 -->
+<div class="selbar" id="selBar" hidden role="region" aria-label="고른 절">
+  <span id="selInfo"></span>
+  <button onclick="selCopy()">복사</button><button onclick="selShare()">나누기</button><button onclick="selClear()" aria-label="고른 절 지우기">✕</button>
+</div>
+
+<!-- 크게 읽기 — 본문만 크게, 다른 것은 모두 숨긴다 -->
+<div class="focus" id="focus" hidden role="dialog" aria-modal="true" aria-labelledby="fcTtl">
+  <div class="fc-bar">
+    <button onclick="closeFocus()" aria-label="닫기">✕</button>
+    <div class="fc-h"><b id="fcTtl"></b><span id="fcRef"></span></div>
+    <button onclick="setFont(-1)" aria-label="글자 작게">가－</button><button onclick="setFont(1)" aria-label="글자 크게">가＋</button>
+  </div>
+  <div class="fc-body"><div class="verse" id="fcVerse"></div><div class="fc-end">— 아멘 —</div></div>
 </div>
 
 <nav>
@@ -688,13 +756,96 @@ function sendCard(){
   WordShare.send(WordShare.card(d,v,v?ref:''));
 }
 
+/* ---------- 본문 읽기: 절마다 한 줄 / 이어 읽기 · 절 고르기 · 크게 읽기 ---------- */
+var CUR_VS=[],SEL={};
+var READ_MODE=(function(){try{return localStorage.getItem('dongsan_read_mode')==='flow'?'flow':'lines'}catch(e){return 'lines'}})();
+function verseHtml(vs){
+  var lastCh=null,multi=vs.some(function(v){return String(v.v).indexOf(':')>0});
+  return vs.map(function(v,i){
+    var s=String(v.v),ch=multi?s.split(':')[0]:null,num=multi?s.split(':')[1]:s,head='';
+    if(ch&&ch!==lastCh){head='<div class="vch">'+ch+'장</div>';lastCh=ch}
+    return head+'<span class="vv" data-i="'+i+'"><sup class="vn">'+num+'</sup>'+wEsc(v.t)+'</span>';
+  }).join(' ');
+}
+function applyReadMode(){
+  ['verseBox','fcVerse'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.toggle('flow',READ_MODE==='flow')});
+  var b=document.getElementById('modeBtn');
+  if(b){b.setAttribute('aria-pressed',READ_MODE==='flow'?'true':'false');b.textContent=READ_MODE==='flow'?'≡ 절마다 줄':'¶ 이어 읽기'}
+}
+function toggleReadMode(){
+  READ_MODE=READ_MODE==='flow'?'lines':'flow';
+  try{localStorage.setItem('dongsan_read_mode',READ_MODE)}catch(e){}
+  applyReadMode();
+}
+/* 절 고르기 — 누르면 표시, 다시 누르면 지움 */
+function selRef(){
+  var r=WordData.parseRef(day().passage),book=r?r.book:'',groups={},order=[];
+  Object.keys(SEL).map(Number).sort(function(a,b){return a-b}).forEach(function(i){
+    var s=String(CUR_VS[i].v),ch=s.indexOf(':')>0?s.split(':')[0]:String(r?r.chapter:''),n=+(s.indexOf(':')>0?s.split(':')[1]:s);
+    if(!groups[ch]){groups[ch]=[];order.push(ch)}groups[ch].push(n);
+  });
+  return book+' '+order.map(function(ch){
+    var a=groups[ch],out=[],st=a[0],pv=a[0];
+    for(var k=1;k<=a.length;k++){if(a[k]===pv+1){pv=a[k];continue}out.push(st===pv?st:st+'-'+pv);st=pv=a[k]}
+    return ch+':'+out.join(',');
+  }).join('; ');
+}
+function selText(){
+  var t=Object.keys(SEL).map(Number).sort(function(a,b){return a-b}).map(function(i){return CUR_VS[i].t}).join(' ');
+  return '“'+t+'”\n— '+selRef()+' (개역개정)';
+}
+function selDraw(){
+  var n=Object.keys(SEL).length,bar=document.getElementById('selBar');
+  document.querySelectorAll('.verse .vv').forEach(function(e){e.classList.toggle('sel',!!SEL[e.dataset.i])});
+  bar.hidden=!n;if(n)document.getElementById('selInfo').textContent='🖍 '+selRef();
+}
+function selClear(){SEL={};selDraw()}
+function selCopy(){
+  var t=selText();
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(selDone,function(){prompt('복사',t)});
+  else prompt('복사',t);
+}
+/* 복사됨은 막대 안에 잠깐 보여 준다 — 아래 알림이 막대를 가리지 않게 */
+function selDone(){var i=document.getElementById('selInfo');i.textContent='✓ 복사했어요';clearTimeout(selDone.t);selDone.t=setTimeout(selDraw,1400)}
+function selShare(){
+  var t=selText()+'\n\n동산감리교회 오늘의 말씀\nhttps://ryussuny.github.io/dongsan-church/word.html';
+  if(navigator.share)navigator.share({text:t}).catch(function(){});else selCopy();
+}
+['verseBox','fcVerse'].forEach(function(id){
+  var el=document.getElementById(id);if(!el)return;
+  el.addEventListener('click',function(e){
+    var v=e.target.closest&&e.target.closest('.vv');if(!v)return;
+    if(window.getSelection&&String(window.getSelection()).length)return; // 손가락으로 글자를 긁어 고르는 중이면 그대로 둔다
+    var i=v.dataset.i;if(SEL[i])delete SEL[i];else SEL[i]=1;selDraw();
+  });
+});
+/* 크게 읽기 */
+function openFocus(){
+  var d=day();
+  document.getElementById('fcTtl').textContent=d.title||'';
+  document.getElementById('fcRef').textContent=d.passage+' · 개역개정';
+  var fv=document.getElementById('fcVerse');fv.innerHTML=CUR_VS.length?verseHtml(CUR_VS):document.getElementById('verseBox').innerHTML;
+  applyReadMode();selDraw();
+  var f=document.getElementById('focus');f.hidden=false;document.body.style.overflow='hidden';
+  f.querySelector('.fc-body').scrollTop=0;
+  try{history.pushState({focus:1},'')}catch(e){}
+}
+function closeFocus(fromPop){
+  var f=document.getElementById('focus');if(f.hidden)return;
+  f.hidden=true;document.body.style.overflow='';
+  if(!fromPop&&history.state&&history.state.focus)try{history.back()}catch(e){}
+}
+window.addEventListener('popstate',function(){closeFocus(true)});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeFocus()});
+
 function renderVerses(){
   var box=document.getElementById('verseBox'),d=day();
   WordBible.load().then(function(ok){
     if(!ok){box.innerHTML='<span style="color:var(--text3)">본문 파일을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</span>';return}
     var vs=WordBible.verses(d.passage,true);
     if(!vs.length){box.innerHTML='<span style="color:var(--text3)">'+wEsc(d.passage)+' 본문을 찾지 못했습니다.<br>성경책에서 직접 펴서 읽어 주세요.</span>';return}
-    box.innerHTML=vs.map(function(v){return '<span class="vn">'+v.v+'</span>'+wEsc(v.t)}).join(' ');
+    CUR_VS=vs;selClear();
+    box.innerHTML=verseHtml(vs);applyReadMode();
     renderWhere();renderMemo();
     var miss=WordBible.missing(d.passage);
     if(miss.length)box.innerHTML+='<div style="margin-top:12px;padding:10px 12px;background:var(--warm);border-radius:10px;'+
