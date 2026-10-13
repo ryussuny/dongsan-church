@@ -19,7 +19,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(170deg,var
   min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:28px 20px;color:var(--dt-3a2e22,#3a2e22);word-break:keep-all}
 .wrap{width:100%;max-width:440px}
-.top{text-align:center;margin-bottom:26px}
+.top{position:relative;text-align:center;margin-bottom:26px}
+#themeSlot{position:absolute;top:-6px;right:-4px}
+#themeSlot #themeBtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--lt-e6d3b4,#e6d3b4);background:var(--lt-fffaf2,#fffaf2);font-size:17px;line-height:1;cursor:pointer}
 .cross{font-size:34px;color:#c99a3f}
 .logo{display:block;width:110px;height:auto;margin:14px auto 0;opacity:.9}
 .lg-d{display:none}
@@ -27,9 +29,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(170deg,var
 h1{font-family:'Gowun Batang',serif;font-size:26px;margin:8px 0 4px}
 .sub{font-size:13px;color:#8a795f}
 .verse{font-family:'Gowun Batang',serif;font-size:14px;color:var(--dt-6b5a45,#6b5a45);margin-top:14px;line-height:1.9}
-.today{background:var(--lt-fffaf2,#fffaf2);border:1px solid var(--lt-e6d3b4,#e6d3b4);border-radius:16px;padding:14px 16px;margin-bottom:16px;text-align:center}
+a.today{display:block;text-decoration:none;color:inherit;background:var(--lt-fffaf2,#fffaf2);border:1px solid var(--lt-e6d3b4,#e6d3b4);border-radius:20px;padding:16px 16px 14px;margin-bottom:16px;text-align:center;
+  box-shadow:0 1px 2px rgba(90,60,30,.06),0 6px 18px rgba(143,69,49,.08);transition:transform .15s}
+a.today:active{transform:scale(.98)}
+.today .go{display:inline-block;margin-top:10px;padding:7px 14px;border-radius:999px;background:var(--lt-f4e6d3,#f4e6d3);color:var(--dt-8f4531,#8f4531);font-size:13px;font-weight:700}
 .today .d{font-size:11px;color:#9b8a72}
-.today .p{font-family:'Gowun Batang',serif;font-size:19px;font-weight:700;margin:4px 0 2px}
+.today .p{font-family:'Gowun Batang',serif;font-size:22px;font-weight:700;margin:6px 0 2px}
 .today .t{font-size:13px;color:var(--dt-6b5a45,#6b5a45)}
 a.card{display:block;border-radius:20px;padding:20px;margin-bottom:12px;color:#fff;text-decoration:none;
   box-shadow:0 6px 18px rgba(143,69,49,.16);transition:transform .15s}
@@ -43,11 +48,12 @@ a.youth{background:linear-gradient(135deg,#3b2d6b,#7c5cff)}
 .grid .card .row{flex-direction:column;align-items:flex-start;gap:6px}
 .grid .card .emo{font-size:30px}
 .grid .card .ttl{font-size:17px}
-a.book,div.book{display:flex;align-items:center;gap:12px;border-radius:18px;padding:16px;margin-bottom:12px;text-decoration:none;
+a.book,div.book{display:block;border-radius:20px;padding:16px;margin-bottom:12px;text-decoration:none;box-shadow:0 1px 2px rgba(90,60,30,.05);
   background:var(--lt-fffaf2,#fffaf2);border:1px solid var(--lt-e6d3b4,#e6d3b4);color:var(--dt-3a2e22,#3a2e22)}
-a.book .emo,.book .emo{font-size:30px}.book b{display:block;font-size:16px}.book span{font-size:12.5px;color:var(--dt-6b5a45,#6b5a45)}
+.book b{display:block;font-size:16px;margin-bottom:3px}.book b i{font-style:normal;margin-right:6px}.book span{font-size:12.5px;color:var(--dt-6b5a45,#6b5a45)}
 .book .bk-soon{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--lt-f4e6d3,#f4e6d3);font-size:13.5px;font-weight:700;color:var(--dt-8f4531,#8f4531);text-align:center}
 .book .bk2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.book [hidden]{display:none}
 .book .bk2 a{display:block;text-align:center;padding:10px 6px;border-radius:12px;background:var(--lt-f4e6d3,#f4e6d3);color:var(--dt-8f4531,#8f4531);font-weight:700;font-size:14px;text-decoration:none}
 .welcome{background:var(--lt-fffaf2,#fffaf2);border:1px dashed var(--lt-e0cdae,#e0cdae);border-radius:16px;padding:14px 16px;margin-bottom:12px;font-size:13px;line-height:1.8;color:var(--dt-6b5a45,#6b5a45)}
 .welcome b{color:var(--dt-3a2e22,#3a2e22)}
@@ -64,6 +70,7 @@ a.book .emo,.book .emo{font-size:30px}.book b{display:block;font-size:16px}.book
 [data-theme="dark"]{color-scheme:dark;
 --dt-3a2e22:#c9c0b4;--dt-6b5a45:#d4cabc;--dt-8f4531:#dbc5b7;--lt-e0cdae:#342e26;--lt-e6d3b4:#342e27;--lt-f4e6d3:#36312b;--lt-fbf3e7:#37322d;--lt-fffaf2:#37332f;--lt-ffffff:#373430;}
 [data-theme="dark"] #themeBtn{background:rgba(44,40,36,.94)!important;border-color:rgba(255,255,255,.18)!important}
+[data-theme="dark"] .today .go,[data-theme="dark"] .book .bk2 a,[data-theme="dark"] .book .bk-soon{background:rgba(255,255,255,.08)}
 @media print{#themeBtn{display:none!important}}
 @media print{[data-theme="dark"]{color-scheme:light}}
 </style>
@@ -71,13 +78,14 @@ a.book .emo,.book .emo{font-size:30px}.book b{display:block;font-size:16px}.book
 <body>
 <div class="wrap">
   <div class="top">
+    <span id="themeSlot"></span>
     <div class="cross">✝</div>
     <h1>오늘의 말씀 나눔</h1>
     <div class="sub">동산감리교회 · 하나님과 함께 이웃과 함께</div>
     <div class="verse">“주의 말씀은 내 발에 등이요<br>내 길에 빛입니다” (시편 119:105)</div>
   </div>
 
-  <div class="today" id="today"></div>
+  <a class="today" id="today" href="word-adult.html"></a>
 
   <a class="card adult" href="word-adult.html">
     <div class="row"><div class="emo">🙏</div>
@@ -101,15 +109,13 @@ a.book .emo,.book .emo{font-size:30px}.book b{display:block;font-size:16px}.book
   </a>
 
   <div class="book">
-    <div class="emo">📖</div>
-    <div style="flex:1"><b>묵상집 · 처음 신앙, 매일 한 걸음</b><span>책으로 넘겨 보고 인쇄할 수 있어요. 앱과 같은 날 같은 말씀입니다.</span>
+    <div><b><i>📖</i>묵상집 · 처음 신앙, 매일 한 걸음</b><span>책으로 넘겨 보고 인쇄할 수 있어요. 앱과 같은 날 같은 말씀입니다.</span>
       <div class="bk2" id="bookBtns"><a href="word-book.html?v=adult">🙏 어른용</a><a href="word-book.html?v=kids">🧒 어린이용</a></div>
       <div class="bk-soon" id="bookSoon" hidden></div></div>
   </div>
 
   <div class="book">
-    <div class="emo">✝</div>
-    <div style="flex:1"><b>설교 말씀 묵상집</b><span>동산교회 강단에서 전한 설교를 하루 한 편 묵상으로 엮었습니다. 넘겨 보고 인쇄할 수 있어요.</span>
+    <div><b><i>✝</i>설교 말씀 묵상집</b><span>동산교회 강단에서 전한 설교를 하루 한 편 묵상으로 엮었습니다. 넘겨 보고 인쇄할 수 있어요.</span>
       <div class="bk2"><a href="sermon-book.html?b=romans">📜 로마서 30일</a><a href="sermon-book.html?b=philippians">😊 빌립보서 12일</a></div></div>
   </div>
 
@@ -137,7 +143,8 @@ a.book .emo,.book .emo{font-size:30px}.book b{display:block;font-size:16px}.book
   document.getElementById('today').innerHTML=
     '<div class="d">'+d.date.replace(/-/g,'.')+' ('+WordData.weekday(d.date)+') 오늘의 말씀</div>'+
     '<div class="p">'+d.passage+'</div><div class="t">'+d.title+'</div>'+
-    (function(){var sr=WordData.series(d.date);return sr?'<div class="sr">'+sr.title+' · '+sr.day+'일째'+(d.feast?' · '+d.feast:'')+'</div>':(d.feast?'<div class="sr">'+d.feast+'</div>':'')})();
+    (function(){var sr=WordData.series(d.date);return sr?'<div class="sr">'+sr.title+' · '+sr.day+'일째'+(d.feast?' · '+d.feast:'')+'</div>':(d.feast?'<div class="sr">'+d.feast+'</div>':'')})()+
+    '<span class="go">📖 오늘 말씀 읽기 →</span>';
   /* 묵상집은 시리즈 첫날 새벽에 연다 */
   if(!WordData.bookOpen()){
     var p=WORD_SERIES.from.split('-');
