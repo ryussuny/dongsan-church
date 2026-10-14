@@ -62,6 +62,8 @@ h2.dttl{font-family:'Gowun Batang',serif;font-size:17pt;line-height:1.3;margin:.
 .bible sup{font-family:'Noto Sans KR',sans-serif;font-size:.6em;color:var(--brick);font-weight:700;margin-right:.6mm;vertical-align:.45em}
 .lab{display:block;font-family:'Noto Sans KR',sans-serif;font-size:8pt;font-weight:700;color:var(--brick);letter-spacing:.04em;margin-bottom:.8mm}
 .med p{font-family:'Gowun Batang',serif;margin-bottom:1.6mm}
+/* 여는 한마디 — 본문 앞에서 궁금증을 연다 */
+.hk{font-family:'Gowun Batang',serif;color:var(--ink2);border-left:1.4pt solid var(--gold);padding:.4mm 0 .4mm 3mm;margin:0 0 3mm}
 /* 더 깊이 읽기 — 본문과 같은 글씨 크기, 문단 단위로 다음 쪽에 이어진다 */
 .dp{border:.6pt solid var(--line);border-radius:2mm;padding:1.6mm 3mm .4mm;margin:2mm 0;background:#f8f4ec;font-family:'Gowun Batang',serif}
 .dp p{margin-bottom:1.6mm}
@@ -292,7 +294,7 @@ function build(){
     '<li>‘오늘 한 걸음’을 실천하고, 기도로 마친 뒤 떠오른 생각을 ‘나의 묵상’ 칸에 적습니다.</li></ol>'+
     '<div class="small">이 책은 날짜가 아니라 ‘일째’로 엮었습니다. 아무 날에나 시작해 하루 한 편씩 읽으면 됩니다. 하루를 놓쳤다면 자책하지 말고 다음 날 다시 펼치십시오.</div>'+
     '<div class="small" style="margin-top:3mm">마당(부)마다 첫 면에 암송 구절이 있습니다. 그 마당을 마칠 때까지 외워 보세요.</div>'+
-    '<div class="small" style="margin-top:3mm"><b>📖 더 깊이 읽기</b> · 날마다 묵상 뒤에 원어 풀이와 역사 이야기, 함께 읽을 말씀, 웨슬리와 감리교회의 눈으로 본 해설을 실었습니다. 시간이 넉넉한 날이나 속회·소그룹에서 함께 읽으십시오.</div>'+
+    '<div class="small" style="margin-top:3mm"><b>💡 알고 읽으면 더 깊은 이야기</b> · 날마다 묵상 뒤에 성경 속 숨은 이야기와 낱말 하나의 뜻, 교회 역사와 웨슬리 이야기를 짧게 실었습니다. 속회나 가족이 함께 읽으며 이야기 나누기에 좋습니다.</div>'+
     '<div class="small" style="margin-top:4mm"><b>표기 안내</b> · 묵상 글에서 “ ” 안의 성경 말씀은 개역개정판 그대로 옮겼습니다. ‘ ’ 안은 쉽게 풀어 쓴 말입니다. 본문이 긴 날은 핵심 단락을 싣고 설교 본문 전체를 함께 적었습니다.</div></div>',{toc:'사용법'});
   /* 읽기표 */
   var per=34,chunks=[];for(var i=0;i<N;i+=per)chunks.push(i);
@@ -321,7 +323,7 @@ function build(){
              '<span class="lab">기도</span><div class="pr">'+esc(o.pr)+'</div></div>';
       // 날마다 빈 쪽 없이 바로 이어 싣는다 (본문이 긴 날은 3쪽이 되기도 한다)
       var ref='<div class="ref">'+esc(rd)+(o.r?' <span style="font-weight:400;color:var(--ink3)">· 설교 본문 '+esc(o.p)+'</span>':'')+'</div>';
-      var B=flow(hd+'<h2 class="dttl">'+esc(o.t)+'</h2>'+ref,hd+'<div class="cont">'+esc(rd)+' (이어서)</div>',
+      var B=flow(hd+'<h2 class="dttl">'+esc(o.t)+'</h2>'+ref+(o.hk?'<div class="hk">'+esc(o.hk)+'</div>':''),hd+'<div class="cont">'+esc(rd)+' (이어서)</div>',
         WordBible.verses(rd,true).map(function(v){return {box:'bible',html:'<span><sup>'+v.v+'</sup>'+esc(v.t)+' </span>'}}));
       var qaLeft=B.tryAdd(qa);
       B.done().forEach(function(h,k){pg('day-l','<div class="inner">'+h+'</div>',k?{}:{key:'d'+idx,toc:idx+'일 '+o.t})});
@@ -329,7 +331,7 @@ function build(){
       var items=String(o.ex).split(/\n\n+/).map(function(p){return {box:'med',html:'<p>'+esc(p)+'</p>'}});
       if(o.dp)String(o.dp).split(/\n\n+/).forEach(function(p,k){
         var h='<p>'+esc(p).replace(/^【([^】]+)】\s*/,'<b class="dk">$1</b> ')+'</p>';
-        items.push({box:'dp',html:k?h:'<div><span class="lab">📖 더 깊이 읽기</span>'+h+'</div>'});
+        items.push({box:'dp',html:k?h:'<div><span class="lab">💡 알고 읽으면 더 깊은 이야기</span>'+h+'</div>'});
       });
       items.push({html:'<div class="gos"><span class="lab">✝ 복음으로 보면</span>'+esc(o.gs)+'</div>'});
       items.push({html:'<div class="rem"><span class="lab">📌 오늘 기억할 한 줄</span>'+esc(o.mm)+'</div>'});

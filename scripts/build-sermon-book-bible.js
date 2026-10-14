@@ -50,9 +50,9 @@ Object.keys(SB).forEach(k => {
     use(d.p, w + ' 설교 본문');
     const v = use(d.r || d.p, w + ' 실을 본문');
     if (v) lens.push([(i + 1), v.reduce((n, x) => n + x.t.length, 0)]);
-    ['t', 'ex', 'dp', 'gs', 'mm', 'go', 'pr'].concat(d.qs.map((_, j) => j)).forEach(f => {
+    ['t', 'hk', 'ex', 'dp', 'gs', 'mm', 'go', 'pr'].concat(d.qs.map((_, j) => j)).forEach(f => {
       const txt = typeof f === 'number' ? d.qs[f] : d[f];
-      if (!txt) { if (f !== 'go' && f !== 'dp') { bad++; console.error('✗ 빈 칸', w, f); } return; }
+      if (!txt) { if (f !== 'go' && f !== 'dp' && f !== 'hk') { bad++; console.error('✗ 빈 칸', w, f); } return; }
       (String(txt).match(/“[^”]+”/g) || []).forEach(q => {
         q.slice(1, -1).split('…').map(norm).filter(Boolean).forEach(part => {
           if (ALL.indexOf(part) < 0) { bad++; console.error('✗ 인용이 원문과 다름', w, f, q); }
