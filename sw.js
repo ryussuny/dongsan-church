@@ -12,7 +12,7 @@
 var VERSION = 'dongsan-v1';
 var SHELL = [
   'word.html', 'word-adult.html', 'word-kids.html', 'word-easy.html', 'word-youth.html', 'word-book.html',
-  'word-core.js', 'word-data.js', 'word-config.js', 'word-extra.js',
+  'word-core.js', 'word-data.js', 'word-config.js', 'word-extra.js', 'install.html', 'install-btn.js',
   'icons/icon-192.png', 'icons/icon-512.png'
 ];
 /* 한 번 받아 두고 계속 쓰는 것 (4.8MB 성경 파일 등) */
