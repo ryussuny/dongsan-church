@@ -408,7 +408,7 @@ GitHub Pages 정적 호스팅이라 `/api/…` 는 존재할 수 없다.
   2. 줄마다 만든 mp3 를 한 폴더에 `<날짜>-<번호>.mp3` 로 모은다.
   3. `node scripts/kids-voice.js join <그 폴더>` → 날짜별로 이어 붙여 `audio/kids/` 와 `word-audio.js` 를 만든다. 조각이 모자란 날은 건너뛴다.
 - 성경 본문(개역개정)은 녹음하지 않는다 — 우리가 쓴 어린이 이야기(kids.summary)만 읽는다.
-- 지금 녹음된 날: 10월 16일. ElevenLabs 계정의 무료 사용이 막혀(“unusual activity… upgrade to a paid subscription”) 나머지는 유료로 올린 뒤 이어서 만든다.
+- 지금 녹음된 날: 10월 16·17·18일. ElevenLabs 무료 계정은 몇 줄 만들면 「unusual activity… upgrade to a paid subscription」로 막히고, 무료 한도로는 74일치(약 1만 7천 크레딧)를 다 만들 수 없다 — 유료로 올린 뒤 이어서 만든다.
 
 ## 본문 장 유튜브 낭독 (2026-10-15)
 
