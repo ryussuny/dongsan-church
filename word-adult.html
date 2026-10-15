@@ -349,6 +349,7 @@ nav button.on{color:var(--brick-deep);font-weight:700}
     <div class="hook" id="hookBox" hidden></div>
     <div class="verse" id="verseBox">본문을 불러오는 중입니다…</div>
     <div class="vhint">절을 누르면 표시되고, 고른 절을 복사하거나 나눌 수 있어요.</div>
+    <div id="videoSlot"></div>
   </div>
 
   <div class="card" id="explainCard">
@@ -498,6 +499,12 @@ nav button.on{color:var(--brick-deep);font-weight:700}
   </div>
 
   <div class="card">
+    <div class="st">🎵 찬양 듣기</div>
+    <div style="font-size:12.5px;color:var(--text2);line-height:1.8">직접 만든 곡과 찬송가, 성가대 특송을 들으실 수 있습니다.</div>
+    <div class="row2"><a class="btn btn-sub" href="songs.html" style="text-decoration:none">찬양 듣기</a></div>
+  </div>
+
+  <div class="card">
     <div class="st">🔒 관리자 앱 <span class="right">목회자 전용</span></div>
     <div style="font-size:12.5px;color:var(--text2);line-height:1.8">교인·상담·심방 기록을 관리합니다. 비밀번호(PIN)를 넣어야 열립니다.</div>
     <div class="row2"><a class="btn btn-sub" href="admin.html" style="text-decoration:none">관리자 앱 열기</a></div>
@@ -539,6 +546,7 @@ nav button.on{color:var(--brick-deep);font-weight:700}
 <script src="word-data.js"></script>
 <script src="word-config.js"></script>
 <script src="word-core.js"></script>
+<script src="word-video.js"></script>
 <script src="word-extra.js"></script>
 <script>
 var VER='adult';
@@ -840,6 +848,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeFocus()
 
 function renderVerses(){
   var box=document.getElementById('verseBox'),d=day();
+  WordVideo.mount(document.getElementById('videoSlot'),d.passage);
   WordBible.load().then(function(ok){
     if(!ok){box.innerHTML='<span style="color:var(--text3)">본문 파일을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</span>';return}
     var vs=WordBible.verses(d.passage,true);

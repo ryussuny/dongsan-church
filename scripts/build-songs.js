@@ -7,6 +7,9 @@
    폴더 이름이 그대로 찬양의 갈래가 된다.
    파일 이름이 곡목이 되고, 이름 앞에 2026-08-30 처럼 날짜가 있으면
    날짜로 따로 뽑아 준다. 곡목 뒤에 ' - 만든이' 를 붙이면 만든이로 나뉜다.
+   노래 옆에 이름이 같은 .txt 가 있으면 그 글을 가사로 함께 넣는다.
+     songs/자작 찬양/모세의 노래.mp3
+     songs/자작 찬양/모세의 노래.txt   ← 가사
 
      node scripts/build-songs.js
    =========================================================== */
@@ -42,6 +45,16 @@ function readName(file) {
   return { date, title: rest.replace(/[_]+/g, ' ').trim() || '찬양', by };
 }
 
+/* 노래와 이름이 같은 .txt 를 가사로 읽는다. 없거나 비었으면 빈 글 */
+function readLyrics(folder, file) {
+  const txt = path.join(DIR, folder, file.replace(/\.[^.]+$/, '') + '.txt');
+  if (!fs.existsSync(txt)) return '';
+  return fs.readFileSync(txt, 'utf8')
+    .replace(/^\uFEFF/, '')                 /* 메모장이 붙이는 BOM 은 뗀다 */
+    .replace(/\r\n?/g, '\n')                /* 윈도 줄바꿈도 한 가지로 */
+    .trim();
+}
+
 function mb(bytes) {
   return Math.round(bytes / 1048576 * 10) / 10;
 }
@@ -56,7 +69,7 @@ const folders = fs.readdirSync(DIR, { withFileTypes: true })
   .map(d => d.name);
 
 const categories = [];
-let total = 0, bytes = 0;
+let total = 0, bytes = 0, withLyrics = 0;
 
 folders.forEach(folder => {
   const files = fs.readdirSync(path.join(DIR, folder))
@@ -71,7 +84,10 @@ folders.forEach(folder => {
       const { date, title, by } = readName(f);
       const size = fs.statSync(path.join(DIR, folder, f)).size;
       bytes += size;
-      return { src: `songs/${folder}/${f}`, title, by, date, mb: mb(size) };
+      const song = { src: `songs/${folder}/${f}`, title, by, date, mb: mb(size) };
+      const lyrics = readLyrics(folder, f);
+      if (lyrics) { song.lyrics = lyrics; withLyrics++; }
+      return song;
     }),
   });
   total += files.length;
@@ -91,6 +107,6 @@ fs.writeFileSync(OUT, JSON.stringify({
   updatedAt: new Date().toISOString().slice(0, 10),
 }, null, 2) + '\n');
 
-console.log(`✓ 찬양 목록 생성 — 갈래 ${categories.length}개 · 곡 ${total}곡 · ${mb(bytes)}MB`);
+console.log(`✓ 찬양 목록 생성 — 갈래 ${categories.length}개 · 곡 ${total}곡 · ${mb(bytes)}MB · 가사 ${withLyrics}곡`);
 categories.forEach(c => console.log(`  ${c.label} ${c.songs.length}곡`));
 if (!total) console.log('  (아직 올린 노래가 없습니다. songs 폴더에 넣어 주세요.)');

@@ -42,6 +42,16 @@ nav.scrolled{box-shadow:0 4px 24px rgba(6,10,20,.35)}
 .nav-sub{font-size:.66rem;color:var(--gold);letter-spacing:.04em;margin-top:1px}
 .nav-back{margin-left:auto;display:flex;align-items:center;gap:.4rem;font-size:.86rem;font-weight:700;color:#c7cede;padding:.55rem 1.1rem;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06)}
 .nav-back:hover{color:var(--gold);border-color:var(--gold)}
+.nav-links{margin-left:auto;display:flex;align-items:center;gap:.45rem}
+.nav-links .nav-back{margin-left:0;min-height:44px}
+@media(max-width:480px){
+  .nav-inner{padding:0 16px}
+  .nav-logo{gap:8px}
+  .nav-sub{display:none}
+  .nav-name{font-size:.95rem}
+  .nav-links{gap:.35rem}
+  .nav-links .nav-back{font-size:.8rem;padding:0 .75rem}
+}
 
 .hero{position:relative;padding:9rem 0 4rem;text-align:center;background:radial-gradient(ellipse 70% 60% at 85% 0%,rgba(201,162,76,.16),transparent 60%),radial-gradient(ellipse 80% 60% at 10% 100%,rgba(47,77,133,.35),transparent 60%),linear-gradient(160deg,var(--brick) 0%,var(--brick-deep) 100%)}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:.5rem 1.1rem;font-size:.82rem;font-weight:700;color:#e7ebf5;margin-bottom:1.6rem}
@@ -58,15 +68,23 @@ section{padding:3.5rem 0}
 .empty p{font-size:.92rem;color:var(--text2);line-height:1.9}
 .empty code{background:var(--warm);border-radius:6px;padding:.1rem .45rem;font-size:.86em;color:var(--brick-deep)}
 
-.cat{margin-bottom:2.6rem}
-.cat-h{display:flex;align-items:baseline;gap:.7rem;margin-bottom:1.1rem;padding-bottom:.7rem;border-bottom:2px solid var(--stone)}
+.cat{margin-bottom:2.6rem;scroll-margin-top:90px}
+.cat-h{display:flex;align-items:center;flex-wrap:wrap;gap:.4rem .7rem;margin-bottom:1.1rem;padding-bottom:.7rem;border-bottom:2px solid var(--stone)}
 .cat-h b{font-family:'Gowun Batang',serif;font-size:1.4rem;color:var(--brick-deep)}
 .cat-h span{font-size:.82rem;color:var(--text3)}
+/* 갈래 전체 듣기 */
+.all{margin-left:auto;min-height:44px;display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--gold);
+  background:var(--white);color:var(--moss2);font:inherit;font-size:.86rem;font-weight:700;padding:0 1.05rem;border-radius:999px;cursor:pointer}
+.all:hover{background:var(--gold);color:var(--brick-deep)}
+/* 주소로 찾아온 갈래를 잠깐 밝혀 준다 */
+.cat.hl .cat-h{animation:hl 2.6s ease}
+@keyframes hl{0%,35%{background:rgba(201,162,76,.22);box-shadow:0 0 0 8px rgba(201,162,76,.22)}100%{background:transparent;box-shadow:0 0 0 8px transparent}}
 
-.song{display:flex;align-items:center;gap:.95rem;background:var(--white);border:1px solid var(--border);
-  border-radius:14px;padding:.85rem 1rem;margin-bottom:.6rem;transition:border-color .2s,box-shadow .2s}
+.song{background:var(--white);border:1px solid var(--border);border-radius:14px;margin-bottom:.6rem;
+  transition:border-color .2s,box-shadow .2s;scroll-margin-top:90px;scroll-margin-bottom:220px}
 .song.playing{border-color:var(--gold);box-shadow:0 4px 18px rgba(201,162,76,.18)}
-.play{flex:none;width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;
+.song-top{display:flex;align-items:center;gap:.85rem;padding:.8rem 1rem;cursor:pointer}
+.play{flex:none;width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;
   background:linear-gradient(145deg,var(--brick2),var(--brick-deep));color:#fff;font-size:15px;
   display:flex;align-items:center;justify-content:center;padding-left:2px}
 .song.playing .play{background:linear-gradient(145deg,var(--gold),var(--moss2));color:var(--brick-deep);padding-left:0}
@@ -74,30 +92,87 @@ section{padding:3.5rem 0}
 .si{flex:1;min-width:0}
 .si .t{font-weight:700;font-size:.98rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .si .m{font-size:.78rem;color:var(--text3);margin-top:1px}
-.si .m i{font-style:normal}
+.si .m:empty{display:none}
+/* 가사·공유 — 보이는 알약은 작게, 누르는 자리는 44px */
+.acts{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.45rem}
+.act{position:relative;border:1px solid var(--border);background:var(--warm);color:var(--text2);font:inherit;font-size:.78rem;font-weight:700;
+  height:32px;padding:0 .8rem;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:.25rem}
+.act::after{content:'';position:absolute;left:-4px;right:-4px;top:-6px;bottom:-6px}
+.act:hover{border-color:var(--gold);color:var(--moss2)}
+.act[aria-expanded="true"]{background:var(--brick-deep);border-color:var(--brick-deep);color:#f2f4f9}
 /* 몇 번 들었는지 — 나눔터 주소를 넣기 전에는 자리도 차지하지 않는다 */
 .plays{flex:none;display:flex;align-items:center;gap:.28rem;font-size:.78rem;color:var(--text3);
   min-width:2.6rem;justify-content:flex-end}
 .plays[hidden]{display:none}
 .plays b{color:var(--text2);font-weight:700}
+/* 곡 아래로 펼치는 가사 */
+.ly{border-top:1px dashed var(--stone);margin:0 1rem;padding:1rem .2rem 1.2rem;white-space:pre-wrap;
+  font-family:'Gowun Batang',serif;font-size:1.02rem;line-height:2;color:var(--text);word-break:keep-all;overflow-wrap:anywhere}
+.ly[hidden]{display:none}
 
-/* 아래에 붙어 따라다니는 재생 막대 */
-.bar{position:fixed;left:0;right:0;bottom:0;z-index:200;background:rgba(13,21,38,.96);backdrop-filter:blur(10px);
-  border-top:1px solid rgba(255,255,255,.1);padding:.8rem 0;transform:translateY(110%);transition:transform .3s}
-.bar.on{transform:none}
-.bar-in{max-width:900px;margin:0 auto;padding:0 1.75rem;display:flex;align-items:center;gap:.9rem}
-.bar .n{flex:1;min-width:0;color:#f2f4f9;font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar .n small{display:block;font-weight:400;font-size:.74rem;color:#8b93b0;margin-top:1px}
-.bar audio{flex:2;min-width:0;height:38px}
-.bar .x{flex:none;background:none;border:none;color:#8b93b0;font-size:1.15rem;cursor:pointer;padding:.2rem .4rem}
-.bar .x:hover{color:#fff}
+/* 아래에 붙어 따라다니는 재생 막대 — 소리는 숨겨 둔 <audio> 가 내고 단추는 우리가 그린다 */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:200;background:rgba(13,21,38,.97);backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255,255,255,.1);padding:.7rem 0 calc(.7rem + env(safe-area-inset-bottom,0px));
+  transform:translateY(110%);visibility:hidden;transition:transform .3s,visibility 0s .3s}
+.bar.on{transform:none;visibility:visible;transition:transform .3s}
+.bar-in{max-width:900px;margin:0 auto;padding:0 1.75rem;display:grid;gap:.35rem .9rem;align-items:center;
+  grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"ctl info tools" "ctl seek tools"}
+.bar .n{grid-area:info;min-width:0;color:#f2f4f9;font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .n small{display:block;font-weight:400;font-size:.74rem;color:#8b93b0;margin-top:1px;overflow:hidden;text-overflow:ellipsis}
+.bar .n small.err{color:#e8a59a}
+.ctl{grid-area:ctl;display:flex;align-items:center;justify-content:center;gap:.3rem}
+.tools{grid-area:tools;display:flex;align-items:center;gap:.2rem}
+.ib{flex:none;min-width:44px;height:44px;border:none;border-radius:12px;background:none;color:#c7cede;font:inherit;font-size:1.05rem;
+  cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;padding:0 .35rem}
+.ib:hover{color:#fff;background:rgba(255,255,255,.07)}
+.ib small{font-size:.6rem;font-weight:700;letter-spacing:-.02em;margin-top:2px;white-space:nowrap}
+.ib.on{color:var(--gold)}
+.ib.dim{color:#6f7894}
+.ib[hidden]{display:none}
+.ib.txt{font-size:.82rem;font-weight:700;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:0 .9rem}
+.ib.txt[aria-expanded="true"]{background:var(--gold);border-color:var(--gold);color:var(--brick-deep)}
+.big{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;flex:none;font-size:18px;
+  background:linear-gradient(145deg,var(--gold),var(--moss2));color:var(--brick-deep);display:flex;align-items:center;justify-content:center}
+.big.paused{padding-left:3px}
+.big:hover{filter:brightness(1.1)}
+/* 고르기만 하고 아직 틀지 않았을 때 — 큰 ▶ 를 눈에 띄게 */
+.bar.ready .big{animation:ready 1.6s ease-in-out infinite}
+@keyframes ready{0%,100%{box-shadow:0 0 0 0 rgba(201,162,76,.55)}50%{box-shadow:0 0 0 10px rgba(201,162,76,0)}}
+@media(prefers-reduced-motion:reduce){.bar.ready .big,.cat.hl .cat-h{animation:none}}
+.seek{grid-area:seek;display:flex;align-items:center;gap:.6rem;font-size:.72rem;color:#8b93b0;font-variant-numeric:tabular-nums}
+.seek span{flex:none;min-width:2.4rem}
+.seek span:last-child{text-align:right}
+.seek input{flex:1;min-width:0;height:28px;-webkit-appearance:none;appearance:none;background:none;cursor:pointer;--p:0%}
+.seek input::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--gold) var(--p),rgba(255,255,255,.18) var(--p))}
+.seek input::-moz-range-track{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--gold) var(--p),rgba(255,255,255,.18) var(--p))}
+.seek input::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#f2f4f9;margin-top:-5.5px;border:none}
+.seek input::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#f2f4f9;border:none}
+.seek input:disabled{cursor:default;opacity:.5}
+/* 막대 위로 올라오는 지금 곡 가사 */
+.bar-ly{max-width:900px;margin:0 auto .7rem;padding:0 1.75rem}
+.bar-ly[hidden]{display:none}
+.bar-ly div{max-height:min(48vh,420px);overflow:auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;
+  padding:1rem 1.1rem;white-space:pre-wrap;font-family:'Gowun Batang',serif;font-size:1rem;line-height:1.95;color:#e7ebf5;overflow-wrap:anywhere}
 @media(max-width:640px){
-  .bar-in{flex-wrap:wrap;gap:.5rem}
-  .bar .n{flex:1 1 100%;order:1}
-  .bar audio{flex:1;order:2}
-  .bar .x{order:3}
+  .bar-in{padding:0 16px;gap:.25rem .5rem;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"info tools" "seek seek" "ctl ctl"}
+  .ctl{gap:.6rem}
+  .bar-ly{padding:0 16px}
 }
-body.bar-on{padding-bottom:120px}
+body.bar-on{padding-bottom:150px}
+@media(max-width:640px){body.bar-on{padding-bottom:210px}}
+
+/* 링크를 복사했다는 짧은 알림 */
+.toast{position:fixed;left:50%;bottom:24px;z-index:400;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  background:var(--brick-deep);color:#f2f4f9;font-size:.86rem;font-weight:700;padding:.7rem 1.2rem;border-radius:999px;
+  box-shadow:0 6px 24px rgba(6,10,20,.35);transition:opacity .25s,transform .25s;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+body.bar-on .toast{bottom:230px}
+
+@media(max-width:480px){
+  .wrap{padding:0 16px}
+  .song-top{padding:.75rem .8rem;gap:.7rem}
+  .ly{margin:0 .8rem}
+}
 
 .note{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:1.3rem 1.4rem;margin-top:.5rem;
   font-size:.85rem;color:var(--text2);line-height:1.9}
@@ -116,7 +191,10 @@ footer a:hover{color:var(--paper)}
       <div class="nav-mark">동</div>
       <div><div class="nav-name">동산감리교회</div><div class="nav-sub">DONGSAN METHODIST CHURCH</div></div>
     </a>
-    <a href="index.html" class="nav-back">← 홈으로</a>
+    <div class="nav-links">
+      <a href="word.html" class="nav-back">← 말씀 앱</a>
+      <a href="index.html" class="nav-back">← 홈으로</a>
+    </div>
   </div>
 </nav>
 
@@ -134,29 +212,71 @@ footer a:hover{color:var(--paper)}
   </div>
 </section>
 
-<div class="bar" id="bar">
+<div class="bar" id="bar" role="region" aria-label="찬양 재생">
+  <div class="bar-ly" id="barLy" hidden><div id="barLyText"></div></div>
   <div class="bar-in">
     <div class="n" id="barName">—</div>
-    <audio id="player" controls controlsList="nodownload noplaybackrate noremoteplayback"
-           preload="none" oncontextmenu="return false"></audio>
-    <button class="x" id="barClose" aria-label="닫기">✕</button>
+    <div class="seek">
+      <span id="tCur">0:00</span>
+      <input type="range" id="seek" min="0" max="1000" step="1" value="0" aria-label="재생 위치" disabled>
+      <span id="tDur">0:00</span>
+    </div>
+    <div class="ctl">
+      <button class="ib" id="bRepeat" type="button"></button>
+      <button class="ib" id="bPrev" type="button" aria-label="이전 곡">⏮</button>
+      <button class="big paused" id="bPlay" type="button" aria-label="듣기">▶</button>
+      <button class="ib" id="bNext" type="button" aria-label="다음 곡">⏭</button>
+      <button class="ib" id="bShuffle" type="button" aria-label="섞어 듣기" aria-pressed="false">🔀<small>셔플</small></button>
+    </div>
+    <div class="tools">
+      <button class="ib txt" id="bLy" type="button" aria-expanded="false" aria-controls="barLy" hidden>가사</button>
+      <button class="ib" id="barClose" type="button" aria-label="닫기">✕</button>
+    </div>
   </div>
+  <!-- 소리를 내는 것은 이것 하나. 화면에는 보이지 않고 위 단추들이 움직인다 -->
+  <audio id="player" preload="none" controlsList="nodownload noplaybackrate noremoteplayback"
+         oncontextmenu="return false"></audio>
 </div>
 
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
 <footer>
-  <div class="wrap">동산감리교회 · 강원도 태백시 계산 4길 25 · <a href="index.html">홈으로 돌아가기</a></div>
+  <div class="wrap">동산감리교회 · 강원도 태백시 계산 4길 25 · <a href="index.html">홈으로 돌아가기</a> · <a href="word.html">오늘의 말씀</a></div>
 </footer>
 
 <script src="word-config.js"></script>
 <script>
 (function(){
+  var SITE='https://ryussuny.github.io/dongsan-church/songs.html';
+  var PREFS='dongsan_song_prefs';
+  var REPEAT=['all','one','none'];
+  var REPEAT_TXT={all:['🔁','전체 반복'],one:['🔂','한 곡 반복'],none:['➡️','반복 없음']};
+
   var listEl=document.getElementById('list');
   var bar=document.getElementById('bar'),player=document.getElementById('player'),
-      barName=document.getElementById('barName');
-  var flat=[],cur=-1;
+      barName=document.getElementById('barName'),
+      bPlay=document.getElementById('bPlay'),bPrev=document.getElementById('bPrev'),
+      bNext=document.getElementById('bNext'),bRepeat=document.getElementById('bRepeat'),
+      bShuffle=document.getElementById('bShuffle'),bLy=document.getElementById('bLy'),
+      barLy=document.getElementById('barLy'),barLyText=document.getElementById('barLyText'),
+      seek=document.getElementById('seek'),tCur=document.getElementById('tCur'),
+      tDur=document.getElementById('tDur');
+
+  var flat=[],cats=[],cur=-1;
+  var queue=[],order=[],pos=-1;      /* queue: 이번에 들을 곡들, order: 들을 차례(섞으면 섞인 차례) */
+  var dragging=false;
 
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+  /* ── 반복·섞기 설정은 이 기기에 기억해 둔다 (막혀 있어도 그냥 기본값으로) ── */
+  var prefs={repeat:'all',shuffle:false};
+  try{
+    var saved=JSON.parse(localStorage.getItem(PREFS)||'{}')||{};
+    if(REPEAT.indexOf(saved.repeat)>=0) prefs.repeat=saved.repeat;
+    prefs.shuffle=!!saved.shuffle;
+  }catch(e){}
+  function savePrefs(){ try{ localStorage.setItem(PREFS,JSON.stringify(prefs)); }catch(e){} }
 
   function empty(){
     listEl.innerHTML=
@@ -175,42 +295,248 @@ footer a:hover{color:var(--paper)}
     return p.join(' · ');
   }
 
-  function render(cats){
+  function render(list){
     var html='',i=0;
-    cats.forEach(function(c){
-      html+='<div class="cat reveal"><div class="cat-h"><b>'+esc(c.label)+'</b>'+
-            '<span>'+c.songs.length+'곡</span></div>';
+    list.forEach(function(c,ci){
+      var idx=[];
+      html+='<div class="cat reveal" data-c="'+ci+'"><div class="cat-h"><b>'+esc(c.label)+'</b>'+
+            '<span>'+c.songs.length+'곡</span>'+
+            '<button class="all" type="button" data-c="'+ci+'">▶ 전체 듣기</button></div>';
       c.songs.forEach(function(s){
-        flat.push(s);
-        html+='<div class="song" data-i="'+i+'">'+
-          '<button class="play" aria-label="듣기">▶</button>'+
+        s.cat=c.label; flat.push(s); idx.push(i);
+        html+='<div class="song" data-i="'+i+'"><div class="song-top">'+
+          '<button class="play" type="button" aria-label="'+esc(s.title)+' 듣기">▶</button>'+
           '<div class="si"><div class="t">'+esc(s.title)+'</div>'+
-          '<div class="m">'+meta(s)+'</div></div>'+
-          '<span class="plays" data-src="'+esc(s.src)+'" hidden></span></div>';
+          '<div class="m">'+meta(s)+'</div>'+
+          '<div class="acts">'+
+            (s.lyrics?'<button class="act" type="button" data-act="ly" aria-expanded="false">📝 가사</button>':'')+
+            '<button class="act" type="button" data-act="share">🔗 공유</button></div></div>'+
+          '<span class="plays" data-src="'+esc(s.src)+'" hidden></span></div>'+
+          (s.lyrics?'<div class="ly" hidden>'+esc(s.lyrics)+'</div>':'')+
+          '</div>';
         i++;
       });
+      cats.push({key:c.key,label:c.label,idx:idx});
       html+='</div>';
     });
-    html+='<div class="note reveal">한 곡이 끝나면 <b>다음 곡</b>이 이어서 나옵니다. '+
-          '아래 막대에서 멈추거나 닫으실 수 있습니다.<br>'+
-          '들으신 횟수는 곡마다 함께 적힙니다.</div>';
+    html+='<div class="note reveal">아래 막대의 <b>🔁</b> 단추로 <b>전체 반복 → 한 곡 반복 → 반복 없음</b>을, '+
+          '<b>🔀</b> 로 섞어 듣기를 고르실 수 있습니다. 고르신 것은 이 기기에 기억됩니다.<br>'+
+          '<b>🔗 공유</b>를 누르면 그 곡으로 바로 오는 주소를 보낼 수 있고, 들으신 횟수는 곡마다 함께 적힙니다.</div>';
     listEl.innerHTML=html;
+    listEl.addEventListener('click',onListClick);
+  }
 
-    listEl.addEventListener('click',function(e){
-      var row=e.target.closest('.song'); if(!row) return;
-      var i=Number(row.dataset.i);
-      if(i===cur && !player.paused){ player.pause(); return; }
-      if(i===cur){ player.play(); return; }
-      play(i);
-    });
+  function onListClick(e){
+    var all=e.target.closest('.all');
+    if(all){ playCat(Number(all.dataset.c)); return; }
+    var row=e.target.closest('.song'); if(!row) return;
+    var i=Number(row.dataset.i);
+    var act=e.target.closest('.act');
+    if(act){ if(act.dataset.act==='ly') toggleRowLyrics(row,act); else share(flat[i]); return; }
+    if(!e.target.closest('.song-top')) return;      /* 펼친 가사를 누를 때는 그냥 둔다 */
+    if(i===cur){ toggle(); return; }
+    choose(i);
+  }
+
+  function toggleRowLyrics(row,btn){
+    var ly=row.querySelector('.ly'); if(!ly) return;
+    var open=ly.hidden;
+    ly.hidden=!open;
+    btn.setAttribute('aria-expanded',open?'true':'false');
+  }
+
+  /* ── 듣는 차례 ─────────────────────────────────────────── */
+  function shuffled(a){
+    a=a.slice();
+    for(var k=a.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)),t=a[k]; a[k]=a[j]; a[j]=t; }
+    return a;
+  }
+  /* first 곡을 맨 앞(섞을 때)이나 제자리(안 섞을 때)에 두고 차례를 다시 짠다 */
+  function buildOrder(first){
+    order=prefs.shuffle?shuffled(queue):queue.slice();
+    if(prefs.shuffle && first!=null){
+      order.splice(order.indexOf(first),1); order.unshift(first);
+    }
+    pos=first==null?0:order.indexOf(first);
+  }
+  function allIdx(){ return flat.map(function(_,k){return k}); }
+
+  /* 목록에서 한 곡을 골랐을 때 — 지금 듣는 묶음 안이면 그 묶음을 이어 간다 */
+  function choose(i,noPlay){
+    if(queue.indexOf(i)<0){ queue=allIdx(); buildOrder(i); }
+    else if(prefs.shuffle){ buildOrder(i); }
+    else pos=order.indexOf(i);
+    load(i,!noPlay);
+  }
+  function playCat(ci){
+    var c=cats[ci]; if(!c||!c.idx.length) return;
+    queue=c.idx.slice(); buildOrder(null);
+    load(order[0],true);
+  }
+
+  /* dir: +1 다음, -1 이전. auto 는 곡이 끝나서 저절로 넘어갈 때 */
+  function step(dir,auto){
+    if(cur<0){ if(flat.length) choose(0); return; }
+    if(!order.length) return;
+    if(dir<0 && player.currentTime>3){ player.currentTime=0; return; }   /* 앞부분이 지났으면 처음부터 */
+    var p=pos+dir;
+    if(p>=order.length){
+      if(auto && prefs.repeat==='none'){ mark(); return; }             /* 반복 없음 — 마지막 곡에서 멈춘다 */
+      if(prefs.shuffle && order.length>1){                               /* 한 바퀴 돌면 다시 섞는다 */
+        order=shuffled(queue);
+        if(order[0]===cur){ order.push(order.shift()); }
+      }
+      p=0;
+    }
+    if(p<0){
+      if(prefs.repeat!=='all'){ player.currentTime=0; return; }
+      p=order.length-1;
+    }
+    pos=p;
+    load(order[p],true);
+  }
+
+  /* ── 곡 올리기 ─────────────────────────────────────────── */
+  function load(i,autoplay){
+    var s=flat[i]; if(!s) return;
+    cur=i;
+    if(player.getAttribute('src')!==s.src){
+      player.preload='metadata';
+      player.src=s.src;
+      setTimes(0,NaN);
+    }
+    var m=meta(s);
+    barName.innerHTML=esc(s.title)+'<small>'+(m?m+' · ':'')+esc(s.cat)+'</small>';
+    bLy.hidden=!s.lyrics;
+    barLyText.textContent=s.lyrics||'';
+    if(!s.lyrics) showBarLyrics(false);
+    bar.classList.add('on'); document.body.classList.add('bar-on');
+    setSession(s);
+    if(autoplay){
+      bar.classList.remove('ready');
+      var pr=player.play();
+      if(pr&&pr.catch) pr.catch(function(){ bar.classList.add('ready'); mark(); });   /* 자동재생을 막는 브라우저도 있다 */
+    } else {
+      bar.classList.add('ready');      /* 링크로 왔을 때는 고르기만 하고, 큰 ▶ 를 누르면 시작 */
+    }
+    mark();
+  }
+
+  function toggle(){
+    if(cur<0){ if(order.length) load(order[0],true); else if(flat.length) choose(0); return; }
+    if(player.paused){
+      bar.classList.remove('ready');
+      var pr=player.play(); if(pr&&pr.catch) pr.catch(function(){});
+    } else player.pause();
   }
 
   function mark(){
+    var on=cur>=0&&!player.paused;
     [].forEach.call(document.querySelectorAll('.song'),function(el){
-      var on=Number(el.dataset.i)===cur;
-      el.classList.toggle('playing',on);
-      el.querySelector('.play').textContent=(on&&!player.paused)?'❚❚':'▶';
+      var me=Number(el.dataset.i)===cur;
+      el.classList.toggle('playing',me);
+      el.querySelector('.play').textContent=(me&&on)?'❚❚':'▶';
     });
+    bPlay.textContent=on?'❚❚':'▶';
+    bPlay.classList.toggle('paused',!on);
+    bPlay.setAttribute('aria-label',on?'잠깐 멈춤':'듣기');
+    if(hasSession()) navigator.mediaSession.playbackState=cur<0?'none':(on?'playing':'paused');
+  }
+
+  function paintModes(){
+    var r=REPEAT_TXT[prefs.repeat];
+    bRepeat.innerHTML=r[0]+'<small>'+r[1]+'</small>';
+    bRepeat.setAttribute('aria-label','반복: '+r[1]+' (눌러서 바꾸기)');
+    bRepeat.classList.toggle('dim',prefs.repeat==='none');
+    bRepeat.classList.toggle('on',prefs.repeat!=='none');
+    bShuffle.classList.toggle('on',prefs.shuffle);
+    bShuffle.classList.toggle('dim',!prefs.shuffle);
+    bShuffle.setAttribute('aria-pressed',prefs.shuffle?'true':'false');
+    player.loop=prefs.repeat==='one';
+  }
+
+  function showBarLyrics(open){
+    barLy.hidden=!open;
+    bLy.setAttribute('aria-expanded',open?'true':'false');
+  }
+
+  /* ── 재생 위치 ─────────────────────────────────────────── */
+  function clock(t){
+    if(!isFinite(t)||t<0) return '0:00';
+    t=Math.floor(t);
+    var m=Math.floor(t/60),s=t%60;
+    return m+':'+(s<10?'0':'')+s;
+  }
+  function setTimes(t,d){
+    var ok=isFinite(d)&&d>0;
+    tCur.textContent=clock(t);
+    tDur.textContent=ok?clock(d):'0:00';
+    seek.disabled=!ok;
+    if(!dragging){
+      seek.value=ok?Math.round(t/d*1000):0;
+      seek.style.setProperty('--p',(ok?t/d*100:0)+'%');
+    }
+  }
+  seek.addEventListener('input',function(){
+    dragging=true;
+    var d=player.duration,t=seek.value/1000*d;
+    tCur.textContent=clock(t);
+    seek.style.setProperty('--p',seek.value/10+'%');
+  });
+  seek.addEventListener('change',function(){
+    var d=player.duration;
+    if(isFinite(d)) player.currentTime=seek.value/1000*d;
+    dragging=false;
+  });
+
+  /* ── 잠금 화면·알림창 단추 (되는 기기에서만) ───────────────── */
+  function hasSession(){ return 'mediaSession' in navigator && navigator.mediaSession; }
+  function setSession(s){
+    if(!hasSession()||typeof MediaMetadata==='undefined') return;
+    try{
+      navigator.mediaSession.metadata=new MediaMetadata({
+        title:s.title, artist:s.by||'동산감리교회', album:s.cat||'찬양',
+        artwork:[{src:new URL('icons/apple-touch-icon.png',location.href).href,sizes:'180x180',type:'image/png'}]
+      });
+    }catch(e){}
+  }
+  function setPosition(){
+    if(!hasSession()||!navigator.mediaSession.setPositionState) return;
+    var d=player.duration; if(!isFinite(d)||d<=0) return;
+    try{ navigator.mediaSession.setPositionState({duration:d,playbackRate:player.playbackRate||1,
+      position:Math.min(player.currentTime,d)}); }catch(e){}
+  }
+  function onAction(name,fn){
+    try{ navigator.mediaSession.setActionHandler(name,fn); }catch(e){}   /* 모르는 동작이면 그냥 넘어간다 */
+  }
+  if(hasSession()){
+    onAction('play',function(){ if(cur>=0&&player.paused) toggle(); });
+    onAction('pause',function(){ player.pause(); });
+    onAction('previoustrack',function(){ step(-1); });
+    onAction('nexttrack',function(){ step(1); });
+    onAction('seekto',function(d){
+      if(d.fastSeek&&'fastSeek' in player){ player.fastSeek(d.seekTime); return; }
+      player.currentTime=d.seekTime; setPosition();
+    });
+  }
+
+  /* ── 공유 ──────────────────────────────────────────────── */
+  var toastEl=document.getElementById('toast'),toastT=0;
+  function toast(msg){
+    toastEl.textContent=msg; toastEl.classList.add('on');
+    clearTimeout(toastT); toastT=setTimeout(function(){ toastEl.classList.remove('on'); },2200);
+  }
+  function linkOf(s){ return SITE+'?s='+encodeURIComponent(s.src); }
+  function share(s){
+    if(!s) return;
+    var url=linkOf(s),title='🎵 '+s.title+' — 동산감리교회 찬양';
+    if(navigator.share){ navigator.share({title:title,text:title,url:url}).catch(function(){}); return; }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){ toast('링크를 복사했습니다. 카톡에 붙여 넣으세요.'); },
+        function(){ window.prompt('이 주소를 복사해 보내 주세요',url); });
+      return;
+    }
+    window.prompt('이 주소를 복사해 보내 주세요',url);
   }
 
   /* ── 몇 번 들었는지 ─────────────────────────────────────────
@@ -237,38 +563,104 @@ footer a:hover{color:var(--paper)}
       .catch(function(){});          /* 못 세도 듣는 데는 지장 없다 */
   }
 
-  function play(i){
-    var s=flat[i]; if(!s) return;
-    cur=i;
-    if(!counted[s.src]){ counted[s.src]=1; askCounts(s.src); }
-    player.src=s.src;
-    barName.innerHTML=esc(s.title)+(meta(s)?'<small>'+meta(s)+'</small>':'');
-    bar.classList.add('on'); document.body.classList.add('bar-on');
-    player.play().catch(function(){});           /* 자동재생을 막는 브라우저도 있다 */
-    mark();
-  }
-
-  player.addEventListener('play',mark);
-  player.addEventListener('pause',mark);
-  player.addEventListener('ended',function(){
-    if(cur+1<flat.length) play(cur+1); else mark();
+  /* ── 소리 쪽 소식 ──────────────────────────────────────── */
+  player.addEventListener('play',function(){
+    var s=flat[cur];
+    if(s&&!counted[s.src]){ counted[s.src]=1; askCounts(s.src); }   /* 실제로 틀었을 때만 센다 */
+    bar.classList.remove('ready'); mark(); setPosition();
   });
+  player.addEventListener('pause',function(){ mark(); setPosition(); });
+  player.addEventListener('timeupdate',function(){ setTimes(player.currentTime,player.duration); });
+  player.addEventListener('loadedmetadata',function(){ setTimes(player.currentTime,player.duration); setPosition(); });
+  player.addEventListener('durationchange',function(){ setTimes(player.currentTime,player.duration); });
+  player.addEventListener('seeked',setPosition);
+  player.addEventListener('ended',function(){
+    if(prefs.repeat==='one'){ player.currentTime=0; player.play().catch(function(){}); return; }
+    step(1,true);
+  });
+  player.addEventListener('error',function(){
+    if(cur<0||!player.getAttribute('src')) return;
+    var sm=barName.querySelector('small');
+    if(sm){ sm.textContent='곡을 불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요.'; sm.className='err'; }
+    mark();
+  });
+
+  bPlay.addEventListener('click',toggle);
+  bPrev.addEventListener('click',function(){ step(-1); });
+  bNext.addEventListener('click',function(){ step(1); });
+  bRepeat.addEventListener('click',function(){
+    prefs.repeat=REPEAT[(REPEAT.indexOf(prefs.repeat)+1)%REPEAT.length];
+    savePrefs(); paintModes(); toast('반복: '+REPEAT_TXT[prefs.repeat][1]);
+  });
+  bShuffle.addEventListener('click',function(){
+    prefs.shuffle=!prefs.shuffle;
+    savePrefs(); paintModes();
+    if(queue.length) buildOrder(cur>=0?cur:null);   /* 지금 곡은 그대로 두고 남은 차례만 바꾼다 */
+    toast(prefs.shuffle?'섞어 듣기를 켰습니다':'차례대로 듣습니다');
+  });
+  bLy.addEventListener('click',function(){ showBarLyrics(barLy.hidden); });
   document.getElementById('barClose').addEventListener('click',function(){
-    player.pause(); bar.classList.remove('on'); document.body.classList.remove('bar-on');
+    player.pause(); bar.classList.remove('on','ready'); document.body.classList.remove('bar-on');
+    showBarLyrics(false);
     cur=-1; mark();
   });
+  paintModes();
+
+  /* ── 주소로 찾아왔을 때 ──────────────────────────────────
+       songs.html?cat=자작 찬양   → 그 갈래로 내려가 잠깐 밝힌다
+       songs.html?s=songs/…mp3   → 그 곡을 골라 두고 큰 ▶ 를 보여 준다
+       songs.html#s=songs/…mp3   (같은 뜻) ── */
+  function param(name){
+    var q=location.search.slice(1).split('&'),h=location.hash.slice(1).split('&'),all=q.concat(h);
+    for(var k=0;k<all.length;k++){
+      var p=all[k].split('=');
+      if(p[0]===name&&p.length>1){
+        try{ return decodeURIComponent(p.slice(1).join('=').replace(/\+/g,' ')); }catch(e){ return ''; }
+      }
+    }
+    return '';
+  }
+  function reveal(el){
+    var c=el.closest('.reveal'); if(c) c.classList.add('on');
+    setTimeout(function(){ el.scrollIntoView({behavior:'smooth',block:'start'}); },60);
+  }
+  function fromLink(){
+    var src=param('s'),key=param('cat');
+    if(src){
+      for(var i=0;i<flat.length;i++){
+        if(flat[i].src===src){
+          choose(i,true);
+          reveal(document.querySelector('.song[data-i="'+i+'"]'));
+          return;
+        }
+      }
+    }
+    if(key){
+      for(var c=0;c<cats.length;c++){
+        if(cats[c].key===key||cats[c].label===key){
+          var el=document.querySelector('.cat[data-c="'+c+'"]');
+          el.classList.add('on','hl');
+          reveal(el);
+          setTimeout(function(){ el.classList.remove('hl'); },2800);
+          return;
+        }
+      }
+    }
+  }
 
   fetch('songs.json?'+Date.now())
     .then(function(r){ if(!r.ok) throw 0; return r.json(); })
     .then(function(d){
-      var cats=(d&&d.categories||[]).filter(function(c){return c.songs&&c.songs.length});
-      if(!cats.length){ empty(); return; }
-      render(cats);
+      var list=(d&&d.categories||[]).filter(function(c){return c.songs&&c.songs.length});
+      if(!list.length){ empty(); return; }
+      render(list);
+      queue=allIdx(); buildOrder(null);
       askCounts();                   /* 열 때 지금 숫자를 받아 온다 (세지는 않는다) */
       var io=new IntersectionObserver(function(es){
         es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); } });
       },{threshold:.08});
       document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+      fromLink();
     })
     .catch(empty);                                /* 목록 파일이 아직 없어도 화면은 멀쩡하다 */
 
