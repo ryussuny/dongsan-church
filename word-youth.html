@@ -81,6 +81,7 @@ textarea{width:100%;min-height:96px;margin-top:10px;border:1px solid var(--line)
     <button onclick="saveImage()">🖼 이미지</button>
     <button onclick="shareText()">📤 공유</button>
   </div>
+  <div id="videoSlot"></div>
 
   <div class="sec">
     <details id="bibleBox"><summary id="bibleSum">오늘 본문 전체 읽기</summary><div class="bible" id="bible">불러오는 중…</div></details>
@@ -121,6 +122,7 @@ textarea{width:100%;min-height:96px;margin-top:10px;border:1px solid var(--line)
 <script src="word-data.js"></script>
 <script src="word-config.js"></script>
 <script src="word-core.js"></script>
+<script src="word-video.js"></script>
 <script>
 var VER='adult',viewDate=WordData.today(),me=WordUser.get();
 var KN='dongsan_youth_notes',KC='dongsan_youth_challenge';
@@ -147,6 +149,7 @@ function render(){
   document.getElementById('dSeries').textContent=sr?('Day '+sr.day+'/'+sr.total+' · '+sr.title):(d.theme||'');
   document.getElementById('fwdBtn').disabled=WordData.locked(WordData.shift(viewDate,1));
   drawHero(d);
+  WordVideo.mount(document.getElementById('videoSlot'),d.passage);
   document.getElementById('medSec').style.display=d.explain?'':'none';
   document.getElementById('med').innerHTML=paras(d.explain);
   document.getElementById('gos').style.display=d.gospel?'':'none';

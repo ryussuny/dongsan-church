@@ -409,3 +409,10 @@ GitHub Pages 정적 호스팅이라 `/api/…` 는 존재할 수 없다.
   3. `node scripts/kids-voice.js join <그 폴더>` → 날짜별로 이어 붙여 `audio/kids/` 와 `word-audio.js` 를 만든다. 조각이 모자란 날은 건너뛴다.
 - 성경 본문(개역개정)은 녹음하지 않는다 — 우리가 쓴 어린이 이야기(kids.summary)만 읽는다.
 - 지금 녹음된 날: 10월 16일. ElevenLabs 계정의 무료 사용이 막혀(“unusual activity… upgrade to a paid subscription”) 나머지는 유료로 올린 뒤 이어서 만든다.
+
+## 본문 장 유튜브 낭독 (2026-10-15)
+
+- 성인용·큰 글씨·청년 화면의 본문 아래 「▶ 유튜브에서 ○○ ○장 듣기」 — `word-video.js`.
+- 지금은 유튜브 **@prs 채널 안에서 그 장을 찾아** 새 창으로 연다 (`WORD_VIDEO_CHANNEL`).
+- 장마다 영상 주소를 `WORD_VIDEO` 에 적으면(예: `'시편 139': 'https://youtu.be/영상번호'`) 그 장은 **앱 안에서 바로 재생**한다(유튜브 공식 퍼가기).
+- 소리 파일은 우리 저장소에 담지 않는다(저작권) — 유튜브에서 틀거나 그쪽으로 보낸다.

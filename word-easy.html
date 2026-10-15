@@ -75,6 +75,7 @@ button:disabled{opacity:.45}
   </div>
 
   <button class="main" id="listenBtn" onclick="listen()">🔊 말씀 들려주세요</button>
+  <div id="videoSlot" style="font-size:17px"></div>
 
   <div class="card" style="margin-top:14px">
     <div id="feast"></div>
@@ -123,6 +124,7 @@ button:disabled{opacity:.45}
 <script src="word-data.js"></script>
 <script src="word-config.js"></script>
 <script src="word-core.js"></script>
+<script src="word-video.js"></script>
 <script>
 var VER='adult',viewDate=WordData.today(),me=WordUser.get();
 var easyFs=(function(){try{return +localStorage.getItem('dongsan_easy_fs')||22}catch(e){return 22}})();
@@ -145,6 +147,7 @@ function render(){
   document.getElementById('feast').innerHTML=d.feast?'<span class="fe">'+wEsc(d.feast)+'</span>':'';
   document.getElementById('ttl').textContent=d.title;
   document.getElementById('ref').textContent=d.passage;
+  WordVideo.mount(document.getElementById('videoSlot'),d.passage);
   document.getElementById('remBox').style.display=d.remember?'':'none';
   document.getElementById('rem').textContent=d.remember||'';
   document.getElementById('medCard').style.display=d.explain?'':'none';
