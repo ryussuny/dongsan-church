@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="동산 말씀">
 <meta name="mobile-web-app-capable" content="yes">
 <title>찬양 — 동산감리교회</title>
-<meta name="description" content="동산감리교회 찬양. 직접 만든 곡과 찬송가, 성가대 특송을 들으실 수 있습니다.">
+<meta name="description" content="동산감리교회 찬양. 직접 만든 곡과 찬송가, 유튜브 찬양을 들으실 수 있습니다.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -68,6 +68,17 @@ section{padding:3.5rem 0}
 .empty p{font-size:.92rem;color:var(--text2);line-height:1.9}
 .empty code{background:var(--warm);border-radius:6px;padding:.1rem .45rem;font-size:.86em;color:var(--brick-deep)}
 
+/* 유튜브 찬양 재생목록 — songs/유튜브.txt */
+.yt{margin-bottom:2.6rem}
+.yt-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:.9rem 1rem;margin-bottom:.7rem}
+.yt-row{display:flex;align-items:center;gap:.8rem}
+.yt-ico{flex:none;width:44px;height:44px;border-radius:12px;background:#cc0000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px}
+.yt-t{flex:1;min-width:0;font-weight:700;font-size:.98rem}
+.yt-t small{display:block;font-weight:400;font-size:.76rem;color:var(--text3)}
+.yt-btn{flex:none;min-height:44px;padding:0 1rem;border-radius:999px;border:1px solid var(--gold);background:none;color:var(--moss2);font:inherit;font-weight:700;font-size:.86rem;cursor:pointer}
+.yt-out{display:inline-block;margin-top:.5rem;font-size:.8rem;color:var(--text3);text-decoration:underline}
+.yt-frame{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;margin-top:.8rem}
+.yt-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .cat{margin-bottom:2.6rem;scroll-margin-top:90px}
 .cat-h{display:flex;align-items:center;flex-wrap:wrap;gap:.4rem .7rem;margin-bottom:1.1rem;padding-bottom:.7rem;border-bottom:2px solid var(--stone)}
 .cat-h b{font-family:'Gowun Batang',serif;font-size:1.4rem;color:var(--brick-deep)}
@@ -202,12 +213,13 @@ footer a:hover{color:var(--paper)}
   <div class="wrap">
     <div class="hero-eyebrow">🎵 PRAISE</div>
     <h1>주께 드리는<br><em>우리의 찬양</em></h1>
-    <p>직접 만든 곡과 찬송가, 성가대의 특송을 함께 들으실 수 있습니다.</p>
+    <p>직접 만든 곡과 찬송가, 유튜브 찬양을 함께 들으실 수 있습니다.</p>
   </div>
 </header>
 
 <section>
   <div class="wrap">
+    <div id="yt"></div>
     <div id="list"></div>
   </div>
 </section>
@@ -648,11 +660,47 @@ footer a:hover{color:var(--paper)}
     }
   }
 
+  /* ── 유튜브 찬양 재생목록 ─────────────────────────────
+     노래 파일을 우리가 담지 않고 유튜브 공식 퍼가기로 튼다. 누르기 전에는 유튜브를 불러오지 않는다. ── */
+  var ytEl=document.getElementById('yt');
+  function ytEmbed(y){
+    return y.list?'https://www.youtube-nocookie.com/embed/videoseries?list='+encodeURIComponent(y.list)+'&rel=0&playsinline=1&autoplay=1'
+                 :'https://www.youtube-nocookie.com/embed/'+encodeURIComponent(y.v)+'?rel=0&playsinline=1&autoplay=1';
+  }
+  function ytOpen(y){
+    return y.list?'https://www.youtube.com/playlist?list='+encodeURIComponent(y.list):'https://www.youtube.com/watch?v='+encodeURIComponent(y.v);
+  }
+  function closeYt(){ [].forEach.call(ytEl.querySelectorAll('.yt-frame'),function(f){f.remove()});
+    [].forEach.call(ytEl.querySelectorAll('.yt-btn'),function(b){b.textContent='▶ 듣기'}); }
+  function renderYt(yts){
+    if(!yts||!yts.length){ ytEl.innerHTML=''; return; }
+    ytEl.innerHTML='<div class="yt reveal"><div class="cat-h"><b>유튜브 찬양</b><span>'+yts.length+'개</span></div>'+
+      yts.map(function(y,i){
+        return '<div class="yt-card" data-i="'+i+'"><div class="yt-row"><div class="yt-ico" aria-hidden="true">▶</div>'+
+          '<div class="yt-t">'+esc(y.title)+'<small>'+(y.list?'유튜브 재생목록':'유튜브 영상')+'</small></div>'+
+          '<button class="yt-btn" type="button">▶ 듣기</button></div>'+
+          '<a class="yt-out" href="'+ytOpen(y)+'" target="_blank" rel="noopener">유튜브에서 열기</a></div>';
+      }).join('')+'</div>';
+    ytEl.addEventListener('click',function(e){
+      var b=e.target.closest('.yt-btn'); if(!b) return;
+      var card=b.closest('.yt-card'),y=yts[+card.dataset.i],open=card.querySelector('.yt-frame');
+      closeYt();
+      if(open) return;                                   /* 다시 누르면 닫는다 */
+      if(!player.paused) player.pause();                 /* 우리 노래는 잠시 멈춘다 */
+      var f=document.createElement('div');f.className='yt-frame';
+      f.innerHTML='<iframe src="'+ytEmbed(y)+'" title="'+esc(y.title)+'" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+      card.appendChild(f);b.textContent='■ 닫기';
+    });
+  }
+  player.addEventListener('play',closeYt);               /* 우리 노래를 틀면 유튜브는 닫는다 */
+
   fetch('songs.json?'+Date.now())
     .then(function(r){ if(!r.ok) throw 0; return r.json(); })
     .then(function(d){
+      renderYt(d&&d.youtube);
       var list=(d&&d.categories||[]).filter(function(c){return c.songs&&c.songs.length});
-      if(!list.length){ empty(); return; }
+      if(!list.length){ if(!(d&&d.youtube&&d.youtube.length)) empty(); else listEl.innerHTML=''; 
+        document.querySelectorAll('.reveal').forEach(function(el){el.classList.add('on')}); return; }
       render(list);
       queue=allIdx(); buildOrder(null);
       askCounts();                   /* 열 때 지금 숫자를 받아 온다 (세지는 않는다) */

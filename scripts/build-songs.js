@@ -24,7 +24,7 @@ const OUT = path.join(ROOT, 'songs.json');
 const EXT = ['.mp3', '.m4a', '.ogg', '.wav'];
 
 /* 내보이는 차례. 여기 없는 폴더는 뒤에 가나다순으로 붙는다. */
-const ORDER = ['자작 찬양', '찬송가', '성가대', '교회학교'];
+const ORDER = ['자작 찬양', '찬송가', '교회학교'];
 
 function isSong(name) {
   return EXT.includes(path.extname(name).toLowerCase());
@@ -101,12 +101,34 @@ categories.sort((a, b) => {
   return a.key.localeCompare(b.key, 'ko');
 });
 
+/* 유튜브 찬양 — songs/유튜브.txt 에 한 줄씩 「제목 | 재생목록(또는 영상) 주소」.
+   # 으로 시작하는 줄과 빈 줄은 건너뛴다. 재생목록은 list=, 영상 하나는 v= 로 알아본다. */
+function readYoutube() {
+  const file = path.join(DIR, '유튜브.txt');
+  if (!fs.existsSync(file)) return [];
+  return fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/)
+    .map(l => l.trim()).filter(l => l && !l.startsWith('#'))
+    .map(l => {
+      const at = l.lastIndexOf('|');
+      const title = (at >= 0 ? l.slice(0, at) : '').trim();
+      const url = (at >= 0 ? l.slice(at + 1) : l).trim();
+      const list = (url.match(/[?&]list=([\w-]+)/) || [])[1] || '';
+      const v = (url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/) || [])[1] || '';
+      if (!list && !v) { console.log('  ⚠ 유튜브 주소를 알아보지 못했습니다:', l); return null; }
+      return { title: title || '유튜브 찬양', list, v };
+    })
+    .filter(Boolean);
+}
+const youtube = readYoutube();
+
 fs.writeFileSync(OUT, JSON.stringify({
-  note: 'songs 폴더에 노래를 넣으면 scripts/build-songs.js 가 이 파일을 다시 만든다. 폴더 이름이 갈래다.',
+  note: 'songs 폴더에 노래를 넣으면 scripts/build-songs.js 가 이 파일을 다시 만든다. 폴더 이름이 갈래다. 유튜브 찬양은 songs/유튜브.txt.',
   categories,
+  youtube,
   updatedAt: new Date().toISOString().slice(0, 10),
 }, null, 2) + '\n');
 
 console.log(`✓ 찬양 목록 생성 — 갈래 ${categories.length}개 · 곡 ${total}곡 · ${mb(bytes)}MB · 가사 ${withLyrics}곡`);
 categories.forEach(c => console.log(`  ${c.label} ${c.songs.length}곡`));
+console.log(`  유튜브 찬양 ${youtube.length}개`);
 if (!total) console.log('  (아직 올린 노래가 없습니다. songs 폴더에 넣어 주세요.)');
