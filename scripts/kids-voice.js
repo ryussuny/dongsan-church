@@ -127,12 +127,25 @@ function join(dir) {
     fs.writeFileSync(path.join(outDir, day + '.mp3'), Buffer.concat(bufs));
     done.push(day);
   });
-  /* 앱이 읽는 목록 — 소리 파일이 있는 날만 적는다 */
-  var cast = {}; plan().forEach(function (s) { if (done.indexOf(s.date) >= 0) (cast[s.date] = cast[s.date] || []).indexOf(CAST[s.role].name) < 0 && cast[s.date].push(CAST[s.role].name); });
+  /* 앱이 읽는 목록 — 소리 파일이 있는 날만, 줄마다 배역·글·끝나는 시각(초)을 적는다.
+     128kbps 고정 비트레이트라 길이는 (바이트 × 8 ÷ 128000) 으로 셈한다. */
+  var lines = {}, P = plan();
+  done.forEach(function (day) {
+    var t = 0;
+    lines[day] = P.filter(function (s) { return s.date === day; }).map(function (s) {
+      var bytes = stripId3(fs.readFileSync(path.join(dir, day + '-' + s.i + '.mp3'))).length;
+      t += bytes * 8 / 128000;
+      return { r: s.role, e: Math.round(t * 100) / 100, x: s.text };
+    });
+  });
+  var old = {};
+  try { var c0 = { window: {} }; vm.createContext(c0); vm.runInContext(fs.readFileSync(path.join(ROOT, 'word-audio.js'), 'utf8') + ';this.A=WORD_AUDIO', c0); old = c0.A || {}; } catch (e) {}
+  Object.keys(old).forEach(function (d) { if (!lines[d] && Array.isArray(old[d]) && fs.existsSync(path.join(outDir, d + '.mp3'))) lines[d] = old[d]; });
+  var body = Object.keys(lines).sort().map(function (d) { return JSON.stringify(d) + ':' + JSON.stringify(lines[d]); }).join(',\n');
   fs.writeFileSync(path.join(ROOT, 'word-audio.js'),
     '/* 어린이 이야기 드라마 낭독 목록 — scripts/kids-voice.js 가 만든다. 손으로 고치지 않는다.\n' +
-    '   날짜: 나오는 목소리들. 소리 파일은 audio/kids/<날짜>.mp3 */\n' +
-    'var WORD_AUDIO=' + JSON.stringify(cast, null, 0).replace(/\],"/g, '],\n"') + ';\n');
+    '   날짜: [{r:배역, e:끝나는 시각(초), x:글}]. 소리 파일은 audio/kids/<날짜>.mp3 */\n' +
+    'var WORD_AUDIO={\n' + body + '\n};\n');
   console.log('이은 날', done.length, '일');
 }
 

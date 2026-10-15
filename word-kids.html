@@ -101,6 +101,14 @@ header .who{margin-left:auto;flex:none;white-space:nowrap;max-width:8.5em;overfl
   font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;line-height:26px;text-align:center}
 .kl.now{background:var(--lt-fff3cd,#fff3cd);box-shadow:0 0 0 2px var(--sun);color:var(--tx)}
 .kl.now .vn{background:var(--sun);color:#5a4200}
+/* 이야기 연극 — 배역마다 한 줄, 지금 말하는 줄을 비춘다 */
+.drama{margin-top:4px;display:flex;flex-direction:column;gap:6px}
+.drama[hidden]{display:none}
+.dl{display:flex;gap:9px;align-items:flex-start;padding:8px 10px;border-radius:14px;font-size:16.5px;line-height:1.8;color:var(--tx2);transition:background-color .2s,box-shadow .2s}
+.dl .who{flex:none;width:30px;height:30px;border-radius:50%;background:var(--lt-eef6fd,#eef6fd);display:flex;align-items:center;justify-content:center;font-size:16px;margin-top:2px}
+.dl.say{color:var(--tx);font-weight:700}
+.dl.now{background:var(--lt-fff3cd,#fff3cd);box-shadow:0 0 0 2px var(--sun);color:var(--tx)}
+.drama-note{margin-top:8px;font-size:12.5px;color:var(--tx3);text-align:center}
 .kch{font-size:13px;font-weight:700;color:var(--sky);margin:10px 8px 4px}
 .kch:first-child{margin-top:0}
 
@@ -308,6 +316,9 @@ nav button.on{color:var(--sky);font-weight:700}
   <div class="card">
     <div class="step y">2단계 · 무슨 이야기일까?</div>
     <div class="story" id="story"></div>
+    <div class="drama" id="drama" hidden></div>
+    <button class="big b-sky" id="storyBtn" style="margin-top:12px" onclick="playStory()">🎭 이야기 들려주기</button>
+    <div class="drama-note" id="dramaNote"></div>
   </div>
 
   <div class="card" id="quizCard">
@@ -453,6 +464,7 @@ nav button.on{color:var(--sky);font-weight:700}
 <script src="word-config.js"></script>
 <script src="word-core.js"></script>
 <script src="word-extra.js"></script>
+<script src="word-audio.js"></script>
 <script>
 var VER='kids';
 var viewDate=WordData.today();
@@ -504,6 +516,7 @@ function renderToday(){
   var kp=document.getElementById('kidPrayer');
   if(kp){kp.parentNode.style.display=d.kidPrayer?'':'none';kp.textContent=d.kidPrayer||''}
   document.getElementById('story').textContent=k.summary;
+  stopStory();paintDramaNote();
   document.getElementById('tableQ').textContent=WordExtra.table(d);
   document.getElementById('missionTx').textContent=k.mission;
   document.getElementById('keyVerse').innerHTML='<div class="t" id="kvText">말씀을 가져오는 중이에요…</div>'+
@@ -624,7 +637,7 @@ function renderMemo(){
   card.hidden=false;
 }
 function peek(el){el.classList.add('peek');setTimeout(function(){el.classList.remove('peek')},1500)}
-function hearMemo(){if(memo)WordVoice.speak(memo.text+'. '+memo.ref)}
+function hearMemo(){if(!memo)return;if(storyOn())stopStory();WordVoice.speak(memo.text+'. '+memo.ref)}
 function doneMemo(){
   if(!memo)return;
   if(WordExtra.memoryDone()[memo.week]){wToast('주일에 선생님께 들려 드려요 🎖');return}
@@ -839,15 +852,104 @@ function toggleFull(){
   if(open)markRead();else if(WordVoice.playing&&FULL_READING)WordVoice.stop();
 }
 function voiceBtns(on,which){
+  if(on&&which!=='story'&&STORY.audio)stopStory();
   var a=document.getElementById('readBtn'),f=document.getElementById('fullRead');
   a.textContent=on&&which==='short'?'⏹ 그만 읽기':'🔊 읽어 주기';
   f.textContent=on&&which==='full'?'⏹ 그만':'🔊 따라 읽기';f.classList.toggle('on',on&&which==='full');
 }
+/* 읽어 주기 — 제목과 오늘의 말씀을 읽고, 이어서 이야기를 들려준다 */
+var USER_STOP=false;
 function readAloud(){
-  if(WordVoice.playing){WordVoice.stop();return}
+  if(WordVoice.playing||storyOn()){stopAll();return}
   var d=day(),kv=document.getElementById('kvText').textContent;
-  FULL_READING=false;markRead();
-  WordVoice.speak(d.title+'. '+kv+' '+d.kids.summary,{onChange:function(on){voiceBtns(on,'short')}});
+  FULL_READING=false;USER_STOP=false;markRead();
+  WordVoice.speak(d.title+'. '+kv,{onChange:function(on){
+    voiceBtns(on,'short');
+    if(!on&&!USER_STOP)setTimeout(function(){if(!USER_STOP)playStory(true)},350);
+  }});
+}
+function stopAll(){USER_STOP=true;WordVoice.stop();stopStory()}
+
+/* ---------- 🎭 이야기 연극 ----------
+   녹음해 둔 낭독(audio/kids/<날짜>.mp3, word-audio.js)이 있으면 그 소리를 틀고,
+   없으면 휴대폰 목소리로 배역마다 높낮이·빠르기를 바꿔 읽는다. */
+var ROLE={narrator:{e:'📖',p:1.05,r:.92},god:{e:'✨',p:.6,r:.8},jesus:{e:'✝️',p:.85,r:.86},prophet:{e:'📜',p:.75,r:.88},
+  david:{e:'🎵',p:1,r:.9},paul:{e:'✉️',p:.9,r:.95},peter:{e:'🙋',p:1.12,r:.98},woman:{e:'👩',p:1.35,r:.95},
+  angel:{e:'👼',p:1.5,r:.95},villain:{e:'🐍',p:1.6,r:1.08}};
+var ROLE_NAMES=[['뱀|마귀','villain'],['천사','angel'],['마리아|마르다|여인|하와','woman'],['예수님','jesus'],['하나님','god'],
+  ['다윗|시편 기자','david'],['세례 요한|이사야|예레미야|시므온|사가랴','prophet'],['바울|요한','paul'],['베드로|제자들|사람들','peter']];
+var NAME_ROLE={},NAMES=[];
+ROLE_NAMES.forEach(function(n){n[0].split('|').forEach(function(x){NAME_ROLE[x]=n[1];NAMES.push(x)})});
+NAMES.sort(function(a,b){return b.length-a.length});            /* 긴 이름부터 — 「세례 요한」이 「요한」보다 먼저 */
+var NAME_RE=new RegExp('('+NAMES.join('|')+')(?:은|는|이|가|께서)','g');
+/* 녹음이 없는 날 — 따옴표 앞 글의 마지막 주어로 말하는 사람을 어림한다 */
+function guessLines(d){
+  var parts=d.kids.summary.split(/([‘“][^’”]*[’”])/).filter(function(p){return p.trim()}),before='',out=[{r:'narrator',x:'오늘의 이야기. '+d.title+'.'}];
+  parts.forEach(function(p){
+    var q=/^[‘“]/.test(p)&&p.length>6,r='narrator';
+    if(q){
+      var best=null,m;NAME_RE.lastIndex=0;
+      while((m=NAME_RE.exec(before)))best=NAME_ROLE[m[1]];
+      r=best||'narrator';p=p.replace(/^[‘“]|[’”]$/g,'');
+    }else before+=p;
+    var last=out[out.length-1];
+    if(last.r===r){last.x+=' '+p.trim();return}
+    out.push({r:r,x:p.trim()});
+  });
+  return out;
+}
+var STORY={lines:[],audio:null,tts:false};
+function storyLines(){var rec=window.WORD_AUDIO&&WORD_AUDIO[viewDate];return rec?{lines:rec,rec:true}:{lines:guessLines(day()),rec:false}}
+function paintDrama(lines){
+  var box=document.getElementById('drama');
+  box.innerHTML=lines.map(function(l,i){
+    var say=l.r!=='narrator';
+    return '<div class="dl'+(say?' say':'')+'" data-i="'+i+'"><span class="who">'+(ROLE[l.r]||ROLE.narrator).e+'</span><span>'+
+      (say?'“':'')+wEsc(l.x)+(say?'”':'')+'</span></div>';
+  }).join('');
+}
+function hiLine(i){
+  var now=null;
+  document.querySelectorAll('#drama .dl').forEach(function(e){var on=+e.dataset.i===i;e.classList.toggle('now',on);if(on)now=e});
+  if(now){var r=now.getBoundingClientRect();if(r.top<70||r.bottom>window.innerHeight-90)now.scrollIntoView({block:'center',behavior:'smooth'})}
+}
+function storyOn(){return !!((STORY.audio&&!STORY.audio.paused)||STORY.tts)}
+function storyUI(on){
+  var b=document.getElementById('storyBtn');b.textContent=on?'⏹ 그만 들을래요':'🎭 이야기 들려주기';
+  document.getElementById('story').hidden=on;document.getElementById('drama').hidden=!on;
+  if(!on)hiLine(-1);
+}
+function stopStory(){
+  if(STORY.audio){STORY.audio.pause();STORY.audio=null}
+  if(STORY.tts){STORY.tts=false;WordVoice.stop()}
+  storyUI(false);
+}
+function playStory(chained){
+  if(!chained&&(storyOn()||WordVoice.playing)){stopAll();return}
+  USER_STOP=false;markRead();
+  var s=storyLines();STORY.lines=s.lines;paintDrama(s.lines);storyUI(true);
+  if(!chained)document.getElementById('drama').scrollIntoView({block:'center',behavior:'smooth'});
+  if(s.rec){
+    var a=new Audio('audio/kids/'+viewDate+'.mp3');STORY.audio=a;
+    a.addEventListener('timeupdate',function(){
+      var t=a.currentTime,i=0;while(i<s.lines.length-1&&t>=s.lines[i].e)i++;hiLine(i);
+    });
+    a.addEventListener('ended',function(){STORY.audio=null;storyUI(false);celebrateStory()});
+    a.addEventListener('error',function(){if(STORY.audio===a){STORY.audio=null;ttsStory(s.lines)}});   /* 파일을 못 받으면 휴대폰 목소리로 */
+    a.play().catch(function(){if(STORY.audio===a){STORY.audio=null;ttsStory(s.lines)}});
+  }else ttsStory(s.lines);
+}
+function ttsStory(lines){
+  STORY.tts=true;
+  WordVoice.speak(lines.map(function(l){var v=ROLE[l.r]||ROLE.narrator;return {t:l.x,pitch:v.p,rate:v.r}}),{onItem:hiLine,
+    onChange:function(on){if(!on&&STORY.tts){STORY.tts=false;storyUI(false);if(!USER_STOP)celebrateStory()}}});
+}
+function celebrateStory(){wToast('🎭 이야기 끝! 이제 퀴즈를 풀어 볼까요?')}
+function paintDramaNote(){
+  var rec=window.WORD_AUDIO&&WORD_AUDIO[viewDate],n=document.getElementById('dramaNote');
+  if(rec){var seen={},names=[];rec.forEach(function(l){if(!seen[l.r]){seen[l.r]=1;names.push((ROLE[l.r]||ROLE.narrator).e)}});
+    n.textContent='🎙 성우 목소리로 녹음한 이야기예요 · '+names.join(' ')}
+  else n.textContent='휴대폰 목소리가 사람마다 다르게 읽어 줘요';
 }
 /* 따라 읽기 — 한 절씩 소리 내어 읽고, 지금 읽는 절을 노랗게 비춘다 */
 var FULL_READING=false;
@@ -858,6 +960,7 @@ function hiVerse(i){
 }
 function readFull(){
   if(WordVoice.playing&&FULL_READING){WordVoice.stop();return}
+  if(storyOn())stopStory();
   if(!CUR_VS.length){wToast('말씀을 가져오는 중이에요');return}
   FULL_READING=true;markRead();
   WordVoice.speak(CUR_VS.map(function(v){return v.t}),{rate:.88,onItem:hiVerse,
@@ -977,7 +1080,7 @@ function renderBoard(){
 }
 function openDay(ds){
   if(WordData.locked(ds)){wToast('내일 말씀은 내일 새벽에 열려요');return}
-  if(WordVoice.playing)WordVoice.stop();
+  if(WordVoice.playing||storyOn())stopAll();
   viewDate=ds;renderToday();loadFeed();
   document.querySelectorAll('nav button').forEach(function(b,i){b.classList.toggle('on',i===0)});
   go('today');

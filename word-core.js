@@ -384,10 +384,12 @@ var WordVoice=(function(){
   function pieces(t){
     var out=[];
     (Array.isArray(t)?t:[t]).forEach(function(x,i){
+      var pv=null;                                   /* {t,pitch,rate} 로 주면 그 글만 목소리 높낮이·빠르기를 바꾼다 */
+      if(x&&typeof x==='object'){pv=x;x=x.t}
       (String(x||'').match(/[^.!?]+[.!?]*/g)||[]).forEach(function(s){  /* 문장마다 끊는다 */
         s=s.trim();
-        while(s.length>180){var cut=s.lastIndexOf(' ',180);if(cut<60)cut=180;out.push({s:s.slice(0,cut),i:i});s=s.slice(cut).trim()}
-        if(s)out.push({s:s,i:i});
+        while(s.length>180){var cut=s.lastIndexOf(' ',180);if(cut<60)cut=180;out.push({s:s.slice(0,cut),i:i,v:pv});s=s.slice(cut).trim()}
+        if(s)out.push({s:s,i:i,v:pv});
       });
     });
     return out;
@@ -398,12 +400,12 @@ var WordVoice=(function(){
     if(!q){set(false);return}
     if(onItem)try{onItem(q.i)}catch(e){}
     var u=new SpeechSynthesisUtterance(q.s);
-    u.lang='ko-KR';u.rate=rate;u.pitch=pitch;
+    u.lang='ko-KR';u.rate=(q.v&&q.v.rate)||rate;u.pitch=(q.v&&q.v.pitch)||pitch;
     u.onend=next;u.onerror=function(){queue=[];set(false)};
     window.speechSynthesis.speak(u);
   }
   var rate=.92,pitch=1.05;
-  /* t: 글 하나 또는 글 목록. o: {rate,pitch,onChange,onItem}
+  /* t: 글 하나 또는 글 목록(글 대신 {t,pitch,rate} 도 된다). o: {rate,pitch,onChange,onItem}
      onItem(i) 는 목록의 i 번째 글을 읽기 시작할 때 부른다 (지금 읽는 절 표시용). */
   function speak(t,o){
     if(!supported()){wToast('이 기기는 읽어 주기를 지원하지 않습니다');return}
