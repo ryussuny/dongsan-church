@@ -46,6 +46,9 @@ button:disabled{opacity:.45}
 .med p{margin-bottom:12px}
 .gos{background:var(--soft);border-radius:14px;padding:14px 16px;margin-top:6px;font-family:'Gowun Batang',serif}
 .pr{font-family:'Gowun Batang',serif;font-weight:700}
+.inst{display:block;margin-top:18px;padding:16px 18px;border-radius:18px;border:2px solid var(--brick);background:var(--card);color:var(--brick);text-align:center;font-weight:900;font-size:22px;text-decoration:none;line-height:1.4}
+.inst small{display:block;font-size:16px;font-weight:400;color:var(--ink2)}
+.inst[hidden]{display:none}
 .foot{text-align:center;margin-top:20px;font-size:17px;line-height:2.2}
 .foot a{color:var(--brick);font-weight:700}
 .sizer{display:flex;gap:8px;align-items:center;justify-content:flex-end}
@@ -112,6 +115,9 @@ button:disabled{opacity:.45}
     <button onclick="copyGive()">📋 계좌번호 복사</button>
     <div class="give-note">보내실 때 받는 분 통장 표시에 이름과 헌금 종류를 적어 주세요. (예: 홍길동 감사)</div>
   </div>
+
+  <a class="inst" id="installLink" href="install.html">📲 휴대폰 첫 화면에 설치하기<small>아이콘 하나로 바로 열려요</small></a>
+  <script>if((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true)document.getElementById('installLink').hidden=true;</script>
 
   <div class="foot">
     글씨는 위쪽 <b>가−</b> <b>가＋</b> 로 조절하세요.<br>

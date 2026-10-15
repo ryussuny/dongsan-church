@@ -53,7 +53,7 @@ a.book,div.book{display:block;border-radius:20px;padding:16px;margin-bottom:12px
 .book b{display:block;font-size:16px;margin-bottom:3px}.book b i{font-style:normal;margin-right:6px}.book span{font-size:12.5px;color:var(--dt-6b5a45,#6b5a45)}
 .book .bk-soon{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--lt-f4e6d3,#f4e6d3);font-size:13.5px;font-weight:700;color:var(--dt-8f4531,#8f4531);text-align:center}
 .book .bk2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.book [hidden]{display:none}
+.book [hidden],.book[hidden]{display:none}
 .book .bk2 a{display:block;text-align:center;padding:10px 6px;border-radius:12px;background:var(--lt-f4e6d3,#f4e6d3);color:var(--dt-8f4531,#8f4531);font-weight:700;font-size:14px;text-decoration:none}
 .welcome{background:var(--lt-fffaf2,#fffaf2);border:1px dashed var(--lt-e0cdae,#e0cdae);border-radius:16px;padding:14px 16px;margin-bottom:12px;font-size:13px;line-height:1.8;color:var(--dt-6b5a45,#6b5a45)}
 .welcome b{color:var(--dt-3a2e22,#3a2e22)}
@@ -122,6 +122,12 @@ a.book,div.book{display:block;border-radius:20px;padding:16px;margin-bottom:12px
   <a class="book" href="songs.html">
     <b><i>🎵</i>찬양 듣기</b><span>직접 만든 곡과 찬송가, 유튜브 찬양을 들을 수 있어요.</span>
   </a>
+
+  <a class="book" href="install.html" id="installCard">
+    <b><i>📲</i>휴대폰 첫 화면에 설치하기</b><span>앱처럼 아이콘 하나로 바로 열려요. 아이폰·갤럭시 모두 1분이면 됩니다.</span>
+  </a>
+  <script>/* 이미 설치해서 아이콘으로 연 경우에는 안내를 감춘다 */
+  if((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true)document.getElementById('installCard').hidden=true;</script>
 
   <div class="welcome">
     <b>처음 오셨나요?</b> 교회에 다니지 않아도 누구나 이름 없이 읽고 들을 수 있습니다.
