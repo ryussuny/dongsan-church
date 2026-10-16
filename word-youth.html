@@ -3,6 +3,7 @@
 <script src="theme.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <link rel="manifest" href="manifest.json">
+<script src="install-btn.js"></script>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="favicon.png" type="image/png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -69,6 +70,7 @@ textarea{width:100%;min-height:96px;margin-top:10px;border:1px solid var(--line)
 <body>
 <div class="wrap">
   <div class="top"><a href="word.html">← 말씀</a><span class="tag">청년 · 청소년</span></div>
+  <div data-install-slot></div>
   <div class="day">
     <button onclick="move(-1)" aria-label="어제">‹</button>
     <div class="c"><div class="d" id="dLabel"></div><div class="s" id="dSeries"></div></div>
