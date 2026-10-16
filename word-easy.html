@@ -11,98 +11,163 @@
 <title>큰 글씨 말씀 — 동산감리교회</title>
 <meta name="description" content="글씨가 크고 누르기 쉬운 오늘의 말씀. 본문과 묵상을 읽고, 버튼 하나로 들을 수 있습니다.">
 <meta name="theme-color" content="#8f4531">
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#fbf6ee;--card:#ffffff;--ink:#231d17;--ink2:#4a3f33;--line:#e6d3b4;--brick:#8f4531;--brick2:#b3593f;--gold:#c99a3f;--soft:#fbf1e3;--ok:#3f7d3a;--fs:22px}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#181512;--card:#24201b;--ink:#f3ece2;--ink2:#d6cbbb;--line:#433a30;--brick:#e09a7d;--brick2:#e7a487;--soft:#2c261f;--ok:#8cc47e}}
-:root[data-theme="dark"]{--bg:#181512;--card:#24201b;--ink:#f3ece2;--ink2:#d6cbbb;--line:#433a30;--brick:#e09a7d;--brick2:#e7a487;--soft:#2c261f;--ok:#8cc47e}
+/* ===========================================================
+   C · 한 걸음 — 어르신용 큰 글씨, 네 걸음으로 차근차근
+   ① 말씀 읽기 → ② 쉬운 풀이 → ③ 마음에 물어보기 → ④ 함께 기도
+   =========================================================== */
+:root{--bg:#eef3ee;--card:#ffffff;--ink:#14201a;--ink2:#3d5246;--line:#d5e0d6;--line2:#c3d2c5;--acc:#2f6b4f;--acc-on:#ffffff;--soft:#eef3ee;
+  --key:#fff3d6;--key-ink:#8a5a12;--stamp:#b5761d;--stamp-bg:#fff8e8;--stamp-line:#ecd7a6;--fs:21px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111814;--card:#1a241f;--ink:#e8efe9;--ink2:#b9c9bf;--line:#2c3a33;--line2:#3a4b42;--acc:#7cc4a0;--acc-on:#0f1813;--soft:#14201a;
+  --key:#3b311c;--key-ink:#f0c674;--stamp:#e0a64a;--stamp-bg:#2a2418;--stamp-line:#5a4a2a}}
+:root[data-theme="dark"]{--bg:#111814;--card:#1a241f;--ink:#e8efe9;--ink2:#b9c9bf;--line:#2c3a33;--line2:#3a4b42;--acc:#7cc4a0;--acc-on:#0f1813;--soft:#14201a;
+  --key:#3b311c;--key-ink:#f0c674;--stamp:#e0a64a;--stamp-bg:#2a2418;--stamp-line:#5a4a2a}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',sans-serif;font-size:var(--fs);line-height:1.75;word-break:keep-all;overflow-wrap:anywhere}
-.wrap{max-width:760px;margin:0 auto;padding:16px 16px 60px}
-.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-.top a{color:var(--brick);font-weight:700;text-decoration:none;font-size:18px;padding:8px 0}
-.date{text-align:center;margin:6px 0 14px}
-.date .d{font-size:1.35em;font-weight:700}
-.date .s{font-size:.72em;color:var(--ink2)}
-.nav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-button,.btn{font:inherit;font-size:20px;font-weight:700;border-radius:16px;border:2px solid var(--line);background:var(--card);color:var(--ink);
+body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans KR','Noto Sans KR',sans-serif;font-size:var(--fs);line-height:1.75;word-break:keep-all;overflow-wrap:anywhere}
+.wrap{max-width:760px;margin:0 auto;padding:0 14px 60px}
+button,.btn{font:inherit;font-size:.92em;font-weight:700;border-radius:18px;border:2px solid var(--line2);background:var(--card);color:var(--ink);
   min-height:60px;padding:10px 14px;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;text-align:center}
 button:active,.btn:active{transform:scale(.98)}
-button.main{background:var(--brick);border-color:var(--brick);color:#fff;font-size:22px;min-height:68px;width:100%}
-:root[data-theme="dark"] button.main{color:#181512}
-button.done{background:var(--ok);border-color:var(--ok);color:#fff}
 button:disabled{opacity:.45}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
-.card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px 18px;margin-bottom:14px}
-.lab{display:block;font-size:.68em;font-weight:700;color:var(--brick);letter-spacing:.04em;margin-bottom:6px}
-.ttl{font-family:'Gowun Batang',serif;font-size:1.3em;font-weight:700;line-height:1.4}
-.ref{color:var(--brick);font-weight:700;font-size:.85em;margin-top:2px}
-.fe{display:inline-block;background:var(--gold);color:#231d17;font-size:.62em;font-weight:700;border-radius:99px;padding:3px 12px;margin-bottom:6px}
-.bible{font-family:'Gowun Batang',serif;font-size:1.04em;line-height:1.95;margin-top:12px}
-.bible span{display:block;margin-bottom:6px}
-.bible b{font-family:'Noto Sans KR',sans-serif;color:var(--brick);font-size:.62em;margin-right:6px;vertical-align:.25em}
-.rem{background:var(--brick);color:#fff;border-radius:20px;padding:20px 18px;margin-bottom:14px;font-family:'Gowun Batang',serif;font-weight:700;font-size:1.08em;line-height:1.7}
-:root[data-theme="dark"] .rem{color:#181512}
-.rem .lab{color:inherit;opacity:.85;font-family:'Noto Sans KR',sans-serif}
-.med p{margin-bottom:12px}
-.gos{background:var(--soft);border-radius:14px;padding:14px 16px;margin-top:6px;font-family:'Gowun Batang',serif}
-.pr{font-family:'Gowun Batang',serif;font-weight:700}
-.inst{display:block;margin-top:18px;padding:16px 18px;border-radius:18px;border:2px solid var(--brick);background:var(--card);color:var(--brick);text-align:center;font-weight:900;font-size:22px;text-decoration:none;line-height:1.4}
-.inst small{display:block;font-size:16px;font-weight:400;color:var(--ink2)}
-.inst[hidden]{display:none}
+button.main{background:var(--acc);border-color:var(--acc);color:var(--acc-on);font-size:1.02em;min-height:68px;width:100%}
+button.main.done{background:var(--card);color:var(--acc);border-color:var(--acc)}
+button.next{width:100%;margin-top:18px;background:var(--card);color:var(--acc);border-color:var(--acc);min-height:62px}
+button.next.ok{background:var(--soft);border-color:var(--line2);color:var(--ink2)}
+button.amen{background:var(--ink);border-color:var(--ink);color:var(--card);font-size:1.08em;min-height:70px;width:100%;margin-top:12px}
+button.amen.done{background:var(--card);color:var(--acc);border-color:var(--acc)}
+/* 머리 */
+.head{background:var(--card);margin:0 -14px;padding:12px 16px 18px;border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.top a{display:flex;align-items:center;gap:4px;min-height:48px;padding:0 14px 0 8px;border-radius:14px;background:var(--soft);color:var(--ink);font-weight:700;text-decoration:none;font-size:17px}
+.sizer{display:flex;gap:6px}
+.sizer button{min-height:48px;min-width:52px;font-size:17px;padding:4px 8px;border-radius:14px}
+.sizer button+button{font-size:21px}
+#themeSlot{display:flex}
+#themeSlot #themeBtn{width:48px;height:48px;min-height:48px;padding:0;border-radius:14px;border:2px solid var(--line2);background:var(--card);font-size:19px}
+.date{margin-top:14px;font-size:.86em;color:var(--ink2);font-weight:500}
+.ttl{font-size:1.45em;line-height:1.35;font-weight:700;margin-top:2px}
+.ref{color:var(--acc);font-weight:700;font-size:.9em;margin-top:2px}
+.fe{display:inline-block;background:var(--key);color:var(--key-ink);font-size:.62em;font-weight:700;border-radius:99px;padding:3px 12px;margin-top:8px}
+.series{font-size:.7em;color:var(--ink2);margin-top:4px}
+.steps{list-style:none;margin-top:16px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.steps li{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:15px;color:var(--ink2)}
+.steps li i{display:block;width:100%;height:8px;border-radius:4px;background:var(--line)}
+.steps li.ok i,.steps li.now i{background:var(--acc)}
+.steps li.now{color:var(--acc);font-weight:700}
+.steps li.ok{color:var(--acc)}
+.steps button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;min-height:44px}
+.nav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 0}
+.nav button{font-size:.86em;min-height:56px}
+/* 걸음 카드 */
+.card{background:var(--card);border:2px solid transparent;border-radius:24px;padding:20px 18px;margin-top:14px}
+.card.now{border-color:var(--acc)}
+.sh{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.sh .n{width:40px;height:40px;flex:none;border-radius:50%;background:var(--line);color:var(--ink);font-size:21px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.card.now .sh .n,.card.ok .sh .n{background:var(--acc);color:var(--acc-on)}
+.sh h2{font-size:1.12em;font-weight:700;line-height:1.3}
+.sh .ck{margin-left:auto;font-size:15px;color:var(--acc);font-weight:700;white-space:nowrap}
+.bible{margin-top:18px;display:flex;flex-direction:column;gap:12px;line-height:1.75}
+.bible span{display:block}
+.bible span.key{background:var(--key);border-radius:16px;padding:10px 14px;font-weight:700}
+.bible b{color:var(--acc);font-size:.8em;margin-right:6px}
+.bible span.key b{color:var(--key-ink)}
+.rem{font-weight:700;color:var(--ink)}
+.med p{margin-top:12px;color:var(--ink2);line-height:1.8}
+.gos{background:var(--soft);border-radius:16px;padding:14px 16px;margin-top:14px;font-size:.92em;line-height:1.8}
+.lab{display:block;font-size:.68em;font-weight:700;color:var(--acc);letter-spacing:.04em;margin-bottom:4px}
+.qs{display:flex;flex-direction:column;gap:12px}
+.qs p{line-height:1.8}
+.qs button{width:100%;justify-content:flex-start;text-align:left;min-height:58px;padding:10px 16px;font-weight:500;font-size:.9em;border-color:var(--line)}
+.qs button[aria-pressed="true"]{border-color:var(--acc);background:var(--soft);color:var(--acc);font-weight:700}
+.pr{background:var(--soft);border-radius:16px;padding:16px;font-size:.96em;line-height:1.8}
+/* 완료 도장 */
+.stampc{display:flex;gap:16px;align-items:center;background:var(--stamp-bg);border:2px solid var(--stamp-line);border-radius:24px;padding:20px 18px;margin-top:14px}
+.stampc[hidden]{display:none}
+.stamp{width:92px;height:92px;flex:none;border-radius:50%;border:3px solid var(--stamp);color:var(--stamp);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-8deg);line-height:1.15}
+.stamp small{font-size:13px;font-weight:700}
+.stamp b{font-size:24px}
+.stampc .t{font-size:1em;font-weight:700}
+.stampc>div:last-child{min-width:0}
+.dots{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.dots i{width:20px;height:20px;border-radius:50%;border:2px solid var(--stamp-line)}
+.dots i.on{background:var(--stamp);border-color:var(--stamp)}
+.stampc .s{font-size:16px;color:var(--ink2);margin-top:6px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.row2 .btn{font-size:.86em}
 .foot{text-align:center;margin-top:20px;font-size:17px;line-height:2.2}
-.foot a{color:var(--brick);font-weight:700}
-.sizer{display:flex;gap:8px;align-items:center;justify-content:flex-end}
-.sizer button{min-height:48px;min-width:56px;font-size:18px;padding:6px 10px}
+.foot a{color:var(--acc);font-weight:700}
 .give{text-align:center}
 .give .lab{text-align:left}
 .give-b{font-size:.85em;font-weight:700;color:var(--ink2)}
-.give-n{font-family:'Gowun Batang',serif;font-size:min(1.3em,8vw);white-space:nowrap;font-weight:700;letter-spacing:.02em;line-height:1.4;margin:2px 0}
+.give-n{font-size:min(1.3em,8vw);white-space:nowrap;font-weight:700;letter-spacing:.02em;line-height:1.4;margin:2px 0}
 .give-w{font-size:.85em;color:var(--ink2)}
 .give-w b{color:var(--ink)}
 .give button{width:100%;margin-top:12px}
 .give-note{font-size:.72em;color:var(--ink2);line-height:1.7;margin-top:12px}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2f2a26;color:#fff;padding:12px 18px;border-radius:14px;font-size:18px;z-index:50}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#14201a;color:#fff;padding:12px 18px;border-radius:14px;font-size:18px;z-index:50}
+[data-install-slot]{margin-top:12px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top">
-    <a href="word.html">← 처음으로</a>
-    <div class="sizer"><button onclick="size(-2)" aria-label="글씨 작게">가−</button><button onclick="size(2)" aria-label="글씨 크게">가＋</button></div>
+  <div class="head">
+    <div class="top">
+      <a href="word.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>처음으로</a>
+      <div class="sizer"><button onclick="size(-2)" aria-label="글씨 작게">가−</button><button onclick="size(2)" aria-label="글씨 크게">가＋</button><span id="themeSlot"></span></div>
+    </div>
+    <div data-install-slot></div>
+    <div class="date" id="dLabel"></div>
+    <h1 class="ttl" id="ttl"></h1>
+    <div class="ref" id="ref"></div>
+    <div id="feast"></div>
+    <div class="series" id="dSeries"></div>
+    <ol class="steps" id="steps" aria-label="오늘 할 일 네 걸음">
+      <li data-s="1"><button type="button" onclick="goStep(1)"><i></i>① 읽기</button></li>
+      <li data-s="2"><button type="button" onclick="goStep(2)"><i></i>② 풀이</button></li>
+      <li data-s="3"><button type="button" onclick="goStep(3)"><i></i>③ 질문</button></li>
+      <li data-s="4"><button type="button" onclick="goStep(4)"><i></i>④ 기도</button></li>
+    </ol>
   </div>
-  <div data-install-slot></div>
 
-  <div class="date"><div class="d" id="dLabel"></div><div class="s" id="dSeries"></div></div>
   <div class="nav">
     <button onclick="move(-1)">◀ 어제 말씀</button>
     <button id="fwdBtn" onclick="move(1)">다음 말씀 ▶</button>
   </div>
 
-  <button class="main" id="listenBtn" onclick="listen()">🔊 말씀 들려주세요</button>
-  <div id="videoSlot" style="font-size:17px"></div>
-
-  <div class="card" style="margin-top:14px">
-    <div id="feast"></div>
-    <div class="ttl" id="ttl"></div>
-    <div class="ref" id="ref"></div>
+  <section class="card" id="st1">
+    <div class="sh"><span class="n">1</span><h2>말씀 읽기</h2><span class="ck" id="ck1"></span></div>
+    <button class="main" id="listenBtn" onclick="listen()">🔊 말씀 들려주세요</button>
+    <div id="videoSlot" style="font-size:17px"></div>
     <div class="bible" id="bible">말씀을 가져오는 중입니다…</div>
-  </div>
+    <button class="next" id="nx1" onclick="doneStep(1)">다 읽었어요 · 다음 걸음 ▶</button>
+  </section>
 
-  <div class="rem" id="remBox"><span class="lab">📌 오늘 기억할 한 줄</span><div id="rem"></div></div>
-
-  <div class="card" id="medCard">
-    <span class="lab">🌿 오늘의 묵상</span>
+  <section class="card" id="st2">
+    <div class="sh"><span class="n">2</span><h2>쉬운 풀이</h2><span class="ck" id="ck2"></span></div>
+    <div class="rem" id="remBox"><span class="lab">오늘 기억할 한 줄</span><div id="rem"></div></div>
     <div class="med" id="med"></div>
     <div class="gos" id="gos"></div>
-  </div>
+    <button class="next" id="nx2" onclick="doneStep(2)">알겠어요 · 다음 걸음 ▶</button>
+  </section>
 
-  <div class="card">
-    <span class="lab">🙏 함께 드리는 기도</span>
+  <section class="card" id="st3">
+    <div class="sh"><span class="n">3</span><h2>마음에 물어보기</h2><span class="ck" id="ck3"></span></div>
+    <div class="qs" id="qs"></div>
+  </section>
+
+  <section class="card" id="st4">
+    <div class="sh"><span class="n">4</span><h2>함께 기도해요</h2><span class="ck" id="ck4"></span></div>
     <div class="pr" id="pr"></div>
-  </div>
+    <button class="amen" id="readBtn" onclick="amen()">아멘</button>
+  </section>
 
-  <button class="main" id="readBtn" onclick="markRead()">✅ 오늘 말씀 읽었습니다</button>
+  <div class="stampc" id="stampc" hidden>
+    <div class="stamp" aria-hidden="true"><small id="stS">오늘</small><b id="stN">1일</b><small>완료</small></div>
+    <div><div class="t">오늘 한 걸음 걸었어요</div>
+      <div class="dots" id="dots" role="img" aria-label="이번 주 읽은 날"></div>
+      <div class="s">내일 아침 5시에 새 말씀이 와요</div></div>
+  </div>
 
   <div class="row2">
     <a class="btn" id="bookLink" href="word-book.html">📖 묵상집으로 보기</a>
@@ -149,6 +214,8 @@ function render(){
   document.getElementById('dLabel').textContent=(+p[1])+'월 '+(+p[2])+'일 '+(w==='주일'?'주일':w+'요일')+(isToday?' · 오늘':'');
   var sr=WordData.series(viewDate);
   document.getElementById('dSeries').textContent=sr?(sr.title+' · '+sr.day+'일째'):(d.theme||'');
+  document.getElementById('qs').innerHTML=(d.adult.questions||[]).map(function(q,i){
+    return '<p>'+wEsc(q)+'</p><button type="button" aria-pressed="false" data-q="'+i+'" onclick="heldQ(this)">○ 마음에 담았어요</button>'}).join('');
   document.getElementById('fwdBtn').disabled=WordData.locked(WordData.shift(viewDate,1));
   document.getElementById('feast').innerHTML=d.feast?'<span class="fe">'+wEsc(d.feast)+'</span>':'';
   document.getElementById('ttl').textContent=d.title;
@@ -156,19 +223,76 @@ function render(){
   WordVideo.mount(document.getElementById('videoSlot'),d.passage);
   document.getElementById('remBox').style.display=d.remember?'':'none';
   document.getElementById('rem').textContent=d.remember||'';
-  document.getElementById('medCard').style.display=d.explain?'':'none';
   document.getElementById('med').innerHTML=paras(d.explain);
   document.getElementById('gos').style.display=d.gospel?'':'none';
-  document.getElementById('gos').innerHTML=d.gospel?'<span class="lab">✝️ 복음으로 보면</span>'+wEsc(d.gospel):'';
+  document.getElementById('gos').innerHTML=d.gospel?'<span class="lab">복음으로 보면</span>'+wEsc(d.gospel):'';
   document.getElementById('pr').textContent=d.adult.prayer;
   document.getElementById('bookLink').href='word-book.html?v=adult#'+viewDate;
   document.getElementById('bookLink').style.display=sr?'':'none';
   WordBible.load().then(function(ok){
     var el=document.getElementById('bible');
     var vs=ok?WordBible.verses(d.passage,true):[];
-    el.innerHTML=vs.length?vs.map(function(v){return '<span><b>'+v.v+'</b>'+wEsc(v.t)+'</span>'}).join(''):'성경책에서 '+wEsc(d.passage)+'을 펴서 읽어 주세요.';
+    var key=keyOf(d);
+    el.innerHTML=vs.length?vs.map(function(v){
+      var n=String(v.v),c=n.indexOf(':')>0?n.split(':')[0]:key&&key.base,m=+(n.indexOf(':')>0?n.split(':')[1]:n);
+      var isKey=key&&c===key.ch&&m>=key.from&&m<=key.to;
+      return '<span'+(isKey?' class="key"':'')+'><b>'+n+'</b>'+wEsc(v.t)+'</span>'}).join(''):'성경책에서 '+wEsc(d.passage)+'을 펴서 읽어 주세요.';
   });
   refreshRead();
+  paintSteps();
+}
+/* 오늘의 핵심 절(어린이 암송 구절)은 노랗게 */
+function keyOf(d){
+  var r=d.kids&&d.kids.verseRef?WordData.parseRef(d.kids.verseRef):null,p=WordData.parseRef(d.passage);
+  if(!r||!p||r.book!==p.book||!r.from)return null;
+  return {ch:String(r.chapter),base:String(p.chapter),from:+r.from,to:+(r.to||r.from)};
+}
+/* ---------- 네 걸음 — 이 기기에만 날짜별로 기억한다 ---------- */
+function stepsGet(){try{return JSON.parse(localStorage.getItem('dongsan_easy_steps')||'{}')}catch(e){return {}}}
+function stepsOf(){return stepsGet()[viewDate]||{}}
+function stepsSet(o){var a=stepsGet();a[viewDate]=Object.assign(stepsOf(),o);
+  /* 오래된 날은 지운다 (40일만 남김) */
+  Object.keys(a).sort().slice(0,-40).forEach(function(k){delete a[k]});
+  try{localStorage.setItem('dongsan_easy_steps',JSON.stringify(a))}catch(e){}}
+function confirmed(){return !!(me.name&&WordStore.myConfirms(me.name,VER).some(function(c){return c.date===viewDate}))}
+function paintSteps(){
+  var st=stepsOf();if(confirmed())st[4]=true;
+  var now=[1,2,3,4].filter(function(n){return !st[n]})[0]||0;
+  [1,2,3,4].forEach(function(n){
+    var li=document.querySelector('#steps [data-s="'+n+'"]'),c=document.getElementById('st'+n);
+    li.className=st[n]?'ok':(n===now?'now':'');
+    c.classList.toggle('now',n===now);c.classList.toggle('ok',!!st[n]);
+    document.getElementById('ck'+n).textContent=st[n]?'✓ 했어요':'';
+    var nx=document.getElementById('nx'+n);if(nx)nx.classList.toggle('ok',!!st[n]);
+  });
+  document.querySelectorAll('#qs button').forEach(function(b){var on=!!(st.q&&st.q[b.dataset.q]);
+    b.setAttribute('aria-pressed',on?'true':'false');b.textContent=on?'✓ 마음에 담았어요':'○ 마음에 담았어요'});
+  paintStamp(!!st[4]);
+}
+function goStep(n){var c=document.getElementById('st'+n);if(c)window.scrollTo({top:c.getBoundingClientRect().top+window.scrollY-12,behavior:'smooth'})}
+function doneStep(n){var o={};o[n]=true;stepsSet(o);paintSteps();if(n<4)goStep(n+1)}
+function heldQ(b){
+  var st=stepsOf(),q=Object.assign({},st.q||{});q[b.dataset.q]=!q[b.dataset.q];
+  var all=document.querySelectorAll('#qs button').length,cnt=Object.keys(q).filter(function(k){return q[k]}).length;
+  stepsSet({q:q,3:cnt>0});paintSteps();
+  if(cnt===all&&q[b.dataset.q])setTimeout(function(){goStep(4)},300);
+}
+/* 아멘 — 기도를 마치면 읽음 확인까지 한 번에 */
+function amen(){
+  if(viewDate>WordData.today())return;
+  stepsSet({4:true});paintSteps();
+  if(!confirmed())markRead();
+}
+function paintStamp(on){
+  var box=document.getElementById('stampc');box.hidden=!on;if(!on)return;
+  var sr=WordData.series(viewDate);
+  document.getElementById('stS').textContent=sr?'처음 신앙':'오늘';
+  document.getElementById('stN').textContent=sr?sr.day+'일':'말씀';
+  /* 이번 주(월~주일) 읽은 날 */
+  var dt=new Date(viewDate+'T00:00:00'),wd=(dt.getDay()+6)%7,mon=WordData.shift(viewDate,-wd);
+  var mine=me.name?WordStore.myConfirms(me.name,VER).map(function(c){return c.date}):[],all=stepsGet(),on7=0,html='';
+  for(var i=0;i<7;i++){var k=WordData.shift(mon,i),ok=mine.indexOf(k)>=0||!!(all[k]&&all[k][4]);if(ok)on7++;html+='<i class="'+(ok?'on':'')+'"></i>'}
+  var dots=document.getElementById('dots');dots.innerHTML=html;dots.setAttribute('aria-label','이번 주 7일 가운데 '+on7+'일 읽었어요');
 }
 function listen(){
   if(WordVoice.playing){WordVoice.stop();return}
@@ -179,13 +303,14 @@ function listen(){
   if(d.gospel)parts.push('복음으로 보면. '+d.gospel);
   parts.push('기도합니다. '+d.adult.prayer);
   WordVoice.speak(parts,{rate:.86,onChange:function(on){
-    document.getElementById('listenBtn').textContent=on?'⏹ 그만 들을게요':'🔊 말씀 들려주세요'}});
+    document.getElementById('listenBtn').textContent=on?'⏹ 그만 들을게요':'🔊 말씀 들려주세요';
+    if(!on&&!stepsOf()[1]){stepsSet({1:true});paintSteps()}}});
 }
 function refreshRead(){
   var b=document.getElementById('readBtn');
   var done=me.name&&WordStore.myConfirms(me.name,VER).some(function(c){return c.date===viewDate});
-  b.className='main'+(done?' done':'');
-  b.textContent=done?'✓ 읽음 확인을 보냈습니다':'✅ 오늘 말씀 읽었습니다';
+  b.className='amen'+(done?' done':'');
+  b.textContent=done?'✓ 아멘 · 읽음 확인을 보냈습니다':'아멘';
   b.disabled=viewDate>WordData.today();
 }
 function markRead(){
@@ -198,7 +323,7 @@ function markRead(){
   var b=document.getElementById('readBtn');b.disabled=true;b.textContent='보내는 중…';
   WordStore.confirm({date:viewDate,name:me.name,ver:VER}).then(function(){
     var s=wordStreak(me.name,VER);
-    wToast(s.days>1?'확인되었습니다 · 연속 '+s.days+'일째 🎉':'확인되었습니다. 은혜가 넘치시길 🙏');refreshRead();
+    wToast(s.days>1?'확인되었습니다 · 연속 '+s.days+'일째 🎉':'확인되었습니다. 은혜가 넘치시길 🙏');refreshRead();paintSteps();
   },function(){wToast('보내지 못했습니다. 잠시 뒤 다시 눌러 주세요');refreshRead()});
 }
 function copyGive(){
