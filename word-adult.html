@@ -369,6 +369,12 @@ nav button.on{color:var(--ink)}
 .stat .v{color:var(--ink);font-family:'Noto Serif KR','Gowun Batang',serif}
 [data-theme="dark"]{--cream:#15171c;--paper:#1c1f26;--warm:#262a33;--border:#353a45;--rule:#3d4350;
   --text:#ece6da;--text2:#d3ccbf;--text3:#a59d90;--ink:#a9bdf0;--ink-on:#15171c;--mark:rgba(241,223,168,.24);--gold-ink:#a9bdf0}
+/* 설치 띠도 남색 테두리로 */
+[data-install-slot] .ib-bar{background:transparent;color:var(--text);border:1px solid var(--ink);border-radius:4px;box-shadow:none;padding:12px 14px}
+[data-install-slot] .ib-bar small{color:var(--text3);opacity:1}
+[data-install-slot] .ib-bar img{width:40px;height:40px;border-radius:10px;box-shadow:none}
+[data-install-slot] .ib-bar b{font-size:16px}
+[data-install-slot] .ib-bar .ib-go{background:var(--ink);color:var(--ink-on);border-radius:4px}
 [data-theme="dark"] header{border-bottom-color:var(--rule)}
 [data-theme="dark"] nav{border-top-color:var(--rule)}
 [data-theme="dark"] .hero .pl{border-top-color:var(--text3)}
