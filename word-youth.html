@@ -10,104 +10,168 @@
 <meta name="apple-mobile-web-app-title" content="동산 말씀">
 <title>청년·청소년 말씀 — 동산감리교회</title>
 <meta name="description" content="하루 3분, 오늘의 말씀과 질문 하나, 도전 하나. 동산감리교회 청년·청소년을 위한 아침 묵상.">
-<meta name="theme-color" content="#1d1b2a">
+<meta name="theme-color" content="#1a2a52">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f4fb;--card:#ffffff;--ink:#1d1b2a;--ink2:#545068;--ink3:#8a87a0;--line:#e4e1ef;--acc:#ff6b4a;--acc2:#7c5cff;--mint:#19b38a;--soft:#f1eefc;--fs:16px}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121119;--card:#1c1a26;--ink:#f1effa;--ink2:#c7c3da;--ink3:#8f8ba6;--line:#2e2b3d;--soft:#24213a}}
-:root[data-theme="dark"]{--bg:#121119;--card:#1c1a26;--ink:#f1effa;--ink2:#c7c3da;--ink3:#8f8ba6;--line:#2e2b3d;--soft:#24213a}
+/* ===========================================================
+   B · 새벽빛 — 청년·청소년. 새벽 하늘 머리, 들으며 따라 읽기,
+   「오늘의 한 구절」 카드(이미지·공유), 질문 → 도전
+   어두운 화면이 기본 느낌이고, 밝은 화면에서도 머리는 새벽 하늘 그대로
+   =========================================================== */
+:root{--bg:#f3f1f7;--card:#ffffff;--ink:#141a33;--ink2:#4b5070;--ink3:#7a7f99;--line:#e1deec;--acc:#f2b84b;--acc-ink:#0e1830;--acc-tx:#8a5300;
+  --soft:#eeebf6;--kv:#f4ead2;--kv-ink:#1c1a2e;--now:#fff1cf;--fs:16px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1830;--card:#17234a;--ink:#ece5d6;--ink2:#c9c1d9;--ink3:#9893b0;--line:#2c3b6d;--acc-tx:#f2b84b;--soft:#1f2c58;--now:#1f2c58}}
+:root[data-theme="dark"]{--bg:#0e1830;--card:#17234a;--ink:#ece5d6;--ink2:#c9c1d9;--ink3:#9893b0;--line:#2c3b6d;--acc-tx:#f2b84b;--soft:#1f2c58;--now:#1f2c58}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',sans-serif;font-size:var(--fs);line-height:1.7;word-break:keep-all;overflow-wrap:anywhere}
 .wrap{max-width:640px;margin:0 auto;padding:0 16px 70px}
 .top{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px}
-.top a{color:var(--ink2);text-decoration:none;font-size:14px;font-weight:500}
-.tag{font-size:12px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--acc),var(--acc2));padding:4px 10px;border-radius:99px}
-.day{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 12px}
-.day button{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:18px;width:44px;height:44px;border-radius:14px;cursor:pointer}
-.day button:disabled{opacity:.35}
-.day .c{text-align:center;flex:1}
-.day .d{font-weight:900;font-size:17px}
-.day .s{font-size:12.5px;color:var(--ink3)}
-.hero{border-radius:24px;padding:22px 20px 18px;color:#fff;background:linear-gradient(140deg,#1d1b2a 0%,#3b2d6b 55%,#7c5cff 100%);position:relative;overflow:hidden}
-.hero::after{content:'';position:absolute;right:-50px;bottom:-60px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,74,.55),transparent 70%)}
-.hero .ref{font-size:12.5px;opacity:.8;font-weight:700;letter-spacing:.04em;position:relative}
-.hero .ttl{font-size:21px;font-weight:900;margin:2px 0 12px;position:relative;line-height:1.4}
-.hero .v{font-family:'Gowun Batang',serif;font-size:18px;font-weight:700;line-height:1.8;position:relative}
-.hero .vr{font-size:12.5px;opacity:.8;margin-top:8px;position:relative}
-.hero .fe{display:inline-block;background:var(--acc);font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:99px;margin-bottom:8px;position:relative}
-.acts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 16px}
-.acts button{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:13.5px;font-weight:700;border-radius:14px;min-height:46px;cursor:pointer}
-.sec{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px}
-.sec h3{font-size:13px;font-weight:900;letter-spacing:.05em;color:var(--acc2);margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.sec p{margin-bottom:10px}
+.top a{color:var(--ink2);text-decoration:none;font-size:14px;font-weight:500;min-height:44px;display:flex;align-items:center}
+#themeSlot{display:flex}
+#themeSlot #themeBtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:17px;cursor:pointer}
+.tag{font-size:12px;font-weight:700;color:var(--acc-ink);background:var(--acc);padding:4px 10px;border-radius:99px}
+/* 새벽 하늘 머리 */
+.hero{position:relative;border-radius:26px;overflow:hidden;background:#1a2a52;color:#fbf6ea}
+.hero svg{display:block;width:100%;height:auto}
+.hero .hx{position:absolute;left:20px;right:20px;top:16px}
+.hero .chip{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:500;letter-spacing:.04em;background:rgba(14,24,48,.5);padding:5px 12px;border-radius:999px}
+.hero .k{margin-top:14px;font-size:12.5px;font-weight:700;color:#f2b84b;letter-spacing:.06em}
+.hero .ttl{font-family:'Gowun Batang',serif;font-size:29px;font-weight:700;line-height:1.3;margin-top:6px;max-width:80%}
+.hero .ref{margin-top:6px;font-size:14px;color:#c9c1d9}
+.hero .fe{display:inline-block;margin-left:6px;background:#f2b84b;color:#0e1830;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:99px}
+.hero .nav{position:absolute;right:12px;top:12px;display:flex;gap:6px}
+.hero .nav button{width:40px;height:40px;border-radius:50%;border:none;background:rgba(14,24,48,.5);color:#fbf6ea;font:inherit;font-size:20px;cursor:pointer}
+.hero .nav button:disabled{opacity:.35}
+/* 듣기 막대 */
+.player{position:relative;margin:-22px 10px 0;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;
+  box-shadow:0 8px 24px rgba(14,24,48,.12)}
+.player[hidden]{display:none}
+.pl-btn{flex:none;width:58px;height:58px;border-radius:50%;border:none;background:var(--acc);color:var(--acc-ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.pl-btn svg{width:24px;height:24px}
+.pl-tx{flex:1;min-width:0}
+.pl-tx b{display:block;font-size:16px}
+.pl-tx small{display:block;font-size:13px;color:var(--ink3)}
+.pl-rate{flex:none;min-width:52px;height:36px;border-radius:18px;border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.pl-bar{flex:1 1 100%;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.pl-bar i{display:block;height:100%;width:0;background:var(--acc);border-radius:3px;transition:width .4s}
+/* 본문 — 한 절씩 */
+.sec{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin-top:14px}
+.sec h3{font-size:12.5px;font-weight:900;letter-spacing:.12em;color:var(--acc-tx);margin-bottom:10px}
+.sec p{margin-bottom:10px;color:var(--ink2);line-height:1.85}
 .sec p:last-child{margin-bottom:0}
-details summary{cursor:pointer;font-weight:700;color:var(--ink2);list-style:none}
-details summary::before{content:'▸ ';color:var(--acc2)}
-details[open] summary::before{content:'▾ '}
-.bible{font-family:'Gowun Batang',serif;font-size:1.02em;line-height:1.9;margin-top:10px}
-.bible b{font-family:'Noto Sans KR',sans-serif;font-size:.65em;color:var(--acc2);margin-right:4px;vertical-align:.25em}
-.gos{background:var(--soft);border-radius:14px;padding:12px 14px;margin-top:10px;font-size:.96em}
-.one{border-radius:20px;padding:18px;margin-bottom:12px;background:linear-gradient(90deg,var(--acc),#ff9a5c);color:#fff;font-weight:900;font-size:1.08em;line-height:1.6}
-.one small{display:block;font-size:12px;opacity:.9;font-weight:700;margin-bottom:4px}
-.q{font-weight:700;font-size:1.04em}
-textarea{width:100%;min-height:96px;margin-top:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:14px;padding:12px;font:inherit;font-size:15px;resize:vertical}
-.row{display:flex;gap:8px;margin-top:8px}
-.row button,.chal button{flex:1;border:0;border-radius:14px;min-height:46px;font:inherit;font-weight:700;font-size:14.5px;cursor:pointer}
-.b1{background:var(--ink);color:var(--bg)}
-.b2{background:var(--soft);color:var(--ink)}
+details summary{cursor:pointer;font-weight:700;color:var(--ink);list-style:none;min-height:32px;display:flex;align-items:center;gap:6px}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:'▸';color:var(--acc-tx)}
+details[open] summary::before{content:'▾'}
+.bible{margin-top:12px;display:flex;flex-direction:column;gap:12px;font-family:'Gowun Batang',serif;font-size:1.1em;line-height:1.85}
+.yl{display:block;border-radius:14px;transition:background-color .25s,opacity .25s}
+.yl b{font-family:'Noto Sans KR',sans-serif;font-size:.62em;color:var(--ink3);margin-right:8px;vertical-align:.2em}
+.yl.key b{color:var(--acc-tx)}
+.yl.now{background:var(--now);padding:10px 14px;font-weight:700;font-size:1.08em}
+.yl.now b{color:var(--acc-tx)}
+.yl.past{opacity:.5}
+.gos{background:var(--soft);border-radius:14px;padding:12px 14px;margin-top:12px;font-size:.95em;color:var(--ink2)}
+.gos b{display:block;font-size:12px;letter-spacing:.1em;color:var(--acc-tx);margin-bottom:2px}
+/* 오늘의 한 구절 */
+.kv{position:relative;overflow:hidden;margin-top:14px;border-radius:24px;background:var(--kv);color:var(--kv-ink);padding:24px 20px 18px}
+.kv::before,.kv::after{content:'';position:absolute;border-radius:50%;pointer-events:none}
+.kv::before{right:-24px;top:-24px;width:96px;height:96px;background:#f2b84b;opacity:.35}
+.kv::after{right:-38px;top:-38px;width:124px;height:124px;border:1.5px solid #f2b84b;opacity:.45}
+.kv small{display:block;font-size:12.5px;font-weight:900;letter-spacing:.12em;color:#7a4d12}
+.kv .v{position:relative;margin-top:10px;font-family:'Gowun Batang',serif;font-size:22px;line-height:1.6;font-weight:700}
+.kv .vr{margin-top:6px;font-size:13.5px;color:#5a5468}
+.kv .one{margin-top:14px;padding-top:12px;border-top:1px solid rgba(28,26,46,.15);font-size:15px;font-weight:700;line-height:1.6}
+.kv .acts{display:flex;gap:8px;margin-top:16px}
+.kv .acts button{flex:1;min-height:48px;border-radius:14px;font:inherit;font-size:14.5px;font-weight:700;cursor:pointer;border:1.5px solid #1c1a2e;background:transparent;color:#1c1a2e}
+.kv .acts button.f{background:#1c1a2e;color:#f4ead2}
+.q{font-weight:500;font-size:1.06em;color:var(--ink);line-height:1.75}
+label.f{display:block;margin-top:14px;font-size:13px;color:var(--ink3)}
+textarea{width:100%;min-height:96px;margin-top:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:14px;padding:12px 14px;font:inherit;font-size:15px;line-height:1.6;resize:vertical}
+.row{display:flex;gap:8px;margin-top:10px}
+.row button,.chal button{flex:1;border:0;border-radius:14px;min-height:50px;font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.b2{background:var(--acc);color:var(--acc-ink)}
 .chal{display:flex;gap:12px;align-items:center}
-.chal .t{flex:1;font-weight:700}
-.chal button{flex:none;min-width:96px;background:var(--mint);color:#fff}
-.chal button.done{background:var(--soft);color:var(--mint)}
+.chal .t{flex:1;font-weight:700;color:var(--ink)}
+.chal button{flex:none;min-width:96px;background:var(--acc);color:var(--acc-ink)}
+.chal button.done{background:var(--soft);color:var(--acc-tx)}
 .streak{font-size:12.5px;color:var(--ink3);margin-top:8px}
-.read{width:100%;border:0;border-radius:18px;min-height:56px;font:inherit;font-weight:900;font-size:16px;color:#fff;cursor:pointer;
-  background:linear-gradient(90deg,var(--acc2),var(--acc))}
-.read.done{background:var(--mint)}
+.read{width:100%;margin-top:16px;border:0;border-radius:18px;min-height:58px;font:inherit;font-weight:900;font-size:16px;cursor:pointer;background:var(--ink);color:var(--bg)}
+.read.done{background:var(--soft);color:var(--acc-tx)}
+#videoSlot{margin-top:4px}
 .foot{text-align:center;font-size:13px;color:var(--ink3);margin-top:18px;line-height:2}
 .foot a{color:var(--ink2);font-weight:700}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><a href="word.html">← 말씀</a><span class="tag">청년 · 청소년</span></div>
+  <div class="top"><a href="word.html">← 말씀</a><span style="display:flex;align-items:center;gap:8px"><span class="tag">청년 · 청소년</span><span id="themeSlot"></span></span></div>
   <div data-install-slot></div>
-  <div class="day">
-    <button onclick="move(-1)" aria-label="어제">‹</button>
-    <div class="c"><div class="d" id="dLabel"></div><div class="s" id="dSeries"></div></div>
-    <button id="fwdBtn" onclick="move(1)" aria-label="다음 날">›</button>
+  <div class="hero" id="hero">
+    <svg viewBox="0 0 390 300" aria-hidden="true">
+      <rect width="390" height="300" fill="#1a2a52"/><rect y="120" width="390" height="180" fill="#2d3c6b"/><rect y="178" width="390" height="122" fill="#5a4f7a"/>
+      <circle cx="292" cy="214" r="120" fill="none" stroke="#f2b84b" stroke-opacity=".14" stroke-width="1.5"/>
+      <circle cx="292" cy="214" r="88" fill="none" stroke="#f2b84b" stroke-opacity=".28" stroke-width="1.5"/>
+      <circle cx="292" cy="214" r="58" fill="#f2b84b"/>
+      <path d="M0 238C70 204 130 214 190 232S320 222 390 200V300H0Z" fill="#24305a"/>
+      <path d="M0 274C90 248 170 262 240 276S350 270 390 260V300H0Z" fill="#0e1830"/>
+      <circle cx="40" cy="96" r="1.6" fill="#ece5d6" fill-opacity=".8"/><circle cx="120" cy="60" r="1.2" fill="#ece5d6" fill-opacity=".6"/>
+      <circle cx="220" cy="100" r="1" fill="#ece5d6" fill-opacity=".5"/><circle cx="350" cy="84" r="1.4" fill="#ece5d6" fill-opacity=".7"/>
+    </svg>
+    <div class="hx">
+      <div class="chip" id="dLabel"></div>
+      <div class="k" id="dSeries"></div>
+      <h1 class="ttl" id="hTitle"></h1>
+      <div class="ref" id="hRef"></div>
+    </div>
+    <div class="nav">
+      <button onclick="move(-1)" aria-label="어제 말씀">‹</button>
+      <button id="fwdBtn" onclick="move(1)" aria-label="다음 날 말씀">›</button>
+    </div>
   </div>
 
-  <div class="hero" id="hero"></div>
-  <div class="acts">
-    <button id="listenBtn" onclick="listen()">🔊 듣기</button>
-    <button onclick="saveImage()">🖼 이미지</button>
-    <button onclick="shareText()">📤 공유</button>
+  <div class="player" id="player">
+    <button type="button" class="pl-btn" id="listenBtn" onclick="listen()" aria-label="말씀 듣기 시작">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+    </button>
+    <div class="pl-tx"><b id="plT">듣고 따라 읽기</b><small id="plS">목소리 따라 글자가 밝아져요</small></div>
+    <button type="button" class="pl-rate" id="rateBtn" onclick="cycleRate()" aria-label="읽는 빠르기">1.0×</button>
+    <div class="pl-bar" aria-hidden="true"><i id="plBar"></i></div>
   </div>
-  <div id="videoSlot"></div>
 
   <div class="sec">
-    <details id="bibleBox"><summary id="bibleSum">오늘 본문 전체 읽기</summary><div class="bible" id="bible">불러오는 중…</div></details>
+    <details id="bibleBox" open><summary id="bibleSum">오늘 본문</summary><div class="bible" id="bible">불러오는 중…</div></details>
+    <div id="videoSlot"></div>
+  </div>
+
+  <div class="kv" id="kvBox">
+    <small>오늘의 한 구절</small>
+    <div class="v" id="kvV"></div>
+    <div class="vr" id="kvR"></div>
+    <div class="one" id="oneBox"><span id="one"></span></div>
+    <div class="acts">
+      <button type="button" class="f" onclick="saveImage()">이미지로 저장</button>
+      <button type="button" onclick="shareText()">카톡으로 보내기</button>
+    </div>
   </div>
 
   <div class="sec" id="medSec">
-    <h3>⏱ 3분 묵상</h3>
+    <h3>3분 묵상</h3>
     <div id="med"></div>
     <div class="gos" id="gos"></div>
   </div>
 
-  <div class="one" id="oneBox"><small>📌 오늘의 한 줄</small><div id="one"></div></div>
-
   <div class="sec">
-    <h3>💭 오늘의 질문</h3>
+    <h3>오늘의 질문</h3>
     <div class="q" id="yq"></div>
-    <textarea id="note" placeholder="떠오르는 생각을 적어 보세요. 이 기기에만 저장됩니다." oninput="saveNote()"></textarea>
+    <label class="f" for="note">내 생각 (이 기기에만 저장돼요)</label>
+    <textarea id="note" placeholder="떠오르는 생각을 한 줄로 적어 보세요" oninput="saveNote()"></textarea>
     <div class="row">
       <button class="b2" onclick="postNote(this)">교회 나눔에 올리기</button>
     </div>
   </div>
 
   <div class="sec">
-    <h3>🔥 오늘의 도전</h3>
+    <h3>오늘의 도전</h3>
     <div class="chal"><div class="t" id="ya"></div><button id="chalBtn" onclick="toggleChal()">했어요</button></div>
     <div class="streak" id="chalStreak"></div>
   </div>
@@ -148,43 +212,80 @@ function render(){
   var d=day(),p=viewDate.split('-'),w=WordData.weekday(viewDate),isToday=viewDate===WordData.today();
   document.getElementById('dLabel').textContent=(+p[1])+'월 '+(+p[2])+'일 '+(w==='주일'?'주일':w+'요일')+(isToday?' · 오늘':'');
   var sr=WordData.series(viewDate);
-  document.getElementById('dSeries').textContent=sr?('Day '+sr.day+'/'+sr.total+' · '+sr.title):(d.theme||'');
+  document.getElementById('dSeries').textContent=sr?(sr.title+' · DAY '+sr.day):(d.theme||'');
   document.getElementById('fwdBtn').disabled=WordData.locked(WordData.shift(viewDate,1));
   drawHero(d);
   WordVideo.mount(document.getElementById('videoSlot'),d.passage);
   document.getElementById('medSec').style.display=d.explain?'':'none';
   document.getElementById('med').innerHTML=paras(d.explain);
   document.getElementById('gos').style.display=d.gospel?'':'none';
-  document.getElementById('gos').innerHTML=d.gospel?'<b>✝ 복음으로 보면</b><br>'+wEsc(d.gospel):'';
+  document.getElementById('gos').innerHTML=d.gospel?'<b>복음으로 보면</b>'+wEsc(d.gospel):'';
   document.getElementById('oneBox').style.display=d.remember?'':'none';
   document.getElementById('one').textContent=d.remember||'';
   var y=youth(d);
   document.getElementById('yq').textContent=y.q;
   document.getElementById('ya').textContent=y.a;
   document.getElementById('note').value=load(KN)[viewDate]||'';
-  document.getElementById('bibleSum').textContent='오늘 본문 전체 읽기 · '+d.passage;
+  document.getElementById('bibleSum').textContent='오늘 본문 · '+d.passage+' · 개역개정';
   document.getElementById('bookLink').href='word-book.html?v=adult#'+viewDate;
   document.getElementById('bookWrap').style.display=WordData.series(viewDate)?'':'none';
   WordBible.load().then(function(){
     drawHero(d);
     var vs=WordBible.verses(d.passage,true);
-    document.getElementById('bible').innerHTML=vs.length?vs.map(function(v){return '<b>'+v.v+'</b>'+wEsc(v.t)}).join(' '):'성경에서 '+wEsc(d.passage)+'을 찾아 읽어 보세요.';
+    CUR_VS=vs;
+    var key=keyRange(d);
+    document.getElementById('bible').innerHTML=vs.length?vs.map(function(v,i){
+      var n=String(v.v),c=n.indexOf(':')>0?n.split(':')[0]:(key&&key.base),m=+(n.indexOf(':')>0?n.split(':')[1]:n);
+      var k=key&&c===key.ch&&m>=key.from&&m<=key.to;
+      return '<span class="yl'+(k?' key':'')+'" data-i="'+i+'"><b>'+n+'</b>'+wEsc(v.t)+'</span>'}).join(''):'성경에서 '+wEsc(d.passage)+'을 찾아 읽어 보세요.';
   });
   refreshChal();refreshRead();
 }
+var CUR_VS=[];
+/* 오늘의 핵심 절(암송 구절) */
+function keyRange(d){
+  var r=d.kids&&d.kids.verseRef?WordData.parseRef(d.kids.verseRef):null,p=WordData.parseRef(d.passage);
+  if(!r||!p||r.book!==p.book||!r.from)return null;
+  return {ch:String(r.chapter),base:String(p.chapter),from:+r.from,to:+(r.to||r.from)};
+}
 function drawHero(d){
+  document.getElementById('hTitle').textContent=d.title;
+  document.getElementById('hRef').innerHTML=wEsc(d.passage)+(d.feast?'<span class="fe">'+wEsc(d.feast)+'</span>':'');
   var v=keyVerse(d);
-  document.getElementById('hero').innerHTML=(d.feast?'<span class="fe">'+wEsc(d.feast)+'</span>':'')+
-    '<div class="ref">'+wEsc(d.passage)+'</div><div class="ttl">'+wEsc(d.title)+'</div>'+
-    (v?'<div class="v">“'+wEsc(v)+'”</div><div class="vr">'+wEsc(d.kids.verseRef)+'</div>':'');
+  document.getElementById('kvBox').style.display=(v||d.remember)?'':'none';
+  document.getElementById('kvV').textContent=v?'“'+v+'”':'';
+  document.getElementById('kvR').textContent=v?d.kids.verseRef:'';
+}
+/* 듣고 따라 읽기 — 한 절씩 읽으며 지금 절을 밝히고, 이어서 묵상과 오늘의 한 줄을 읽는다 */
+var RATES=[1,1.2,.85],rateI=0;
+try{rateI=Math.max(0,RATES.indexOf(+localStorage.getItem('dongsan_youth_rate')))}catch(e){}
+function cycleRate(){rateI=(rateI+1)%RATES.length;try{localStorage.setItem('dongsan_youth_rate',RATES[rateI])}catch(e){}
+  document.getElementById('rateBtn').textContent=RATES[rateI].toFixed(1)+'×';
+  if(WordVoice.playing){WordVoice.stop();listen()}}
+var PLAY='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>',
+    PAUSE='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+function hiLine(i){
+  var n=CUR_VS.length,now=null;
+  document.querySelectorAll('#bible .yl').forEach(function(e){var k=+e.dataset.i;e.classList.toggle('now',k===i);e.classList.toggle('past',i>=0&&k<i);if(k===i)now=e});
+  if(now){var r=now.getBoundingClientRect();if(r.top<60||r.bottom>window.innerHeight-60)now.scrollIntoView({block:'center',behavior:'smooth'})}
+  var on=WordVoice.playing;
+  document.getElementById('plS').textContent=on&&i>=0&&i<n?(i+1)+' / '+n+'절 · 목소리 따라 글자가 밝아져요':(on&&i>=n?'묵상을 읽고 있어요':'목소리 따라 글자가 밝아져요');
+  document.getElementById('plBar').style.width=on&&n&&i>=0?Math.min(100,Math.round((i+1)/n*100))+'%':'0';
+}
+function paintPlay(on){
+  var b=document.getElementById('listenBtn');
+  b.innerHTML=on?PAUSE:PLAY;b.setAttribute('aria-label',on?'멈추기':'말씀 듣기 시작');
+  document.getElementById('plT').textContent=on?'말씀 듣는 중':'듣고 따라 읽기';
+  if(!on)hiLine(-1);
 }
 function listen(){
   if(WordVoice.playing){WordVoice.stop();return}
-  var d=day(),parts=[d.title+'. '+d.passage+'.'];
-  if(WordBible.ready)parts.push(WordBible.plain(d.passage,true));
-  if(d.explain)parts.push(d.explain.replace(/\n+/g,' '));
+  var d=day(),parts=CUR_VS.map(function(v){return v.t});
+  if(!parts.length&&WordBible.ready)parts.push(WordBible.plain(d.passage,true));
+  if(d.explain)parts.push('3분 묵상. '+d.explain.replace(/\n+/g,' '));
   if(d.remember)parts.push('오늘의 한 줄. '+d.remember);
-  WordVoice.speak(parts,{rate:1,onChange:function(on){document.getElementById('listenBtn').textContent=on?'⏹ 멈춤':'🔊 듣기'}});
+  document.getElementById('bibleBox').open=true;
+  WordVoice.speak(parts,{rate:RATES[rateI],onItem:hiLine,onChange:paintPlay});
 }
 function saveNote(){var n=load(KN),t=document.getElementById('note').value;if(t)n[viewDate]=t;else delete n[viewDate];store(KN,n)}
 function postNote(btn){
@@ -245,9 +346,13 @@ function saveImage(){
   WordBible.load().then(function(){return document.fonts?document.fonts.load('bold 60px "Gowun Batang"','가'):null}).then(function(){
     var v=keyVerse(d)||d.title,c=document.createElement('canvas');c.width=1080;c.height=1920;
     var x=c.getContext('2d'),g=x.createLinearGradient(0,0,1080,1920);
-    g.addColorStop(0,'#1d1b2a');g.addColorStop(.55,'#3b2d6b');g.addColorStop(1,'#7c5cff');x.fillStyle=g;x.fillRect(0,0,1080,1920);
-    var r=x.createRadialGradient(900,1650,0,900,1650,520);r.addColorStop(0,'rgba(255,107,74,.6)');r.addColorStop(1,'rgba(255,107,74,0)');x.fillStyle=r;x.fillRect(0,0,1080,1920);
-    x.fillStyle='rgba(255,255,255,.75)';x.font='700 38px "Noto Sans KR",sans-serif';x.fillText(d.passage,90,330);
+    g.addColorStop(0,'#1a2a52');g.addColorStop(.6,'#2d3c6b');g.addColorStop(1,'#5a4f7a');x.fillStyle=g;x.fillRect(0,0,1080,1920);
+    /* 아래쪽에 떠오르는 해와 두 겹 언덕 */
+    x.strokeStyle='rgba(242,184,75,.28)';x.lineWidth=4;x.beginPath();x.arc(800,1720,280,0,Math.PI*2);x.stroke();
+    x.fillStyle='#f2b84b';x.beginPath();x.arc(800,1720,170,0,Math.PI*2);x.fill();
+    x.fillStyle='#24305a';x.beginPath();x.moveTo(0,1660);x.bezierCurveTo(300,1560,600,1620,1080,1540);x.lineTo(1080,1920);x.lineTo(0,1920);x.fill();
+    x.fillStyle='#0e1830';x.beginPath();x.moveTo(0,1780);x.bezierCurveTo(360,1720,700,1790,1080,1740);x.lineTo(1080,1920);x.lineTo(0,1920);x.fill();
+    x.fillStyle='#f2b84b';x.font='700 38px "Noto Sans KR",sans-serif';x.fillText(d.passage,90,330);
     x.fillStyle='#fff';x.font='900 60px "Noto Sans KR",sans-serif';
     wrapLines(x,d.title,900).forEach(function(l,i){x.fillText(l,90,420+i*76)});
     x.font='700 64px "Gowun Batang",serif';
@@ -255,9 +360,9 @@ function saveImage(){
     lines.forEach(function(l,i){x.fillText(l,90,y+i*104)});
     x.fillStyle='rgba(255,255,255,.8)';x.font='700 36px "Noto Sans KR",sans-serif';
     x.fillText(d.kids.verseRef,90,y+lines.length*104+40);
-    if(d.remember){x.font='700 40px "Noto Sans KR",sans-serif';x.fillStyle='#ffd2c6';
-      wrapLines(x,'📌 '+d.remember,900).forEach(function(l,i){x.fillText(l,90,1580+i*56)})}
-    x.fillStyle='rgba(255,255,255,.6)';x.font='500 32px "Noto Sans KR",sans-serif';x.fillText('동산감리교회 · 오늘의 말씀',90,1800);
+    if(d.remember){x.font='700 40px "Noto Sans KR",sans-serif';x.fillStyle='#f4ead2';
+      wrapLines(x,d.remember,900).forEach(function(l,i){x.fillText(l,90,1380+i*56)})}
+    x.fillStyle='rgba(255,255,255,.6)';x.font='500 32px "Noto Sans KR",sans-serif';x.fillText('동산감리교회 · 오늘의 말씀',90,1860);
     c.toBlob(function(b){
       var f=new File([b],'dongsan-word-'+viewDate+'.png',{type:'image/png'});
       if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f]}).catch(function(){});return}
@@ -265,7 +370,8 @@ function saveImage(){
     },'image/png');
   });
 }
-if(!WordVoice.supported())document.getElementById('listenBtn').style.display='none';
+document.getElementById('rateBtn').textContent=RATES[rateI].toFixed(1)+'×';
+if(!WordVoice.supported())document.getElementById('player').hidden=true;
 WordStore.init().then(render);
 </script>
 <script>
