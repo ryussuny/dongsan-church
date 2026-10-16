@@ -261,6 +261,56 @@ nav button.on{color:var(--sky);font-weight:700}
 @media print{#themeBtn{display:none!important}}
 @media print{[data-theme="dark"]{color-scheme:light}}
 </style>
+<style id="dawn-b">
+/* ===========================================================
+   B · 새벽빛 — 해 뜨는 그림, 들으며 따라 읽기, 오늘의 한 구절 카드
+   밝은 화면은 아침 하늘, 어두운 화면은 새벽 하늘
+   =========================================================== */
+:root{--h1:#bfe3ff;--h2:#ffe0bd;--h3:#ffc79a;--sunc:#ffc93c;--hill1:#8fd18f;--hill2:#6fc36f;--hill3:#ffffff;--hink:#26355e;--hink2:#4b5a85;
+  --pl:#ffffff;--plb:#dfeef9;--acc:#f2a33a;--acc-ink:#5a3a00;--kv:#fff4d9;--kv-ink:#2c2440}
+[data-theme="dark"]{--h1:#1a2a52;--h2:#2d3c6b;--h3:#5a4f7a;--sunc:#f2b84b;--hill1:#24305a;--hill2:#1b2645;--hill3:#1a2633;--hink:#fbf6ea;--hink2:#c9c1d9;
+  --pl:#17234a;--plb:#2c3b6d;--acc:#f2b84b;--acc-ink:#0e1830;--kv:#f4ead2;--kv-ink:#1c1a2e}
+.today-hero{position:relative;padding:0;overflow:hidden;background:var(--h1);text-align:left;border-radius:26px}
+[data-theme="dark"] .today-hero{background:var(--h1)}
+.today-hero svg.sky{display:block;width:100%;height:auto}
+.today-hero .hx{position:absolute;left:18px;right:18px;top:16px}
+.today-hero .dt{display:inline-block;margin:0;font-size:13px;font-weight:700;color:var(--hink);background:rgba(255,255,255,.6);padding:4px 12px;border-radius:999px}
+[data-theme="dark"] .today-hero .dt{background:rgba(14,24,48,.5);color:var(--hink)}
+.today-hero .ttl{margin-top:12px;font-size:27px;line-height:1.3;font-weight:700;color:var(--hink);max-width:72%;word-break:keep-all}
+[data-theme="dark"] .today-hero .ttl{color:var(--hink)}
+.today-hero .ps{margin-top:4px;font-size:15px;color:var(--hink2)}
+[data-theme="dark"] .today-hero .ps{color:var(--hink2)}
+.today-hero .emo{position:absolute;font-size:44px;line-height:1;transform:translate(-50%,-50%)}
+.today-hero .bot{background:var(--hill3);padding:2px 16px 16px;text-align:center}
+.today-hero .bookln{margin-top:0;background:var(--h1);color:var(--hink)}
+[data-theme="dark"] .today-hero .bookln{background:rgba(255,255,255,.08);color:#ffe08a}
+/* 듣기 막대 */
+.player{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:-4px 0 14px;padding:14px 16px;border-radius:22px;background:var(--pl);
+  border:1px solid var(--plb);box-shadow:0 4px 14px rgba(74,163,223,.12)}
+.player[hidden]{display:none}
+.pl-btn{flex:none;width:60px;height:60px;border-radius:50%;border:none;background:var(--acc);color:var(--acc-ink);display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 4px 0 rgba(0,0,0,.12)}
+.pl-btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.pl-btn svg{width:26px;height:26px}
+.pl-tx{flex:1;min-width:0}
+.pl-tx b{display:block;font-size:18px;color:var(--tx)}
+.pl-tx small{display:block;font-size:14px;color:var(--tx2);margin-top:1px}
+.pl-bar{flex:1 1 100%;height:8px;border-radius:4px;background:var(--plb);overflow:hidden}
+.pl-bar i{display:block;height:100%;width:0;border-radius:4px;background:var(--acc);transition:width .4s}
+/* 따라 읽기 — 지금 읽는 절은 밝게, 읽은 절은 흐리게 */
+.kl.now{background:var(--kv);box-shadow:0 0 0 2px var(--acc);color:var(--kv-ink);font-weight:700}
+.kl.now .vn{background:var(--acc);color:var(--acc-ink)}
+.kl.past{opacity:.5}
+[data-theme="dark"] .kl.now{background:#1f2c58;color:#fbf6ea}
+/* 오늘의 한 구절 */
+.keyverse{position:relative;overflow:hidden;background:var(--kv);border:none;border-radius:24px;padding:22px 20px 18px;text-align:left}
+.keyverse::before,.keyverse::after{content:'';position:absolute;border-radius:50%;pointer-events:none}
+.keyverse::before{right:-26px;top:-26px;width:96px;height:96px;background:var(--acc);opacity:.32}
+.keyverse::after{right:-40px;top:-40px;width:124px;height:124px;border:1.5px solid var(--acc);opacity:.4}
+.keyverse .kv-h{display:block;font-size:13px;font-weight:900;letter-spacing:.1em;color:#8a5a12;font-family:'Noto Sans KR',sans-serif}
+.keyverse .t{position:relative;margin-top:8px;color:var(--kv-ink)}
+.keyverse .r{color:#8a5a12}
+</style>
 </head>
 <body>
 
@@ -278,6 +328,13 @@ nav button.on{color:var(--sky);font-weight:700}
 <div class="pg on" id="pg-today">
   <div data-install-slot style="margin-top:-4px"></div>
   <div class="today-hero" id="hero"></div>
+  <div class="player" id="player">
+    <button type="button" class="pl-btn" id="plBtn" onclick="playerGo()" aria-label="말씀 따라 읽기 시작">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+    </button>
+    <div class="pl-tx"><b id="plT">말씀 따라 읽기</b><small id="plS">목소리 따라 글자가 밝아져요</small></div>
+    <div class="pl-bar" aria-hidden="true"><i id="plBar"></i></div>
+  </div>
 
   <div class="road" id="road" aria-label="오늘의 길"></div>
 
@@ -507,21 +564,52 @@ function sync(o){
 }
 
 /* ---------- 오늘 ---------- */
+/* 해 뜨는 하늘 그림 — 색은 밝은/어두운 화면에 따라 CSS 변수로 바뀐다 */
+function heroSky(){
+  return '<svg class="sky" viewBox="0 0 390 250" aria-hidden="true">'+
+    '<rect width="390" height="250" fill="var(--h1)"/><rect y="118" width="390" height="132" fill="var(--h2)"/><rect y="168" width="390" height="82" fill="var(--h3)"/>'+
+    '<circle cx="281" cy="165" r="88" fill="none" stroke="var(--sunc)" stroke-opacity=".18" stroke-width="1.5"/>'+
+    '<circle cx="281" cy="165" r="64" fill="none" stroke="var(--sunc)" stroke-opacity=".32" stroke-width="1.5"/>'+
+    '<circle cx="281" cy="165" r="42" fill="var(--sunc)"/>'+
+    '<path d="M0 200C70 172 130 180 190 196S320 186 390 168V250H0Z" fill="var(--hill1)"/>'+
+    '<path d="M0 230C90 208 170 220 240 232S350 226 390 216V250H0Z" fill="var(--hill2)"/>'+
+    '<path d="M0 244C120 236 260 240 390 238V250H0Z" fill="var(--hill3)"/>'+
+    '<circle cx="40" cy="104" r="1.6" fill="#fff" fill-opacity=".8"/><circle cx="350" cy="40" r="1.4" fill="#fff" fill-opacity=".7"/>'+
+    '<circle cx="200" cy="96" r="1.1" fill="#fff" fill-opacity=".6"/></svg>';
+}
+var PLAY_SVG='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>',
+    PAUSE_SVG='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+/* 듣기 막대 — 전체 본문을 펴고 한 절씩 따라 읽는다 */
+function playerInit(){var p=document.getElementById('player');if(p&&!WordVoice.supported())p.hidden=true}
+document.addEventListener('DOMContentLoaded',playerInit);
+function playerGo(){
+  if(!(WordVoice.playing&&FULL_READING)&&document.getElementById('fullWrap').style.display!=='block')toggleFull();
+  readFull();
+}
+function paintPlayer(on,i){
+  var b=document.getElementById('plBtn');if(!b)return;
+  b.innerHTML=on?PAUSE_SVG:PLAY_SVG;b.setAttribute('aria-label',on?'따라 읽기 멈추기':'말씀 따라 읽기 시작');
+  var n=CUR_VS.length;
+  document.getElementById('plT').textContent=on?'말씀 듣는 중':'말씀 따라 읽기';
+  document.getElementById('plS').textContent=on&&i>=0&&n?(i+1)+' / '+n+'절 · 목소리 따라 글자가 밝아져요':'목소리 따라 글자가 밝아져요';
+  document.getElementById('plBar').style.width=on&&n&&i>=0?Math.round((i+1)/n*100)+'%':'0';
+}
 function renderToday(){
   var d=day(),k=d.kids;
-  document.getElementById('hero').innerHTML=
-    '<div class="emo">'+k.emoji+'</div><div class="ttl">'+wEsc(d.title)+'</div>'+
-    '<div class="ps">'+wEsc(d.passage)+'</div>'+
-    '<div class="dt">'+viewDate.replace(/-/g,'.')+' ('+(WordData.weekday(viewDate)==='주일'?'주일':WordData.weekday(viewDate)+'요일')+')'+
-    (d.feast?' · '+wEsc(d.feast):'')+'</div>'+
-    (function(){var sr=WordData.series(viewDate);return sr?'<a class="bookln" href="word-book.html?v=kids#'+viewDate+'">📖 어린이 묵상집으로 보기 · '+sr.day+'일째</a>':''})();
+  var sr=WordData.series(viewDate);
+  document.getElementById('hero').innerHTML=heroSky()+
+    '<div class="emo" style="left:72%;top:66%" aria-hidden="true">'+k.emoji+'</div>'+
+    '<div class="hx"><div class="dt">'+viewDate.slice(5).replace('-','.')+' '+(WordData.weekday(viewDate)==='주일'?'주일':WordData.weekday(viewDate)+'요일')+
+    (d.feast?' · '+wEsc(d.feast):'')+(sr?' · '+sr.day+'일째':'')+'</div>'+
+    '<div class="ttl">'+wEsc(d.title)+'</div><div class="ps">'+wEsc(d.passage)+'</div></div>'+
+    (sr?'<div class="bot"><a class="bookln" href="word-book.html?v=kids#'+viewDate+'">📖 어린이 묵상집으로 보기</a></div>':'');
   var kp=document.getElementById('kidPrayer');
   if(kp){kp.parentNode.style.display=d.kidPrayer?'':'none';kp.textContent=d.kidPrayer||''}
   document.getElementById('story').textContent=k.summary;
   stopStory();paintDramaNote();
   document.getElementById('tableQ').textContent=WordExtra.table(d);
   document.getElementById('missionTx').textContent=k.mission;
-  document.getElementById('keyVerse').innerHTML='<div class="t" id="kvText">말씀을 가져오는 중이에요…</div>'+
+  document.getElementById('keyVerse').innerHTML='<small class="kv-h">오늘의 한 구절</small><div class="t" id="kvText">말씀을 가져오는 중이에요…</div>'+
     '<div class="r">'+wEsc(k.verseRef)+'</div>';
   renderMoods();renderQuiz();renderProgress();applyFont();
   renderWhere();renderReview();renderMemo();renderTease();
@@ -858,6 +946,7 @@ function voiceBtns(on,which){
   var a=document.getElementById('readBtn'),f=document.getElementById('fullRead');
   a.textContent=on&&which==='short'?'⏹ 그만 읽기':'🔊 읽어 주기';
   f.textContent=on&&which==='full'?'⏹ 그만':'🔊 따라 읽기';f.classList.toggle('on',on&&which==='full');
+  paintPlayer(on&&which==='full',-1);
 }
 /* 읽어 주기 — 제목과 오늘의 말씀을 읽고, 이어서 이야기를 들려준다 */
 var USER_STOP=false;
@@ -957,7 +1046,8 @@ function paintDramaNote(){
 var FULL_READING=false;
 function hiVerse(i){
   var now=null;
-  document.querySelectorAll('#fullText .kl').forEach(function(e){var on=+e.dataset.i===i;e.classList.toggle('now',on);if(on)now=e});
+  document.querySelectorAll('#fullText .kl').forEach(function(e){var on=+e.dataset.i===i;e.classList.toggle('now',on);e.classList.toggle('past',i>=0&&+e.dataset.i<i);if(on)now=e});
+  paintPlayer(i>=0&&FULL_READING,i);
   if(now){var r=now.getBoundingClientRect();if(r.top<70||r.bottom>window.innerHeight-90)now.scrollIntoView({block:'center',behavior:'smooth'})}
 }
 function readFull(){

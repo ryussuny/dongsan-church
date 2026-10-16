@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>오늘의 말씀 나눔 — 동산감리교회</title>
 <meta name="theme-color" content="#8f4531">
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Serif+KR:wght@400;600;700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 .explain{font-size:.97rem;color:var(--text);word-break:keep-all}
 .explain p{line-height:2.0;margin:0 0 .9rem;text-align:left}
@@ -292,6 +292,88 @@ nav button.on{color:var(--brick-deep);font-weight:700}
 .give button{flex:none;border:1px solid var(--border);border-radius:8px;background:var(--warm);color:var(--text2);
   font-family:inherit;font-size:12px;font-weight:700;padding:6px 10px;cursor:pointer}
 </style>
+<style id="paper-a">
+/* ===========================================================
+   A · 새벽 종이 — 책이나 주보처럼 차분하게 읽는 성인용 화면
+   명조 본문, 여백의 절 번호, 첫 글자 크게, 오늘의 핵심 절 형광펜,
+   얇은 줄로 나눈 차례(본문 → 마음에 새길 한 줄 → 묵상 → 질문 → 기도)
+   =========================================================== */
+:root{--cream:#f6f1e7;--paper:#fbf8f1;--warm:#ece3d1;--border:#d8cdb8;--rule:#cfc4b0;
+  --text:#1f1b16;--text2:#3a332a;--text3:#6b6052;--ink:#1f2f5e;--ink-on:#f6f1e7;--mark:#f1dfa8;--gold-ink:#1f2f5e}
+body{font-family:'Noto Sans KR',sans-serif}
+header{background:var(--cream);color:var(--text);border-bottom:1.5px solid var(--text);padding:10px 16px}
+header .mark{background:transparent;border:1.5px solid var(--text);border-radius:50%;width:32px;height:32px;font-size:15px;color:var(--ink)}
+header h1{font-family:'Noto Serif KR','Gowun Batang',serif;font-size:16px;font-weight:700;letter-spacing:-.01em}
+header .sub{font-size:10.5px;opacity:1;color:var(--text3)}
+header .who{background:transparent;border:1px solid var(--rule);color:var(--text2)}
+#themeSlot #themeBtn,[data-theme="dark"] #themeSlot #themeBtn{background:transparent!important;border:1px solid var(--rule)!important}
+.pg{padding:14px 18px}
+.card{background:var(--paper);border:1px solid var(--border);border-radius:6px;box-shadow:none}
+.st{font-family:'Noto Serif KR','Gowun Batang',serif;font-size:17px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+.st::after{content:'';flex:1;height:1px;background:var(--rule);margin-left:4px;order:1}
+.st .right{order:2;font-family:'Noto Sans KR',sans-serif}
+/* 읽는 차례는 상자 없이 종이 위에 바로 */
+.vcard,#explainCard,#guideCard,#tableCard{background:transparent;border:none;border-radius:0;padding:6px 0 4px;margin-bottom:26px}
+.vcard .st,#explainCard .st,#guideCard .st,#tableCard .st{font-size:21px}
+/* 머리 — 시리즈 · 제목 · 본문 줄 */
+.hero{background:transparent;color:var(--text);border-radius:0;padding:14px 0 0;margin-bottom:22px}
+.hero::after{display:none}
+.hero .k{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12.5px;font-weight:700;color:var(--ink);letter-spacing:.05em}
+.hero .k i{width:18px;height:1px;background:var(--ink)}
+.hero .ttl{font-family:'Noto Serif KR','Gowun Batang',serif;font-weight:900;font-size:36px;line-height:1.28;letter-spacing:-.02em;margin:14px 0 0;word-break:keep-all}
+.hero .pl{margin-top:16px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;border-top:1.5px solid var(--text);border-bottom:1px solid var(--rule);padding:10px 0}
+.hero .pl b{font-family:'Noto Serif KR','Gowun Batang',serif;font-size:16.5px;font-weight:600}
+.hero .pl span{font-size:12px;color:var(--text3);white-space:nowrap}
+.hero .chips{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+.hero .th,.hero .fe{margin:0;font-size:12px;background:transparent;border:1px solid var(--rule);color:var(--text2);padding:3px 10px;border-radius:999px;font-weight:500}
+.hero .fe{border-color:var(--ink);color:var(--ink);font-weight:700}
+.hero .sr{color:var(--text3);margin-top:10px;font-size:12.5px}
+.hero .sr a{color:var(--ink);font-weight:700}
+.badge-src{background:transparent;border:1px solid var(--rule);color:var(--text3)}
+.nav-date button{background:transparent;border:1px solid var(--rule);border-radius:4px;color:var(--text2);min-height:40px}
+.nav-date .now{font-size:12.5px;letter-spacing:.12em;color:var(--text3);font-weight:500}
+/* 본문 */
+.verse{font-family:'Noto Serif KR','Gowun Batang',serif;line-height:1.95;color:var(--text)}
+.verse:not(.flow) .vv{padding:.28em 0 .28em 2.1em}
+.verse:not(.flow) .vn{width:1.5em;text-align:left;top:.85em;font-size:.62em;color:var(--ink)}
+.verse:not(.flow) .dc{float:left;font-size:3.05em;line-height:.92;font-weight:900;margin:.1em .14em 0 0;color:var(--ink)}
+.verse .vv.key .vt{background:var(--mark);-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 .12em;border-radius:2px}
+.verse .vch{color:var(--ink);border-bottom-color:var(--rule)}
+.vtools button{background:transparent;border-color:var(--rule);border-radius:4px;color:var(--text2);height:34px}
+.vtools button[aria-pressed="true"],.vtools .listen.on{background:var(--ink);border-color:var(--ink);color:var(--ink-on)}
+.vhint{color:var(--text3)}
+/* 오늘 마음에 새길 한 줄 */
+.keep{margin:26px 0 4px;padding:22px 4px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);text-align:center}
+.keep small{display:block;font-size:11.5px;letter-spacing:.2em;color:var(--text3);font-weight:700}
+.keep div{margin-top:10px;font-family:'Noto Serif KR','Gowun Batang',serif;font-size:21px;line-height:1.6;font-weight:700;color:var(--ink);word-break:keep-all}
+/* 묵상 · 복음 · 질문 · 기도 */
+.explain{font-size:16px;color:var(--text2)}
+.explain p{line-height:1.95}
+.gospel{background:var(--warm);border-left:none;border-radius:4px;padding:16px 18px;color:var(--text2);font-size:15px}
+.gospel b{font-size:12px;letter-spacing:.08em;color:var(--ink)}
+.q{border-bottom:none;padding:7px 0;font-size:16px;line-height:1.8;color:var(--text);gap:14px}
+.q b{font-family:'Noto Serif KR','Gowun Batang',serif;font-size:22px;font-weight:900;color:var(--ink);line-height:1.3;min-width:14px}
+.pray{background:transparent;border-top:1px solid var(--rule);border-radius:0;padding:16px 0 0;margin-top:14px;font-family:'Noto Serif KR','Gowun Batang',serif;font-size:17px;color:var(--text)}
+.tq{font-family:'Noto Serif KR','Gowun Batang',serif;font-size:17px}
+/* 단추 */
+.btn{border-radius:4px}
+.btn-main{background:var(--ink);color:var(--ink-on)}
+.btn-sub{background:transparent;border:1.5px solid var(--text);color:var(--text)}
+.btn-card{border-radius:4px;background:transparent;border:1px dashed var(--ink);color:var(--ink)}
+nav{background:var(--cream);border-top:1.5px solid var(--text)}
+nav button.on{color:var(--ink)}
+.modewrap a{border-radius:4px}
+.modewrap a.on{background:var(--ink);border-color:var(--ink);color:var(--ink-on)}
+.amen.on{background:var(--ink);border-color:var(--ink)}
+.plan-row.today{box-shadow:inset 3px 0 0 var(--ink)}
+.stat .v{color:var(--ink);font-family:'Noto Serif KR','Gowun Batang',serif}
+[data-theme="dark"]{--cream:#15171c;--paper:#1c1f26;--warm:#262a33;--border:#353a45;--rule:#3d4350;
+  --text:#ece6da;--text2:#d3ccbf;--text3:#a59d90;--ink:#a9bdf0;--ink-on:#15171c;--mark:rgba(241,223,168,.24);--gold-ink:#a9bdf0}
+[data-theme="dark"] header{border-bottom-color:var(--rule)}
+[data-theme="dark"] nav{border-top-color:var(--rule)}
+[data-theme="dark"] .hero .pl{border-top-color:var(--text3)}
+[data-theme="dark"] .btn-sub{border-color:var(--text3)}
+</style>
 <style id="dongsan-dark-v1">
 [data-theme="dark"]{--gold-ink:#d9b26a;--hl:rgba(217,178,106,.24);--hl-line:rgba(217,178,106,.5);--hl-soft:rgba(217,178,106,.1)}
 [data-theme="dark"]{color-scheme:dark;--cream:#16130f;--paper:#221d18;--warm:#2b241e;--border:#4a3f33;--text:#efe6d8;--text2:#cdbfa9;--text3:#a3927a;--moss:#8fb47a;
@@ -340,7 +422,7 @@ nav button.on{color:var(--brick-deep);font-weight:700}
   </div>
 
   <div class="card vcard">
-    <div class="st">📖 오늘의 본문 <span class="right" id="verSrc"></span></div>
+    <div class="st">오늘의 본문 <span class="right" id="verSrc"></span></div>
     <div class="vtools" role="toolbar" aria-label="본문 읽기 도구">
       <button class="listen" id="listenBtn" onclick="listen()" hidden>🔊 듣기</button>
       <button id="modeBtn" onclick="toggleReadMode()" aria-pressed="false">¶ 이어 읽기</button>
@@ -350,23 +432,24 @@ nav button.on{color:var(--brick-deep);font-weight:700}
     </div>
     <div class="hook" id="hookBox" hidden></div>
     <div class="verse" id="verseBox">본문을 불러오는 중입니다…</div>
+    <div class="keep" id="keepBox" hidden></div>
     <div class="vhint">절을 누르면 표시되고, 고른 절을 복사하거나 나눌 수 있어요.</div>
     <div id="videoSlot"></div>
   </div>
 
   <div class="card" id="explainCard">
-    <div class="st">💡 오늘의 묵상</div>
+    <div class="st">묵상</div>
     <div id="explainBox" class="explain"></div>
   </div>
 
   <div class="card" id="guideCard">
-    <div class="st">🌿 묵상 길잡이</div>
+    <div class="st">생각해 볼 질문</div>
     <div id="questions"></div>
     <div class="pray" id="prayer"></div>
   </div>
 
   <div class="card" id="tableCard">
-    <div class="st">🍽️ 오늘의 식탁 질문 <span class="right">어린이 화면에도 같은 물음</span></div>
+    <div class="st">오늘의 식탁 질문 <span class="right">어린이 화면에도 같은 물음</span></div>
     <div class="tq" id="tableQ"></div>
     <div class="tq-note">저녁 식탁에서 가족과 나눠 보세요. 아이들은 이 물음에 답하면 별을 하나 더 받습니다.</div>
     <div class="memo" id="memoBox" hidden></div>
@@ -605,23 +688,24 @@ function renderToday(){
     b.title=atEdge?LOCK_MSG:'';
   });
   var srcTxt=d.source==='plan'?'교회 읽기표':(d.source==='custom'?'인도자 지정':'매일 묵상표');
+  var sr=WordData.series(viewDate);
   document.getElementById('hero').innerHTML=
-    '<div class="d">'+label+' <span class="badge-src">'+srcTxt+'</span></div>'+
-    '<div class="p">'+wEsc(d.passage)+'</div>'+
-    '<div class="t">'+wEsc(d.title)+'</div>'+
-    (d.theme?'<div class="th">'+wEsc(d.theme)+'</div>':'')+
-    (d.feast?'<span class="fe">'+wEsc(d.feast)+'</span>':'')+
-    (function(){var sr=WordData.series(viewDate);return sr?'<div class="sr">📖 '+wEsc(sr.title)+' · '+sr.day+'/'+sr.total+'일 · '+
-      '<a href="word-book.html?v=adult#'+viewDate+'">묵상집으로 보기</a></div>':''})();
+    '<div class="k">'+(sr?'<span>'+wEsc(sr.title)+'</span><i></i><span>'+sr.day+'일째</span>':'<span>오늘의 말씀</span>')+'</div>'+
+    '<h2 class="ttl">'+wEsc(d.title||d.passage)+'</h2>'+
+    '<div class="pl"><b>'+wEsc(d.passage)+'</b><span>개역개정 · '+srcTxt+'</span></div>'+
+    ((d.theme||d.feast)?'<div class="chips">'+(d.feast?'<span class="fe">'+wEsc(d.feast)+'</span>':'')+(d.theme?'<span class="th">'+wEsc(d.theme)+'</span>':'')+'</div>':'')+
+    (sr?'<div class="sr">'+sr.day+' / '+sr.total+'일 · <a href="word-book.html?v=adult#'+viewDate+'">묵상집으로 보기</a></div>':'');
   document.getElementById('questions').innerHTML=d.adult.questions.map(function(q,i){
-    return '<div class="q"><b>'+(i+1)+'.</b><div>'+wEsc(q)+'</div></div>'}).join('');
-  document.getElementById('prayer').textContent='🙏 '+d.adult.prayer;
+    return '<div class="q"><b>'+(i+1)+'</b><div>'+wEsc(q)+'</div></div>'}).join('');
+  document.getElementById('prayer').textContent=d.adult.prayer;
   var ex=document.getElementById('explainBox'), exc=document.getElementById('explainCard');
   if(ex){ex.innerHTML=(d.explain||'').split(/\n{2,}/).filter(Boolean)
     .map(function(t){return '<p>'+wEsc(t.trim())+'</p>'}).join('')+
-    (d.gospel?'<div class="gospel"><b>✝️ 복음으로 보면</b>'+wEsc(d.gospel)+'</div>':'')+
-    (d.remember?'<div class="remember"><small>📌 오늘 기억할 한 줄</small><div>'+wEsc(d.remember)+'</div></div>':'');
-  if(exc)exc.style.display=(d.explain||d.gospel||d.remember)?'':'none';}
+    (d.gospel?'<div class="gospel"><b>복음으로 보기</b>'+wEsc(d.gospel)+'</div>':'');
+  if(exc)exc.style.display=(d.explain||d.gospel)?'':'none';}
+  var kb=document.getElementById('keepBox');
+  kb.hidden=!d.remember;
+  kb.innerHTML=d.remember?'<small>오늘 마음에 새길 한 줄</small><div>'+wEsc(d.remember)+'</div>':'';
   document.getElementById('verSrc').textContent='개역개정';
   WordVoice.stop();
   document.getElementById('tableQ').textContent=WordExtra.table(d);
@@ -775,12 +859,22 @@ function sendCard(){
 /* ---------- 본문 읽기: 절마다 한 줄 / 이어 읽기 · 절 고르기 · 크게 읽기 ---------- */
 var CUR_VS=[],SEL={};
 var READ_MODE=(function(){try{return localStorage.getItem('dongsan_read_mode')==='flow'?'flow':'lines'}catch(e){return 'lines'}})();
+/* 오늘의 핵심 절(어린이 암송 구절과 같은 절)은 형광펜으로 칠해 둔다 */
+function keyVerses(){
+  var d=day(),r=d.kids&&d.kids.verseRef?WordData.parseRef(d.kids.verseRef):null,p=WordData.parseRef(d.passage);
+  if(!r||!p||r.book!==p.book||!r.from)return null;
+  return {ch:String(r.chapter),from:+r.from,to:+(r.to||r.from)};
+}
 function verseHtml(vs){
-  var lastCh=null,multi=vs.some(function(v){return String(v.v).indexOf(':')>0});
+  var lastCh=null,multi=vs.some(function(v){return String(v.v).indexOf(':')>0}),key=keyVerses(),
+      p0=WordData.parseRef(day().passage),ch0=p0?String(p0.chapter):'';
   return vs.map(function(v,i){
     var s=String(v.v),ch=multi?s.split(':')[0]:null,num=multi?s.split(':')[1]:s,head='';
     if(ch&&ch!==lastCh){head='<div class="vch">'+ch+'장</div>';lastCh=ch}
-    return head+'<span class="vv" data-i="'+i+'"><sup class="vn">'+num+'</sup>'+wEsc(v.t)+'</span>';
+    var isKey=key&&(ch||ch0)===key.ch&&+num>=key.from&&+num<=key.to,t=String(v.t||'');
+    /* 첫 절의 첫 글자는 크게 (절마다 줄 보기에서만 보인다) */
+    var body=i===0&&t?'<span class="dc">'+wEsc(t.charAt(0))+'</span>'+wEsc(t.slice(1)):wEsc(t);
+    return head+'<span class="vv'+(isKey?' key':'')+'" data-i="'+i+'"><sup class="vn">'+num+'</sup><span class="vt">'+body+'</span></span>';
   }).join(' ');
 }
 function applyReadMode(){
