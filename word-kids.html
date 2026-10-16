@@ -3,6 +3,7 @@
 <script src="theme.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <link rel="manifest" href="manifest.json">
+<script src="install-btn.js"></script>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="favicon.png" type="image/png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -275,6 +276,7 @@ nav button.on{color:var(--sky);font-weight:700}
 
 <!-- ===== 오늘 ===== -->
 <div class="pg on" id="pg-today">
+  <div data-install-slot style="margin-top:-4px"></div>
   <div class="today-hero" id="hero"></div>
 
   <div class="road" id="road" aria-label="오늘의 길"></div>
