@@ -109,7 +109,7 @@ header .who{margin-left:auto;font-size:12px;background:rgba(255,255,255,.18);pad
 .vhint{margin-top:12px;font-size:11.5px;color:var(--text3);text-align:center}
 .vcard{padding:18px 18px 14px}
 /* 고른 절 막대 */
-.selbar{position:fixed;left:12px;right:12px;bottom:calc(70px + env(safe-area-inset-bottom));z-index:70;max-width:520px;margin:0 auto;
+.selbar{position:fixed;left:12px;right:12px;bottom:calc(82px + env(safe-area-inset-bottom));z-index:70;max-width:520px;margin:0 auto;
   display:flex;align-items:center;gap:6px;padding:8px 8px 8px 14px;border-radius:14px;background:#2f2a26;color:#fff;
   box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:13px}
 .selbar[hidden]{display:none}
@@ -361,7 +361,16 @@ header .who{background:transparent;border:1px solid var(--rule);color:var(--text
 .btn-sub{background:transparent;border:1.5px solid var(--text);color:var(--text)}
 .btn-card{border-radius:4px;background:transparent;border:1px dashed var(--ink);color:var(--ink)}
 nav{background:var(--cream);border-top:1.5px solid var(--text)}
-nav button.on{color:var(--ink)}
+nav button.on{color:var(--ink);font-weight:700}
+/* 아래 메뉴 — 누르는 순간 바로 표시가 나도록 (손가락 닿으면 아이콘이 눌리고, 고른 칸은 남색 띠) */
+nav{padding-bottom:calc(env(safe-area-inset-bottom) + 4px)}
+nav button{position:relative;min-height:64px;padding:8px 2px 9px;font-size:12px;touch-action:manipulation;-webkit-user-select:none;user-select:none;transition:color .1s}
+nav button .i{display:flex;align-items:center;justify-content:center;width:54px;height:32px;margin:0 auto 3px;border-radius:999px;font-size:19px;transition:background-color .12s,transform .08s}
+nav button.on .i{background:var(--warm)}
+nav button:active .i,nav button.press .i{transform:scale(.86);background:var(--warm)}
+nav button.on::before{content:'';position:absolute;top:-1.5px;left:26%;right:26%;height:3px;border-radius:0 0 3px 3px;background:var(--ink)}
+html{touch-action:manipulation}
+.vtools button{min-height:38px;height:auto;touch-action:manipulation}
 .modewrap a{border-radius:4px}
 .modewrap a.on{background:var(--ink);border-color:var(--ink);color:var(--ink-on)}
 .amen.on{background:var(--ink);border-color:var(--ink)}
@@ -653,15 +662,14 @@ var me=WordUser.get();
 var feedCache={confirms:[],shares:[]};
 var alarmTimer=null;
 
+/* 화면 바꾸기 — 탭 표시와 화면 전환을 먼저 그리고, 내용 채우기는 그다음 틈에 한다
+   (나눔·현황처럼 그릴 것이 많은 화면도 누르는 즉시 넘어가 보이게) */
 function go(p,btn){
-  document.querySelectorAll('.pg').forEach(function(e){e.classList.remove('on')});
-  document.getElementById('pg-'+p).classList.add('on');
-  if(btn){document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('on')});btn.classList.add('on')}
-  if(p==='share')renderShares();
-  if(p==='stat')renderStat();
-  if(p==='plan')renderPlan();
-  if(p==='set')renderSet();
+  document.querySelectorAll('.pg').forEach(function(e){e.classList.toggle('on',e.id==='pg-'+p)});
+  if(btn){document.querySelectorAll('nav button').forEach(function(b){b.classList.toggle('on',b===btn);b.setAttribute('aria-current',b===btn?'page':'false')})}
   window.scrollTo(0,0);
+  var r={share:renderShares,stat:renderStat,plan:renderPlan,set:renderSet}[p];
+  if(r)requestAnimationFrame(function(){setTimeout(r,0)});
 }
 
 function day(){return WordData.forDate(viewDate,WordStore.custom())}
