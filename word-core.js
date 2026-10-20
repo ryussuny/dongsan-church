@@ -267,6 +267,21 @@ function wOnce(btn,busyText,work){
   return Promise.resolve().then(work).then(function(v){free();return v},function(e){free();throw e});
 }
 
+/* ---------- 누르는 느낌 ----------
+   아이폰 사파리는 문서에 touchstart 듣기가 없으면 :active(눌림 표시)를 그리지 않는다.
+   손가락이 닿는 즉시 단추에 .press 를 붙였다가 떼면 지운다 — 눌렸는지 바로 보이게. */
+(function(){
+  if(typeof document==='undefined')return;
+  var cur=null;
+  function clear(){if(cur){cur.classList.remove('press');cur=null}}
+  document.addEventListener('touchstart',function(){},{passive:true});
+  document.addEventListener('pointerdown',function(e){
+    var b=e.target.closest&&e.target.closest('button,.btn,a.card,a.book,nav button');
+    clear();if(b){cur=b;b.classList.add('press')}
+  },{passive:true});
+  ['pointerup','pointercancel','pointerleave','scroll'].forEach(function(t){document.addEventListener(t,function(){setTimeout(clear,90)},{passive:true,capture:true})});
+})();
+
 /* ---------- 성경 본문 ---------- */
 var WordBible=(function(){
   var loading=null,ready=false;
