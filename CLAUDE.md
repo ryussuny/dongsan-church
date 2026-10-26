@@ -17,3 +17,9 @@
   묵상 글·본문을 고치면 `node scripts/build-book-bible.js`(묵상집 전용 작은 성경 `book-bible.js`) → `node scripts/build-book.js` 순서로 다시 만든다. `book-bible.js` 가 낡아도 묵상집은 전체 성경으로 열린다.
 - 설교 묵상집(로마서·빌립보서): `sermon-book.html` + `sermon-book-data.js`. 날마다 hk 여는 한마디(본문 앞 호기심을 여는 한두 줄), ex 묵상, dp 「알고 읽으면 더 깊은 이야기」(문단 앞 【궁금한 소제목】, 원어는 하루 한 단어 이하, 이야기 중심). 고친 뒤 `node scripts/build-sermon-book-bible.js` 로 인용 대조·작은 성경 다시 만들기. 글씨는 모든 쪽 10pt, 넘치면 다음 쪽으로 이어진다.
 - 묵상 글에서 “ ” 안은 개역개정 원문 그대로, ‘ ’ 는 풀어 쓴 말이다. 인용을 고치면 `dongsan_bible.js` 원문과 글자를 대조한다.
+
+## 디자인 스튜디오
+- 화면: `design.html` (관리자 앱 홈 「🎨 디자인」). 한 줄 부탁 → Claude 가 HTML 조각을 그리고, 틀(`design-templates.js`)은 AI 없이 그린다.
+- 디자인 시스템: 값은 `design-system.js`(테마·크기·AI 규칙), 설명은 `DESIGN.md`. 테마 값을 바꾸면 `DESIGN.md` 표도 같이 고친다.
+- 디자인은 색·글꼴을 CSS 변수(`--bg` `--ink` `--accent` …)로만 쓴다 — 그래야 테마만 바꿔도 전체가 바뀐다.
+- 코딩 에이전트에서는 `.claude/skills/dongsan-design` 스킬과 `node scripts/design-render.js` 를 쓴다. 결과물 `designs/` 는 커밋하지 않는다.
