@@ -68,10 +68,10 @@ ol.q li{margin-bottom:.4rem}
 #err{display:none}
 
 /* 인쇄 — A4 한 장, 항상 밝은 화면 */
-@page{size:A4;margin:9mm}
+@page{size:A4;margin:7mm}
 @media print{
   html,body{background:#fff!important;color:#000!important}
-  header,.tools,.notice.screen,#themeBtn,audio,.foot,.song a.yt{display:none!important}
+  header,.tools,.screen,#themeBtn,audio,.foot,.song a.yt{display:none!important}
   main{max-width:none;padding:0}
   .hero{background:#fff!important;color:#000!important;border:1px solid #888;padding:8px 12px;margin-bottom:6px;border-radius:8px}
   .hero .d,.hero .t,.hero .m{color:#000!important;background:none!important;padding:0;margin:0 8px 0 0}
@@ -83,8 +83,28 @@ ol.q li{margin-bottom:.4rem}
   .step h2 .min{display:none}
   .step p{margin:0 0 .25rem}
   .verse .who{width:44px;font-size:7pt;padding-top:2px}
-  body.dense{font-size:7.5pt}
-  body.dense .verse .vt,body.dense .lord{font-size:8pt;line-height:1.35}
+  /* 본문 절은 2단으로 — 길수록 글자를 더 줄여 A4 한 쪽에 담는다 */
+  #verses:not(.muted){column-count:2;column-gap:12px}
+  .verse{break-inside:avoid}
+  .verse .who{display:none}
+  .verse .vn{width:16px;font-size:7pt;padding-top:1px}
+  body.dense{font-size:8pt;line-height:1.35}
+  body.dense .verse .vt,body.dense .lord{font-size:8.5pt;line-height:1.35}
+  body.dense2{font-size:7pt;line-height:1.3}
+  body.dense2 .verse .vt,body.dense2 .lord{font-size:7.5pt;line-height:1.3}
+  body.dense2 .step{padding:3px 6px;margin-bottom:3px}
+  body.dense3 #verses:not(.muted){column-count:3;column-gap:8px}
+  body.dense4 #verses:not(.muted){column-count:4;column-gap:6px}
+  body.dense4 .kid{display:inline-block;width:49%;vertical-align:top;margin:0!important;padding:2px 6px}
+  body.dense4 .step{padding:2px 6px;margin-bottom:2px}
+  body.dense4 .remember{margin-bottom:2px;padding:2px 6px}
+  body.dense4 .sub-h{margin:2px 0 1px}
+  body.dense4{font-size:6.5pt;line-height:1.25}
+  body.dense4 .verse .vt,body.dense4 .lord{font-size:7pt;line-height:1.25}
+  body.dense4 .hero .p{font-size:11pt;display:inline-block;margin:0 8px 0 0}
+  body.dense4 .hero .d,body.dense4 .hero .t,body.dense4 .hero .m{display:inline-block}
+  body.dense4 .hero{padding:3px 8px;margin-bottom:2px}
+  body.dense4 .remember div{font-size:8pt}
   .verse{padding:1px 0}
   .verse .vt{font-size:9pt;line-height:1.4}
   .remember{background:#fff!important;color:#000!important;border:1px solid #666;padding:4px 8px;margin-bottom:4px}
@@ -107,7 +127,7 @@ ol.q li{margin-bottom:.4rem}
   <div id="notice" class="notice screen" style="display:none"></div>
   <div class="tools">
     <label>함께하는 사람 <select id="people"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select> 명</label>
-    <button type="button" class="print" id="printBtn">🖨 인쇄 (A4 한 장)</button>
+    <button type="button" class="print" id="printBtn">🖨 인쇄</button>
   </div>
 
   <section class="step" id="s1"><h2><span class="n">1</span>여는 기도<span class="min">1분</span></h2>
@@ -121,7 +141,7 @@ ol.q li{margin-bottom:.4rem}
   <section class="step" id="s3"><h2><span class="n">3</span>성경 봉독<span class="min">2분</span></h2>
     <div id="passageRef" class="sub-h" style="margin-top:0"></div>
     <div id="verses" class="muted">본문을 불러오는 중…</div>
-    <p class="muted" style="margin-top:8px">한 절씩 돌아가며 읽어요. 마지막 절을 읽은 뒤 다시 첫 번째 사람으로 돌아갑니다.</p>
+    <p class="muted screen" style="margin-top:8px">한 절씩 돌아가며 읽어요. 마지막 절을 읽은 뒤 다시 첫 번째 사람으로 돌아갑니다.</p>
   </section>
 
   <section class="step" id="s4"><h2><span class="n">4</span>말씀 나눔<span class="min">3분</span></h2>
@@ -209,7 +229,7 @@ ol.q li{margin-bottom:.4rem}
     if(!p)return;
     if(p.kind==='audio'){
       box.innerHTML='<p><b>'+esc(p.s.title)+'</b>'+(p.cat?' <span class="muted">· '+esc(p.cat)+'</span>':'')+'</p>'+
-        '<audio controls preload="none" src="'+esc(encodeURI(p.s.src))+'"></audio><p class="muted">교회 찬양 중 한 곡이에요. 함께 듣고 따라 불러요.</p>';
+        '<audio controls preload="none" src="'+esc(encodeURI(p.s.src))+'"></audio><p class="muted screen">교회 찬양 중 한 곡이에요. 함께 듣고 따라 불러요.</p>';
     }else{
       var u=p.s.url||p.s.href||'',ti=p.s.title||'교회 찬양';
       box.innerHTML='<p><b>'+esc(ti)+'</b></p>'+(u?'<a class="yt" href="'+esc(u)+'" target="_blank" rel="noopener">유튜브에서 듣기</a>':'')+'<p class="muted">교회 찬양 중 한 곡이에요.</p>';
@@ -250,6 +270,9 @@ ol.q li{margin-bottom:.4rem}
       if(!list||!list.length){$('verses').textContent='본문을 찾지 못했어요. 성경을 펴서 '+d.passage+' 을 함께 읽어요.';return}
       verseList=list;renderVerses();
       if(list.length>9)document.body.classList.add('dense');
+      if(list.length>15)document.body.classList.add('dense2');
+      if(list.length>15)document.body.classList.add('dense3');
+      if(list.length>22)document.body.classList.add('dense4');
     }).catch(function(){$('verses').textContent='본문을 불러오지 못했어요. 성경을 펴서 '+d.passage+' 을 함께 읽어요.'});
   }).catch(function(){
     $('hero').innerHTML='<div class="d">오늘의 말씀을 불러오지 못했어요</div><div class="t">잠시 뒤 다시 열어 주세요.</div>';
