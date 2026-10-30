@@ -86,13 +86,13 @@ async function polishWithAI(text, entry) {
       headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5',
-        max_tokens: 1500,
+        max_tokens: 4000,
         system: '한국 개신교 설교 요약 편집자. 원고에 있는 내용만 쓰고, 성도 개인 신상·건강 정보는 절대 넣지 않는다.',
         messages: [{ role: 'user', content: aiPrompt(text, entry) }]
       })
     });
     const d = await r.json();
-    const out = d && d.content && d.content[0] && d.content[0].text;
+    const out = d && d.content && (d.content.find(c => c.type === 'text') || {}).text;
     if (!out) return null;
     const m = out.match(/\{[\s\S]*\}/);
     return m ? JSON.parse(m[0]) : null;
