@@ -7,6 +7,14 @@
 <meta name="description" content="한 줄로 적으면 교회 포스터·카드뉴스·예배 화면·현수막을 디자인해 주는 동산감리교회 디자인 스튜디오">
 <meta name="theme-color" content="#1A2340">
 <link rel="icon" href="favicon.png">
+<!-- 따로 설치하는 앱 「동산 디자인」 — 말씀 앱(manifest.json)과 다른 아이콘·이름으로 깔린다 -->
+<link rel="manifest" href="design-manifest.json">
+<link rel="apple-touch-icon" href="icons/design-apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="동산 디자인">
+<script>window.INSTALL_APP={name:'동산 디자인',icon:'icons/design-192.png',guide:'',desktop:true}</script>
+<script src="install-btn.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--gold:#C9A84C;--gold-light:#E8D5A0;--gold-dark:#8B6914;--navy:#1A2340;--navy-light:#2E3D70;--cream:#FAF7F0;--white:#FFF;
@@ -105,17 +113,24 @@ textarea.inp{resize:vertical;min-height:84px}
 .foot{font-size:11px;color:var(--light);line-height:1.8;text-align:center;margin-top:14px}
 .foot a{color:var(--gold-dark)}
 [hidden]{display:none!important}
+/* 설치 단추 — 이 화면 색(남색·금빛)으로 */
+.ib-bar{margin:0 0 12px!important;background:linear-gradient(135deg,var(--navy),var(--navy-light))!important;box-shadow:0 3px 0 rgba(0,0,0,.18)!important}
+.ib-bar b{font-size:16px!important}.ib-bar small{font-size:12.5px!important}
+.ib-bar .ib-go{color:var(--navy)!important;background:var(--gold-light)!important}
+/* 설치한 앱으로 열면 — 관리자 앱으로 가는 길 대신 앱 이름만 */
+@media (display-mode: standalone){.hd .back{display:none}}
 </style>
 </head>
 <body>
 
 <header class="hd">
-  <a href="admin.html">← 관리자</a>
+  <a class="back" href="admin.html">← 관리자</a>
   <h1>🎨 동산 디자인 스튜디오<small>한 줄로 적으면 포스터·카드·예배 화면을 만들어 드려요</small></h1>
 </header>
 
 <main class="studio">
   <div class="left">
+    <div data-install-slot></div>
     <div class="tabs" role="tablist">
       <button role="tab" id="t-ai" aria-selected="true" onclick="tab('ai')">✨ 한 줄로</button>
       <button role="tab" id="t-tpl" aria-selected="false" onclick="tab('tpl')">📋 틀로 바로</button>
@@ -773,6 +788,10 @@ drawFormats();drawThemes();drawExamples();checkKey();loadUpcoming();tplPrefillVe
   const latest=boxGet()[0];
   if(st.tab==='ai'&&latest&&Date.now()-latest.t<6*3600*1000){boxOpen(latest.id);setStatus('📚 마지막에 만든 디자인을 다시 열었어요.')}
 })();
+/* 앱 아이콘을 길게 눌러 고르는 바로가기(틀로 바로·보관함) — 앱이 이미 열려 있으면 주소 끝만 바뀐다 */
+window.addEventListener('hashchange',()=>{const h=location.hash.replace('#','');if(h==='tpl'||h==='box')tab(h);else if(h==='')tab('ai')});
+/* 인터넷이 끊겨도 「틀로 바로」는 열리게 */
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
 </body>
 </html>
