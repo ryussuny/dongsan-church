@@ -162,9 +162,12 @@ async function main() {
         series: polished.series || entry.series,
         summary: polished.summary || entry.summary,
         keyPoints: Array.isArray(polished.keyPoints) && polished.keyPoints.length ? polished.keyPoints : entry.keyPoints,
+        body: polished.body || entry.body,
         conclusion: polished.conclusion || entry.conclusion,
-        hymns: Array.isArray(polished.hymns) && polished.hymns.length ? polished.hymns : entry.hymns
+        meditation: polished.meditation || '',
+        application: polished.application || ''
       });
+      delete entry.hymns;
       if (polished.scripture) {
         const { normalizeRef } = require(path.join(ROOT, 'sermon-summary.js'));
         const ref = normalizeRef(polished.scripture);

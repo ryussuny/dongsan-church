@@ -223,7 +223,8 @@ function sermonCard(s, i) {
       ${s.body ? `<h4>말씀</h4>${s.body.split(/\n{2,}/).map(t => `<p>${esc(t)}</p>`).join('')}` : ''}
       ${points.length ? `<h4>말씀의 흐름</h4><ul>${points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
       ${s.conclusion ? `<h4>맺는 말씀</h4><p>${esc(s.conclusion)}</p>` : ''}
-      ${(s.hymns || []).length ? `<h4>찬송</h4><p>${(s.hymns || []).map(esc).join(' · ')}</p>` : ''}
+      ${s.meditation ? `<h4>묵상</h4><p>${esc(s.meditation)}</p>` : ''}
+      ${s.application ? `<h4>적용 한 문장</h4><p>${esc(s.application)}</p>` : ''}
     </div>
   </div>`;
 }
