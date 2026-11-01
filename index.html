@@ -296,6 +296,15 @@ a.sermon-card:focus-visible{outline:3px solid var(--brick2);outline-offset:3px}
 .today-title{font-family:'Gowun Batang',serif;font-size:1.5rem;font-weight:700;margin-bottom:.5rem}
 .today-passage{font-size:.95rem;opacity:.9;margin-bottom:1rem}
 .today-scripture{font-size:1.02rem;line-height:1.85;opacity:.96;border-top:1px solid rgba(255,255,255,.25);padding-top:1.1rem}
+.prayer-band{display:block;text-decoration:none;background:#101a2e;color:#f3efe6;border-radius:22px;padding:2rem 2.6rem;margin:2rem 0 3.5rem}
+.today-card.show+.prayer-band{margin-top:-2rem}
+.prayer-band span{display:block}
+.pb-k{font-size:.8rem;font-weight:700;letter-spacing:.04em;color:#e0a84c;margin-bottom:.5rem}
+.pb-t{font-family:'Gowun Batang',serif;font-size:1.45rem;font-weight:700}
+.pb-s{font-size:.92rem;opacity:.8;margin-top:.35rem}
+.pb-go{margin-top:1rem;font-size:.92rem;font-weight:700;color:#e0a84c}
+.prayer-band:hover .pb-go{text-decoration:underline}
+@media(max-width:600px){.prayer-band{padding:1.6rem 1.5rem}}
 
 /* ===== 오늘의 말씀 관리자 바 & 모달 ===== */
 .today-admin-bar{text-align:right;margin:-1.6rem 0 2.4rem}
@@ -504,6 +513,12 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
       <div class="today-passage" id="todayPassage">—</div>
       <div class="today-scripture" id="todayScripture">—</div>
     </div>
+    <a class="prayer-band reveal" href="prayer.html">
+      <span class="pb-k">다니엘기도회 · 함께 드리는 기도</span>
+      <span class="pb-t">교회 공동기도문</span>
+      <span class="pb-s">예배의 회복 · 다음세대 · 치료 중인 성도 · 교회의 땅과 건물 · 가정의 믿음</span>
+      <span class="pb-go">기도문 펼치기 →</span>
+    </a>
   </div>
 </section>
 
