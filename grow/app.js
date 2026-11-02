@@ -6,12 +6,12 @@
 var G = window.G, D = window.GD;
 
 /* 자비스 얼굴 자리 채우기 */
-G.$('#hmJv').innerHTML = G.jarvisSVG();
+G.$('#hmJv').innerHTML = G.jarvisSVG('full');
 G.$('#stJv').innerHTML = G.jarvisSVG();
 /* 만화 이모지 대신 메카 그림 — 빠른 단추·격납고 제목 */
 if (window.GA && GA.robot) {
   var qj = G.$('.hm-quick [data-go="chat"] .qe'), qb = G.$('.hm-quick [data-go="book"] .qe');
-  if (qj) qj.innerHTML = GA.jarvis({ full: false, size: 44 });
+  if (qj) qj.innerHTML = G.jarvisSVG();
   if (qb) qb.innerHTML = GA.robot(0, 6, { size: 44 });
   var bt = G.$('#bookTitle'); if (bt) bt.innerHTML = '<span class="bt-ic">' + GA.robot(0, 6, { size: 34 }) + '</span>로봇 격납고';
   G.css('qart', '.hm-quick .qe svg{width:clamp(30px,8vw,44px);height:clamp(30px,8vw,44px);display:block;margin:0 auto}#bookTitle{display:flex;align-items:center;gap:6px}#bookTitle .bt-ic svg{width:34px;height:34px;display:block}');
@@ -55,7 +55,7 @@ G.renderHome = function () {
   });
   /* 자라는 나무 — 스티커가 모일수록 자란다 */
   var rp = G.robotNow();
-  if (rp) { G.$('#trE').innerHTML = rp.svg; G.$('#trName').textContent = rp.robot.name + ' 조립 중'; G.$('#trSub').textContent = '부품 ' + rp.owned + ' / 6 · 미션 하나 = 부품 하나'; }
+  if (rp) { G.$('#trE').innerHTML = rp.svg; G.$('#trName').textContent = rp.robot.name + ' 조립 중'; G.$('#trSub').textContent = '부품 ' + rp.owned + ' / 6 · 다음: ' + (rp.robot.parts ? rp.robot.parts[rp.owned] : '부품'); }
   else { var tr = G.tree(); G.$('#trE').innerHTML = tr.e + tr.fruit; G.$('#trName').textContent = '내 나무: ' + tr.name; G.$('#trSub').textContent = tr.sub; }
   /* 이번 주 도장 */
   var sd = G.store.get('sessionDays', []), logs = G.logs(), st = G.$('#hmStreak'); st.innerHTML = '';
@@ -64,27 +64,6 @@ G.renderHome = function () {
     var key = G.today(dd), on = sd.indexOf(key) >= 0 || logs.some(function (l) { return l.d === key; });
     st.appendChild(G.el('<i class="' + (on ? 'on' : '') + '" title="' + key + '">' + (on ? '⭐' : DAYS[dd.getDay()]) + '</i>'));
   }
-};
-
-/* ---------- 로봇 부품 모으기 ----------
-   놀이 하나를 마칠 때마다 부품 하나(스티커 수와 같다). 로봇 하나 = 부품 여섯.
-   여섯 로봇을 다 만들면 처음 로봇부터 '황금 버전'으로 다시 모은다. */
-function partInfo(count) {      /* count = 지금까지 받은 부품 수 */
-  if (!(window.GA && GA.robot && GA.ROBOTS)) return null;
-  var n = GA.ROBOTS.length, idx = Math.floor(Math.max(0, count - 1) / 6), owned = count ? ((count - 1) % 6) + 1 : 0;
-  var round = Math.floor(idx / n); idx = idx % n;
-  return { idx: idx, owned: owned, round: round, robot: GA.ROBOTS[idx] };
-}
-G.rewardPart = function (count) {
-  var p = partInfo(count); if (!p || !count) return null;
-  var r = Object.assign({}, p.robot); if (p.round) r.name = '황금 ' + r.name;
-  return { robot: r, owned: p.owned, complete: p.owned === 6, partName: (GA.PARTS || [])[p.owned - 1] || '부품',
-    svg: GA.robot(p.idx, p.owned, { highlight: p.owned - 1, cls: p.round ? 'gold' : '' }) };
-};
-G.robotNow = function () {
-  var c = G.stickers().count, p = partInfo(c); if (!p) return null;
-  if (p.owned === 6) { p = partInfo(c + 1); p.owned = 0; }       /* 방금 완성했으면 다음 로봇을 보여 준다 */
-  return { robot: p.robot, owned: p.owned, svg: GA.robot(p.idx, p.owned, {}) };
 };
 
 G.tree = function () {
@@ -115,6 +94,7 @@ function openArea(k) {
 G.openArea = openArea;
 
 function openBook() {
+  if (G.openHangar && window.GR) { G.openHangar(); return; }   /* 로봇 군단 격납고 (robots.js) */
   var s2 = G.stickers(), c = s2.count;
   if (!(window.GA && GA.ROBOTS)) {   /* 그림 파일이 없으면 예전 스티커북 */
     G.$('#bookGrid').hidden = false; G.$('#hangar').hidden = true;

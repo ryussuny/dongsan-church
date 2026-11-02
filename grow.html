@@ -311,7 +311,8 @@ textarea.inp{min-height:90px;resize:vertical}
 #home.hero-scr .area-tile b{font-family:'Black Han Sans','Jua',sans-serif;letter-spacing:.5px;text-shadow:0 0 12px color-mix(in srgb,var(--c) 60%,transparent)}
 #home.hero-scr .hm-tree{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);box-shadow:none;color:#eaf2ff}
 #home.hero-scr .hm-tree small{color:#9fb6e0}
-#home.hero-scr .hm-tree .tr-e{width:58px;height:66px;font-size:0}
+#home.hero-scr .hm-tree .tr-e{width:58px;height:78px;font-size:0}
+#home.hero-scr .hm-tree .tr-e .rart{width:58px;border-radius:8px}
 #home.hero-scr .hm-tree .tr-e svg{width:100%;height:100%}
 #home.hero-scr .hm-streak i{background:rgba(255,255,255,.09);color:#cfe0ff}
 #home.hero-scr .hm-streak i.on{background:linear-gradient(135deg,#ffd54f,#ff9f1c);color:#3b2600}
@@ -346,6 +347,26 @@ textarea.inp{min-height:90px;resize:vertical}
 .new-part{animation:partFlash 1s ease-in-out 3}
 @keyframes partFlash{0%,100%{filter:none}50%{filter:brightness(1.8) drop-shadow(0 0 8px #fff)}}
 .calm .hero-scr::before{opacity:.25}
+/* 실사 자비스 — 말할 때 청록 빛, 들을 때 붉은 빛 */
+.jvi{position:relative;display:block;width:100%;height:100%}
+.jvi img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;border:2px solid rgba(94,234,255,.55);box-shadow:0 0 12px rgba(56,189,248,.4);transition:box-shadow .2s,border-color .2s;background:#0a1430}
+.jvi-full img{border-radius:16px;object-position:center top}
+.jv-talk .jvi img{border-color:#5eeaff;box-shadow:0 0 0 3px rgba(94,234,255,.6),0 0 24px #38bdf8}
+.jv-listen .jvi img{border-color:#ff6b81;box-shadow:0 0 0 3px rgba(255,107,129,.6),0 0 24px #ff6b81}
+.jvi-eq{position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);display:flex;gap:2px;align-items:flex-end;height:12px;opacity:0;transition:opacity .2s}
+.jv-talk .jvi-eq{opacity:1}
+.jvi-eq b{width:3px;height:100%;background:#5eeaff;border-radius:2px;box-shadow:0 0 6px #5eeaff;animation:jvEq .45s ease-in-out infinite alternate}
+.jvi-eq b:nth-child(2){animation-delay:.1s}.jvi-eq b:nth-child(3){animation-delay:.2s}.jvi-eq b:nth-child(4){animation-delay:.05s}.jvi-eq b:nth-child(5){animation-delay:.15s}
+@keyframes jvEq{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
+#home.hero-scr .hm-jv{width:96px;height:128px}
+.hm-quick .qe .jvi{width:clamp(30px,8vw,44px);height:clamp(30px,8vw,44px);margin:0 auto}
+.reward.hero .rw-part .rp-art{width:108px;height:auto}
+.reward.hero .rp-name{font-size:15px!important;color:#ffd54f;margin-top:2px}
+.rp-dots{display:flex;gap:4px;margin:7px 0 3px}
+.rp-dots i{width:15px;height:6px;border-radius:3px;background:rgba(255,255,255,.18)}
+.rp-dots i.on{background:#5eeaff;box-shadow:0 0 6px #5eeaff}
+.rp-dots i.new{background:#ffd54f;box-shadow:0 0 8px #ffd54f;animation:partFlash 1s ease-in-out 3}
+.reward.hero .rp-rank{color:#ffd54f!important;font-weight:700;margin-top:4px}
 .calm #home.hero-scr .hm-today::after{display:none}
 
 @media print{
@@ -432,6 +453,7 @@ textarea.inp{min-height:90px;resize:vertical}
 <script src="grow/jarvis.js"></script>
 <script src="grow/ef.js"></script>
 <script src="grow/parent.js"></script>
+<script src="grow/robots.js"></script>
 <script src="grow/app.js"></script>
 </body>
 </html>

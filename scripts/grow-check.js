@@ -244,7 +244,11 @@ server.listen(0, async function () {
     r.maleFirst = fake.slice().sort(function (a, b) { return G.voice.score(b) - G.voice.score(a); })[0].name;
     r.samsungMale = G.voice.isMale({ name: 'ko-KR-SMTm00', voiceURI: 'ko-KR-SMTm00' }) && !G.voice.isMale({ name: 'ko-KR-SMTf00', voiceURI: 'x' });
     /* 그림·로봇 부품 */
-    r.ga = !!(window.GA && GA.robot && GA.ROBOTS && GA.ROBOTS.length === 6);
+    r.ga = !!(window.GA && GA.robot && window.GR && GR.ROBOTS.length >= 12 && GR.ROBOTS.every(function (x) { return x.name && x.type && x.alt && x.parts.length === 6; }));
+    r.names = window.GR ? GR.ROBOTS.length : 0;
+    /* 계급: 로봇 0대 훈련생, 3대 정예 대원 */
+    r.rank0 = window.GR && GR.rank(0).cur.name === '훈련생'; r.rank3 = window.GR && GR.rank(3).cur.name === '정예 대원';
+    var p18 = G.rewardPart ? G.rewardPart(18) : null; r.rankUp = !!(p18 && p18.complete && p18.rankUp && p18.rankUp.name === '정예 대원');
     r.jvHero = /<svg/.test(G.jarvisSVG('full'));
     var p6 = G.rewardPart ? G.rewardPart(6) : null, p7 = G.rewardPart ? G.rewardPart(7) : null;
     r.part6 = p6 && p6.complete && p6.owned === 6; r.part7 = p7 && !p7.complete && p7.owned === 1 && p7.robot.name !== (p6 && p6.robot.name);
@@ -254,10 +258,11 @@ server.listen(0, async function () {
   ok(hero.youngLittle, '어린아이에게는 다정한 말투로 돌아가야 함');
   ok(hero.startLv === 2 && hero.speechLv === 1, '8살 넘은 아이의 처음 단계(말하기 1·나머지 2)가 맞지 않음: ' + JSON.stringify(hero));
   ok(hero.maleFirst === 'ko-kr-x-kod-local' && hero.samsungMale, '남자 목소리를 먼저 고르지 않음: ' + JSON.stringify(hero));
-  ok(hero.ga && hero.jvHero, '히어로 로봇 그림(hero-art.js)을 불러오지 못함');
+  ok(hero.ga && hero.jvHero, '로봇 군단(이름·종류·변신·부품 6개)이나 자비스 그림을 불러오지 못함: ' + JSON.stringify(hero));
+  ok(hero.rank0 && hero.rank3 && hero.rankUp, '계급(훈련생→정예 대원)이나 계급 업 알림이 맞지 않음: ' + JSON.stringify(hero));
   ok(hero.part6 && hero.part7, '로봇 부품 모으기가 맞지 않음(6번째=완성, 7번째=다음 로봇 첫 부품): ' + JSON.stringify(hero));
-  var hg = await page.evaluate(function () { document.querySelector('[data-go="book"]').click(); var n = document.querySelectorAll('#hangar .hg-card').length; window.G.home(); return n; });
-  ok(hg === 6, '로봇 격납고에 로봇 여섯이 나오지 않음: ' + hg);
+  var hg = await page.evaluate(function () { document.querySelector('[data-go="book"]').click(); var n = document.querySelectorAll('#hangar .hg-card').length, now = !!document.querySelector('#hangar .hg-now .plist'), rk = !!document.querySelector('#hangar .hg-rank'); window.G.home(); return { n: n, now: now, rk: rk }; });
+  ok(hg.n === hero.names && hg.now && hg.rk, '로봇 격납고(계급·조립 중·전체 로봇)가 바르게 나오지 않음: ' + JSON.stringify(hg));
 
   /* 말판: 자주 쓰는 6낱말 고정 줄 */
   var aac = await page.evaluate(function () { var G = window.G; G.start('talkboard'); var n = document.querySelectorAll('#stBody .tb-core .tb-tile').length; G.home(); return n; });

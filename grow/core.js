@@ -570,8 +570,14 @@ G.wake = function (on) {
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && G.cur) G.wake(true); });
 
 /* ---------- 자비스 얼굴 ---------- */
+G.JV_IMG = { head: 'assets/grow/jarvis-head.jpg', full: 'assets/grow/jarvis.jpg' };
 G.jarvisSVG = function (cls) {
   /* 히어로 로봇 그림(hero-art.js)이 있으면 그것을 쓴다 — 'big'·'full' 은 전신 */
+  /* 실사 자비스(assets/grow) — 말할 때·들을 때는 테두리가 빛난다 */
+  if (G.JV_IMG && !/\bsvg\b/.test(cls || '')) {
+    var full = /\b(big|full)\b/.test(cls || '');
+    return '<span class="jvi ' + (full ? 'jvi-full ' : '') + (cls || '') + '"><img src="' + (full ? G.JV_IMG.full : G.JV_IMG.head) + '" alt="자비스"><i class="jvi-eq"><b></b><b></b><b></b><b></b><b></b></i></span>';
+  }
   if (window.GA && GA.jarvis) try { return GA.jarvis({ full: /\b(big|full)\b/.test(cls || ''), cls: cls || '' }); } catch (e) {}
   return '<svg class="jv ' + (cls || '') + '" viewBox="0 0 120 120" aria-hidden="true">' +
     '<line x1="60" y1="14" x2="60" y2="26" class="jv-ant"/><circle cx="60" cy="11" r="6" class="jv-bulb"/>' +
@@ -879,12 +885,14 @@ function finish(ctx, x) {
   var msg = x.msg || (hard ? '마음을 말해 줘서 고마워. 자비스가 옆에 있을게.' : G.pick(D.DONE));
   /* 히어로: 스티커 대신 로봇 부품 — 여섯 개 모으면 로봇 완성(변신!) */
   var part = G.rewardPart ? G.rewardPart(G.stickers().count) : null;
-  if (part && !x.msg && !hard) msg = part.complete ? part.robot.name + ' 완성! 변신!' : G.pick(D.DONE);
+  if (part && !x.msg && !hard) msg = part.complete ? part.robot.name + ' 완성! 변신!' + (part.rankUp ? ' 계급이 ' + part.rankUp.name + '(으)로 올랐어!' : '') : G.pick(D.PRAISE) + ' ' + part.partName.replace(/ \(.*\)$/, '') + ' 획득!';
   var ov = G.el('<div class="reward' + (part ? ' hero' : '') + '" role="dialog">' +
     '<div class="rw-card">' + (hard ? '<div class="rw-stars"><span>💗</span></div>' : '<div class="rw-stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>') +
     (part ? '' : '<div class="rw-jv">' + G.jarvisSVG('big') + '</div>') +
     '<div class="rw-msg">' + G.esc(msg) + '</div>' +
-    (part ? '<div class="rw-part"><div class="rp-art' + (part.complete ? ' transform' : '') + '">' + part.svg + '</div><div><small>' + (part.complete ? '로봇 완성!' : '새 부품 획득') + '</small><b>' + G.esc(part.robot.name) + '<br>' + G.esc(part.partName) + '</b><small>부품 ' + part.owned + ' / 6</small></div></div>'
+    (part ? '<div class="rw-part"><div class="rp-art' + (part.complete ? ' transform' : '') + '">' + part.svg + '</div><div><small>' + (part.complete ? '로봇 완성! 변신!' : '새 부품 획득') + '</small><b>' + G.esc(part.robot.name) + '</b><b class="rp-name">' + G.esc(part.partName) + '</b>' +
+      '<span class="rp-dots">' + [0, 1, 2, 3, 4, 5].map(function (k) { return '<i class="' + (k < part.owned ? 'on' : '') + (k === part.owned - 1 ? ' new' : '') + '"></i>'; }).join('') + '</span>' +
+      (part.rankUp ? '<small class="rp-rank">' + part.rankUp.e + ' 계급 업! 「' + G.esc(part.rankUp.name) + '」</small>' : '') + '</div></div>'
       : '<div class="rw-stk"><small>새 스티커</small><b>' + stk + '</b></div>') +
     '<div class="rw-btns">' + (inSess ? '<button class="btn big go">다음 놀이 ▶</button>' : '<button class="btn big again">🔁 한 번 더</button>') +
     '<button class="btn big soft home">' + (inSess ? '🏠 쉬었다 할래요' : '🏠 처음으로') + '</button></div></div></div>');
@@ -1001,12 +1009,15 @@ G.nextInSession = function () {
   if (over && s.i < s.list.length - 1) s.i = s.list.length - 1;
   if (s.i >= s.list.length) {
     G.session = null; G.store.del('sessionSave');
+    /* 오늘의 미션을 끝까지 하면 보너스 부품 하나 (하루 한 번) */
+    var bonus = G.store.get('bonusDay', '') !== G.today() && s.done.length >= 2;
+    if (bonus) { G.store.set('bonusDay', G.today()); G.giveSticker(); }
     G.store.set('lastSession', { d: G.today(), n: s.done.length });
     var sd = G.store.get('sessionDays', []); if (sd.indexOf(G.today()) < 0) { sd.push(G.today()); G.store.set('sessionDays', sd.slice(-400)); }
     G.home();
     if (!G.settings.calm) { G.fx.confetti(50); G.sfx.play('win'); } else G.sfx.play('ding');
     G.say(G.older() ? '오늘의 미션 모두 완료! ' + G.callName() + ', 진짜 멋졌어. 이제 화면은 쉬고 몸으로 놀자!' : '오늘의 놀이 끝! ' + G.callName() + ', 정말 멋졌어. 이제 화면은 쉬고, 엄마 아빠랑 몸으로 놀자!');
-    G.toast('🎉 오늘의 놀이를 모두 마쳤어요! 이제 화면을 쉬어요', 4500);
+    G.toast(bonus ? '🎁 오늘의 미션 완료 보너스 — 부품 하나 더! 이제 화면을 쉬어요' : '🎉 오늘의 놀이를 모두 마쳤어요! 이제 화면을 쉬어요', 4500);
     return;
   }
   G.runSlot(s.list[s.i]);
