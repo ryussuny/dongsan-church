@@ -32,7 +32,8 @@ G.renderHome = function () {
   var last = G.store.get('lastSession', {}), done = last.d === G.today(), saved = G.savedSession();
   var tb = G.$('#todayBtn');
   tb.classList.toggle('done', done && !saved);
-  tb.querySelector('b').textContent = saved ? '이어서 하기 ▶' : done ? '오늘의 놀이 끝! 🎉' : '오늘의 놀이';
+  var word = G.older() ? '미션' : '놀이';
+  tb.querySelector('b').textContent = saved ? '이어서 하기 ▶' : done ? '오늘의 ' + word + ' 끝! 🎉' : '오늘의 ' + word;
   G.$('#todaySub').textContent = saved ? '아까 하던 놀이를 이어서 해요' : done ? '내일 또 만나요 · 이제 몸으로 놀아요' : G.settings.sessionMin + '분 · 자비스가 골라 줘요';
   /* 영역 타일 */
   var box = G.$('#hmAreas'); box.innerHTML = '';

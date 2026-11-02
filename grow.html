@@ -283,20 +283,32 @@ textarea.inp{min-height:90px;resize:vertical}
 #home.hero-scr .hm-hi h1{font-family:'Black Han Sans','Jua',sans-serif;color:#fff;text-shadow:0 0 18px rgba(90,169,255,.55)}
 #home.hero-scr .hm-jv{width:104px;height:124px;filter:drop-shadow(0 0 16px rgba(80,180,255,.6))}
 #home.hero-scr .hm-parent{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);box-shadow:none}
-#home.hero-scr .hm-today{position:relative;overflow:hidden;background:linear-gradient(120deg,#ff7a18,#ff3d6e 52%,#7c3aed);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 12px 30px rgba(255,61,110,.35),0 0 0 2px rgba(255,255,255,.12)}
+#home.hero-scr .hm-today{position:relative;overflow:hidden;border-radius:18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0) 40%),linear-gradient(135deg,#1b2a4e,#0f1a33 60%,#142447);
+  border:1px solid rgba(94,234,255,.55);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),inset 0 0 28px rgba(56,189,248,.18),0 0 22px rgba(56,189,248,.35),0 12px 30px rgba(0,0,0,.45);
+  clip-path:polygon(0 12px,12px 0,calc(100% - 28px) 0,100% 28px,100% 100%,28px 100%,0 calc(100% - 28px))}
+#home.hero-scr .hm-today .tp{background:linear-gradient(135deg,#ff9a3c,#ff5f1f);box-shadow:0 0 18px rgba(255,140,60,.6);border-radius:16px;color:#fff}
+#home.hero-scr .hm-today b{letter-spacing:1px;text-shadow:0 0 14px rgba(94,234,255,.6)}
+#home.hero-scr .hm-today small{color:#9fdcff}
 #home.hero-scr .hm-today::after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);animation:sheen 3.2s ease-in-out infinite}
 @keyframes sheen{0%{left:-60%}55%,100%{left:130%}}
 #home.hero-scr .hm-today b{font-family:'Black Han Sans','Jua',sans-serif}
-#home.hero-scr .hm-today.done{background:linear-gradient(120deg,#10b981,#06b6d4)}
+#home.hero-scr .hm-today.done{border-color:rgba(52,211,153,.7);box-shadow:inset 0 0 28px rgba(52,211,153,.18),0 0 22px rgba(52,211,153,.35),0 12px 30px rgba(0,0,0,.45)}
 #home.hero-scr .hm-quick button{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);box-shadow:none;color:#eaf2ff}
-#home.hero-scr .area-tile{min-height:150px;border:1px solid rgba(255,255,255,.22);
-  background:linear-gradient(150deg,color-mix(in srgb,var(--c) 78%,#fff 22%),color-mix(in srgb,var(--c) 70%,#000 30%) 75%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -10px 24px rgba(0,0,0,.18),0 10px 26px color-mix(in srgb,var(--c) 40%,transparent)}
-#home.hero-scr .area-tile::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.22) 45%,transparent 60%);pointer-events:none}
+#home.hero-scr .area-tile{min-height:150px;border-radius:16px;color:#eaf2ff;
+  border:1px solid color-mix(in srgb,var(--c) 55%,rgba(255,255,255,.12));
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 35%),
+    radial-gradient(120% 90% at 85% 10%,color-mix(in srgb,var(--c) 28%,transparent),transparent 60%),
+    linear-gradient(160deg,#1a2540,#0e1729);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 0 0 1px rgba(0,0,0,.35),0 0 18px color-mix(in srgb,var(--c) 22%,transparent),0 10px 24px rgba(0,0,0,.4);
+  clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px))}
+#home.hero-scr .area-tile::before{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,transparent,var(--c),transparent);opacity:.9;pointer-events:none}
+#home.hero-scr .area-tile::after{display:none}
+#home.hero-scr .area-tile small{color:#a9bbdb;opacity:1}
 #home.hero-scr .area-tile .ai{display:block;width:68px;height:68px}
 #home.hero-scr .area-tile .ai svg{width:100%;height:100%;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
-#home.hero-scr .area-tile b{font-family:'Black Han Sans','Jua',sans-serif;text-shadow:0 2px 6px rgba(0,0,0,.3)}
+#home.hero-scr .area-tile b{font-family:'Black Han Sans','Jua',sans-serif;letter-spacing:.5px;text-shadow:0 0 12px color-mix(in srgb,var(--c) 60%,transparent)}
 #home.hero-scr .hm-tree{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);box-shadow:none;color:#eaf2ff}
 #home.hero-scr .hm-tree small{color:#9fb6e0}
 #home.hero-scr .hm-tree .tr-e{width:58px;height:66px;font-size:0}
