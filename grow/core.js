@@ -497,6 +497,8 @@ G.listen = function (o) {
       /* 아이 말소리 사전: 부모가 👍 해 준 발음은 다음부터 맞다고 본다 */
       if (G.SL && G.SL.accepts) (o.expect || []).forEach(function (w) { if (G.SL.accepts(w, alts)) score = Math.max(score, 0.9); });
       var res = Object.assign({ text: text, alts: alts, score: score, ok: score >= (o.threshold || 0.5), heard: !!text }, extra || {});
+      /* 고운 말·표준말 — 들은 말을 기기 안에서만 센다(부모 화면 🌷). 대화에서 자비스가 고쳐 들려줄 때도 쓴다 */
+      if (text && G.kind) try { res.kind = G.kind.note(text, o.expect); } catch (e) {}
       if (G.SL && G.SL.save) {
         if (extra && extra.error === 'audio-capture' && clip) G.SL.noteConflict('audio-capture');
         var meta = { act: G.cur ? G.cur.id : '', lv: G.cur ? G.cur.level : 0, target: (o.expect || [])[0] || '', heard: text, alts: alts.slice(0, 3),

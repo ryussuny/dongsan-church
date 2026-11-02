@@ -101,6 +101,14 @@ server.listen(0, async function () {
     if (G.acts.daynight) { localStorage.setItem('grow_logs', JSON.stringify([{ t: 1, d: '2026-01-01', id: 'daynight', area: 'brain', lv: 1, n: 10, ok: 10, ms: 1000 }])); out.level.warm = G.levelFor('daynight', 3); }
     if (keep) localStorage.setItem('grow_logs', keep); else localStorage.removeItem('grow_logs');
     /* 너그러운 말소리 맞춤 */
+    /* 고운 말·표준말 */
+    var K = G.kind, kc = function (t) { var c = K.check(t); return { good: c.good.map(function (g) { return g.g; }), std: c.std.map(function (x) { return x.from; }), rough: c.rough.map(function (x) { return x.key; }), fixed: c.fixed }; };
+    out.kind = K ? {
+      thanks: kc('고마워'), hello: kc('선생님 안녕하세요'), slang: kc('대박'), gae: kc('이거 개좋아'), name: kc('짱구 보고 싶어'), fool: kc('바보야'),
+      noisy: kc('시끄러워'), hit: kc('친구가 때렸어'), dislike: kc('싫어'), bug: kc('벌레가 죽어 있어'), feel: kc('나 속상해'),
+      polish: K.polish('우와 대박! 이 로봇 짱이야. 개멋져!'), mask: K.mask('씨발 싫어'),
+      foolReply: (K.reply(K.check('바보야')) || {}).say || '', swearReply: (K.reply(K.check('씨발')) || {}).say || '', slangReply: (K.reply(K.check('대박')) || {}).say || ''
+    } : null;
     out.sim = { '아과/사과': G.similar('아과', '사과'), '나나/바나나': G.similar('나나', '바나나'), '머머/멍멍': G.similar('머머', '멍멍'),
       '강아지 줘/강아지': G.similar('강아지 줘', '강아지'), '자동차/강아지': G.similar('자동차', '강아지'), '물/우유': G.similar('물', '우유'),
       '무/물': G.similar('무', '물'), '고/코': G.similar('고', '코'),
@@ -167,6 +175,18 @@ server.listen(0, async function () {
   ok(design.level.quitIgnored === 2, '중간에 그만둔 판이 단계 판단에 섞임: ' + design.level.quitIgnored);
   if (design.level.warm !== undefined) ok(design.level.warm === 2, '규칙 익히기(1단계)를 잘해도 진짜 연습 단계로 안 오름: ' + design.level.warm);
   ok(design.aiChildDefault === false, '아이 대화 AI 가 부모 동의 없이 켜져 있음');
+  var KD = design.kind;
+  ok(!!KD, '고운 말 엔진(G.kind)이 없음');
+  if (KD) {
+    ok(KD.thanks.good[0] === 'thanks' && KD.hello.good[0] === 'hello' && KD.feel.good[0] === 'feel', '고운 말(고마워·인사·마음 말하기)을 알아채지 못함: ' + JSON.stringify([KD.thanks, KD.hello, KD.feel]));
+    ok(KD.slang.std[0] === '대박' && KD.slang.fixed === '정말 멋지다' && KD.gae.fixed === '이거 정말 좋아', '유행어를 표준말로 바꾸지 못함: ' + JSON.stringify([KD.slang, KD.gae]));
+    ok(!KD.name.std.length, '이름(짱구)을 유행어로 잘못 봄');
+    ok(KD.fool.rough[0] === '바보' && /나 속상해/.test(KD.foolReply) && !/바보/.test(KD.foolReply), '거친 말에 마음 읽기·대신 쓸 말을 주지 않거나 거친 말을 따라 함: ' + KD.foolReply);
+    ok(!KD.noisy.rough.length && !KD.hit.rough.length && !KD.dislike.rough.length && !KD.bug.rough.length, '느낌 말·겪은 일(시끄러워·때렸어·싫어·죽어 있어)을 거친 말로 봄: ' + JSON.stringify([KD.noisy, KD.hit, KD.dislike, KD.bug]));
+    ok(!/대박|짱|개멋/.test(KD.polish), '자비스 말에 유행어가 남음: ' + KD.polish);
+    ok(KD.mask.indexOf('씨발') < 0 && !/씨발/.test(KD.swearReply), '욕설을 AI 로 보내거나 따라 말함: ' + KD.mask + ' / ' + KD.swearReply);
+    ok(/틀렸/.test(KD.slangReply + KD.foolReply + KD.swearReply) === false, '고운 말 대답에 "틀렸어"가 있음');
+  }
   ok(!design.churchKeySilent, '교회 관리자 앱 키를 부모 동의 없이 가져다 씀');
 
   /* ---------- 2) 모든 놀이를 모든 단계로 돌려 보기 ---------- */
@@ -367,6 +387,11 @@ server.listen(0, async function () {
   await p2.evaluate(function () { window.G.openParent('speech'); }); await p2.waitForTimeout(800);
   var tabOk = await p2.evaluate(function () { return document.querySelectorAll('#pBody .note[data-sid]').length; });
   ok(tabOk >= 1, '부모 화면 「말소리」 탭에 녹음 목록이 나오지 않음');
+  var kwTab = await p2.evaluate(function () {
+    var G = window.G; G.kind.note('고마워', []); G.kind.note('대박', []); G.openParent('speech');
+    return new Promise(function (ok) { setTimeout(function () { var b = document.getElementById('pBody'); ok({ card: !!document.getElementById('kwAI'), std: /정말 멋지다/.test(b.textContent), good: /고마워요/.test(b.textContent), tips: /고쳐 말해 주기/.test(b.textContent) }); }, 900); });
+  });
+  ok(kwTab.card && kwTab.std && kwTab.good && kwTab.tips, '부모 화면 「🌷 고운 말·표준말」 카드가 제대로 나오지 않음: ' + JSON.stringify(kwTab));
   var zipBytes = await p2.evaluate(function () { return window.G.SL.exportData().then(function (b) { return b.arrayBuffer(); }).then(function (buf) { return Array.from(new Uint8Array(buf)); }); });
   var zpath = path.join(require('os').tmpdir(), 'grow-speech-check.zip'); fs.writeFileSync(zpath, Buffer.from(zipBytes));
   var zl = '';

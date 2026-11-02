@@ -426,6 +426,23 @@ function tReport(body) {
 
 /* ===== 말소리 (자동 녹음 · 분석 · 학습 데이터) ===== */
 var spDays = 30;
+/* 🌷 고운 말 · 표준말 — 들은 말에서 센 것(기기에만) + 집에서 돕는 법 */
+function kindCard() {
+  if (!G.kind) return '';
+  var d = G.kind.data(), w = G.kind.sum(7), m = G.kind.sum(30);
+  var h = '<h3>🌷 고운 말 · 표준말</h3><p class="muted">아이가 한 말에서 고운 말(고마워·미안해·인사·부탁·칭찬)과 유행어·거친 말을 세어요. 자비스는 꾸짖지 않고, 유행어는 표준말로 다시 들려주고(고쳐 말해 주기) 거친 말엔 마음을 먼저 알아준 뒤 대신 쓸 고운 말을 알려 줘요. 음성 인식 기준이라 정확하지 않을 수 있어요. 욕설은 글자로 남기지 않아요.</p>' +
+    '<div class="pstats"><div><b>' + w.good + '</b><small>이번 주 고운 말 (스스로 ' + w.self + ')</small></div><div><b>' + w.std + '</b><small>유행어·줄임말</small></div><div><b>' + w.rough + '</b><small>거친 말</small></div></div>';
+  var gk = G.kind.GOOD.filter(function (g) { return d.good[g.g]; });
+  if (gk.length) h += '<h4>쓴 고운 말</h4><div class="wchips">' + gk.map(function (g) { return '<span>' + g.e + ' ' + G.esc(g.name) + '<small>' + d.good[g.g].n + '</small></span>'; }).join('') + '</div>';
+  var st = Object.keys(d.std).sort(function (a, b) { return d.std[b].n - d.std[a].n; }).slice(0, 8);
+  if (st.length) h += '<h4>이렇게 바꿔 들려주세요</h4><ul class="princ">' + st.map(function (k) { return '<li>「' + G.esc(k) + '」 → <b>「' + G.esc(d.std[k].to || '표준말') + '」</b> <small class="muted">' + d.std[k].n + '번</small></li>'; }).join('') + '</ul>';
+  var ro = Object.keys(d.rough).sort(function (a, b) { return d.rough[b].n - d.rough[a].n; });
+  if (ro.length) h += '<h4>거친 말이 나올 때 — 대신 쓸 말</h4><ul class="princ">' + ro.map(function (k) { return '<li>' + G.esc(d.rough[k].key) + ' → <b>"' + G.esc(k) + '"</b> <small class="muted">' + d.rough[k].n + '번</small></li>'; }).join('') + '</ul>';
+  if (!m.good && !m.std && !m.rough) h += '<p class="muted" style="margin-top:6px">아직 기록이 없어요. 말하기 놀이 · 🌷 고운 말 놀이 · 자비스랑 이야기를 하면 쌓여요.</p>';
+  h += '<h4>집에서 이렇게 해 주세요</h4><ul class="princ">' + G.kind.TIPS.map(function (t) { return '<li><b>' + t[0] + '</b> — ' + G.esc(t[1]) + '</li>'; }).join('') + '</ul>' +
+    '<div class="row" style="margin-top:8px"><button class="btn soft" id="kwAI">🤖 코치에게 고운 말 습관 묻기</button><button class="btn soft" id="kwClear">기록 지우기</button></div>';
+  return card(h);
+}
 function tSpeech(body) {
   if (!G.SL) { body.innerHTML = card('<p class="muted">말소리 연구실을 불러오지 못했어요.</p>'); return; }
   body.innerHTML = card('<p class="muted">불러오는 중…</p>');
@@ -458,6 +475,7 @@ function tSpeech(body) {
         (a.newWords.length ? '<h4>🆕 이번 주 새로 들린 말</h4><div class="wchips">' + a.newWords.map(function (w) { return '<span>' + G.esc(w) + '</span>'; }).join('') + '</div>' : ''));
     }
     var dict = G.SL.dict(), dk = Object.keys(dict);
+    h += kindCard();
     h += card('<h3>📘 아이 말소리 사전 — 자비스가 배운 발음</h3><p class="muted">음성 인식이 못 알아들었지만 부모님이 👍(또는 ✅)해 준 발음이에요. 다음부터는 이 발음도 맞다고 알아들어요.</p>' +
       (dk.length ? '<div class="wchips">' + dk.map(function (t) { return Object.keys(dict[t]).map(function (v) { return '<span>' + G.esc(t) + ' ← ' + G.esc(v) + '<small>' + dict[t][v] + '</small><button data-fg="' + G.esc(t + '|' + v) + '" aria-label="지우기">×</button></span>'; }).join(''); }).join('') + '</div>' : '<p class="muted">아직 배운 발음이 없어요.</p>'));
     var recent = all.slice(-40).reverse();
@@ -492,6 +510,11 @@ function tSpeech(body) {
     });
     G.$('#spZip', body).onclick = function () { var b = this; b.disabled = true; b.textContent = '만드는 중…'; G.SL.exportData().then(function (z) { download(z, '함께자라요-말소리-학습데이터-' + G.today() + '.zip'); b.disabled = false; b.textContent = '📦 학습 데이터 내보내기'; }); };
     G.$('#spZipTxt', body).onclick = function () { G.SL.exportData({ audio: false }).then(function (z) { download(z, '함께자라요-말소리-글-' + G.today() + '.zip'); }); };
+    var kwA = G.$('#kwAI', body); if (kwA) kwA.onclick = function () {
+      var qi = -1; G.coach.QUICK.forEach(function (q, i) { if (/고운 말/.test(q.t)) qi = i; });
+      tab = 'coach'; renderTabs(); render(); setTimeout(function () { var qb = G.$('[data-q="' + qi + '"]'); if (qb) qb.click(); }, 120);
+    };
+    var kwC = G.$('#kwClear', body); if (kwC) kwC.onclick = function () { if (confirm('고운 말 기록을 지울까요?')) { G.kind.clear(); render(); } };
     G.$('#spAI', body).onclick = function () {
       var qi = -1; G.coach.QUICK.forEach(function (q, i) { if (/말소리/.test(q.t)) qi = i; });
       G.SL.refresh().then(function () { tab = 'coach'; renderTabs(); render(); setTimeout(function () { var qb = G.$('[data-q="' + qi + '"]'); if (qb) qb.click(); }, 120); });
