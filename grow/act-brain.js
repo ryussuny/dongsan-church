@@ -994,7 +994,7 @@ G.act({
       var line = OP_NAME[cmd] + '!';
       if (tries >= 1) line = OP_NAME[cmd] + ' 하면, ' + OP_NAME[target] + '! 같이 해 보자. ' + OP_NAME[cmd] + '!';
       ctx.say(line).then(function () { return ctx.wait(pace(1500)); }).then(function () {
-        return ctx.parentJudge(opposite ? ['👍 반대로 했어요', '🔁 다시'] : ['👍 짚었어요', '🔁 다시']);
+        return ctx.parentJudge(G.$('.bw', B), opposite ? ['👍 반대로 했어요', '🔁 다시'] : ['👍 짚었어요', '🔁 다시']);
       }).then(function (ok) {
         if (ok) {
           if (tries === 0) ctx.trial(true);
