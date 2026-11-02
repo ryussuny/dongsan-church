@@ -249,7 +249,7 @@ server.listen(0, async function () {
     /* 계급: 로봇 0대 훈련생, 3대 정예 대원 */
     r.rank0 = window.GR && GR.rank(0).cur.name === '훈련생'; r.rank3 = window.GR && GR.rank(3).cur.name === '정예 대원';
     var p18 = G.rewardPart ? G.rewardPart(18) : null; r.rankUp = !!(p18 && p18.complete && p18.rankUp && p18.rankUp.name === '정예 대원');
-    r.jvHero = /<svg/.test(G.jarvisSVG('full'));
+    r.jvHero = /<svg|<img[^>]+jarvis/.test(G.jarvisSVG('full'));   /* 실사 자비스(그림) 또는 벡터 */
     var p6 = G.rewardPart ? G.rewardPart(6) : null, p7 = G.rewardPart ? G.rewardPart(7) : null;
     r.part6 = p6 && p6.complete && p6.owned === 6; r.part7 = p7 && !p7.complete && p7.owned === 1 && p7.robot.name !== (p6 && p6.robot.name);
     return r;
