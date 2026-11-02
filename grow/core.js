@@ -552,6 +552,7 @@ G.ui.drag = function (el, o) {
     if (el.classList.contains('placed')) return;
     on = true; pid = e.pointerId; try { el.setPointerCapture(pid); } catch (er) {}
     sx = e.clientX; sy = e.clientY; ox = 0; oy = 0;
+    if (getComputedStyle(el).position === 'static') el.style.position = 'relative';   /* 위로 떠오르게 (절대 위치 조각은 그대로) */
     el.classList.add('dragging'); G.sfx.play('tap'); if (o.onStart) o.onStart(el);
   }
   function move(e) {
