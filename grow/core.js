@@ -293,7 +293,7 @@ G.voice = (function () {
   function elText(t) {
     if (G.settings.elName) return t;
     var nick = (G.profile.nick || '').trim(); if (!nick) return t;
-    /* 별명은 보내지 않는다: "아인아, 오늘도" → "오늘도" */
+    /* 별명은 보내지 않는다: "(별명)아, 오늘도" → "오늘도" */
     return t.split(G.callName()).join('').split(nick).join('').replace(/^[\s,!.]+/, '').replace(/\s+([,!.?])/g, '$1').trim() || t;
   }
   function elId(t) { return [G.settings.elVoice, G.settings.elModel, Math.round(G.settings.rate * 100), t].join('|'); }
