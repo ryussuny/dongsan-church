@@ -207,15 +207,18 @@ G.sfx = (function () {
     play: function (name) { if (!G.settings.sound) return; try { (lib[name] || lib.tap)(); } catch (e) {} },
     tone: function (f, dur, type, vol, delay) { if (!G.settings.sound) return; tone(f, delay || 0, dur || 0.3, type, vol); },
     noise: function (dur, vol, hp) { if (!G.settings.sound) return; noise(0, dur, vol, hp); },
-    /* 멜로디: notes = [['C5',0.5], ['E5',0.5], [null,0.25 (쉼)] ...], 박자 bpm. stop() 을 돌려준다 */
+    /* 멜로디: notes = [['C5',0.5], ['E5',0.5], [null,0.25 (쉼)] ...], 박자 bpm. stop() 을 돌려준다.
+       음을 하나씩 예약해서 stop() 하면 바로 멈춘다 (멈춰 놀이에서 중요) */
     melody: function (notes, bpm, loop) {
-      var stopped = false, h = null, beat = 60 / (bpm || 110);
-      function run() {
-        if (stopped) return; var t = 0;
-        notes.forEach(function (n) { if (n[0] && G.settings.sound) tone(N[n[0]] || n[0], t, n[1] * beat * 0.9, 'triangle', 0.18); t += n[1] * beat; });
-        if (loop) h = setTimeout(run, t * 1000);
+      var stopped = false, h = null, beat = 60 / (bpm || 110), i = 0;
+      function step() {
+        if (stopped) return;
+        if (i >= notes.length) { if (!loop) return; i = 0; }
+        var n = notes[i++];
+        if (n[0] && G.settings.sound) tone(N[n[0]] || n[0], 0, n[1] * beat * 0.9, 'triangle', 0.18);
+        h = setTimeout(step, n[1] * beat * 1000);
       }
-      run();
+      step();
       return function () { stopped = true; clearTimeout(h); };
     },
     get ctx() { return ctx(); }

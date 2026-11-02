@@ -1157,7 +1157,7 @@ G.act({
       });
       q('.sc-edit', top).onclick = function () {
         G.sfx.play('tap');
-        G.grownUp().then(function (ok) { if (ok && ctx.alive) { view = 'edit'; G.voice.stop(); render(); } });
+        G.grownUp('오늘 할 일을 바꾸려면 답을 눌러 주세요.').then(function (ok) { if (ok && ctx.alive) { view = 'edit'; G.voice.stop(); render(); } });
       };
       w.appendChild(top);
       if (view === 'ft') boardView(w); else listView(w);
