@@ -226,7 +226,13 @@ G.openParent = function (tab) { if (G.renderParent) { G.showScreen('parent'); G.
 G.renderHome();
 var m = /#\/play\/([\w-]+)/.exec(location.hash);
 if (m && G.acts[m[1]]) { history.replaceState(null, '', location.pathname + location.search); G.start(m[1]); }
-else if (/#parent/.test(location.hash)) { history.replaceState(null, '', location.pathname + location.search); }
+else if (/#parent/.test(location.hash)) openParentLink();
+/* 부모 화면 바로 가기 링크 (grow.html#parent) — 링크로 와도 어른 확인은 거친다 */
+function openParentLink() {
+  history.replaceState(null, '', location.pathname + location.search);
+  setTimeout(function () { G.grownUp('부모 화면 링크로 오셨어요. 답을 눌러 주세요.').then(function (ok) { if (ok) G.openParent(); }); }, 300);
+}
+window.addEventListener('hashchange', function () { if (/#parent/.test(location.hash)) openParentLink(); });
 /* 처음 연 날 — 아이 정보 넣기 안내 */
 if (!G.store.get('welcomed')) {
   G.store.set('welcomed', 1);
