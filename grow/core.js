@@ -624,6 +624,8 @@ G.start = function (id, o) {
     },
     trial: function (ok) { ctx.n++; if (ok) ctx.ok++; },
     progress: function (i, n) {
+      /* 점이 많으면 머리말이 밀리므로 10개 넘으면 '3/12' 글자로 */
+      if (n > 10) { E.dots.innerHTML = '<b class="dots-n">' + Math.min(i + 1, n) + '/' + n + '</b>'; return; }
       E.dots.innerHTML = G.range(n).map(function (k) { return '<i class="' + (k < i ? 'done' : k === i ? 'now' : '') + '"></i>'; }).join('');
     },
     wait: function (ms) { return new Promise(function (r) { var h = setTimeout(function () { if (ctx.alive) r(); }, ms); ctx._clean.push(function () { clearTimeout(h); }); }); },
@@ -644,6 +646,7 @@ G.start = function (id, o) {
     canvas: function (box, co) { var c = G.ui.canvas(box || ctx.body, co); ctx._clean.push(c.destroy); return c; },
     /* 부모가 '말했어요/했어요' 를 눌러 주는 큰 단추 둘 (음성 인식이 없거나 몸으로 하는 놀이) */
     parentJudge: function (box, labels) {
+      if (Array.isArray(box)) { labels = box; box = null; }   /* parentJudge(['👍 …','🔁 …']) 도 된다 */
       labels = labels || ['👍 했어요', '🔁 다시'];
       return new Promise(function (ok) {
         var w = G.el('<div class="judge"><button class="btn big yes">' + labels[0] + '</button><button class="btn big soft no">' + labels[1] + '</button></div>');
@@ -662,6 +665,7 @@ G.start = function (id, o) {
   if (G.session) { var s = G.session; E.sess.hidden = false; E.sess.innerHTML = '<b style="width:' + Math.round(s.i / s.list.length * 100) + '%"></b>'; }
   else E.sess.hidden = true;
   showScreen('stage');
+  var tt = G.$('#toast'); if (tt) tt.classList.remove('on');   /* 알림 띠가 놀이 단추를 가리지 않게 */
   G.wake(true);
   if (!/#\/play\//.test(location.hash)) { history.pushState({ play: id }, '', '#/play/' + id); }
   try { def.run(ctx); } catch (e) { console.error(e); G.toast('놀이를 여는 중 문제가 생겼어요'); }

@@ -142,7 +142,7 @@ else if (/#parent/.test(location.hash)) { history.replaceState(null, '', locatio
 /* 처음 연 날 — 아이 정보 넣기 안내 */
 if (!G.store.get('welcomed')) {
   G.store.set('welcomed', 1);
-  setTimeout(function () { G.toast('👨‍👩‍👦 를 길게 눌러 아이 별명·나이·집중할 영역을 먼저 넣어 주세요', 5200); }, 800);
+  setTimeout(function () { if (!G.cur) G.toast('👨‍👩‍👦 를 길게 눌러 아이 별명·나이·집중할 영역을 먼저 넣어 주세요', 5200); }, 800);
 }
 
 /* 앱처럼 설치·오프라인 */
