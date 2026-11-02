@@ -117,6 +117,13 @@ function pickItem(ctx, o) {
   });
 }
 function clear(ctx) { ctx.body.innerHTML = ''; }
+/* 칸 맞추기 — 칸이 오르면 몇 문제만 다음 단계 문제로: 2칸은 하나, 3칸은 둘.
+   첫 문제는 늘 지금 단계라 쉽게 시작한다. 돌려주는 것: 문제마다 true(다음 단계 문제) / false */
+function stepMix(ctx, N) {
+  var out = G.range(N).map(function () { return false; });
+  G.sample(G.range(N).slice(1), Math.max(0, (ctx.step || 1) - 1)).forEach(function (i) { out[i] = true; });
+  return out;
+}
 
 /* =================================================================
    1. 짝 맞추기 (기억)
@@ -125,11 +132,13 @@ G.act({
   id: 'match', area: 'mind', title: '짝 맞추기', icon: '🃏', order: 10,
   desc: '같은 그림 두 장을 찾아요',
   goal: '시각 기억·작업 기억, 차례로 살펴보는 주의력, 그림 이름(어휘)',
-  how: '카드를 뒤집을 때마다 그림 이름을 아이와 같이 소리 내어 말해 주세요. 못 찾고 헤매면 "아까 강아지가 어디 있었지?" 하고 위치를 함께 떠올려 주세요. 1단계는 그림을 먼저 2초 보여 줍니다.',
+  how: '카드를 뒤집을 때마다 그림 이름을 아이와 같이 소리 내어 말해 주세요. 못 찾고 헤매면 "아까 강아지가 어디 있었지?" 하고 위치를 함께 떠올려 주세요. 1단계는 그림을 먼저 2초쯤 보여 주고, 칸이 오를수록 조금씩 짧아집니다.',
   levels: 3, needs: [], mins: 3,
   run: async function (ctx) {
     var lv = ctx.level;
-    var plan = lv === 1 ? [{ p: 2, pre: 2000 }, { p: 2, pre: 2000 }] : lv === 2 ? [{ p: 3, pre: 1200 }, { p: 3, pre: 0 }] : [{ p: 6, pre: 0 }];
+    /* 칸이 오르면 — 1단계: 미리 보는 시간이 2단계 쪽으로 조금씩 짧아진다. 2·3단계: 마지막 판 짝이 하나씩 는다 (ctx.tune) */
+    var plan = lv === 1 ? [{ p: 2, pre: ctx.tune([2000, 1200, 0]) }, { p: 2, pre: ctx.tune([2000, 0, 0]) }] :
+      lv === 2 ? [{ p: 3, pre: 1200 }, { p: ctx.tune([2, 3, 6]), pre: 0 }] : [{ p: ctx.tune([2, 3, 6]), pre: 0 }];
     var pool = G.shuffle(wordPool(lv === 1 ? 1 : lv === 2 ? 2 : 3));
     for (var b = 0; b < plan.length; b++) {
       ctx.progress(b, plan.length);
@@ -210,14 +219,17 @@ G.act({
   how: '위 그림을 손가락으로 가리키며 "이거랑 똑같은 거 어디 있지?" 하고 물어 주세요. 3단계는 비슷한 그림(같은 무리)이 섞여 나와 더 꼼꼼히 봐야 합니다. 찾으면 그림 이름도 같이 말해 주세요.',
   levels: 3, needs: [], mins: 2,
   run: async function (ctx) {
-    var lv = ctx.level, N = 6, k = lv === 1 ? 1 : lv === 2 ? 2 : 3;
+    var lv = ctx.level, N = 6;
     var pool = wordPool(lv === 1 ? 2 : 3);
     var targets = G.sample(pool, N);
+    /* 칸이 오르면 한두 문제는 다음 단계 문제로 — 3단계는 그 문제에 비슷한 그림이 하나 더 */
+    var mix = stepMix(ctx, N);
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
+      var tl = mix[i] ? Math.min(3, lv + 1) : lv, k = tl === 1 ? 1 : tl === 2 ? 2 : lv === 3 && mix[i] ? 4 : 3;
       var t = targets[i], others;
-      if (lv === 1) others = G.sample(pool.filter(function (w) { return w.c !== t.c; }), k);
-      else if (lv === 3) {
+      if (tl === 1) others = G.sample(pool.filter(function (w) { return w.c !== t.c; }), k);
+      else if (tl === 3) {
         var same = pool.filter(function (w) { return w.c === t.c && w !== t; });
         others = G.sample(same, Math.min(k, same.length));
         if (others.length < k) others = others.concat(G.sample(pool.filter(function (w) { return w !== t && others.indexOf(w) < 0; }), k - others.length));
@@ -250,6 +262,15 @@ G.act({
     var lv = ctx.level;
     var pool = D.SEQUENCES.filter(function (s) { return (s.lv || 1) <= lv; });
     var pick = G.sample(pool, 3);
+    /* 칸이 오르면 한두 개는 다음 단계 묶음에서 뽑는다 (3단계는 가장 어려운 묶음에서). 첫 번째는 늘 지금 단계 */
+    stepMix(ctx, pick.length).forEach(function (m, j) {
+      if (!m) return;
+      var more = D.SEQUENCES.filter(function (s) {
+        var sl = s.lv || 1;
+        return (lv < 3 ? sl <= lv + 1 : sl >= 3) && (pick.indexOf(s) < 0 || s === pick[j]);
+      });
+      if (more.length) pick[j] = G.pick(more);
+    });
     for (var i = 0; i < pick.length; i++) {
       ctx.progress(i, pick.length);
       await oneSeq(ctx, pick[i], i === 0);
@@ -320,13 +341,15 @@ G.act({
   how: '아이 손을 잡고 하나씩 짚으며 같이 "하나, 둘, 셋" 소리 내어 세어 주세요. 손으로 누르기 어려우면 "자비스가 세어 줄게" 단추를 눌러 보여 주세요. 3단계에는 "어느 쪽이 더 많아?" 문제가 섞입니다.',
   levels: 3, needs: [], mins: 3,
   run: async function (ctx) {
-    var lv = ctx.level, max = lv === 1 ? 3 : lv === 2 ? 5 : 10, N = 5;
+    /* 칸이 오르면 세는 수의 끝이 다음 단계 쪽으로 커진다 (1단계 3→4→4, 2단계 5→7→8, 10 까지).
+       3단계는 끝이 10 그대로, 대신 아주 작은 수가 덜 나온다 (가장 작은 수 1→3→4) */
+    var lv = ctx.level, max = Math.min(10, ctx.tune([3, 5, 10])), lo = lv === 3 ? [1, 3, 4][G.clamp(ctx.step || 1, 1, 3) - 1] : 1, N = 5;
     var kinds = lv === 3 ? G.shuffle(['n', 'n', 'n', 'cmp', 'cmp']) : ['n', 'n', 'n', 'n', 'n'];
     var lastN = 0;
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
       if (kinds[i] === 'cmp') { await compareItem(ctx, max); continue; }
-      var n; do { n = 1 + Math.floor(Math.random() * max); } while (n === lastN && max > 1);
+      var n; do { n = lo + Math.floor(Math.random() * (max - lo + 1)); } while (n === lastN && max > lo);
       lastN = n;
       await countItem(ctx, n, max, i === 0);
     }
@@ -365,7 +388,7 @@ async function countItem(ctx, n, max, first) {
   });
   ctx.say('모두 몇 개야?');
   var opts = [n], tries = 0;
-  var want = max <= 3 ? 2 : 3;
+  var want = ctx.level === 1 ? 2 : 3;   /* 고를 수는 단계마다 그대로 (1단계 둘, 2·3단계 셋) — 칸은 세는 수만 바꾼다 */
   while (opts.length < want && tries++ < 50) {
     var v = n + (Math.random() < 0.5 ? -1 : 1) * (1 + Math.floor(Math.random() * 2));
     if (v >= 1 && v <= Math.max(max, 3) && opts.indexOf(v) < 0) opts.push(v);
@@ -410,13 +433,16 @@ G.act({
   levels: 3, needs: [], mins: 2,
   run: async function (ctx) {
     var lv = ctx.level, N = 6, cols = colorsUsed(), shapes = D.SHAPES;
+    /* 칸이 오르면 한두 문제는 다음 단계 문제로 — 3단계는 그 문제에 같은 색 다른 모양이 하나 더 */
+    var mix = stepMix(ctx, N);
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
       clear(ctx);
-      var kind = lv === 1 ? 'shape' : lv === 2 ? (i % 2 ? 'color' : 'shape') : 'both';
+      var tl = mix[i] ? Math.min(3, lv + 1) : lv;
+      var kind = tl === 1 ? 'shape' : tl === 2 ? (i % 2 ? 'color' : 'shape') : 'both';
       var items, target, name;
       if (kind === 'shape') {
-        var col = G.pick(cols), ss = G.sample(shapes, lv === 1 ? 2 : 3);
+        var col = G.pick(cols), ss = G.sample(shapes, tl === 1 ? 2 : 3);
         items = ss.map(function (s) { return { s: s, c: col }; });
         target = items[0]; name = target.s.name;
       } else if (kind === 'color') {
@@ -427,6 +453,7 @@ G.act({
         var S = G.sample(shapes, 3), C = G.sample(cols, 3);
         target = { s: S[0], c: C[0] };
         items = [target, { s: S[0], c: C[1] }, { s: S[1], c: C[0] }, { s: S[2], c: C[2] }];
+        if (lv === 3 && mix[i]) items.push({ s: S[2], c: C[0] });
         name = target.c.adj + ' ' + target.s.name;
       }
       ctx.body.appendChild(G.el('<div class="mind-q"><div class="mind-num">' + (kind === 'color' ? '🎨' : kind === 'shape' ? '🔷' : '🔍') + '</div></div>'));
@@ -463,10 +490,12 @@ G.act({
   levels: 3, needs: [], mins: 2,
   run: async function (ctx) {
     var lv = ctx.level, N = 5;
+    /* 칸이 오르면 한두 문제는 다음 단계 문제로 — 3단계는 그 문제에 같은 무리 그림이 하나 더 */
+    var mix = stepMix(ctx, N);
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
       clear(ctx);
-      var set = buildOdd(lv);
+      var set = buildOdd(mix[i] ? Math.min(3, lv + 1) : lv, lv === 3 && mix[i]);
       ctx.body.appendChild(G.el('<div class="mind-q"><div class="mind-num">🤔</div></div>'));
       ctx.say(i === 0 ? '하나만 달라! 다른 하나는 뭘까?' : '다른 하나는 뭘까?');
       var why = G.josa(set.odd.w, '은', '는') + ' ' + CAT_NOT[set.base] + '. ' + CAT_IS[set.odd.c] + '!';
@@ -483,8 +512,8 @@ G.act({
   }
 });
 
-function buildOdd(lv) {
-  var maxLv = lv === 1 ? 2 : 3, base, oddCat, nBase = lv === 3 ? 3 : 2;
+function buildOdd(lv, more) {
+  var maxLv = lv === 1 ? 2 : 3, base, oddCat, nBase = (lv === 3 ? 3 : 2) + (more ? 1 : 0);
   for (var tries = 0; tries < 30; tries++) {
     if (lv === 1) { base = G.pick(Object.keys(FAR)); oddCat = G.pick(FAR[base]); }
     else if (lv === 3) { base = G.pick(Object.keys(NEAR)); oddCat = G.pick(NEAR[base]); }
@@ -515,17 +544,23 @@ G.act({
     var lv = ctx.level, N = 6;
     var kinds = lv === 1 ? ['bs', 'bs', 'bs', 'bs', 'bs', 'bs'] : lv === 2 ? G.shuffle(['bs', 'bs', 'bs', 'three', 'three', 'three'])
       : G.shuffle(['bs', 'three', 'long', 'long', 'many', 'many']);
+    /* 칸이 오르면 한두 문제는 다음 단계 문제로 (1단계 → 셋 중에서, 2단계 → 길다·많다).
+       3단계는 길이·양 문제 한두 개가 조금 더 비슷해진다 */
+    var close = {};
+    if (lv < 3) stepMix(ctx, N).forEach(function (m, j) { if (m) kinds[j] = lv === 1 ? 'three' : G.pick(['long', 'many']); });
+    else G.sample(G.range(N).filter(function (j) { return kinds[j] === 'long' || kinds[j] === 'many'; }), Math.max(0, (ctx.step || 1) - 1)).forEach(function (j) { close[j] = true; });
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
       clear(ctx);
-      await bigItem(ctx, kinds[i]);
+      await bigItem(ctx, kinds[i], !!close[i]);
     }
     ctx.progress(N, N);
     ctx.finish();
   }
 });
 
-function bigItem(ctx, kind) {
+/* close: 길이·양이 조금 더 비슷하게 (기차 칸 차이 2, 과자 차이 3) */
+function bigItem(ctx, kind, close) {
   var e = G.pick(BIG_THINGS), w = countWord(e), wantBig = Math.random() < 0.5, items, target, phrase, answer, cols = 2, render;
   if (kind === 'bs' || kind === 'three') {
     var sizes = kind === 'bs' ? ['big', 'small'] : ['big', 'mid', 'small'];
@@ -536,14 +571,14 @@ function bigItem(ctx, kind) {
     answer = '여기! 이게 ' + phrase + G.josa(w, '이야', '야').slice(w.length) + '.';
     render = function (it) { return '<span class="ce" style="font-size:' + SZ[it.s] + '">' + e + '</span>'; };
   } else if (kind === 'long') {
-    var long = 4 + Math.floor(Math.random() * 2), short = 1 + Math.floor(Math.random() * 2);
+    var long = 4 + Math.floor(Math.random() * 2), short = close ? long - 2 : 1 + Math.floor(Math.random() * 2);
     items = [{ n: long, s: 'big' }, { n: short, s: 'small' }];
     target = wantBig ? items[0] : items[1];
     phrase = wantBig ? '긴 기차' : '짧은 기차'; cols = 1;
     answer = '여기! 이게 ' + phrase + '야.';
     render = function (it) { return '<span class="train">🚂' + '🚃'.repeat(it.n) + '</span>'; };
   } else {
-    var food = G.pick(['🍪', '🍓', '🍬', '🍇', '🧁']), many = 6 + Math.floor(Math.random() * 3), few = 1 + Math.floor(Math.random() * 2);
+    var food = G.pick(['🍪', '🍓', '🍬', '🍇', '🧁']), many = 6 + Math.floor(Math.random() * 3), few = close ? many - 3 : 1 + Math.floor(Math.random() * 2);
     items = [{ n: many, s: 'big' }, { n: few, s: 'small' }];
     target = wantBig ? items[0] : items[1];
     phrase = wantBig ? '많은 쪽' : '적은 쪽'; cols = 2;

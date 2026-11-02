@@ -89,6 +89,7 @@ G.noteSaid = function (text, expected) {
   var said = G.store.get('saidWords', {}), today = G.today(), hit = [];
   String(text).split(/\s+/).forEach(function (tok) {
     tok = tok.replace(/[^가-힣]/g, ''); if (!tok || tok.length > 8) return;
+    if (G.kind && G.kind.check(tok).rough.some(function (r) { return r.swear; })) return;   /* 욕설은 낱말 기록에 남기지 않는다 */
     /* 사전 낱말과 비슷하면 그 낱말로 */
     var best = null, bs = 0;
     Object.keys(VOCAB).forEach(function (k) { var s = G.similar(tok, k); if (s > bs && Math.abs(k.length - tok.length) <= 1) { bs = s; best = k; } });
@@ -107,7 +108,7 @@ G.noteSaid = function (text, expected) {
 var GO_WORDS = [
   [/그림|그리|색칠/, 'draw'], [/풍선|터뜨/, 'pop'], [/숨|후~|촛불/, 'blow'], [/이야기|동화|책/, 'stories'],
   [/숫자|세기/, 'count'], [/춤|노래|멈춰/, 'freeze'], [/짝|카드|기억/, 'match'], [/동물 소리|소리/, 'sounds'],
-  [/공|굴려/, 'tilt'], [/물방울|비눗/, 'bubbles'], [/거울|표정/, 'facemirror'], [/선|길/, 'trace']
+  [/공|굴려/, 'tilt'], [/물방울|비눗/, 'bubbles'], [/거울|표정/, 'facemirror'], [/선|길/, 'trace'], [/고운 ?말|예쁜 ?말/, 'kindword']
 ];
 G.findGo = function (text) {
   if (!text) return null;
@@ -204,6 +205,14 @@ var CHAT_SYS = [
   '- 누가 때렸다·아프게 했다·만졌다·무섭게 했다는 말이 나오면: "말해 줘서 고마워. 네 잘못이 아니야. 믿을 수 있는 어른한테 꼭 말하자." 처럼 짧게 말하고, 자세히 캐묻지 마.',
   '- 비밀로 하자고 절대 말하지 마. 어른한테 숨기자는 말도 하지 마.',
   '- 너는 사람이 아니라 로봇 친구야. 물어보면 솔직하게 "나는 로봇 자비스야"라고 말해.',
+  '',
+  '표준말과 고운 말 (아이가 바르고 예쁜 말을 배우도록):',
+  '- 너는 언제나 표준말과 고운 말로만 말해. 형 말투일 때도 유행어·줄임말·거친 말(대박, 헐, 짱, 개-, 존-, 킹받아, 쩐다, 꿀잼 등)은 쓰지 마. "정말 멋지다", "깜짝이야", "최고야"처럼 말해.',
+  '- 고마워·미안해·괜찮아?·같이 하자·도와줄까? 같은 고운 말을 자연스럽게 자주 들려줘. 어른 이야기가 나오면 높임말 본보기도 보여 줘. ("할머니께는 \'감사합니다\'라고 해 볼까?")',
+  '- 아이가 유행어·줄임말·아기 말을 쓰면 "틀렸어" 하지 말고, 같은 뜻의 표준말 문장으로 한 번 자연스럽게 다시 들려줘(고쳐 말해 주기). 따라 하라고 시키지 마. (아이 "대박!" → "그렇지, 정말 멋지다!")',
+  '- 거친 말이 들리면(음성 인식이 잘못 들었을 수도 있어) 꾸짖지 말고 마음을 먼저 알아준 뒤 대신 쓸 고운 말을 하나 알려 줘. 거친 말은 절대 따라 말하지 마. (→ "속상했구나. \'나 속상해\'라고 말해 볼까?")',
+  '- 아이가 고운 말을 쓰면 무엇이 좋았는지 콕 집어 칭찬해. ("\'고마워\'라고 해 줘서 자비스 마음이 따뜻해졌어!")',
+  '- 입력에 [참고] 줄이 있으면 그 귀띔대로 해 줘.',
   '- 사고 싶게 만드는 말, 다른 앱·사이트 이야기, 무서운 캐릭터 이야기는 하지 마.',
   '',
   '출력: JSON 하나.',
@@ -226,6 +235,8 @@ var BAD = /죽어|죽여|죽을|자살|살인|섹스|성기|야동|바보|멍청
 function safeReply(r) {
   if (!r || typeof r.say !== 'string') return null;
   var say = r.say.replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim();
+  /* 자비스는 표준말로만 — 유행어가 섞여 나오면 표준말로 바꾼다 */
+  if (G.kind) { say = G.kind.polish(say).trim(); (r.choices || []).forEach(function (c) { if (c && c.w) c.w = G.kind.polish(c.w).trim(); }); if (r.expect) r.expect = G.kind.polish(r.expect).trim(); }
   if (!say || BAD.test(say) || (r.choices || []).some(function (c) { return BAD.test((c && c.w) || ''); })) return null;
   if (say.length > 140) say = say.slice(0, 140).replace(/[^.!?。]*$/, '') || say.slice(0, 140);
   return { say: say, choices: (r.choices || []).slice(0, 3).filter(function (c) { return c && c.e && c.w && c.w.length <= 12; }), expect: String(r.expect || '').slice(0, 12), go: r.go || '' };
@@ -302,12 +313,21 @@ G.act({
     function respond(text, how) {
       if (busy || !ctx.alive) return;
       busy = true; G.stopListen();
-      if (text) { replies++; bubble(text, 'kid'); if (how === 'voice') { spoken++; G.noteSaid(text, expectW); } ctx.trial(true); }
+      /* 고운 말·표준말: 아이 말을 살펴본다 (들은 말은 G.listen 에서 이미 셌다) */
+      var kc = text && how === 'voice' && G.kind ? G.kind.check(text) : null;
+      if (text) { replies++; bubble(kc && kc.rough.some(function (x) { return x.swear; }) ? G.kind.mask(text) : text, 'kid'); if (how === 'voice') { spoken++; G.noteSaid(text, expectW); } ctx.trial(true); }
       else if (how !== 'start') ctx.trial(false);
       chBox.innerHTML = '';
-      if (!useAI) { busy = false; jarvis(engine.next(text, how)); return; }
+      if (!useAI) {
+        busy = false;
+        var nx = engine.next(text, how), kr = G.kind && G.kind.reply(kc);
+        /* 기기 엔진: 거친 말이면 마음 읽기 + 대신 쓸 말, 유행어면 표준말로 고쳐 들려주기, 고운 말이면 칭찬 — 그다음 원래 대답 */
+        if (kr && !nx.go) nx = kr.expect ? { say: kr.say, choices: [], expect: kr.expect } : { say: kr.say + ' ' + nx.say, choices: nx.choices, expect: nx.expect };
+        jarvis(nx); return;
+      }
       var u = how === 'start' ? '[시작] 자비스가 방금 "안녕! 우리 이야기하자!" 하고 인사했어. 이제 아이가 좋아할 만한 첫 질문을 고를 수 있게 해 줘.' :
-        text ? (how === 'tap' ? '[아이가 그림을 눌렀어요] ' + text : '[아이] ' + text) : '[대답 없음]';
+        text ? (how === 'tap' ? '[아이가 그림을 눌렀어요] ' + text : '[아이] ' + (G.kind ? G.kind.mask(text) : text)) : '[대답 없음]';
+      var kh = G.kind && G.kind.hint(kc); if (kh) u += '\n' + kh;
       msgs.push({ role: 'user', content: (msgs.length ? '' : childContext(ctx.level) + '\n\n') + u });
       face.classList.add('think');
       G.ai.call({ system: CHAT_SYS, messages: msgs, maxTokens: 2000, effort: 'low', schema: CHAT_SCHEMA }).then(function (res) {
@@ -368,7 +388,7 @@ G.coach = {
     var byArea = {}, byAct = {};
     L.forEach(function (l) {
       var a = byArea[l.area] = byArea[l.area] || { n: 0, ms: 0 }; a.n++; a.ms += l.ms || 0;
-      var b = byAct[l.id] = byAct[l.id] || { n: 0, tr: 0, ok: 0, lv: [] }; b.n++; b.tr += l.n || 0; b.ok += l.ok || 0; b.lv.push(l.lv || 1);
+      var b = byAct[l.id] = byAct[l.id] || { n: 0, tr: 0, ok: 0, lv: [] }; b.n++; b.tr += l.n || 0; b.ok += l.ok || 0; b.lv.push(G.stageLabel(l.lv, l.st));
     });
     var lines = [];
     var age = G.ageMonths();
@@ -381,13 +401,14 @@ G.coach = {
     Object.keys(byArea).forEach(function (k) { lines.push('- ' + ((G.AREAS[k] || {}).name || k) + ': ' + byArea[k].n + '번, ' + Math.round(byArea[k].ms / 60000) + '분'); });
     Object.keys(byAct).forEach(function (k) {
       var b = byAct[k], d = G.acts[k];
-      lines.push('  · ' + (d ? d.title : k) + ': ' + b.n + '번' + (b.tr ? ', 정답·반응 ' + Math.round(b.ok / b.tr * 100) + '%' : '') + ', 단계 ' + b.lv.join('→'));
+      lines.push('  · ' + (d ? d.title : k) + ': ' + b.n + '번' + (b.tr ? ', 정답·반응 ' + Math.round(b.ok / b.tr * 100) + '%' : '') + ', 단계(단계-칸) ' + b.lv.filter(function (x, i, a) { return i === 0 || x !== a[i - 1]; }).join('→'));
     });
     var moods = L.filter(function (l) { return l.id === 'checkin' && l.x && l.x.emo; }).map(function (l) { var e = (D.EMOTIONS || []).filter(function (m) { return m.id === l.x.emo; })[0]; return e ? e.name : l.x.emo; });
     if (moods.length) lines.push('[기분 체크] ' + moods.join(', '));
     var said = G.store.get('saidWords', {}), sk = Object.keys(said).sort(function (a, b) { return said[b].n - said[a].n; }).slice(0, 40);
     if (sk.length) lines.push('[음성 인식이 들은 아이 말 (부정확할 수 있음)] ' + sk.map(function (k) { return k + '(' + said[k].n + ')'; }).join(', '));
     if (G.SL && G.SL.summaryText) lines.push(G.SL.summaryText);
+    if (G.kind && G.kind.summaryText) { var kt = G.kind.summaryText(); if (kt) lines.push(kt); }
     var diary = G.store.get('diary', []).filter(function (n) { return n.t >= since; }).slice(-12);
     if (diary.length) { lines.push('[부모 메모]'); diary.forEach(function (n) { lines.push('- ' + G.today(new Date(n.t)) + ' ' + (n.tag ? '[' + n.tag + '] ' : '') + mask(n.text)); }); }
     lines.push('[놀이 목록] ' + Object.keys(G.acts).filter(function (k) { return !G.acts[k].tool; }).map(function (k) { var d = G.acts[k]; return d.title + '(' + (G.AREAS[d.area] || {}).name + ': ' + (d.goal || '') + ')'; }).join(' / '));
@@ -405,6 +426,7 @@ G.coach = {
     { e: '📅', t: '다음 주 집 놀이 계획', q: '기록을 보고 다음 한 주(월~일) 집 놀이 계획을 세워 주세요. 하루 15~20분, 이 앱 놀이와 앱 밖 놀이(집에 있는 물건)를 섞고, 요일마다 무엇을 왜 하는지 표처럼 정리해 주세요.' },
     { e: '🗣️', t: '언어치료 선생님께 드릴 정리', q: '다음 언어치료 시간에 선생님께 보여 드릴 요약을 써 주세요. 요즘 집에서 본 말·소통 모습, 잘 늘고 있는 점, 궁금한 점(질문 3~5개)을 정리해 주세요.' },
     { e: '🎙️', t: '말소리 분석 (언어치료 관점)', q: '말소리 기록(음성 인식 기준 추정)을 언어치료 관점에서 풀어 주세요. 1) 표현 어휘·문장 길이가 어떻게 자라고 있는지 2) 자주 보이는 말소리 패턴이 이 나이에 흔한 것인지, 치료사와 상의할 것인지 3) 어려운 낱말을 집에서 연습하는 놀이 3가지 4) 언어치료 선생님께 여쭤볼 질문. 음성 인식은 실제 낱말 쪽으로 고쳐 듣는 경향이 있으니 단정하지 말고, 진단처럼 쓰지 마세요.' },
+    { e: '🌷', t: '고운 말·표준말 습관', q: '[고운 말·표준말] 기록을 보고 아이가 표준말과 고운 말을 더 쓰도록 집에서 할 수 있는 것을 알려 주세요. 1) 요즘 잘 쓰는 고운 말(칭찬할 점) 2) 자주 나오는 유행어·거친 말과 그 말 뒤에 있을 마음 3) 부모가 고쳐 말해 주는 법(recast)과 대신 쓸 말 예시 4) 이번 주 우리 집 고운 말 약속 하나. 꾸짖는 방법은 권하지 말아 주세요.' },
     { e: '✋', t: '작업치료를 집에서 잇기', q: '작업치료(소근육·감각·일상생활)에서 배운 것을 집에서 이어 갈 수 있는 놀이를 일과(밥·옷 입기·목욕·놀이) 속에 넣어 알려 주세요.' },
     { e: '🎨', t: '그림·기분으로 마음 읽기', q: '기분 체크와 그리기 기록을 보고 아이 마음을 어떻게 읽고 반응해 주면 좋을지, 미술치료 관점에서 집에서 할 수 있는 표현 놀이를 알려 주세요.' },
     { e: '😣', t: '떼쓰기·감각 예민할 때', q: '아이가 떼를 쓰거나 소리·옷·음식에 예민하게 반응할 때 그 자리에서 할 수 있는 것과, 미리 막을 수 있는 것을 단계별로 알려 주세요.' },

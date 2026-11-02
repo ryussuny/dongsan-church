@@ -216,6 +216,9 @@ G.act({
     });
     var ROUNDS = 6, round = 0, span = lv + 1, streak = 0, best = 0, seq = [], pos = 0, accepting = false, misses = 0, idleH = null;
     var LIT = pace(560), GAP = pace(240);
+    /* 칸이 오르면 마지막 한 판(2칸)·두 판(3칸)은 하나 더 길게 — 다음 단계 길이를 살짝 맛보기 */
+    var LONG_FROM = ROUNDS - ((ctx.step || 1) - 1);
+    function lenFor(rd) { return Math.min(7, span + (rd >= LONG_FROM ? 1 : 0)); }
 
     function light(i, ms) {
       var b = pads[i]; b.classList.add('lit');
@@ -303,7 +306,7 @@ G.act({
         ctx.finish({ msg: '동물 친구 노래를 ' + (best || seq.length) + '개까지 기억했어! 기억 대장이다!' });
         return;
       }
-      misses = 0; seq = makeSeq(span);
+      misses = 0; seq = makeSeq(lenFor(round));
       turn.textContent = '';
       ctx.wait(pace(500)).then(play);
     }
@@ -330,7 +333,11 @@ G.act({
     B.innerHTML = '<div class="bw"><div class="b-rule"></div><div class="dn-card blank"></div>' +
       '<div class="dn-btns"><button class="dn-btn sun" data-k="sun"><span>☀️</span><small>해</small></button><button class="dn-btn moon" data-k="moon"><span>🌙</span><small>달</small></button></div></div>';
     var wrap = G.$('.bw', B), rule = G.$('.b-rule', B), card = G.$('.dn-card', B), btns = G.$$('.dn-btn', B);
-    var N = 10, SWITCH_AT = lv >= 3 ? 4 : -1, opposite = lv === 2, i = 0, cur = null, open = false, timer = null, run3 = 0, deck = [];
+    var st = ctx.step || 1;
+    /* 칸이 오르면 — 2단계: '똑같이'를 몇 장 하다가 반대로 바뀐다(3단계 맛보기). 2칸은 1장, 3칸은 3장 뒤에 (3단계는 4장)
+       3단계: 바뀐 뒤 반대로 하는 카드가 한 장씩 더 */
+    var N = 10 + (lv >= 3 ? st - 1 : 0), SWITCH_AT = lv >= 3 ? 4 : lv === 2 && st > 1 ? ctx.tune([0, 0, 4]) : -1;
+    var opposite = lv === 2 && SWITCH_AT < 0, i = 0, cur = null, open = false, timer = null, run3 = 0, deck = [];
     for (var k = 0; k < N; k++) { var x; do { x = Math.random() < 0.5 ? 'sun' : 'moon'; } while (k >= 2 && deck[k - 1] === x && deck[k - 2] === x); deck.push(x); }
 
     function setRule() {
@@ -439,7 +446,7 @@ G.act({
   how: '규칙이 바뀌는 순간이 가장 어려워요. 바뀔 때 부모가 "이제 모양 게임!" 하고 한 번 더 말해 주고, 처음 몇 장은 천천히 해도 돼요. 화면 밖에서는 빨래 개기·장난감 정리를 "이번엔 색깔끼리, 이번엔 종류끼리"로 바꿔 가며 해 보세요.',
   basis: 'Dimensional Change Card Sort — DCCS (Zelazo, 2006), 테두리판 포함',
   run: function (ctx) {
-    var B = ctx.body, lv = ctx.level;
+    var B = ctx.body, lv = ctx.level, st = ctx.step || 1;
     var S = G.pick(DC_SETS), C = G.pick(DC_COLS);
     var T = [{ shape: S.a, col: 0 }, { shape: S.b, col: 1 }];        // 두 집 (기준 카드)
     var CARDS = [{ shape: S.a, col: 1 }, { shape: S.b, col: 0 }];     // 헷갈리게 섞인 카드
@@ -451,10 +458,11 @@ G.act({
     function shufflePart(from) { var part = G.shuffle(plan.slice(from)); plan = plan.slice(0, from).concat(part); }
     add('color', lv === 1 ? 6 : lv === 2 ? 6 : 4); shufflePart(0);
     var switchAt = -1, mixedAt = -1;
-    if (lv >= 2) { switchAt = plan.length; add('shape', lv === 2 ? 6 : 4); shufflePart(switchAt); }
+    /* 칸이 오르면 바뀐 규칙으로 하는 카드가 한 장씩 더 (2단계: 모양 카드 6→7→8, 3단계: 반짝 섞인 카드 8→9→10) */
+    if (lv >= 2) { switchAt = plan.length; add('shape', lv === 2 ? 6 + st - 1 : 4); shufflePart(switchAt); }
     if (lv >= 3) {
       mixedAt = plan.length;
-      for (var k = 0; k < 8; k++) { var gold = k % 2 === 0; plan.push({ rule: gold ? 'shape' : 'color', card: CARDS[(k >> 1) % 2], gold: gold }); }
+      for (var k = 0; k < 8 + st - 1; k++) { var gold = k % 2 === 0; plan.push({ rule: gold ? 'shape' : 'color', card: CARDS[(k >> 1) % 2], gold: gold }); }
       shufflePart(mixedAt);
     }
 
@@ -559,7 +567,8 @@ G.act({
   basis: 'Go/No-Go 과제 — 반응 억제 측정(유아용 동물 버전)',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
-    var EXPO = pace([2200, 1600, 1150][lv - 1]), ISI = pace([850, 700, 600][lv - 1]), COUNT = [14, 18, 22][lv - 1];
+    /* 칸이 오르면 보이는 시간·사이 시간·마릿수가 다음 단계 쪽으로 1/3씩 (ctx.tune) */
+    var EXPO = pace(ctx.tune([2200, 1600, 1150])), ISI = pace(ctx.tune([850, 700, 600])), COUNT = ctx.tune([14, 18, 22]);
     var NOGO = lv >= 3 ? ['🦈', '🐡'] : ['🦈'];
     B.innerHTML = '<div class="bw"><div class="gn-top"><div class="gn-net"><b>🪣</b><span>0</span><em></em></div></div><div class="gn-time"><b></b></div><div class="gn-sea"></div></div>';
     var wrap = G.$('.bw', B), sea = G.$('.gn-sea', B), netN = G.$('.gn-net span', B), netE = G.$('.gn-net em', B), tbar = G.$('.gn-time b', B);
@@ -646,7 +655,8 @@ G.act({
   basis: '시각 탐색·지우기(cancellation) 과제 — 선택적 주의 측정',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
-    var BOARDS = 3, TARGETS = [3, 5, 8][lv - 1], TOTAL = [12, 20, 30][lv - 1];
+    /* 칸이 오르면 찾을 친구·전체 그림 수가 다음 단계 쪽으로 조금씩 (ctx.tune) */
+    var BOARDS = 3, TARGETS = ctx.tune([3, 5, 8]), TOTAL = ctx.tune([12, 20, 30]);
     B.innerHTML = '<div class="bw"><div class="fa-head"><span class="ft"></span><span class="fc"></span></div><div class="fa-field"></div></div>';
     var field = G.$('.fa-field', B), ft = G.$('.ft', B), fc = G.$('.fc', B);
     var sets = G.sample(FA_SETS, BOARDS), bi = 0, found = 0, cur = null, items = [], idleH = null, falseTaps = 0;
@@ -780,6 +790,9 @@ G.act({
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
     var COUNT = 4, mi = 0, m = null, pos = null, moves = 0, back = 0, bad = 0, visited = {}, locked = true, log = [];
+    /* 판마다 미로 크기 (0 = ㄱ자 길). 칸이 오르면 쉬운 판 하나가 한 크기 큰 미로로 바뀐다 — 뒤쪽 판부터 */
+    var SIZES = lv === 1 ? [[0, 0, 3, 3], [0, 3, 3, 3], [0, 3, 3, 4]] : lv === 2 ? [[4, 4, 4, 4], [4, 4, 4, 5], [4, 4, 5, 5]] : [[5, 5, 5, 5], [5, 5, 5, 6], [5, 5, 6, 6]];
+    var plan = SIZES[G.clamp(ctx.step || 1, 1, 3) - 1];
     B.innerHTML = '<div class="bw"><div class="mz-look"></div><div class="mz-board locked"></div></div>';
     var board = G.$('.mz-board', B), look = G.$('.mz-look', B), cells = [];
     function k(p) { return p[0] + ',' + p[1]; }
@@ -824,7 +837,8 @@ G.act({
       locked = true; board.classList.add('locked');
       var opt = mzPath(m, m.start).length;
       log.push({ n: m.N, mv: moves, opt: opt, back: back });
-      var ok = m.N === 3 ? true : back <= (lv >= 3 ? 4 : 2);
+      /* 되돌아온 칸은 미로가 클수록 조금 더 너그럽게 (4칸 미로 2, 5칸 4, 6칸 5) */
+      var ok = m.N === 3 ? true : back <= (m.N >= 6 ? 5 : m.N >= 5 ? 4 : 2);
       ctx.trial(ok);
       ctx.extra.mazes = log;
       G.sfx.play('great'); var c = centerOf(cellAt(m.goal)); G.fx.burst(c[0], c[1], ['🥕', '⭐', '✨']);
@@ -835,7 +849,7 @@ G.act({
       });
     }
     function start() {
-      m = lv === 1 ? (mi < 2 ? mazeL1() : mazeDFS(3)) : lv === 2 ? mazeDFS(4) : mazeDFS(5);
+      m = plan[mi] ? mazeDFS(plan[mi]) : mazeL1();
       pos = m.start.slice(); moves = 0; back = 0; bad = 0; visited = {}; visited[k(pos)] = 1;
       render();
       if (lv >= 3) {
@@ -884,7 +898,8 @@ G.act({
   basis: '만족 지연(마시멜로) 과제 변형 (Mischel) — 기다리기 전략 모델링 포함',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
-    var BASE = [5, 10, 20][lv - 1], ROUNDS = 3, r = 0, total = 0, waitedN = 0, stopMel = null;
+    /* 칸이 오르면 기다리는 시간이 다음 단계 쪽으로 조금씩 (초, ctx.tune) */
+    var BASE = ctx.tune([5, 10, 20]), ROUNDS = 3, r = 0, total = 0, waitedN = 0, stopMel = null;
     B.innerHTML = '<div class="bw"><div class="wt-plate"><small>내 접시</small><span class="wt-got"></span></div>' +
       '<div class="wt-main"><div class="wt-cookie" role="button" aria-label="쿠키">🍪<span class="two">×2</span></div>' +
       '<div class="wt-jarbox"><span class="wt-bell">🔔</span><div class="wt-jar"><div class="wt-fill"></div><div class="wt-stars"></div></div></div></div>' +
@@ -981,14 +996,17 @@ G.act({
   how: '부모가 옆에서 같이 일어나 함께 해 주세요. 아이가 헷갈리면 천천히 말하고, 맞으면 크게 손뼉! 화면 밖에서는 차 안·목욕 시간에 "머리-발" 반대 놀이, "가라 하면 서기, 서라 하면 가기" 놀이로 짧게 이어 가세요.',
   basis: '머리-발가락-무릎-어깨 과제 HTKS (Ponitz 외, 2008)',
   run: function (ctx) {
-    var B = ctx.body, lv = ctx.level;
-    var N = 6, parts = lv === 1 ? ['head', 'shoulder', 'knee', 'foot'] : lv === 2 ? ['head', 'foot'] : ['head', 'foot', 'shoulder', 'knee'];
-    var opposite = lv >= 2;
+    var B = ctx.body, lv = ctx.level, st = ctx.step || 1;
+    /* 칸이 오르면 — 2단계: 어깨·무릎 명령이 한 번(2칸)·두 번(3칸) 섞인다(3단계 맛보기). 3단계: 명령이 하나씩 더 */
+    var N = 6 + (lv >= 3 ? st - 1 : 0), parts = lv === 1 ? ['head', 'shoulder', 'knee', 'foot'] : lv === 2 ? ['head', 'foot'] : ['head', 'foot', 'shoulder', 'knee'];
+    var opposite = lv >= 2, extra = lv === 2 ? st - 1 : 0;
     B.innerHTML = '<div class="bw"><div class="b-rule"></div><div class="op-wrap">' + opFigure() + '<div class="op-say"></div></div></div>';
     var rule = G.$('.b-rule', B), say = G.$('.op-say', B), svg = G.$('.op-fig', B);
-    rule.innerHTML = !opposite ? '👯 똑같이 짚어요!' : lv === 2 ? '🔄 반대로! <b>머리 ↔ 발</b>' : '🔄 반대로! <b>머리 ↔ 발</b> · <b>어깨 ↔ 무릎</b>';
+    rule.innerHTML = !opposite ? '👯 똑같이 짚어요!' : lv === 2 && !extra ? '🔄 반대로! <b>머리 ↔ 발</b>' : '🔄 반대로! <b>머리 ↔ 발</b> · <b>어깨 ↔ 무릎</b>';
     var deck = [];
     for (var k = 0; k < N; k++) { var p; do { p = G.pick(parts); } while (k > 0 && deck[k - 1] === p); deck.push(p); }
+    /* 첫 명령은 늘 머리·발 — 어깨·무릎은 그 뒤 아무 자리에 (둘이면 어깨 하나, 무릎 하나) */
+    if (extra) { var sk = G.shuffle(['shoulder', 'knee']); G.sample(G.range(N).slice(1), extra).forEach(function (j, n) { deck[j] = sk[n]; }); }
     var i = 0;
     function mark(p, cls) { G.$$('.op-part', svg).forEach(function (el) { el.classList.toggle(cls, el.dataset.p === p); }); }
     function clear() { G.$$('.op-part', svg).forEach(function (el) { el.classList.remove('on', 'ans'); }); }
@@ -1019,7 +1037,7 @@ G.act({
     }
     ctx.progress(0, N);
     var intro = !opposite ? '자비스가 말하는 곳을 짚어 볼까? 일어나서 같이 해요!' :
-      lv === 2 ? '반대로 놀이! 자비스가 "머리!" 하면 발을, "발!" 하면 머리를 짚어요. 헷갈리지 않게!' :
+      lv === 2 ? '반대로 놀이! 자비스가 "머리!" 하면 발을, "발!" 하면 머리를 짚어요. 헷갈리지 않게!' + (extra ? ' 가끔은 어깨 하면 무릎, 무릎 하면 어깨!' : '') :
         '반대로 놀이! 머리 하면 발, 발 하면 머리. 어깨 하면 무릎, 무릎 하면 어깨! 할 수 있어!';
     ctx.say(intro).then(function () { step(0); });
   }

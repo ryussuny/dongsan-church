@@ -101,7 +101,7 @@ function stats(days) {
     var ms = Math.min(l.ms || 0, 15 * 60000);
     var d = byDay[l.d] = byDay[l.d] || { ms: 0, n: 0 }; d.ms += ms; d.n++;
     var a = byArea[l.area] = byArea[l.area] || { ms: 0, n: 0 }; a.ms += ms; a.n++;
-    var b = byAct[l.id] = byAct[l.id] || { n: 0, tr: 0, ok: 0, lv: [], last: 0, ms: 0, area: l.area }; b.n++; b.tr += l.n || 0; b.ok += l.ok || 0; b.lv.push(l.lv || 1); b.last = Math.max(b.last, l.t); b.ms += ms;
+    var b = byAct[l.id] = byAct[l.id] || { n: 0, tr: 0, ok: 0, lv: [], fine: [], last: 0, ms: 0, area: l.area }; b.n++; b.tr += l.n || 0; b.ok += l.ok || 0; b.lv.push(G.stageLabel(l.lv, l.st)); b.fine.push(((l.lv || 1) - 1) * G.STEPS + (l.st || 1)); b.last = Math.max(b.last, l.t); b.ms += ms;
     (G.efOf ? G.efOf(l.id, l.lv || 1) : ((G.acts[l.id] || {}).ef || [])).forEach(function (k) { byEF[k] = (byEF[k] || 0) + 1; });
     if (l.id === 'checkin' && l.x && l.x.emo) moods.push({ d: l.d, emo: l.x.emo });
   });
@@ -178,7 +178,8 @@ function actTable(S, withGoal) {
   return '<div class="tblw"><table class="tbl"><thead><tr><th>놀이</th><th>횟수</th><th>반응·정답</th><th>단계</th>' + (withGoal ? '<th>기르는 힘</th>' : '<th>마지막</th>') + '</tr></thead><tbody>' +
     ids.map(function (id) {
       var b = S.byAct[id], d = G.acts[id] || { title: id, icon: '•' }, pct = b.tr ? Math.round(b.ok / b.tr * 100) : null;
-      var lv = b.lv.slice(-6), trend = lv[lv.length - 1] > lv[0] ? ' ↑' : lv[lv.length - 1] < lv[0] ? ' ↓' : '';
+      /* 같은 칸이 이어지면 한 번만: 1-1→1-2→1-3 */
+      var lv = b.lv.filter(function (x, i, a) { return i === 0 || x !== a[i - 1]; }).slice(-5), fi = b.fine.slice(-6), trend = fi[fi.length - 1] > fi[0] ? ' ↑' : fi[fi.length - 1] < fi[0] ? ' ↓' : '';
       return '<tr><td><span class="area" style="background:' + areaColor(b.area) + '"></span>' + d.icon + ' ' + G.esc(d.title) + '</td><td>' + b.n + '</td><td>' +
         (pct == null ? '<span class="muted">자유 놀이</span>' : '<span class="mb"><i style="width:' + pct + '%"></i></span>' + pct + '%') + '</td><td>' + lv.join('→') + trend + '</td><td>' +
         (withGoal ? G.esc(d.goal || '') : fmtD(b.last)) + '</td></tr>';
@@ -280,7 +281,7 @@ function tRec(body) {
   h += card('<h3>하루 놀이 시간</h3>' + dayChart(S));
   h += card('<h3>영역별 시간</h3>' + areaBars(S));
   h += card('<h3>🧠 생각 힘(실행기능) 균형</h3>' + efBars(S));
-  h += card('<h3>놀이별 결과</h3><p class="muted">단계는 자비스가 맞춰 올리고 내린 기록이에요(1→3). ↑ 는 오른 것.</p>' + actTable(S));
+  h += card('<h3>놀이별 결과</h3><p class="muted">단계는 자비스가 맞춰 올리고 내린 기록이에요. 「2-3」은 2단계 3칸 — 단계마다 작은 칸이 셋이라 조금씩 어려워져요(1-1 → 3-3). ↑ 는 오른 것.</p>' + actTable(S));
   h += card('<h3>🗣️ 들린 말 (아이 말 기록)</h3><p class="muted">자비스가 아이 차례(🎤 빨간불)에 들은 말이에요. 그때 부모님이 같이 말하면 그 말도 들어갈 수 있어요 — 아이 차례에는 조용히 기다려 주세요.</p>' + saidChips(200, true));
   h += card('<h3>🎨 그림첩</h3><div class="arts" id="pArts"><p class="muted">불러오는 중…</p></div>');
   h += card('<h3>내보내기</h3><p class="muted">기록을 표 파일(CSV)로 받아 엑셀에서 볼 수 있어요. 공개 홈페이지에 올리지 마세요.</p><button class="btn soft" id="pCsv" style="margin-top:6px">⬇️ 기록 CSV 받기</button>');
@@ -289,7 +290,7 @@ function tRec(body) {
   G.$$('[data-delw]', body).forEach(function (b) { b.onclick = function () { var s = G.store.get('saidWords', {}); delete s[b.dataset.delw]; G.store.set('saidWords', s); render(); }; });
   G.$('#pCsv', body).onclick = function () {
     var rows = [['날짜', '시각', '영역', '놀이', '단계', '시도', '맞음', '초', '덧붙임']];
-    G.logs().forEach(function (l) { var d = G.acts[l.id]; rows.push([l.d, new Date(l.t).toTimeString().slice(0, 5), (G.AREAS[l.area] || {}).name || l.area, d ? d.title : l.id, l.lv, l.n, l.ok, Math.round((l.ms || 0) / 1000), JSON.stringify(l.x || {})]); });
+    G.logs().forEach(function (l) { var d = G.acts[l.id]; rows.push([l.d, new Date(l.t).toTimeString().slice(0, 5), (G.AREAS[l.area] || {}).name || l.area, d ? d.title : l.id, G.stageLabel(l.lv, l.st), l.n, l.ok, Math.round((l.ms || 0) / 1000), JSON.stringify(l.x || {})]); });
     var csv = '﻿' + rows.map(function (r) { return r.map(function (c) { c = String(c == null ? '' : c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\n');
     download(new Blob([csv], { type: 'text/csv' }), '함께자라요-기록-' + G.today() + '.csv');
   };
@@ -425,6 +426,23 @@ function tReport(body) {
 
 /* ===== 말소리 (자동 녹음 · 분석 · 학습 데이터) ===== */
 var spDays = 30;
+/* 🌷 고운 말 · 표준말 — 들은 말에서 센 것(기기에만) + 집에서 돕는 법 */
+function kindCard() {
+  if (!G.kind) return '';
+  var d = G.kind.data(), w = G.kind.sum(7), m = G.kind.sum(30);
+  var h = '<h3>🌷 고운 말 · 표준말</h3><p class="muted">아이가 한 말에서 고운 말(고마워·미안해·인사·부탁·칭찬)과 유행어·거친 말을 세어요. 자비스는 꾸짖지 않고, 유행어는 표준말로 다시 들려주고(고쳐 말해 주기) 거친 말엔 마음을 먼저 알아준 뒤 대신 쓸 고운 말을 알려 줘요. 음성 인식 기준이라 정확하지 않을 수 있어요. 욕설은 글자로 남기지 않아요.</p>' +
+    '<div class="pstats"><div><b>' + w.good + '</b><small>이번 주 고운 말 (스스로 ' + w.self + ')</small></div><div><b>' + w.std + '</b><small>유행어·줄임말</small></div><div><b>' + w.rough + '</b><small>거친 말</small></div></div>';
+  var gk = G.kind.GOOD.filter(function (g) { return d.good[g.g]; });
+  if (gk.length) h += '<h4>쓴 고운 말</h4><div class="wchips">' + gk.map(function (g) { return '<span>' + g.e + ' ' + G.esc(g.name) + '<small>' + d.good[g.g].n + '</small></span>'; }).join('') + '</div>';
+  var st = Object.keys(d.std).sort(function (a, b) { return d.std[b].n - d.std[a].n; }).slice(0, 8);
+  if (st.length) h += '<h4>이렇게 바꿔 들려주세요</h4><ul class="princ">' + st.map(function (k) { return '<li>「' + G.esc(k) + '」 → <b>「' + G.esc(d.std[k].to || '표준말') + '」</b> <small class="muted">' + d.std[k].n + '번</small></li>'; }).join('') + '</ul>';
+  var ro = Object.keys(d.rough).sort(function (a, b) { return d.rough[b].n - d.rough[a].n; });
+  if (ro.length) h += '<h4>거친 말이 나올 때 — 대신 쓸 말</h4><ul class="princ">' + ro.map(function (k) { return '<li>' + G.esc(d.rough[k].key) + ' → <b>"' + G.esc(k) + '"</b> <small class="muted">' + d.rough[k].n + '번</small></li>'; }).join('') + '</ul>';
+  if (!m.good && !m.std && !m.rough) h += '<p class="muted" style="margin-top:6px">아직 기록이 없어요. 말하기 놀이 · 🌷 고운 말 놀이 · 자비스랑 이야기를 하면 쌓여요.</p>';
+  h += '<h4>집에서 이렇게 해 주세요</h4><ul class="princ">' + G.kind.TIPS.map(function (t) { return '<li><b>' + t[0] + '</b> — ' + G.esc(t[1]) + '</li>'; }).join('') + '</ul>' +
+    '<div class="row" style="margin-top:8px"><button class="btn soft" id="kwAI">🤖 코치에게 고운 말 습관 묻기</button><button class="btn soft" id="kwClear">기록 지우기</button></div>';
+  return card(h);
+}
 function tSpeech(body) {
   if (!G.SL) { body.innerHTML = card('<p class="muted">말소리 연구실을 불러오지 못했어요.</p>'); return; }
   body.innerHTML = card('<p class="muted">불러오는 중…</p>');
@@ -457,6 +475,7 @@ function tSpeech(body) {
         (a.newWords.length ? '<h4>🆕 이번 주 새로 들린 말</h4><div class="wchips">' + a.newWords.map(function (w) { return '<span>' + G.esc(w) + '</span>'; }).join('') + '</div>' : ''));
     }
     var dict = G.SL.dict(), dk = Object.keys(dict);
+    h += kindCard();
     h += card('<h3>📘 아이 말소리 사전 — 자비스가 배운 발음</h3><p class="muted">음성 인식이 못 알아들었지만 부모님이 👍(또는 ✅)해 준 발음이에요. 다음부터는 이 발음도 맞다고 알아들어요.</p>' +
       (dk.length ? '<div class="wchips">' + dk.map(function (t) { return Object.keys(dict[t]).map(function (v) { return '<span>' + G.esc(t) + ' ← ' + G.esc(v) + '<small>' + dict[t][v] + '</small><button data-fg="' + G.esc(t + '|' + v) + '" aria-label="지우기">×</button></span>'; }).join(''); }).join('') + '</div>' : '<p class="muted">아직 배운 발음이 없어요.</p>'));
     var recent = all.slice(-40).reverse();
@@ -491,6 +510,11 @@ function tSpeech(body) {
     });
     G.$('#spZip', body).onclick = function () { var b = this; b.disabled = true; b.textContent = '만드는 중…'; G.SL.exportData().then(function (z) { download(z, '함께자라요-말소리-학습데이터-' + G.today() + '.zip'); b.disabled = false; b.textContent = '📦 학습 데이터 내보내기'; }); };
     G.$('#spZipTxt', body).onclick = function () { G.SL.exportData({ audio: false }).then(function (z) { download(z, '함께자라요-말소리-글-' + G.today() + '.zip'); }); };
+    var kwA = G.$('#kwAI', body); if (kwA) kwA.onclick = function () {
+      var qi = -1; G.coach.QUICK.forEach(function (q, i) { if (/고운 말/.test(q.t)) qi = i; });
+      tab = 'coach'; renderTabs(); render(); setTimeout(function () { var qb = G.$('[data-q="' + qi + '"]'); if (qb) qb.click(); }, 120);
+    };
+    var kwC = G.$('#kwClear', body); if (kwC) kwC.onclick = function () { if (confirm('고운 말 기록을 지울까요?')) { G.kind.clear(); render(); } };
     G.$('#spAI', body).onclick = function () {
       var qi = -1; G.coach.QUICK.forEach(function (q, i) { if (/말소리/.test(q.t)) qi = i; });
       G.SL.refresh().then(function () { tab = 'coach'; renderTabs(); render(); setTimeout(function () { var qb = G.$('[data-q="' + qi + '"]'); if (qb) qb.click(); }, 120); });
@@ -544,7 +568,7 @@ function tSet(body) {
     sw('calm', '🌿 감각 예민 모드 (소리 작게 · 반짝임 끄기)') +
     '<h4>오늘의 놀이 시간</h4><div class="wchips">' + [10, 15, 20].map(function (m) { return '<button class="chip ' + (St.sessionMin === m ? 'on' : '') + '" data-sm="' + m + '">' + m + '분</button>'; }).join('') + '</div>' +
     '<p class="muted" style="margin-top:6px">WHO·미국소아과학회는 2~5세 화면 시간을 하루 1시간 이하, 어른과 함께하기를 권해요.</p>');
-  h += card('<h3>📶 놀이 단계 · 보이기</h3><p class="muted">「자동」이면 자비스가 최근 세 번 결과로 단계를 맞춰요. 치료사 선생님이 정한 단계가 있으면 고정하세요.</p><div id="lvList"></div>');
+  h += card('<h3>📶 놀이 단계 · 보이기</h3><p class="muted">단계(1~3)마다 작은 칸이 셋 있어요. 「자동」이면 한 판을 80% 넘게 해내면 한 칸 올라가고(다음 단계로 넘어갈 때는 85%), 힘들어하면(40% 밑) 한 칸 내려와요. 칸이 오를 때마다 속도·개수·시간이 다음 단계 쪽으로 1/3씩만 바뀌어서 갑자기 어려워지지 않아요. 치료사 선생님이 정한 단계가 있으면 고정하세요 — 그 단계 안에서만 칸이 움직여요.</p><div id="lvList"></div>');
   h += card('<h3>🤖 자비스 AI (Claude)</h3><p class="muted">키를 넣으면 「자비스랑 이야기」가 아이 말에 맞춰 대답하고, 코치·리포트 요약을 쓸 수 있어요. 키가 없어도 모든 놀이는 그대로 돼요. 보내는 것: 아이가 한 말(음성 인식 글)·나이·좋아하는 것·기록 요약. 이름은 보내지 않아요.</p>' +
     '<div class="row" style="margin-top:8px"><input class="inp" id="sKey" type="password" placeholder="sk-ant-..." style="flex:1" value="' + G.esc(G.store.get('apiKey', '')) + '"><button class="btn" id="sKeySave">저장</button></div>' +
     (!G.store.get('apiKey', '') && G.ai.churchKey() ? '<button class="btn soft sm" id="sKeyChurch" style="margin-top:6px">⛪ 교회 관리자 앱 키 가져오기</button>' : '') +
@@ -613,7 +637,7 @@ function tSet(body) {
     if (!list.length) return;
     lh += '<h4>' + G.AREAS[k].icon + ' ' + G.AREAS[k].name + '</h4>' + list.map(function (d) {
       var cur = (P.level || {})[d.id] || 0, hidden = (P.hide || {})[d.id];
-      return '<div class="lvrow"><span>' + d.icon + ' ' + G.esc(d.title) + ' <small class="muted">지금 ' + G.levelFor(d.id, d.levels) + '단계</small></span>' +
+      return '<div class="lvrow"><span>' + d.icon + ' ' + G.esc(d.title) + ' <small class="muted">지금 ' + (function (g) { return d.levels > 1 ? g.lv + '단계 ' + g.st + '칸' : '한 단계'; })(G.stageFor(d.id, d.levels)) + '</small></span>' +
         (d.levels > 1 ? '<select data-lv="' + d.id + '"><option value="0">자동</option>' + G.range(d.levels).map(function (i) { return '<option value="' + (i + 1) + '" ' + (cur === i + 1 ? 'selected' : '') + '>' + (i + 1) + '단계</option>'; }).join('') + '</select>' : '<span></span>') +
         '<label class="muted"><input type="checkbox" data-hide="' + d.id + '" ' + (hidden ? '' : 'checked') + '> 보이기</label></div>';
     }).join('');

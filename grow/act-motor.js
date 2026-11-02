@@ -293,6 +293,11 @@ var TR_SHAPES = (function () {
 })();
 /* 발달 순서: 세로·가로(2~3세) → 둥근 선·원·+(3~4세) → 사선·네모·세모(4~5세) → 별·글자 */
 var TR_LEVEL = { 1: ['v', 'h', 'v', 'h', 'v'], 2: ['arch', 'wave', 'circle', 'cross', 'zigzag'], 3: ['square', 'triangle', 'gn', 'dmo', 'star'] };
+/* 칸이 오르면 다음 단계 길을 끝에 하나씩 섞는다 (2칸: 1개, 3칸: 2개). 3단계는 길 폭만 조금 좁아진다 */
+var TR_STEP = {
+  1: { 2: ['v', 'h', 'v', 'h', 'arch'], 3: ['v', 'h', 'v', 'arch', 'wave'] },
+  2: { 2: ['arch', 'circle', 'cross', 'zigzag', 'square'], 3: ['arch', 'circle', 'cross', 'square', 'triangle'] }
+};
 var TR_STORY = [
   { c: '🐛', cn: '애벌레', g: '🍎', gn: '사과', go: '애벌레가 사과까지 가요', yum: '냠냠! 사과 맛있다!' },
   { c: '🚗', cn: '자동차', g: '🏠', gn: '집', go: '자동차가 집까지 가요', yum: '부릉부릉, 집에 도착!' },
@@ -332,13 +337,14 @@ G.act({
   offline: '쟁반에 소금이나 밀가루를 얇게 깔고 손가락 하나로 세로줄·동그라미를 그린 뒤, 굵은 크레용으로 종이 위 같은 길을 따라 그려 보세요.',
   run: async function (ctx) {
     var lv = ctx.level, B = ctx.body, AREA = areaHex(ctx);
-    var TOLF = [0.085, 0.068, 0.052][lv - 1], AUTO = [30000, 40000, 50000][lv - 1];
+    /* 칸이 오르면 길 폭이 조금 좁아지고(TOLF), 자비스가 도와주기 전 기다림이 조금 길어진다(AUTO) */
+    var TOLF = ctx.tune([0.085, 0.068, 0.052]), AUTO = ctx.tune([30000, 40000, 50000]);
     B.innerHTML = '<div class="mt-wrap"><div class="mt-board tr-board"><div class="tr-name"></div></div></div>';
     var board = G.$('.tr-board', B), nameEl = G.$('.tr-name', board);
     var K = ctx.canvas(board, { onResize: layout });
     var goalEl = G.el('<span class="tr-goal" aria-hidden="true"></span>'), charEl = G.el('<span class="tr-char" aria-hidden="true"></span>');
     board.appendChild(goalEl); board.appendChild(charEl);
-    var list = TR_LEVEL[lv].map(function (k) { return k === 'gn' ? G.pick(['g', 'n']) : k === 'dmo' ? G.pick(['d', 'm', 'o']) : k; });
+    var list = ((TR_STEP[lv] || {})[ctx.step] || TR_LEVEL[lv]).map(function (k) { return k === 'gn' ? G.pick(['g', 'n']) : k === 'dmo' ? G.pick(['d', 'm', 'o']) : k; });
     var stories = TR_STORY.slice(0, 2).concat(G.shuffle(TR_STORY.slice(2)));
     var P = null, pid = null, helped = 0, accSum = 0, accN = 0;
     var idle = idler(ctx, pace(8000), nudge);
@@ -584,13 +590,16 @@ G.act({
     B.innerHTML = '<div class="mt-wrap"><div class="mt-board dt-board"></div></div>';
     var board = G.$('.dt-board', B);
     var K = ctx.canvas(board, { onResize: layout });
-    var pics = G.sample(DT_PICS[lv], NP), P = null, pid = null, finger = null, missAll = 0, autoN = 0;
+    /* 칸이 오르면 마지막 그림 1~2개를 다음 단계 그림(점이 더 많은)으로 — 3단계는 점만 조금 작아진다 */
+    var NX = lv < 3 ? ctx.step - 1 : 0;
+    var pics = G.sample(DT_PICS[lv], NP - NX).concat(NX ? G.sample(DT_PICS[lv + 1], NX) : []), P = null, pid = null, finger = null, missAll = 0, autoN = 0;
+    var DOTR = ctx.tune([0.085, 0.072, 0.06]);   /* 점 크기 — 칸이 오르면 조금씩 작게 */
     var idle = idler(ctx, pace(7000), nudge);
 
     function layout() {
       if (!K.w || !P) return;
       var W = K.w, H = K.h, S = Math.min(W, H);
-      var r = G.clamp(S * [0.085, 0.072, 0.06][lv - 1], 20, 34);
+      var r = G.clamp(S * DOTR, 20, 34);
       P.r = r; P.hit = Math.max(r * 1.55, 28);
       var Q = S - 2 * (r + 10), ox = (W - Q) / 2, oy = (H - Q) / 2;
       P.pos = P.pic.p.map(function (p) { return { x: ox + p[0] / 100 * Q, y: oy + p[1] / 100 * Q }; });
@@ -743,7 +752,9 @@ G.act({
   offline: '비눗방울을 불어 주고 검지 하나로 콕 터뜨려 보세요. 익숙해지면 "높이 있는 방울만!", "큰 방울만!" 규칙을 붙여요.',
   run: function (ctx) {
     var lv = ctx.level, B = ctx.body;
-    var DUR = [30, 38, 45][lv - 1], SPAWN = pace([1450, 1050, 850][lv - 1]) / 1000, RISE = [8.5, 6.2, 4.8][lv - 1] * (calm() ? 1.35 : 1), MAXON = [4, 6, 7][lv - 1];
+    /* 칸이 오르면 풍선이 조금 더 자주·빨리 오고, 조금 작아진다 (다음 단계 쪽으로 1/3씩) */
+    var DUR = ctx.tune([30, 38, 45]), SPAWN = pace(ctx.tune([1450, 1050, 850])) / 1000, RISE = ctx.tune([8.5, 6.2, 4.8]) * (calm() ? 1.35 : 1), MAXON = ctx.tune([4, 6, 7]);
+    var WF = ctx.tune([0.27, 0.21, 0.165]), WMIN = ctx.tune([84, 66, 54]), WMAX = ctx.tune([130, 104, 86]);
     var RED = colorOf('red'), COLS = ['red', 'yellow', 'blue', 'green', 'orange', 'purple', 'pink'].map(colorOf), OTHERS = COLS.filter(function (c) { return c !== RED; });
     B.innerHTML = '<div class="mt-wrap"><div class="mt-top"><span class="mt-pill pp-count">🎈 <b>0</b></span>' +
       (lv === 3 ? '<span class="mt-pill pp-rule">' + ppSVG() + ' 빨간 풍선만 콕!</span>' : '') + '</div>' +
@@ -755,7 +766,7 @@ G.act({
     function place(b) { b.el.style.transform = 'translate3d(' + (b.x - b.w / 2 + Math.sin(el * b.fr * 6.28 + b.ph) * b.amp) + 'px,' + b.y + 'px,0)'; }
     function spawn() {
       var W = sky.clientWidth, H = sky.clientHeight; if (!W || !H) return;
-      var w = G.clamp(W * [0.27, 0.21, 0.165][lv - 1], [84, 66, 54][lv - 1], [130, 104, 86][lv - 1]), h = w * 1.43;
+      var w = G.clamp(W * WF, WMIN, WMAX), h = w * 1.43;
       var col = lv === 3 ? (spawned < 2 || Math.random() < 0.45 ? RED : G.pick(OTHERS)) : G.pick(COLS);
       var x, tries = 0;
       do { x = w / 2 + Math.random() * Math.max(1, W - w); }
@@ -855,6 +866,12 @@ G.act({
     var plan = lv === 1 ? [{ m: 'color', k: 2, n: 6 }, { m: 'color', k: 2, n: 6 }]
       : lv === 2 ? [{ m: 'color', k: 3, n: 6 }, { m: 'color', k: 3, n: 6 }]
       : [{ m: 'color', k: 4, n: 8 }, { m: 'cat', k: 3, n: 6 }];
+    /* 칸이 오르면 둘째 판만 조금 어렵게 — 2칸: 그림이 조금 더 많이, 3칸: 바구니가 하나 더(다음 단계처럼).
+       3단계는 바구니를 늘리지 않고 범주 판 그림만 3개씩 더 */
+    var last = plan[plan.length - 1], st = ctx.step;
+    if (lv === 1) { if (st === 2) last.n = 8; else if (st === 3) last.k = 3; }
+    else if (lv === 2) { if (st === 2) last.n = 9; else if (st === 3) { last.k = 4; last.n = 8; } }
+    else if (st > 1) last.n = 6 + 3 * (st - 1);
     var pool = lv === 1 ? ['red', 'yellow', 'blue', 'green'] : ['red', 'yellow', 'blue', 'green', 'orange', 'purple'];
     var used = [], misses = 0;
     var idle = idler(ctx, pace(12000), null);
@@ -996,6 +1013,10 @@ G.act({
   offline: '쟁반에 구슬이나 탁구공을 올리고 두 손으로 기울여 종이컵 안에 넣어 보세요.',
   run: function (ctx) {
     var lv = ctx.level, B = ctx.body, GOALS = 4;
+    /* 칸이 오르면 마지막 판(2칸: 1판, 3칸: 2판)을 다음 단계 길(나무 벽 하나 더)로 미리 해 본다.
+       구멍은 조금씩 작아지고, 구멍이 커지기·자비스 도움 전 기다림은 조금 길어진다 */
+    var PRE = lv < 3 ? ctx.step - 1 : 0, HOLE = ctx.tune([1.9, 1.6, 1.4]), GROW = ctx.tune([15000, 20000, 25000]), HELP = ctx.tune([40000, 50000, 60000]);
+    function goalLv(i) { return i >= GOALS - PRE ? lv + 1 : lv; }
     B.innerHTML = '<div class="mt-wrap"><div class="mt-top"><span class="mt-pill tl-count">⛳ <b>0</b> / ' + GOALS + '</span><button class="btn sm soft tl-mode" type="button" hidden></button></div>' +
       '<div class="tl-board"><div class="tl-start"><div class="te">⛳</div><div class="tt">기기를 <b>두 손</b>으로 꼭 잡고<br>살살 기울여서 공을 구멍에 쏙!</div>' +
       '<button class="btn big tl-go" type="button">▶ 시작</button><button class="btn soft tl-finger" type="button">👆 손가락으로 할래요</button></div></div></div>';
@@ -1022,7 +1043,7 @@ G.act({
     function build() {
       var W = K.w, H = K.h, S = Math.min(W, H), tall = H > W * 1.12;
       r = G.clamp(S * 0.055, 16, 30); FR = Math.max(6, r * 0.35);
-      holeR0 = r * [1.9, 1.6, 1.4][lv - 1];
+      holeR0 = r * HOLE;
       var T = r * 1.1;
       walls = L.walls.map(function (w) {
         var a = L.flip ? 1 - w.a : w.a, b0 = L.mir ? 1 - w.b1 : w.b0, b1 = L.mir ? 1 - w.b0 : w.b1;
@@ -1056,11 +1077,13 @@ G.act({
     }
     function nextGoal() {
       readCols();
-      L = tlLayout(lv); build(); prevW = K.w; prevH = K.h;
+      var glv = goalLv(k);
+      L = tlLayout(glv); build(); prevW = K.w; prevH = K.h;
       var s = toXY(L.start.a, L.start.b);
       ball = { x: G.clamp(s.x, FR + r, K.w - FR - r), y: G.clamp(s.y, FR + r, K.h - FR - r), vx: 0, vy: 0, rot: 0, e: TL_BALLS[k % TL_BALLS.length], hide: false };
       holeR = holeR0; guide = null; sink = null; t0 = performance.now();
-      if (k > 0) ctx.say(lv === 1 ? G.pick(['이번엔 저쪽 구멍이야!', '또 해 볼까? 살살~']) : G.pick(['나무 벽을 돌아서 가 봐!', '벽을 피해서 구멍까지!', '어느 쪽으로 돌아갈까?']));
+      if (k > 0 && glv > lv && goalLv(k - 1) === lv) ctx.say(glv === 2 ? '이번엔 나무 벽이 생겼어! 벽을 돌아서 가 봐!' : '이번엔 나무 벽이 두 개야! 천천히 돌아서 가 봐!');   /* 처음 보는 길은 미리 알려 준다 */
+      else if (k > 0) ctx.say(glv === 1 ? G.pick(['이번엔 저쪽 구멍이야!', '또 해 볼까? 살살~']) : G.pick(['나무 벽을 돌아서 가 봐!', '벽을 피해서 구멍까지!', '어느 쪽으로 돌아갈까?']));
     }
     function tiltAcc(deg) { var d = Math.abs(deg) < 1.5 ? 0 : deg - (deg > 0 ? 1.5 : -1.5); return Math.sin(G.clamp(d, -30, 30) * Math.PI / 180); }
     function bump(v) {
@@ -1157,7 +1180,7 @@ G.act({
       }
       if (ball.hide) { draw(); return; }
       physics(dt);
-      var el = (performance.now() - t0) / 1000, H0 = pace([15000, 20000, 25000][lv - 1]) / 1000, AUTO = pace([40000, 50000, 60000][lv - 1]) / 1000;
+      var el = (performance.now() - t0) / 1000, H0 = pace(GROW) / 1000, AUTO = pace(HELP) / 1000;
       if (el > H0) holeR = holeR0 * (1 + 0.8 * Math.min(1, (el - H0) / 25));   /* 오래 걸리면 구멍이 살살 커진다 */
       if (el > AUTO && !guide) startGuide();
       if (Math.hypot(ball.x - hole.x, ball.y - hole.y) < holeR * 0.8) {
@@ -1262,6 +1285,8 @@ G.act({
     var K = ctx.canvas(card, { onResize: function () { if (cur && !cur.done) coat(); } });
     var grid = new Uint8Array(GN * GN), cleared = 0, cur = null, pid = null, last = null, lastSnd = 0, helped = 0;
     var words = scWords(lv, NP), idle = idler(ctx, pace(9000), nudge);
+    /* 칸이 오르면 붓이 조금씩 작아진다 (자비스가 같이 해 주기 전 기다림은 그만큼 조금 길게) */
+    var BRUSH = ctx.tune([0.1, 0.07, 0.048]), HELP = ctx.tune([45000, 55000, 65000]);
 
     function star4(c, x, y, s) {
       c.beginPath(); c.moveTo(x, y - s); c.quadraticCurveTo(x, y, x + s, y); c.quadraticCurveTo(x, y, x, y + s);
@@ -1280,7 +1305,7 @@ G.act({
       c.fillStyle = 'rgba(255,255,255,.6)'; c.fillText('?', w / 2, h / 2 + w * 0.02);
       grid.fill(0); cleared = 0; bar.style.width = '0%';
       pic.style.visibility = '';
-      cur.br = w * [0.1, 0.07, 0.048][lv - 1];
+      cur.br = w * BRUSH;
     }
     function mark(x, y, br) {
       var cs = K.w / GN, i0 = Math.max(0, Math.floor((x - br) / cs)), i1 = Math.min(GN - 1, Math.floor((x + br) / cs)),
@@ -1372,7 +1397,7 @@ G.act({
         coat(); void K.cv.offsetWidth; K.cv.style.transition = '';
         picE.textContent = w.e;
         idle.go();
-        cur.autoH = ctx.timeout(autoReveal, pace([45000, 55000, 65000][lv - 1]));
+        cur.autoH = ctx.timeout(autoReveal, pace(HELP));
         ctx.say(i === 0 ? '무언가 숨어 있어요! 손가락으로 쓱쓱 문질러 봐!' : G.pick(['이번엔 뭐가 숨었을까? 쓱쓱!', '쓱쓱 지우면 뭐가 나올까?', '또 숨었어! 쓱쓱 찾아보자!']));
       });
     }
@@ -1399,7 +1424,8 @@ G.act({
   basis: '형태 지각·공간 관계 — 모양 맞추기 상자(형태판) 과제, 색 단서 → 모양만 보기로 단서를 줄여 감',
   offline: '그릇과 뚜껑 짝 맞추기, 모양 맞추기 상자 놀이, 종이에 블록 테두리를 그려 두고 그 위에 같은 블록 올리기를 해 보세요.',
   run: async function (ctx) {
-    var lv = ctx.level, plan = lv === 1 ? [2, 2, 2] : lv === 2 ? [3, 4] : [5, 6];
+    /* 칸이 오르면 조각이 하나씩 늘어난다 (모양은 여섯 가지뿐이라 3단계는 늘리지 않고 맞춰 넣는 자리만 조금 정확하게) */
+    var lv = ctx.level, plan = ({ 1: [[2, 2, 2], [2, 2, 3], [2, 3, 3]], 2: [[3, 4], [3, 5], [4, 5]], 3: [[5, 6], [5, 6], [5, 6]] })[lv][ctx.step - 1];
     var easy = ['circle', 'square', 'triangle', 'heart', 'star'], all = D.SHAPES.map(function (s) { return s.id; }), last = '', misses = 0;
     var idle = idler(ctx, pace(12000), null);
     for (var b = 0; b < plan.length; b++) {
@@ -1419,6 +1445,7 @@ G.act({
 function pzBoard(ctx, shapes, bi, idle) {
   return new Promise(function (resolve) {
     var B = ctx.body, lv = ctx.level, cue = lv < 3;
+    var SNAP = lv === 3 ? [0.75, 0.68, 0.62][ctx.step - 1] : 0.75;   /* 3단계는 칸이 오르면 조금 더 가까이 가져가야 쏙 */
     B.innerHTML = '<div class="mt-wrap pz-wrap"><div class="pz-area pz-holes"></div><div class="pz-tip" aria-hidden="true">⬆️</div><div class="pz-area pz-tray"></div></div>';
     var wrap = G.$('.pz-wrap', B), holesBox = G.$('.pz-holes', B), tray = G.$('.pz-tray', B);
     var cols = G.shuffle(PZ_COL), sel = null, placed = 0, bmiss = 0, busy = false;
@@ -1452,7 +1479,7 @@ function pzBoard(ctx, shapes, bi, idle) {
         var hr = o.hole.getBoundingClientRect(), d = Math.hypot(hr.left + hr.width / 2 - cx, hr.top + hr.height / 2 - cy);
         if (d < bd) { bd = d; best = o; }
       });
-      return best && bd < r.width / 1.1 * 0.75 ? { p: best, d: bd } : null;
+      return best && bd < r.width / 1.1 * SNAP ? { p: best, d: bd } : null;
     }
     function select(p) { if (sel) sel.el.classList.remove('sel'); sel = p; if (p) p.el.classList.add('sel'); }
     function size() {

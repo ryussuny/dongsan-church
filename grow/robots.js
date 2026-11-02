@@ -15,7 +15,7 @@
 var G = window.G;
 
 /* 실사 그림이 준비된 로봇 (assets/grow/robots/<id>.jpg) — 그림을 더하면 여기에 id 를 적는다 */
-var HAS_IMG = { striker: 1, sentinel: 1, breaker: 1 };
+var HAS_IMG = { striker: 1, sentinel: 1, breaker: 1, airblade: 1, rotor: 1, lancer: 1, trident: 1, fortress: 1, express: 1, fang: 1, rex: 1, nova: 1, omega: 1 };
 
 var R = window.GR = {};
 R.SLOTS = ['다리 구동부', '몸통 코어', '왼팔', '오른팔', '머리 센서', '특수 장비'];

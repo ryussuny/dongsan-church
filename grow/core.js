@@ -293,7 +293,7 @@ G.voice = (function () {
   function elText(t) {
     if (G.settings.elName) return t;
     var nick = (G.profile.nick || '').trim(); if (!nick) return t;
-    /* 별명은 보내지 않는다: "아인아, 오늘도" → "오늘도" */
+    /* 별명은 보내지 않는다: "(별명)아, 오늘도" → "오늘도" */
     return t.split(G.callName()).join('').split(nick).join('').replace(/^[\s,!.]+/, '').replace(/\s+([,!.?])/g, '$1').trim() || t;
   }
   function elId(t) { return [G.settings.elVoice, G.settings.elModel, Math.round(G.settings.rate * 100), t].join('|'); }
@@ -497,6 +497,8 @@ G.listen = function (o) {
       /* 아이 말소리 사전: 부모가 👍 해 준 발음은 다음부터 맞다고 본다 */
       if (G.SL && G.SL.accepts) (o.expect || []).forEach(function (w) { if (G.SL.accepts(w, alts)) score = Math.max(score, 0.9); });
       var res = Object.assign({ text: text, alts: alts, score: score, ok: score >= (o.threshold || 0.5), heard: !!text }, extra || {});
+      /* 고운 말·표준말 — 들은 말을 기기 안에서만 센다(부모 화면 🌷). 대화에서 자비스가 고쳐 들려줄 때도 쓴다 */
+      if (text && G.kind) try { res.kind = G.kind.note(text, o.expect); } catch (e) {}
       if (G.SL && G.SL.save) {
         if (extra && extra.error === 'audio-capture' && clip) G.SL.noteConflict('audio-capture');
         var meta = { act: G.cur ? G.cur.id : '', lv: G.cur ? G.cur.level : 0, target: (o.expect || [])[0] || '', heard: text, alts: alts.slice(0, 3),
@@ -641,35 +643,63 @@ G.log = function (e) {
 };
 G.logsFor = function (id) { return G.logs().filter(function (l) { return l.id === id; }); };
 
-/* 단계 맞추기 — 최근 세 번이 잘 되면 올리고(정답 85%↑), 힘들면(50%↓) 내린다.
-   부모가 정해 둔 단계(profile.level[id])가 있으면 그것을 쓴다. */
-G.levelFor = function (id, max) {
-  max = max || 3;
-  var fixed = G.profile.level && G.profile.level[id];
-  if (fixed) return G.clamp(fixed, 1, max);
-  var def = G.acts[id] || {};
+/* 단계 맞추기 — 단계(1~3)마다 작은 칸이 셋(1~3칸) 있다. 모두 9칸: 1-1 → 1-2 → 1-3 → 2-1 … → 3-3.
+   칸이 오를 때마다 속도·개수·시간 같은 어려움이 다음 단계 쪽으로 1/3씩만 다가간다(ctx.tune) —
+   갑자기 어려워지지 않게 '조금씩'. 규칙이 새로 생기는 큰 변화는 단계가 바뀔 때만 온다.
+   · 오르기: 이 칸에서 한 판 80% 이상 → 한 칸 위. 다음 단계로 넘어가는 칸(x-3 → 다음 단계 1칸)만 85% 이상.
+     (한 칸에 한 판씩, 한 단계를 오르려면 잘한 판이 세 번 — 예전 '세 판 85%' 와 같은 속도)
+   · 내리기: 한 판이라도 40% 밑이거나, 이 칸에서 두 판 모아 50% 밑이면 한 칸 아래 (한 단계가 아니라 한 칸만).
+   · 1단계가 '규칙 익히기'(warm)인 놀이는 한 판만 잘해도 2단계 1칸으로.
+   · 부모가 단계를 정해 두면(profile.level[id]) 그 단계 안에서만 칸이 움직인다. */
+G.STEPS = 3;
+function fineOf(l) { return ((l.lv || 1) - 1) * G.STEPS + G.clamp(l.st || 1, 1, G.STEPS); }
+G.stageFor = function (id, max) {
+  var def = G.acts[id] || {}, S = G.STEPS;
+  max = max || def.levels || 3;
+  if (max <= 1) return { lv: 1, st: 1, fine: 1 };
+  var lo = 1, hi = max * S, fixed = G.profile.level && G.profile.level[id];
+  if (fixed) { fixed = G.clamp(fixed, 1, max); lo = (fixed - 1) * S + 1; hi = fixed * S; }
+  function out(f) { f = G.clamp(f, lo, hi); return { lv: Math.ceil(f / S), st: (f - 1) % S + 1, fine: f }; }
   /* 중간에 그만둔 판은 빼고, 끝까지 한 판만 본다 */
   var done = G.logsFor(id).filter(function (l) { return !(l.x && l.x.quit); });
   if (!done.length) {
-    /* 처음 하는 놀이: 8살(96개월) 넘은 아이는 말하기 말고는 2단계부터 — 너무 쉬우면 지루하다. 어려우면 한 판 만에 내려온다 */
+    /* 처음 하는 놀이: 8살(96개월) 넘은 아이는 말하기 말고는 2단계 1칸부터 — 너무 쉬우면 지루하다. 어려우면 한 판 만에 내려온다 */
     var am = G.ageMonths();
-    return am != null && am >= 96 && def.area !== 'speech' && (def.levels || 1) >= 3 && !def.tool ? 2 : 1;
+    return out(am != null && am >= 96 && def.area !== 'speech' && max >= 3 && !def.tool ? S + 1 : 1);
   }
-  var cur = done[done.length - 1].lv || 1;
-  var atCur = done.filter(function (l) { return (l.lv || 1) === cur; });
-  var graded = atCur.filter(function (l) { return l.n > 0; }).slice(-3);
+  var cur = fineOf(done[done.length - 1]);
+  if (cur < lo || cur > hi) return out(cur);                       /* 부모가 단계를 바꿨으면 그 단계로 */
+  /* 지금 칸에서 이어서 한 판들만 (예전에 같은 칸이었던 판은 섞지 않는다) */
+  var run = [];
+  for (var i = done.length - 1; i >= 0 && fineOf(done[i]) === cur; i--) run.unshift(done[i]);
+  var graded = run.filter(function (l) { return l.n > 0; }).slice(-3);
   if (!graded.length) {
-    /* 맞고 틀림이 없는 자유 놀이(그리기)는 한 단계에서 세 번 하면 올린다 */
-    return def.autoLevel && atCur.length >= 3 ? Math.min(max, cur + 1) : cur;
+    /* 맞고 틀림이 없는 자유 놀이(그리기)는 한 칸에서 한 번 하면 한 칸 오른다 (한 단계에 세 번) */
+    return out(def.autoLevel && run.length >= 1 ? cur + 1 : cur);
   }
-  var lastAcc = graded[graded.length - 1].ok / graded[graded.length - 1].n;
+  var last = graded[graded.length - 1], lastAcc = last.ok / last.n;
   var pool = graded.reduce(function (s, l) { return [s[0] + l.ok, s[1] + l.n]; }, [0, 0]), acc = pool[0] / pool[1];
-  /* 내리기: 이 단계에서 한 판이라도 40% 밑이거나, 두 판 이상 모아 50% 밑 */
-  if (lastAcc < 0.4 || (graded.length >= 2 && acc < 0.5)) return Math.max(1, cur - 1);
-  /* 올리기: 이 단계에서 세 판을 모아 85% 이상. 1단계가 '규칙 익히기'인 놀이(warm)는 한 판만 잘해도 올린다 */
-  var need = def.warm && cur === 1 ? 1 : 3;
-  if (graded.length >= need && acc >= 0.85) return Math.min(max, cur + 1);
-  return cur;
+  if (lastAcc < 0.4 || (graded.length >= 2 && acc < 0.5)) return out(cur - 1);
+  if (def.warm && cur <= S) return out(lastAcc >= 0.85 ? S + 1 : cur);
+  return out(lastAcc >= (cur % S === 0 ? 0.85 : 0.8) ? cur + 1 : cur);
+};
+G.levelFor = function (id, max) { return G.stageFor(id, max).lv; };
+/* '2-3' 처럼 — 부모 화면·기록용 */
+G.stageLabel = function (lv, st) { return (lv || 1) + '-' + (st || 1); };
+
+/* 단계별 숫자를 칸에 맞게 고르기. arr = [1단계, 2단계, 3단계] 값.
+   1칸은 그 단계 값 그대로, 2칸·3칸은 다음 단계 값 쪽으로 1/3, 2/3 다가간다.
+   마지막 단계는 앞 단계와의 차이의 절반 쪽으로 (3-3 이 3-1 보다 차이의 1/3 만큼 어려움).
+   값이 모두 정수면 정수로 돌려준다. 숫자가 아니면 그 단계 값 그대로. */
+G.tune = function (arr, lv, st) {
+  if (!Array.isArray(arr)) return arr;
+  var i = G.clamp(lv || 1, 1, arr.length) - 1, a = arr[i], f = (G.clamp(st || 1, 1, G.STEPS) - 1) / G.STEPS;
+  if (typeof a !== 'number' || !f) return a;
+  var b = i + 1 < arr.length ? arr[i + 1] : (i > 0 && typeof arr[i - 1] === 'number' ? a + (a - arr[i - 1]) * 0.5 : a);
+  if (typeof b !== 'number') return a;
+  var v = a + (b - a) * f;
+  var ints = arr.every(function (n) { return typeof n !== 'number' || Math.round(n) === n; });
+  return ints ? Math.round(v) : Math.round(v * 10000) / 10000;
 };
 
 /* ---------- 스티커 ---------- */
@@ -790,7 +820,7 @@ G.cur = null;          // 지금 하는 놀이의 ctx
 G.session = null;      // 오늘의 놀이 진행 {list, i, start, done:[]}
 
 function stageEls() {
-  return { st: G.$('#stage'), body: G.$('#stBody'), title: G.$('#stTitle'), dots: G.$('#stDots'), bubble: G.$('#stBubble'), sess: G.$('#stSess') };
+  return { st: G.$('#stage'), body: G.$('#stBody'), title: G.$('#stTitle'), lv: G.$('#stLv'), dots: G.$('#stDots'), bubble: G.$('#stBubble'), sess: G.$('#stSess') };
 }
 
 /* 놀이 시작 */
@@ -799,9 +829,11 @@ G.start = function (id, o) {
   var def = G.acts[id]; if (!def) { G.toast('준비 중인 놀이예요'); return; }
   G.exit(true);
   var E = stageEls();
-  var lv = o.level || G.levelFor(id, def.levels);
+  /* 단계·칸 — o.level(+o.step) 이 있으면 그대로(시험·부모가 고른 놀이), 없으면 기록으로 맞춘다 */
+  var sg = o.level ? { lv: G.clamp(o.level, 1, def.levels), st: def.levels > 1 ? G.clamp(o.step || 1, 1, G.STEPS) : 1 } : G.stageFor(id, def.levels);
+  var lv = sg.lv;
   var ctx = {
-    def: def, id: id, level: lv, alive: true, body: E.body, t0: Date.now(), n: 0, ok: 0, extra: {}, _clean: [], instr: '',
+    def: def, id: id, level: lv, step: sg.st, alive: true, body: E.body, t0: Date.now(), n: 0, ok: 0, extra: {}, _clean: [], instr: '',
     say: function (t, so) { if (!ctx.alive) return Promise.resolve(); so = so || {}; E.bubble.textContent = String(t).replace(/\s+/g, ' '); E.bubble.classList.add('on'); if (so.repeat !== false) ctx.instr = t; return G.say(t, so).then(function () { return ctx.alive ? undefined : new Promise(function () {}); }); },
     bubble: function (t) { E.bubble.textContent = t; E.bubble.classList.toggle('on', !!t); },
     cheer: function (t, el) {
@@ -850,10 +882,14 @@ G.start = function (id, o) {
       p.cancel = function () { w.remove(); };   /* 음성 인식이 먼저 들으면 단추를 거둔다 (이 약속은 끝나지 않음) */
       return p;
     },
+    /* 칸에 맞춘 숫자: ctx.tune([1단계, 2단계, 3단계]) — G.tune 참고 */
+    tune: function (arr) { return G.tune(arr, ctx.level, ctx.step); },
     finish: function (x) { finish(ctx, x || {}); }
   };
   G.cur = ctx;
-  E.title.innerHTML = '<span>' + def.icon + '</span> ' + G.esc(def.title) + (def.levels > 1 ? ' <small class="lv">' + '★'.repeat(lv) + '</small>' : '');
+  E.title.innerHTML = '<span>' + def.icon + '</span><span class="tt">' + G.esc(def.title) + '</span>';
+  /* ★ 단계 ●●○ 칸 — 말풍선 줄 오른쪽에 늘 보이게 */
+  if (E.lv) E.lv.innerHTML = def.levels > 1 ? '<small class="lv" title="' + lv + '단계 ' + sg.st + '칸" aria-label="' + lv + '단계 ' + sg.st + '칸">' + '★'.repeat(lv) + '<i class="lv-st">' + G.range(G.STEPS).map(function (k) { return k < sg.st ? '●' : '○'; }).join('') + '</i></small>' : '';
   E.dots.innerHTML = ''; E.bubble.textContent = ''; E.bubble.classList.remove('on');
   var tk = G.$('#stTalk'); if (tk) tk.hidden = !!def.tool;   /* 말판·도구 화면에선 💬 가 겹친다 */
   E.body.innerHTML = ''; E.body.className = 'st-body act-' + id;
@@ -877,14 +913,14 @@ G.exit = function (silent) {
   c._clean = [];
   G.wake(false);
   if (!silent && c.n > 0 && !c.def.tool) {  /* 하다 만 것도 기록은 남긴다 (스티커는 없음) */
-    G.log({ t: Date.now(), d: G.today(), id: c.id, area: c.def.area, lv: c.level, n: c.n, ok: c.ok, ms: Date.now() - c.t0, x: Object.assign({ quit: 1 }, c.extra) });
+    G.log({ t: Date.now(), d: G.today(), id: c.id, area: c.def.area, lv: c.level, st: c.step, n: c.n, ok: c.ok, ms: Date.now() - c.t0, x: Object.assign({ quit: 1 }, c.extra) });
   }
 };
 
 function finish(ctx, x) {
   if (!ctx.alive) return;
   var def = ctx.def, ms = Date.now() - ctx.t0;
-  if (!def.tool) G.log({ t: Date.now(), d: G.today(), id: ctx.id, area: def.area, lv: ctx.level, n: ctx.n, ok: ctx.ok, ms: ms, x: Object.assign({}, ctx.extra, x.extra || {}) });
+  if (!def.tool) G.log({ t: Date.now(), d: G.today(), id: ctx.id, area: def.area, lv: ctx.level, st: ctx.step, n: ctx.n, ok: ctx.ok, ms: ms, x: Object.assign({}, ctx.extra, x.extra || {}) });
   ctx.alive = false;
   G.voice.stop(); G.stopListen();
   ctx._clean.forEach(function (f) { try { f(); } catch (e) {} }); ctx._clean = [];
@@ -901,10 +937,20 @@ function finish(ctx, x) {
   /* 히어로: 스티커 대신 로봇 부품 — 여섯 개 모으면 로봇 완성(변신!) */
   var part = G.rewardPart ? G.rewardPart(G.stickers().count) : null;
   if (part && !x.msg && !hard) msg = part.complete ? part.robot.name + ' 완성! 변신!' + (part.rankUp ? ' 계급이 ' + G.josa(part.rankUp.name, '으로', '로') + ' 올랐어!' : '') : G.pick(D.PRAISE) + ' ' + part.partName.replace(/ \(.*\)$/, '') + ' 획득!';
+  /* 칸 오르기 알림 — 오를 때만 보인다. 내려갈 때는 아이에게 아무 말도 하지 않는다(무오류 학습) */
+  var up = '';
+  if (!def.tool && def.levels > 1 && !hard) {
+    var nx = G.stageFor(ctx.id, def.levels), was = (ctx.level - 1) * G.STEPS + ctx.step;
+    if (nx.fine > was) {
+      up = nx.lv > ctx.level ? (G.older() ? '레벨 업! ' : '와, 실력이 쑥! ') + nx.lv + '단계로 올라갔어!' : '실력이 쑥! 한 칸 올라갔어!';
+      msg += ' ' + up;
+    }
+  }
   var ov = G.el('<div class="reward' + (part ? ' hero' : '') + '" role="dialog">' +
     '<div class="rw-card">' + (hard ? '<div class="rw-stars"><span>💗</span></div>' : '<div class="rw-stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>') +
     (part ? '' : '<div class="rw-jv">' + G.jarvisSVG('big') + '</div>') +
-    '<div class="rw-msg">' + G.esc(msg) + '</div>' +
+    '<div class="rw-msg">' + G.esc(up ? msg.slice(0, msg.length - up.length - 1) : msg) + '</div>' +
+    (up ? '<div class="rw-up">⬆️ ' + G.esc(up) + '<small>' + '★'.repeat(nx.lv) + ' ' + G.range(G.STEPS).map(function (k) { return k < nx.st ? '●' : '○'; }).join('') + ' · 다음엔 조금 더 멋진 도전!</small></div>' : '') +
     (part ? '<div class="rw-part"><div class="rp-art' + (part.complete ? ' transform' : '') + '">' + part.svg + '</div><div><small>' + (part.complete ? '로봇 완성! 변신!' : '새 부품 획득') + '</small><b>' + G.esc(part.robot.name) + '</b><b class="rp-name">' + G.esc(part.partName) + '</b>' +
       '<span class="rp-dots">' + [0, 1, 2, 3, 4, 5].map(function (k) { return '<i class="' + (k < part.owned ? 'on' : '') + (k === part.owned - 1 ? ' new' : '') + '"></i>'; }).join('') + '</span>' +
       (part.rankUp ? '<small class="rp-rank">' + part.rankUp.e + ' 계급 업! 「' + G.esc(part.rankUp.name) + '」</small>' : '') + '</div></div>'
@@ -991,7 +1037,7 @@ G.runSlot = function (entry) {
   if (!a || !b) { G.start((a || b).id); return; }
   G.exit(true);
   var E = stageEls();
-  E.title.innerHTML = '<span>🤔</span> 뭐 하고 놀까?'; E.dots.innerHTML = '';
+  E.title.innerHTML = '<span>🤔</span><span class="tt">뭐 하고 놀까?</span>'; if (E.lv) E.lv.innerHTML = ''; E.dots.innerHTML = '';
   E.body.innerHTML = ''; E.body.className = 'st-body act-pick';
   E.st.style.setProperty('--area', '#4f8cff');
   var s = G.session; if (s) { E.sess.hidden = false; E.sess.innerHTML = '<b style="width:' + Math.round(s.i / s.list.length * 100) + '%"></b>'; }
