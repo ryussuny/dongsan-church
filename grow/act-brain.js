@@ -254,6 +254,7 @@ G.act({
         G.ui.hint(pads[seq[pos]]);
       }, 9000);
     }
+    var hintH = null;
     function onTap(i) {
       if (!accepting) return;
       light(i, 300); G.buzz(10);
@@ -271,16 +272,19 @@ G.act({
       ctx.oops(line).then(function () {
         play();
         if (misses >= 2) {
-          /* 두 번째부터는 누를 차례마다 정답이 반짝 (실패 없는 배움) */
-          var watch = ctx.interval(function () {
-            if (!accepting) return;
-            if (pos >= seq.length || round >= ROUNDS) { clearInterval(watch); return; }
+          /* 두 번째부터는 누를 차례마다 정답이 반짝 (실패 없는 배움) — 이 판에서만 */
+          var myRound = round;
+          clearInterval(hintH);
+          hintH = ctx.interval(function () {
+            if (round !== myRound || round >= ROUNDS) { clearInterval(hintH); hintH = null; return; }
+            if (!accepting || pos >= seq.length) return;
             G.ui.hint(pads[seq[pos]]);
           }, 1600);
         }
       });
     }
     function success() {
+      clearInterval(hintH); hintH = null;   /* 반짝 도움은 그 판에서 끝 — 다음 판은 스스로 */
       if (misses === 0) {
         ctx.trial(true); best = Math.max(best, seq.length); streak++;
         if (streak >= 2) { span = Math.min(7, span + 1); streak = 0; }
@@ -772,7 +776,7 @@ G.act({
   desc: '토끼가 당근까지 가는 길 찾기',
   goal: '계획 — 움직이기 전에 머릿속으로 길을 먼저 그려 보고, 막히면 돌아가 다른 길을 찾는 힘',
   how: '출발 전에 "손가락으로 먼저 길을 따라가 볼까?" 하고 눈으로 먼저 가 보게 해 주세요. 막다른 길에 가도 "돌아가면 돼!" 하고 다시 찾는 것을 칭찬해요. 화면 밖에서는 방석·의자로 거실 미로 만들기, 그림책 미로를 손가락으로 따라가기로 이어 가세요.',
-  basis: '미로·하노이탑(Tower) 과제 — 계획·문제 해결 측정',
+  basis: '미로 계획 과제(Porteus 미로 형식) — 3단계는 먼저 보고 길을 계획한 뒤 출발',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
     var COUNT = 4, mi = 0, m = null, pos = null, moves = 0, back = 0, bad = 0, visited = {}, locked = true, log = [];
@@ -905,7 +909,7 @@ G.act({
       early = false; cookie.classList.remove('bit'); two.textContent = '×2';
       fill.style.height = '0'; stars.innerHTML = '';
       help.className = 'wt-help ' + h.cls; help.querySelector('.he').textContent = h.e; help.querySelector('.ht').textContent = h.t;
-      var intro = r === 0 ? '자비스 쿠키 가게에 왔어요! 종이 땡 울릴 때까지 쿠키를 안 만지고 기다리면 쿠키가 두 개! 지금 만지면 하나예요.' :
+      var intro = r === 0 ? '쿠키 가게예요! 땡 할 때까지 기다려요. 그럼 쿠키 두 개!' :
         G.pick(['또 기다려 볼까? 땡 하면 두 개!', '이번엔 조금 더 길어요. 할 수 있어!']);
       ctx.say(intro).then(function () { return ctx.say(h.say); }).then(function () {
         waiting = true; t0 = performance.now();

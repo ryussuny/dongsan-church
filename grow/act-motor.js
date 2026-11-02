@@ -998,7 +998,7 @@ G.act({
     var lv = ctx.level, B = ctx.body, GOALS = 4;
     B.innerHTML = '<div class="mt-wrap"><div class="mt-top"><span class="mt-pill tl-count">⛳ <b>0</b> / ' + GOALS + '</span><button class="btn sm soft tl-mode" type="button" hidden></button></div>' +
       '<div class="tl-board"><div class="tl-start"><div class="te">⛳</div><div class="tt">기기를 <b>두 손</b>으로 꼭 잡고<br>살살 기울여서 공을 구멍에 쏙!</div>' +
-      '<button class="btn big tl-go" type="button">▶ 시작</button><button class="btn sm ghost tl-finger" type="button">👆 손가락으로 할래요</button></div></div></div>';
+      '<button class="btn big tl-go" type="button">▶ 시작</button><button class="btn soft tl-finger" type="button">👆 손가락으로 할래요</button></div></div></div>';
     var board = G.$('.tl-board', B), modeBtn = G.$('.tl-mode', B), cntEl = G.$('.tl-count b', B), startEl = G.$('.tl-start', B);
     var K = ctx.canvas(board, { onResize: onResize });
     var mode = null, oriOn = false, gotOri = false, base = null, tx = 0, ty = 0, drag = null, pid = null;

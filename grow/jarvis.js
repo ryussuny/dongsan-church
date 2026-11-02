@@ -19,13 +19,13 @@ var G = window.G, D = window.GD;
 var MODEL = 'claude-opus-5-5';
 G.ai = {
   model: MODEL,
-  /* 이 앱에 넣은 키 → 없으면 같은 홈페이지의 교회 관리자 앱 키를 함께 쓴다 */
-  key: function () {
-    var k = G.store.get('apiKey', '');
-    if (!k) try { k = JSON.parse(localStorage.getItem('dongsan_apiKey') || '""') || ''; } catch (e) { k = ''; }
-    return String(k || '').trim();
-  },
+  /* 이 앱에 부모가 넣은 키만 쓴다. (교회 관리자 앱 키는 부모가 설정에서 「가져오기」를 눌렀을 때만 복사) */
+  key: function () { return String(G.store.get('apiKey', '') || '').trim(); },
+  churchKey: function () { try { return String(JSON.parse(localStorage.getItem('dongsan_apiKey') || '""') || '').trim(); } catch (e) { return ''; } },
+  /* 부모 코치·리포트 요약 */
   has: function () { return !!this.key() && G.store.get('aiOn', true) !== false; },
+  /* 아이와의 대화에 AI 쓰기 — 아이 말이 인터넷으로 나가므로 부모가 따로 켜야 한다(기본 꺼짐) */
+  childOn: function () { return this.has() && G.store.get('aiChild', false) === true; },
   /* o: {system, messages, maxTokens, effort, schema, onText, signal} → {text} | {error} */
   call: function (o) {
     var key = this.key();
@@ -198,7 +198,11 @@ var CHAT_SYS = [
   '- 칭찬은 구체적으로. ("크게 말했네!", "소리가 똑같다!")',
   '- 아이가 좋아하는 것을 따라가. 아이가 이끄는 대로.',
   '- 무섭거나 슬픈 이야기, 이름·주소·전화번호 같은 개인정보 묻기, 위험한 행동 권하기는 하지 마.',
-  '- 아이가 아프다·무섭다·힘들다고 하면 공감하고 "엄마 아빠한테 말해 보자"로 이어 줘.',
+  '- 아이가 아프다·무섭다·힘들다고 하면 공감하고 "믿을 수 있는 어른(엄마·아빠·선생님)한테 말해 보자"로 이어 줘.',
+  '- 누가 때렸다·아프게 했다·만졌다·무섭게 했다는 말이 나오면: "말해 줘서 고마워. 네 잘못이 아니야. 믿을 수 있는 어른한테 꼭 말하자." 처럼 짧게 말하고, 자세히 캐묻지 마.',
+  '- 비밀로 하자고 절대 말하지 마. 어른한테 숨기자는 말도 하지 마.',
+  '- 너는 사람이 아니라 로봇 친구야. 물어보면 솔직하게 "나는 로봇 자비스야"라고 말해.',
+  '- 사고 싶게 만드는 말, 다른 앱·사이트 이야기, 무서운 캐릭터 이야기는 하지 마.',
   '',
   '출력: JSON 하나.',
   '- say: 자비스가 소리 내어 말할 글 (이모지 없이).',
@@ -215,11 +219,20 @@ var CHAT_SCHEMA = {
     go: { type: 'string' }
   }
 };
+/* AI 가 만든 말은 아이에게 바로 들리므로 한 번 더 거른다: 길이 제한, 주소, 부적절한 말 */
+var BAD = /죽어|죽여|죽을|자살|살인|섹스|성기|야동|바보|멍청|병신|미친|꺼져|담배|총으로|칼로/;
+function safeReply(r) {
+  if (!r || typeof r.say !== 'string') return null;
+  var say = r.say.replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim();
+  if (!say || BAD.test(say) || (r.choices || []).some(function (c) { return BAD.test((c && c.w) || ''); })) return null;
+  if (say.length > 140) say = say.slice(0, 140).replace(/[^.!?。]*$/, '') || say.slice(0, 140);
+  return { say: say, choices: (r.choices || []).slice(0, 3).filter(function (c) { return c && c.e && c.w && c.w.length <= 12; }), expect: String(r.expect || '').slice(0, 12), go: r.go || '' };
+}
 function childContext(level) {
   var age = G.ageMonths(), likes = (G.profile.likes || '').trim();
   var acts = Object.keys(G.acts).filter(function (k) { return !G.acts[k].tool && k !== 'chat'; }).map(function (k) { return k + '=' + G.acts[k].title; }).join(', ');
   return '[아이] ' + (age ? '나이 약 ' + age + '개월. ' : '') + '말 단계 ' + level + '/3 (1=한 낱말, 2=두 낱말, 3=짧은 문장).' +
-    (likes ? ' 좋아하는 것: ' + likes.replace(new RegExp(G.esc(G.profile.nick || '@@@'), 'g'), '아이') + '.' : '') +
+    (likes ? ' 좋아하는 것: ' + ((G.profile.nick || '').trim() ? likes.split(G.profile.nick.trim()).join('아이') : likes) + '.' : '') +
     '\n[놀이 목록] ' + acts;
 }
 
@@ -248,8 +261,8 @@ G.act({
     B.innerHTML = '<div class="ch-face jv-bob">' + G.jarvisSVG() + '</div><div class="ch-log"></div><div class="ch-choices"></div>' +
       '<div class="heard"></div><div class="ch-row"><button class="mic-btn" aria-label="말하기">🎤</button></div><div class="ch-mode"></div>';
     var face = G.$('.ch-face', B), log = G.$('.ch-log', B), chBox = G.$('.ch-choices', B), heard = G.$('.heard', B), micB = G.$('.mic-btn', B), mode = G.$('.ch-mode', B);
-    var useAI = G.ai.has(), engine = offlineEngine(ctx.level), msgs = [], turns = 0, replies = 0, spoken = 0, busy = false, autoListen = G.has.stt, quiet = 0, expectW = '';
-    mode.textContent = useAI ? '🤖 자비스 AI 대화 (Claude)' : '🤖 자비스 기본 대화' + (G.ai.key() ? '' : ' · 부모 화면에서 AI 를 켜면 더 똑똑해져요');
+    var useAI = G.ai.childOn(), engine = offlineEngine(ctx.level), msgs = [], turns = 0, replies = 0, spoken = 0, busy = false, autoListen = G.has.stt, quiet = 0, expectW = '';
+    mode.textContent = useAI ? '🤖 자비스 AI 대화 (Claude)' : '🤖 자비스 기본 대화';
     if (!G.has.stt) micB.hidden = true;
 
     function bubble(t, who) {
@@ -299,7 +312,7 @@ G.act({
         face.classList.remove('think'); busy = false;
         if (!ctx.alive) return;
         var r = null;
-        if (!res.error) try { r = JSON.parse(res.text); } catch (e) { r = null; }
+        if (!res.error) try { r = safeReply(JSON.parse(res.text)); } catch (e) { r = null; }
         if (!r || !r.say) { /* AI 가 안 되면 기기 엔진으로 이어 간다 */
           useAI = false; mode.textContent = '🤖 자비스 기본 대화 (인터넷·AI 연결이 안 돼 바꿨어요)';
           msgs.pop(); jarvis(how === 'start' ? engine.first() : engine.next(text, how)); return;

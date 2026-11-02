@@ -372,7 +372,11 @@ G.css('speech', `
 /* 칸 수·줄 수를 고정 — 어느 탭이든 그림 크기와 자리가 같아야 손이 기억한다 */
 .act-talkboard .tb-grid{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,minmax(clamp(78px,12vh,150px),1fr));
   grid-auto-rows:minmax(clamp(78px,12vh,150px),1fr);gap:clamp(6px,1.6vw,10px);padding:2px 2px 8px}
-@media (min-width:700px){.act-talkboard .tb-grid{grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(3,minmax(clamp(78px,12vh,170px),1fr))}}
+/* 화면을 돌려도 칸이 그대로 — 4칸 고정. 자주 쓰는 6낱말은 어느 탭에서나 위에 고정 */
+.act-talkboard .tb-core{display:grid;grid-template-columns:repeat(6,1fr);gap:clamp(4px,1.2vw,8px)}
+.act-talkboard .tb-core .tb-tile{min-height:clamp(64px,9vh,96px);padding:4px 1px}
+.act-talkboard .tb-core .tb-tile .te{font-size:clamp(24px,6.4vw,40px)}
+.act-talkboard .tb-core .tb-tile .tl{font-size:clamp(12px,3.2vw,17px)}
 .act-talkboard .tb-tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:18px;background:var(--tc,#fff);color:#24344a;
   box-shadow:0 3px 0 rgba(0,0,0,.1);padding:6px 2px;min-width:0;transition:transform .1s}
 .act-talkboard .tb-tile:active{transform:scale(.94)}
@@ -1116,8 +1120,8 @@ G.act({
     B.innerHTML = '<div class="tb"><div class="tb-strip"><div class="tb-sent" aria-live="polite"></div>' +
       '<button class="tb-btn tb-del" type="button" aria-label="하나 지우기">⌫</button><button class="tb-btn tb-clr" type="button" aria-label="모두 지우기">🗑</button>' +
       '<button class="tb-btn tb-say" type="button" aria-label="말하기"><b>▶</b><small>말하기</small></button></div>' +
-      '<div class="tb-tabs" role="tablist"></div><div class="tb-grid"></div></div>';
-    var sentEl = G.$('.tb-sent', B), tabsEl = G.$('.tb-tabs', B), grid = G.$('.tb-grid', B);
+      '<div class="tb-core" aria-label="자주 쓰는 말"></div><div class="tb-tabs" role="tablist"></div><div class="tb-grid"></div></div>';
+    var sentEl = G.$('.tb-sent', B), tabsEl = G.$('.tb-tabs', B), grid = G.$('.tb-grid', B), coreEl = G.$('.tb-core', B);
     var tabBtns = D.AAC_TABS.map(function (t) {
       var b = G.el('<button class="tb-tab" type="button" role="tab"><span>' + t.e + '</span><small>' + G.esc(t.name) + '</small></button>');
       b.addEventListener('click', function () { G.sfx.play('tap'); tab = t.id; renderTabs(); renderGrid(); });
@@ -1171,6 +1175,9 @@ G.act({
     });
     G.$('.tb-del', B).addEventListener('click', function () { G.sfx.play('tap'); sent.pop(); renderSent(); });
     G.$('.tb-clr', B).addEventListener('click', function () { G.sfx.play('whoosh'); sent = []; renderSent(); });
+    ['나', '줘', '더', '그만', '도와줘', '싫어'].forEach(function (w) {
+      var it = (D.AAC.core || []).filter(function (x) { return x.w === w; })[0]; if (it) coreEl.appendChild(tile(it));
+    });
     renderTabs(); renderGrid(); renderSent();
     ctx.bubble('하고 싶은 말을 눌러 봐!');
     G.db.all('pics').then(function (p) {

@@ -102,7 +102,7 @@ function stats(days) {
     var d = byDay[l.d] = byDay[l.d] || { ms: 0, n: 0 }; d.ms += ms; d.n++;
     var a = byArea[l.area] = byArea[l.area] || { ms: 0, n: 0 }; a.ms += ms; a.n++;
     var b = byAct[l.id] = byAct[l.id] || { n: 0, tr: 0, ok: 0, lv: [], last: 0, ms: 0, area: l.area }; b.n++; b.tr += l.n || 0; b.ok += l.ok || 0; b.lv.push(l.lv || 1); b.last = Math.max(b.last, l.t); b.ms += ms;
-    var def = G.acts[l.id]; ((def && def.ef) || []).forEach(function (k) { byEF[k] = (byEF[k] || 0) + 1; });
+    (G.efOf ? G.efOf(l.id, l.lv || 1) : ((G.acts[l.id] || {}).ef || [])).forEach(function (k) { byEF[k] = (byEF[k] || 0) + 1; });
     if (l.id === 'checkin' && l.x && l.x.emo) moods.push({ d: l.d, emo: l.x.emo });
   });
   return { L: L, byDay: byDay, byArea: byArea, byAct: byAct, byEF: byEF, moods: moods, since: since, days: days };
@@ -281,7 +281,7 @@ function tRec(body) {
   h += card('<h3>영역별 시간</h3>' + areaBars(S));
   h += card('<h3>🧠 생각 힘(실행기능) 균형</h3>' + efBars(S));
   h += card('<h3>놀이별 결과</h3><p class="muted">단계는 자비스가 맞춰 올리고 내린 기록이에요(1→3). ↑ 는 오른 것.</p>' + actTable(S));
-  h += card('<h3>🗣️ 아이가 말한 낱말</h3>' + saidChips(200, true));
+  h += card('<h3>🗣️ 들린 말 (아이 말 기록)</h3><p class="muted">자비스가 아이 차례(🎤 빨간불)에 들은 말이에요. 그때 부모님이 같이 말하면 그 말도 들어갈 수 있어요 — 아이 차례에는 조용히 기다려 주세요.</p>' + saidChips(200, true));
   h += card('<h3>🎨 그림첩</h3><div class="arts" id="pArts"><p class="muted">불러오는 중…</p></div>');
   h += card('<h3>내보내기</h3><p class="muted">기록을 표 파일(CSV)로 받아 엑셀에서 볼 수 있어요. 공개 홈페이지에 올리지 마세요.</p><button class="btn soft" id="pCsv" style="margin-top:6px">⬇️ 기록 CSV 받기</button>');
   body.innerHTML = h;
@@ -343,7 +343,7 @@ function tDiary(body) {
 function tCoach(body) {
   var hist = G.store.get('coachChat', []), has = G.ai.key();
   var h = card('<div class="rep-h"><h3>🤖 자비스 코치</h3><button class="btn sm soft" id="cNew">새 대화</button></div><p class="muted">기록을 함께 보고 집 놀이 계획·치료사 질문·마음 돌봄을 도와요. 진단이나 치료를 대신하지 않아요. 아이 이름은 \'아이\'로 바꿔 보내고, 대화는 이 기기에만 남아요.</p>' +
-    (has ? '' : '<div class="note" style="margin-top:8px"><p>Claude API 키가 필요해요. <b>⚙️ 설정 → 자비스 AI</b>에서 넣어 주세요. (교회 관리자 앱에 넣은 키가 있으면 그대로 써요.)</p></div>') +
+    (has ? '' : '<div class="note" style="margin-top:8px"><p>Claude API 키가 필요해요. <b>⚙️ 설정 → 자비스 AI</b>에서 넣어 주세요. (교회 관리자 앱에 넣은 키가 있으면 설정에서 「가져오기」로 쓸 수 있어요.)</p></div>') +
     '<label class="sw" style="border:0"><span>📊 기록 함께 보내기 (최근 14일 요약)</span><input type="checkbox" id="cData" ' + (G.store.get('coachData', true) ? 'checked' : '') + '></label>' +
     '<div class="wchips" id="cQuick">' + G.coach.QUICK.map(function (q, i) { return '<button class="chip" data-q="' + i + '">' + q.e + ' ' + q.t + '</button>'; }).join('') + '</div>');
   h += '<div class="clog" id="cLog">' + hist.map(function (m) { return '<div class="cmsg ' + m.role + '">' + (m.role === 'assistant' ? md(m.content) : G.esc(m.content)) + '</div>'; }).join('') + '</div>';
@@ -445,14 +445,17 @@ function tSet(body) {
   h += card('<h3>🎛️ 소리 · 화면</h3>' +
     sw('sound', '효과음') + sw('vibrate', '진동') + sw('praiseVoice', '칭찬을 소리로') +
     sw('calm', '🌿 감각 예민 모드 (소리 작게 · 반짝임 끄기)') +
-    '<h4>오늘의 놀이 시간</h4><div class="wchips">' + [10, 15, 20, 30].map(function (m) { return '<button class="chip ' + (St.sessionMin === m ? 'on' : '') + '" data-sm="' + m + '">' + m + '분</button>'; }).join('') + '</div>' +
+    '<h4>오늘의 놀이 시간</h4><div class="wchips">' + [10, 15, 20].map(function (m) { return '<button class="chip ' + (St.sessionMin === m ? 'on' : '') + '" data-sm="' + m + '">' + m + '분</button>'; }).join('') + '</div>' +
     '<p class="muted" style="margin-top:6px">WHO·미국소아과학회는 2~5세 화면 시간을 하루 1시간 이하, 어른과 함께하기를 권해요.</p>');
   h += card('<h3>📶 놀이 단계 · 보이기</h3><p class="muted">「자동」이면 자비스가 최근 세 번 결과로 단계를 맞춰요. 치료사 선생님이 정한 단계가 있으면 고정하세요.</p><div id="lvList"></div>');
   h += card('<h3>🤖 자비스 AI (Claude)</h3><p class="muted">키를 넣으면 「자비스랑 이야기」가 아이 말에 맞춰 대답하고, 코치·리포트 요약을 쓸 수 있어요. 키가 없어도 모든 놀이는 그대로 돼요. 보내는 것: 아이가 한 말(음성 인식 글)·나이·좋아하는 것·기록 요약. 이름은 보내지 않아요.</p>' +
     '<div class="row" style="margin-top:8px"><input class="inp" id="sKey" type="password" placeholder="sk-ant-..." style="flex:1" value="' + G.esc(G.store.get('apiKey', '')) + '"><button class="btn" id="sKeySave">저장</button></div>' +
-    (G.store.get('apiKey', '') ? '' : (G.ai.key() ? '<p class="muted" style="margin-top:6px">✅ 교회 관리자 앱에 넣은 키를 함께 쓰고 있어요.</p>' : '')) +
-    sw2('aiOn', 'AI 쓰기', G.store.get('aiOn', true)) +
+    (!G.store.get('apiKey', '') && G.ai.churchKey() ? '<button class="btn soft sm" id="sKeyChurch" style="margin-top:6px">⛪ 교회 관리자 앱 키 가져오기</button>' : '') +
+    sw2('aiOn', '부모 코치·리포트 요약에 AI 쓰기', G.store.get('aiOn', true)) +
+    sw2('aiChild', '🧒 「자비스랑 이야기」에 AI 쓰기 (아이가 한 말이 Claude 로 가요)', G.store.get('aiChild', false)) +
+    '<p class="muted">아이 대화 AI 는 기본으로 꺼져 있어요. 꺼져 있어도 자비스는 기기 안 대화로 이야기해요. 키는 이 기기에 저장되니, 아이가 혼자 쓰는 기기라면 코치만 켜 두셔도 돼요.</p>' +
     '<button class="btn soft" id="sKeyTest" style="margin-top:8px">연결 확인</button> <span class="muted" id="sKeyState"></span>');
+  h += card('<h3>🎤 📷 마이크·카메라 미리 허락하기</h3><p class="muted">놀이 중에 허락 창이 갑자기 뜨면 아이가 당황할 수 있어요. 부모님이 지금 한 번 눌러 허락해 두세요. (말하기·촛불 끄기·입 운동 거울·표정 따라 하기에 써요)</p><button class="btn soft" id="sPerm" style="margin-top:8px">허락하기</button> <span class="muted" id="sPermState"></span>');
   h += card('<h3>📲 휴대폰·태블릿에 앱으로 설치</h3><p>안드로이드(크롬·삼성 인터넷): 아래 단추 또는 메뉴 ⋮ → <b>홈 화면에 추가</b>. 아이폰·아이패드(사파리): 공유 ⬆️ → <b>홈 화면에 추가</b>. 설치하면 인터넷이 없어도 놀이가 열려요.</p><button class="btn" id="sInstall" style="margin-top:8px" hidden>📲 지금 설치</button>');
   h += card('<h3>💾 데이터</h3><p class="muted">기기를 바꾸거나 초기화하기 전에 백업 파일을 받아 두세요. 백업에는 아이 기록·사진·그림이 들어 있으니 공개된 곳에 올리지 마세요.</p>' +
     '<div class="row" style="margin-top:8px"><button class="btn soft" id="dExp">⬇️ 백업 받기</button><label class="btn soft" style="cursor:pointer">⬆️ 백업 불러오기<input type="file" accept="application/json,.json" id="dImp" hidden></label><button class="btn soft" id="dDel" style="color:#e5484d">🗑 모두 지우기</button></div>');
@@ -508,11 +511,22 @@ function tSet(body) {
   G.$$('[data-lv]', lv).forEach(function (s) { s.onchange = function () { P.level = P.level || {}; if (+s.value) P.level[s.dataset.lv] = +s.value; else delete P.level[s.dataset.lv]; G.saveProfile(); }; });
   G.$$('[data-hide]', lv).forEach(function (c) { c.onchange = function () { P.hide = P.hide || {}; if (c.checked) delete P.hide[c.dataset.hide]; else P.hide[c.dataset.hide] = 1; G.saveProfile(); }; });
   /* AI */
-  G.$('#sKeySave', body).onclick = function () { G.store.set('apiKey', G.$('#sKey', body).value.trim()); G.toast('저장했어요'); };
+  G.$('#sKeySave', body).onclick = function () { G.store.set('apiKey', G.$('#sKey', body).value.trim()); G.toast('저장했어요'); render(); };
+  var kc = G.$('#sKeyChurch', body); if (kc) kc.onclick = function () { G.store.set('apiKey', G.ai.churchKey()); G.toast('교회 관리자 앱 키를 가져왔어요'); render(); };
   G.$$('[data-set2]', body).forEach(function (c) { c.onchange = function () { G.store.set(c.dataset.set2, c.checked); }; });
   G.$('#sKeyTest', body).onclick = function () {
     var st = G.$('#sKeyState'); st.textContent = '확인 중…';
     G.ai.call({ system: '짧게 대답하세요.', messages: [{ role: 'user', content: '"연결됐어요" 라고만 말해 주세요.' }], maxTokens: 400, effort: 'low' }).then(function (r) { st.textContent = r.error ? '❌ ' + r.error : '✅ ' + r.text; });
+  };
+  /* 마이크·카메라·음성 인식 미리 허락 */
+  G.$('#sPerm', body).onclick = function () {
+    var st = G.$('#sPermState'); st.textContent = '확인 중…';
+    if (!G.has.mic) { st.textContent = '이 기기·브라우저는 마이크를 쓸 수 없어요'; return; }
+    navigator.mediaDevices.getUserMedia({ audio: true, video: true }).catch(function () { return navigator.mediaDevices.getUserMedia({ audio: true }); })
+      .then(function (m) { m.getTracks().forEach(function (t) { t.stop(); }); st.textContent = '✅ 마이크' + (m.getVideoTracks().length ? '·카메라' : '') + ' 허락됨';
+        if (G.has.stt) { st.textContent += ' · "안녕" 이라고 말해 보세요…'; return G.listen({ ms: 4000 }).then(function (r) { st.textContent = r.denied ? '⚠️ 음성 인식이 막혀 있어요(설정에서 허락)' : r.heard ? '✅ 음성 인식도 돼요: "' + r.text + '"' : '✅ 허락됨 (말소리는 못 들었어요)'; }); }
+        st.textContent += ' · 이 브라우저는 음성 인식이 없어 부모 판정 단추로 해요'; })
+      .catch(function () { st.textContent = '⚠️ 허락되지 않았어요. 휴대폰 설정 → 브라우저 → 마이크·카메라를 켜 주세요'; });
   };
   /* 설치 */
   var ib = G.$('#sInstall', body);

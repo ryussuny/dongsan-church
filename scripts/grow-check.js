@@ -73,10 +73,28 @@ server.listen(0, async function () {
     setLogs([[2, 7], [2, 7], [2, 7]]); out.level.stay = G.levelFor('zz', 3);
     setLogs([[3, 10], [3, 10], [3, 10]]); out.level.cap = G.levelFor('zz', 3);
     setLogs([]); out.level.first = G.levelFor('zz', 3);
+    /* 검토에서 나온 경우: 다른 단계 기록을 섞지 않는다 */
+    setLogs([[1, 10], [1, 10], [2, 6]]); out.level.mixUp = G.levelFor('zz', 3);       /* 2단계 한 판(60%) → 2 그대로 (3으로 뛰지 않음) */
+    setLogs([[1, 10], [2, 6], [3, 3]]); out.level.mixDown = G.levelFor('zz', 3);     /* 3단계 30% → 2로 내림 */
+    var qa = [[1, 9], [1, 9], [1, 9]].map(function (x, i) { return { t: i, d: '2026-01-01', id: 'zz', area: 'mind', lv: x[0], n: 10, ok: x[1], ms: 1000 }; });
+    qa.push({ t: 9, d: '2026-01-01', id: 'zz', area: 'mind', lv: 2, n: 1, ok: 0, ms: 500, x: { quit: 1 } });
+    localStorage.setItem('grow_logs', JSON.stringify(qa)); out.level.quitIgnored = G.levelFor('zz', 3);   /* 그만둔 판은 무시 → 1단계 세 판 90% → 2 */
+    if (G.acts.daynight) { localStorage.setItem('grow_logs', JSON.stringify([{ t: 1, d: '2026-01-01', id: 'daynight', area: 'brain', lv: 1, n: 10, ok: 10, ms: 1000 }])); out.level.warm = G.levelFor('daynight', 3); }
     if (keep) localStorage.setItem('grow_logs', keep); else localStorage.removeItem('grow_logs');
     /* 너그러운 말소리 맞춤 */
     out.sim = { '아과/사과': G.similar('아과', '사과'), '나나/바나나': G.similar('나나', '바나나'), '머머/멍멍': G.similar('머머', '멍멍'),
-      '강아지 줘/강아지': G.similar('강아지 줘', '강아지'), '자동차/강아지': G.similar('자동차', '강아지'), '물/우유': G.similar('물', '우유') };
+      '강아지 줘/강아지': G.similar('강아지 줘', '강아지'), '자동차/강아지': G.similar('자동차', '강아지'), '물/우유': G.similar('물', '우유'),
+      '무/물': G.similar('무', '물'), '고/코': G.similar('고', '코'),
+      '엄마/이': G.similar('엄마', '이'), '배고파/코': G.similar('배고파', '코'), '안녕/눈': G.similar('안녕', '눈'), '안녕/바나나': G.similar('안녕', '바나나'), '아니/이': G.similar('아니', '이') };
+    /* 아이 대화 AI 는 부모가 켜기 전엔 꺼져 있어야 한다 */
+    var k0 = localStorage.getItem('grow_apiKey'), c0 = localStorage.getItem('grow_aiChild');
+    localStorage.setItem('grow_apiKey', JSON.stringify('sk-test')); localStorage.removeItem('grow_aiChild');
+    out.aiChildDefault = window.G.ai.childOn();
+    localStorage.setItem('dongsan_apiKey', JSON.stringify('sk-church')); localStorage.removeItem('grow_apiKey');
+    out.churchKeySilent = window.G.ai.key();
+    localStorage.removeItem('dongsan_apiKey');
+    if (k0) localStorage.setItem('grow_apiKey', k0); else localStorage.removeItem('grow_apiKey');
+    if (c0) localStorage.setItem('grow_aiChild', c0);
     return out;
   });
 
@@ -115,6 +133,14 @@ server.listen(0, async function () {
   ok(design.level.cap === 3, '최고 단계를 넘어감: ' + design.level.cap);
   ok(design.sim['아과/사과'] >= 0.5 && design.sim['나나/바나나'] >= 0.5 && design.sim['머머/멍멍'] >= 0.5 && design.sim['강아지 줘/강아지'] === 1, '서툰 발음을 너그럽게 알아듣지 못함: ' + JSON.stringify(design.sim));
   ok(design.sim['자동차/강아지'] < 0.5, '전혀 다른 말을 맞다고 함: ' + JSON.stringify(design.sim));
+  ok(design.sim['무/물'] >= 0.5 && design.sim['고/코'] >= 0.5, '아이 발음(받침 빠짐·ㅋ→ㄱ)을 받아 주지 못함: ' + JSON.stringify(design.sim));
+  ok(['엄마/이', '배고파/코', '안녕/눈', '안녕/바나나', '아니/이'].every(function (k) { return design.sim[k] < 0.5; }), '엉뚱한 말을 한 글자 낱말로 칭찬함: ' + JSON.stringify(design.sim));
+  ok(design.level.mixUp === 2, '다른 단계 기록을 섞어 단계를 건너뜀: ' + design.level.mixUp);
+  ok(design.level.mixDown === 2, '새 단계가 너무 어려워도(30%) 내려가지 않음: ' + design.level.mixDown);
+  ok(design.level.quitIgnored === 2, '중간에 그만둔 판이 단계 판단에 섞임: ' + design.level.quitIgnored);
+  if (design.level.warm !== undefined) ok(design.level.warm === 2, '규칙 익히기(1단계)를 잘해도 진짜 연습 단계로 안 오름: ' + design.level.warm);
+  ok(design.aiChildDefault === false, '아이 대화 AI 가 부모 동의 없이 켜져 있음');
+  ok(!design.churchKeySilent, '교회 관리자 앱 키를 부모 동의 없이 가져다 씀');
 
   /* ---------- 2) 모든 놀이를 모든 단계로 돌려 보기 ---------- */
   if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
@@ -167,6 +193,48 @@ server.listen(0, async function () {
     G.runSlot(e); var n = document.querySelectorAll('#stBody .choice').length; G.session = null; G.home(); return { n: n };
   });
   ok(pick.n === 2, '아이가 고르는 화면에 놀이 두 개가 나오지 않음: ' + JSON.stringify(pick));
+
+  /* 감각 예민 모드에서도 정답 반짝(힌트)이 보이는가 */
+  await page.evaluate(function () { var G = window.G; G.settings.calm = true; G.saveSettings(); G.start('listen', { level: 1 }); });
+  await page.waitForSelector('#stBody .choice', { timeout: 15000 });
+  var calmHint = await page.evaluate(function () {
+    var G = window.G;
+    var b = document.querySelector('#stBody .choice'); G.ui.hint(b);
+    var cs = getComputedStyle(b), r = { shadow: cs.boxShadow, outline: cs.outlineStyle };
+    G.settings.calm = false; G.saveSettings(); G.home(); return r;
+  });
+  ok((calmHint.shadow && calmHint.shadow !== 'none') || calmHint.outline !== 'none', '감각 예민 모드에서 정답 반짝 힌트가 안 보임: ' + JSON.stringify(calmHint));
+
+  /* 힘든 기분이면 오늘 꾸러미를 줄이고 편한 놀이 + 쉬어가기로 */
+  var mood = await page.evaluate(function () {
+    var G = window.G, keep = localStorage.getItem('grow_logs');
+    G.session = { list: G.planToday(), i: 0, start: Date.now(), done: [] };
+    var L = G.logs(); L.push({ t: Date.now(), d: G.today(), id: 'checkin', area: 'feel', lv: 1, n: 0, ok: 0, ms: 1000, x: { emo: 'sad' } }); localStorage.setItem('grow_logs', JSON.stringify(L));
+    G.nextInSession();
+    var s = G.session, flat = []; (s ? s.list : []).forEach(function (e) { flat = flat.concat(typeof e === 'string' ? [e] : e.pick); });
+    var out = { len: s && s.list.length, brain: flat.some(function (id) { return G.acts[id] && G.acts[id].area === 'brain'; }), last: s && G.acts[s.list[s.list.length - 1]] && G.acts[s.list[s.list.length - 1]].area,
+      saved: !!G.savedSession() };
+    G.session = null; G.store.del('sessionSave'); if (keep) localStorage.setItem('grow_logs', keep); else localStorage.removeItem('grow_logs'); G.home();
+    return out;
+  });
+  ok(mood.len && mood.len <= 3 && !mood.brain && mood.last === 'calm', '슬퍼요를 골라도 꾸러미가 그대로임: ' + JSON.stringify(mood));
+  ok(mood.saved, '오늘의 놀이를 이어 할 수 있게 저장되지 않음');
+
+  /* ✕ 는 바로 끝내지 않고 묻는다 · 💬 말하기 띠 */
+  var ctl = await page.evaluate(function () {
+    var G = window.G; G.start('listen', { level: 1 });
+    document.getElementById('stX').click(); var ask = !!document.querySelector('.quit-ask'); var still = !!G.cur;
+    var k = document.querySelector('.quit-ask .keep'); if (k) k.click();
+    document.getElementById('stTalk').click(); var strip = document.querySelectorAll('.talk-strip button').length;
+    var st = document.querySelector('.talk-strip'); if (st) st.remove();
+    G.home(); return { ask: ask, still: still, strip: strip };
+  });
+  ok(ctl.ask && ctl.still, '✕ 를 한 번 누르면 바로 끝나 버림');
+  ok(ctl.strip === 4, '💬 그만·도와줘·쉬고 싶어·한 번 더 띠가 없음');
+
+  /* 말판: 자주 쓰는 6낱말 고정 줄 */
+  var aac = await page.evaluate(function () { var G = window.G; G.start('talkboard'); var n = document.querySelectorAll('#stBody .tb-core .tb-tile').length; G.home(); return n; });
+  ok(aac === 6, '말판에 자주 쓰는 말 고정 줄이 없음: ' + aac);
 
   /* 부모 화면 탭 */
   for (var t of ['home', 'rec', 'diary', 'coach', 'report', 'set']) {

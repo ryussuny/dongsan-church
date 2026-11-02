@@ -265,7 +265,9 @@ G.act({
   basis: '감정 알아차리기 — 감정에 이름을 붙이면 가라앉는다(affect labeling), 스스로 진정 방법 고르기',
   offline: '저녁 식탁에서 감정 얼굴 카드로 "오늘 기분"을 하나씩 고르고 엄마 아빠 기분도 말해 주기.',
   run: function (ctx) {
-    var lv = ctx.level, list = lv === 1 ? D.EMOTIONS.slice(0, 4) : lv === 2 ? D.EMOTIONS.slice(0, 6) : D.EMOTIONS.slice();
+    /* 좋은 기분과 힘든 기분을 고르게 — 1단계 기쁨·편안·슬픔·화남, 2단계 + 무서움·졸림 */
+    var pickE = function (ids) { return ids.map(function (id) { return D.EMOTIONS.filter(function (e) { return e.id === id; })[0]; }).filter(Boolean); };
+    var lv = ctx.level, list = lv === 1 ? pickE(['happy', 'calm', 'sad', 'angry']) : lv === 2 ? pickE(['happy', 'calm', 'sad', 'angry', 'scared', 'sleepy']) : D.EMOTIONS.slice();
     var cols = list.length === 4 ? 2 : list.length === 6 ? 3 : 4;
     ctx.say(G.pick(['오늘 기분이 어때?', G.callName() + ', 오늘 기분이 어때?', '지금 마음은 어떤 얼굴이야?']) + ' 하나 골라 봐.');
     var ch = ctx.choices(list, {

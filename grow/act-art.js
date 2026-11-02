@@ -67,7 +67,7 @@ ${BOARD} .ab-ask-c div{display:flex;gap:10px;flex-wrap:wrap;justify-content:cent
 ${BOARD} .ab-ask-c .btn{flex:1;min-width:120px;padding:12px 14px;white-space:nowrap}
 ${BOARD} .ab-tools{display:flex;flex-direction:column;gap:6px;flex:none}
 ${BOARD} .ab-pal{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-${BOARD} .ab-sw{height:clamp(38px,10vw,50px);border-radius:999px;background:var(--sw);border:3px solid transparent;font-size:clamp(20px,5.4vw,26px);line-height:1;
+${BOARD} .ab-sw{height:clamp(46px,10vw,54px);border-radius:999px;background:var(--sw);border:3px solid transparent;font-size:clamp(20px,5.4vw,26px);line-height:1;
   box-shadow:inset 0 -5px 0 rgba(0,0,0,.14);transition:transform .12s,box-shadow .12s}
 ${BOARD} .ab-sw.wh{border-color:var(--line)}
 ${BOARD} .ab-sw.rb{background:conic-gradient(from 90deg,#ef5350,#ffa726,#ffca28,#66bb6a,#42a5f5,#ab47bc,#ef5350)}
@@ -101,7 +101,7 @@ ${BOARD} .ab-tb b{position:absolute;right:4px;bottom:2px;font-family:Jua,sans-se
   ${BOARD} .ab-tools{width:244px}
   ${BOARD} .ab-pal,${BOARD} .ab-row{grid-template-columns:repeat(4,1fr);gap:5px}
   ${BOARD} .ab-tb.save{grid-column:auto}
-  ${BOARD} .ab-sw,${BOARD} .ab-st{height:36px;font-size:20px}
+  ${BOARD} .ab-sw,${BOARD} .ab-st{height:44px;font-size:20px}
   ${BOARD} .ab-tb{height:42px;font-size:21px}
   #stage:has(> .st-body${BOARD}) .st-top{padding-top:calc(4px + var(--safe-t));padding-bottom:2px}
   #stage:has(> .st-body${BOARD}) .st-jv{min-height:0;padding:0 12px 3px}

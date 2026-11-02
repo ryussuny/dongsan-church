@@ -194,7 +194,7 @@ G.sfx = (function () {
     oops: function () { tone(330, 0, 0.16, 'sine', 0.16, 262); },        // 부드러운 '음~' (꾸중 소리 아님)
     whoosh: function () { noise(0, 0.35, 0.18, 600); },
     ding: function () { tone(N.A5, 0, 0.5, 'sine', 0.25); tone(N.E5 * 2, 0, 0.4, 'sine', 0.08); },
-    tick: function () { tone(1200, 0, 0.03, 'square', 0.06); },
+    tick: function () { tone(880, 0, 0.05, 'sine', 0.05); },             // 부드러운 똑
     drum: function () { tone(140, 0, 0.18, 'sine', 0.5, 60); noise(0, 0.05, 0.08, 800); },
     shaker: function () { noise(0, 0.12, 0.25, 4000); },
     click: function () { tone(1500, 0, 0.02, 'square', 0.08); },
@@ -225,7 +225,7 @@ G.sfx = (function () {
   };
 })();
 
-G.buzz = function (p) { if (G.settings.vibrate && navigator.vibrate) try { navigator.vibrate(p || 20); } catch (e) {} };
+G.buzz = function (p) { if (G.settings.vibrate && !G.settings.calm && navigator.vibrate) try { navigator.vibrate(p || 20); } catch (e) {} };
 
 /* ---------- 자비스 목소리 (기기 음성 합성) ---------- */
 G.voice = (function () {
@@ -304,18 +304,43 @@ function lev(a, b) {
   return d[m][n];
 }
 /* 0~1: 들은 말 heard 안에 목표 낱말 target 이 얼마나 비슷하게 들어 있나 */
+/* 같은 자리에서 나는 소리끼리는 같게 본다 — 아이들이 흔히 ㅋ↔ㄱ, ㅌ↔ㄷ, ㅍ↔ㅂ 로 바꿔 말한다 */
+var EASE = { 'ㅋ': 'ㄱ', 'ㄲ': 'ㄱ', 'ㅌ': 'ㄷ', 'ㄸ': 'ㄷ', 'ㅍ': 'ㅂ', 'ㅃ': 'ㅂ', 'ㅊ': 'ㅈ', 'ㅉ': 'ㅈ', 'ㅆ': 'ㅅ' };
+function syls(w) { /* 낱말 → [[초성(쉽게), 중성], ...] */
+  var out = [];
+  String(w).replace(/[^가-힣]/g, '').split('').forEach(function (ch) {
+    var c = ch.charCodeAt(0) - 0xAC00, cho = CHO[Math.floor(c / 588)];
+    out.push([EASE[cho] || cho, JUNG[Math.floor((c % 588) / 28)]]);
+  });
+  return out;
+}
+/* 0~1: 들은 말 heard 안에 목표 낱말 target 이 얼마나 비슷하게 들어 있나.
+   · 띄어 쓴 낱말마다 따로 비교한다 (여러 낱말에 걸쳐 우연히 맞는 것을 막는다)
+   · 한 글자 낱말(코·눈·이)은 짧은 대답(두 글자 이하) 안에 같은 첫소리+모음이 있어야 맞다고 본다
+     — "배고파"가 "코"로, "아니"가 "이"로 칭찬받지 않게 */
 G.similar = function (heard, target) {
-  var h = G.jamo(heard), t = G.jamo(target);
-  if (!h || !t) return 0;
-  if (h.indexOf(t) >= 0) return 1;
-  var best = 0;
-  for (var len = Math.max(1, t.length - 2); len <= t.length + 2; len++) {
-    for (var i = 0; i + len <= h.length || (i === 0 && h.length < len); i++) {
-      var part = h.substr(i, len), s = 1 - lev(part, t) / Math.max(part.length, t.length);
-      if (s > best) best = s;
-      if (i + len >= h.length) break;
-    }
+  var t = G.jamo(target); if (!t) return 0;
+  var toks = String(heard || '').split(/\s+/).filter(function (x) { return G.jamo(x); });
+  if (!toks.length) return 0;
+  var ts = syls(target);
+  if (ts.length === 1) {
+    var hit = toks.some(function (tok) {
+      var hs = syls(tok); if (!hs.length || hs.length > 2) return false;
+      return hs.some(function (x) { return x[0] === ts[0][0] && x[1] === ts[0][1]; });
+    });
+    return hit ? 1 : 0;
   }
+  var best = 0;
+  toks.forEach(function (tok) {
+    var h = G.jamo(tok);
+    if (h.indexOf(t) >= 0) { best = 1; return; }
+    if (h.length <= t.length + 1) { best = Math.max(best, 1 - lev(h, t) / Math.max(h.length, t.length)); return; }
+    for (var len = Math.max(1, t.length - 1); len <= t.length + 1; len++) {
+      for (var i = 0; i + len <= h.length; i++) {
+        var part = h.substr(i, len); best = Math.max(best, 1 - lev(part, t) / Math.max(len, t.length));
+      }
+    }
+  });
   return best;
 };
 
@@ -474,19 +499,25 @@ G.levelFor = function (id, max) {
   max = max || 3;
   var fixed = G.profile.level && G.profile.level[id];
   if (fixed) return G.clamp(fixed, 1, max);
-  var all = G.logsFor(id);
-  var L = all.filter(function (l) { return l.n > 0; }).slice(-3);
-  if (!L.length) {
-    /* 맞고 틀림이 없는 자유 놀이(그리기·기분 묻기)는 한 단계에서 세 번 하면 올린다 */
-    if (!all.length) return 1;
-    var cur = all[all.length - 1].lv || 1, same = all.filter(function (l) { return (l.lv || 1) === cur && !(l.x && l.x.quit); }).length;
-    return same >= 3 ? Math.min(max, cur + 1) : cur;
+  var def = G.acts[id] || {};
+  /* 중간에 그만둔 판은 빼고, 끝까지 한 판만 본다 */
+  var done = G.logsFor(id).filter(function (l) { return !(l.x && l.x.quit); });
+  if (!done.length) return 1;
+  var cur = done[done.length - 1].lv || 1;
+  var atCur = done.filter(function (l) { return (l.lv || 1) === cur; });
+  var graded = atCur.filter(function (l) { return l.n > 0; }).slice(-3);
+  if (!graded.length) {
+    /* 맞고 틀림이 없는 자유 놀이(그리기)는 한 단계에서 세 번 하면 올린다 */
+    return def.autoLevel && atCur.length >= 3 ? Math.min(max, cur + 1) : cur;
   }
-  var last = L[L.length - 1].lv || 1;
-  var acc = L.reduce(function (s, l) { return s + l.ok / l.n; }, 0) / L.length;
-  if (L.length >= 2 && acc >= 0.85) return Math.min(max, last + 1);
-  if (acc <= 0.5) return Math.max(1, last - 1);
-  return last;
+  var lastAcc = graded[graded.length - 1].ok / graded[graded.length - 1].n;
+  var pool = graded.reduce(function (s, l) { return [s[0] + l.ok, s[1] + l.n]; }, [0, 0]), acc = pool[0] / pool[1];
+  /* 내리기: 이 단계에서 한 판이라도 40% 밑이거나, 두 판 이상 모아 50% 밑 */
+  if (lastAcc < 0.4 || (graded.length >= 2 && acc < 0.5)) return Math.max(1, cur - 1);
+  /* 올리기: 이 단계에서 세 판을 모아 85% 이상. 1단계가 '규칙 익히기'인 놀이(warm)는 한 판만 잘해도 올린다 */
+  var need = def.warm && cur === 1 ? 1 : 3;
+  if (graded.length >= need && acc >= 0.85) return Math.min(max, cur + 1);
+  return cur;
 };
 
 /* ---------- 스티커 ---------- */
@@ -623,7 +654,7 @@ G.start = function (id, o) {
     bubble: function (t) { E.bubble.textContent = t; E.bubble.classList.toggle('on', !!t); },
     cheer: function (t, el) {
       if (!ctx.alive) return Promise.resolve();
-      G.sfx.play('good'); G.buzz([15, 40, 15]);
+      G.sfx.play('good'); G.buzz(15);
       if (el) G.ui.good(el); else { var c = [innerWidth / 2, innerHeight * 0.45]; G.fx.burst(c[0], c[1]); }
       return G.settings.praiseVoice ? ctx.say(t || G.pick(D.PRAISE), { repeat: false }) : G.sleep(500);
     },
@@ -672,6 +703,7 @@ G.start = function (id, o) {
   G.cur = ctx;
   E.title.innerHTML = '<span>' + def.icon + '</span> ' + G.esc(def.title) + (def.levels > 1 ? ' <small class="lv">' + '★'.repeat(lv) + '</small>' : '');
   E.dots.innerHTML = ''; E.bubble.textContent = ''; E.bubble.classList.remove('on');
+  var tk = G.$('#stTalk'); if (tk) tk.hidden = !!def.tool;   /* 말판·도구 화면에선 💬 가 겹친다 */
   E.body.innerHTML = ''; E.body.className = 'st-body act-' + id;
   E.st.style.setProperty('--area', (G.AREAS[def.area] || {}).color || '#4f8cff');
   if (G.session) { var s = G.session; E.sess.hidden = false; E.sess.innerHTML = '<b style="width:' + Math.round(s.i / s.list.length * 100) + '%"></b>'; }
@@ -705,25 +737,52 @@ function finish(ctx, x) {
   ctx._clean.forEach(function (f) { try { f(); } catch (e) {} }); ctx._clean = [];
   G.cur = null; G.wake(false);
   if (def.tool && !x.reward) { G.home(); return; }
-  /* 상 화면 — 아이에게는 언제나 별 셋. 맞고 틀림은 부모 화면에만 */
+  /* 상 화면 — 아이에게는 언제나 별 셋. 맞고 틀림은 부모 화면에만.
+     꽃가루·긴 팡파르는 오늘의 놀이를 다 마쳤을 때만. 놀이 하나 끝은 짧고 부드럽게(과자극 막기).
+     기분이 힘든 날의 기분 묻기 뒤에는 축하 대신 다독임. */
   var stk = G.giveSticker();
   var inSess = !!G.session;
-  if (inSess) G.session.done.push(ctx.id);
+  if (inSess) { G.session.done.push(ctx.id); G.saveSession(); }
+  var hard = ctx.id === 'checkin' && G.HARD_MOODS.indexOf(ctx.extra.emo) >= 0;
+  var msg = x.msg || (hard ? '마음을 말해 줘서 고마워. 자비스가 옆에 있을게.' : G.pick(D.DONE));
   var ov = G.el('<div class="reward" role="dialog">' +
-    '<div class="rw-card"><div class="rw-stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>' +
+    '<div class="rw-card">' + (hard ? '<div class="rw-stars"><span>💗</span></div>' : '<div class="rw-stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>') +
     '<div class="rw-jv">' + G.jarvisSVG('big') + '</div>' +
-    '<div class="rw-msg">' + G.esc(x.msg || G.pick(D.DONE)) + '</div>' +
+    '<div class="rw-msg">' + G.esc(msg) + '</div>' +
     '<div class="rw-stk"><small>새 스티커</small><b>' + stk + '</b></div>' +
     '<div class="rw-btns">' + (inSess ? '<button class="btn big go">다음 놀이 ▶</button>' : '<button class="btn big again">🔁 한 번 더</button>') +
-    '<button class="btn big soft home">🏠 처음으로</button></div></div></div>');
+    '<button class="btn big soft home">' + (inSess ? '🏠 쉬었다 할래요' : '🏠 처음으로') + '</button></div></div></div>');
   document.body.appendChild(ov);
-  G.sfx.play('win'); G.fx.confetti(); G.buzz([30, 60, 30, 60, 60]);
-  G.say((x.msg || G.pick(D.DONE)));
+  if (hard || G.settings.calm) G.sfx.play('ding');
+  else { G.sfx.play('great'); G.buzz(30); if (!inSess) G.fx.confetti(24); }
+  G.say(msg);
   function close() { ov.remove(); G.voice.stop(); }
   var go = ov.querySelector('.go'), again = ov.querySelector('.again');
   if (go) go.onclick = function () { close(); G.nextInSession(); };
   if (again) again.onclick = function () { close(); G.start(ctx.id); };
-  ov.querySelector('.home').onclick = function () { close(); G.session = null; G.home(); };
+  /* 오늘의 놀이 중 '쉬었다 할래요' — 꾸러미는 남겨 두고 나중에 이어 한다 */
+  ov.querySelector('.home').onclick = function () { close(); if (G.session) { G.session.i++; G.saveSession(); } G.session = null; G.home(); };
+}
+
+/* 힘든 기분 — 이날은 꾸러미를 줄이고 편한 놀이 + 쉬어가기로 (조절이 먼저) */
+G.HARD_MOODS = ['sad', 'angry', 'scared', 'hurt', 'sleepy'];
+G.saveSession = function () { if (G.session) G.store.set('sessionSave', { d: G.today(), list: G.session.list, i: G.session.i, done: G.session.done, start: G.session.start, gentle: G.session.gentle }); };
+G.savedSession = function () { var v = G.store.get('sessionSave', null); return v && v.d === G.today() && v.i < v.list.length ? v : null; };
+G.resumeSession = function () {
+  var v = G.savedSession(); if (!v) return false;
+  G.session = { list: v.list, i: v.i, start: Date.now() - 60000, done: v.done || [], gentle: v.gentle };
+  G.say(G.callName() + ', 아까 하던 놀이 이어서 하자!').then(function () { if (G.session) G.runSlot(G.session.list[G.session.i]); });
+  return true;
+};
+function gentlePlan(emo) {
+  var soft = ['mirror', 'stories', 'draw', 'color', 'scratch', 'bubbles', 'feeldraw'].filter(function (id) { return G.acts[id] && !(G.profile.hide || {})[id]; });
+  var played = G.logs().slice(-60).map(function (l) { return l.id; });
+  soft.sort(function (a, b) { return played.filter(function (x) { return x === b; }).length - played.filter(function (x) { return x === a; }).length; });
+  var two = soft.slice(0, 2), calm = (emo === 'angry' || emo === 'scared') && G.acts.breathe ? 'breathe' : (G.acts.bubbles ? 'bubbles' : 'breathe');
+  if (two.indexOf(calm) >= 0) two = soft.filter(function (x) { return x !== calm; }).slice(0, 2);
+  var out = ['checkin']; if (two.length === 2) out.push({ pick: two }); else if (two.length) out.push(two[0]);
+  if (G.acts[calm]) out.push(calm);
+  return out;
 }
 
 /* ---------- 오늘의 놀이 (하루 10~20분 꾸러미) ----------
@@ -763,6 +822,7 @@ G.startSession = function () {
   if (!list.length) { G.toast('놀이가 아직 없어요'); return; }
   var st = G.store.get('sessionsToday', { d: '', n: 0 }); if (st.d !== G.today()) st = { d: G.today(), n: 0 }; st.n++; G.store.set('sessionsToday', st);
   G.session = { list: list, i: 0, start: Date.now(), done: [] };
+  G.saveSession();
   G.say(G.callName() + ', 오늘도 자비스랑 같이 놀자!').then(function () { if (G.session) G.runSlot(G.session.list[0]); });
 };
 /* 한 칸 시작 — 둘 중 고르기면 고르는 화면부터 */
@@ -790,16 +850,25 @@ G.runSlot = function (entry) {
 };
 G.nextInSession = function () {
   var s = G.session; if (!s) { G.home(); return; }
+  /* 기분 묻기에서 힘든 마음을 골랐으면 오늘은 짧고 편하게 */
+  if (s.list[s.i] === 'checkin' && !s.gentle) {
+    var lg = G.logs().filter(function (l) { return l.id === 'checkin'; }).pop();
+    if (lg && lg.d === G.today() && lg.x && G.HARD_MOODS.indexOf(lg.x.emo) >= 0) {
+      s.list = gentlePlan(lg.x.emo); s.gentle = 1; s.i = 0;
+      G.toast('💗 오늘은 마음이 힘든 날 — 편한 놀이 하나와 쉬어가기만 해요', 4200);
+    }
+  }
   s.i++;
+  G.saveSession();
   var over = (Date.now() - s.start) / 60000 >= G.settings.sessionMin;
   /* 시간이 다 됐어도 마무리 쉬어가기는 하고 끝낸다 */
   if (over && s.i < s.list.length - 1) s.i = s.list.length - 1;
   if (s.i >= s.list.length) {
-    G.session = null;
+    G.session = null; G.store.del('sessionSave');
     G.store.set('lastSession', { d: G.today(), n: s.done.length });
     var sd = G.store.get('sessionDays', []); if (sd.indexOf(G.today()) < 0) { sd.push(G.today()); G.store.set('sessionDays', sd.slice(-400)); }
     G.home();
-    G.fx.confetti(60); G.sfx.play('win');
+    if (!G.settings.calm) { G.fx.confetti(50); G.sfx.play('win'); } else G.sfx.play('ding');
     G.say('오늘의 놀이 끝! ' + G.callName() + ', 정말 멋졌어. 이제 화면은 쉬고, 엄마 아빠랑 몸으로 놀자!');
     G.toast('🎉 오늘의 놀이를 모두 마쳤어요! 이제 화면을 쉬어요', 4500);
     return;

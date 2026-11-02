@@ -23,11 +23,11 @@ G.renderHome = function () {
   var d = new Date();
   G.$('#hmDate').textContent = (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + DAYS[d.getDay()] + '요일';
   G.$('#hmHello').textContent = hello();
-  var last = G.store.get('lastSession', {}), done = last.d === G.today();
+  var last = G.store.get('lastSession', {}), done = last.d === G.today(), saved = G.savedSession();
   var tb = G.$('#todayBtn');
-  tb.classList.toggle('done', done);
-  tb.querySelector('b').textContent = done ? '오늘의 놀이 끝! 🎉' : '오늘의 놀이';
-  G.$('#todaySub').textContent = done ? '또 하고 싶으면 눌러요 · 아래에서 골라도 돼요' : G.settings.sessionMin + '분 · 자비스가 골라 줘요';
+  tb.classList.toggle('done', done && !saved);
+  tb.querySelector('b').textContent = saved ? '이어서 하기 ▶' : done ? '오늘의 놀이 끝! 🎉' : '오늘의 놀이';
+  G.$('#todaySub').textContent = saved ? '아까 하던 놀이를 이어서 해요' : done ? '내일 또 만나요 · 이제 몸으로 놀아요' : G.settings.sessionMin + '분 · 자비스가 골라 줘요';
   /* 영역 타일 */
   var box = G.$('#hmAreas'); box.innerHTML = '';
   G.AREA_ORDER.forEach(function (k) {
@@ -84,7 +84,17 @@ function openBook() {
 }
 
 /* ---------- 단추 연결 ---------- */
-G.$('#todayBtn').onclick = function () { G.sfx.play('tap'); G.startSession(); };
+G.$('#todayBtn').onclick = function () {
+  G.sfx.play('tap');
+  if (G.resumeSession()) return;
+  /* 하루 한 번 — 다 했으면 또 하는 것은 어른이 정한다 (화면 시간) */
+  if (G.store.get('lastSession', {}).d === G.today()) {
+    G.say('오늘 놀이는 다 했어! 내일 또 만나자. 이제 엄마 아빠랑 몸으로 놀자!');
+    G.grownUp('오늘의 놀이를 한 번 더 하려면 어른이 답을 눌러 주세요.').then(function (ok) { if (ok) G.startSession(); });
+    return;
+  }
+  G.startSession();
+};
 G.$$('.hm-quick [data-go]').forEach(function (b) {
   b.onclick = function () {
     G.sfx.play('tap');
@@ -94,10 +104,37 @@ G.$$('.hm-quick [data-go]').forEach(function (b) {
   };
 });
 G.$$('[data-home]').forEach(function (b) { b.onclick = function () { G.sfx.play('tap'); G.home(); }; });
+/* ✕ — 한 번 눌러 바로 끝나지 않게 그림으로 묻는다. 오늘의 놀이는 남겨 두었다가 이어 한다 */
+function leaveStage() {
+  if (G.session) { G.saveSession(); G.session = null; }
+  if (/#\/play\//.test(location.hash)) history.back(); else G.home();
+}
 G.$('#stX').onclick = function () {
   G.sfx.play('tap');
-  if (G.session) G.session = null;
-  if (/#\/play\//.test(location.hash)) history.back(); else G.home();
+  if (!G.cur || G.cur.def.tool) { leaveStage(); return; }
+  var ov = G.el('<div class="modal quit-ask"><div class="md-card"><h3>그만할까?</h3><div class="md-opts" style="margin-top:12px">' +
+    '<button class="btn soft keep"><span>▶</span>계속 놀래요</button><button class="btn stop"><span>🏠</span>그만할래요</button></div></div></div>');
+  document.body.appendChild(ov); G.say('그만할까? 더 놀까?', { repeat: false });
+  ov.querySelector('.keep').onclick = function () { ov.remove(); G.sfx.play('tap'); };
+  ov.querySelector('.stop').onclick = function () { ov.remove(); G.sfx.play('tap'); leaveStage(); };
+};
+/* 💬 어느 놀이에서든 아이가 마음을 말할 수 있게 — 그만 · 도와줘 · 쉬고 싶어 · 한 번 더 */
+G.$('#stTalk').onclick = function () {
+  var old = G.$('.talk-strip'); if (old) { old.remove(); return; }
+  G.sfx.play('tap');
+  var st = G.el('<div class="talk-strip" role="dialog" aria-label="말하기">' +
+    '<button class="t-stop"><span>✋</span>그만</button><button class="t-help"><span>🆘</span>도와줘</button>' +
+    '<button class="t-rest"><span>😮‍💨</span>쉬고 싶어</button><button class="t-more"><span>🔁</span>한 번 더</button></div>');
+  document.body.appendChild(st);
+  var n = G.store.get('talkCount', {});
+  function said(k, line) { n[k] = (n[k] || 0) + 1; G.store.set('talkCount', n); st.remove(); G.sfx.play('tap'); return G.say(line, { repeat: false }); }
+  st.querySelector('.t-stop').onclick = function () { said('stop', '그만하고 싶구나. 말해 줘서 고마워!').then(leaveStage); };
+  st.querySelector('.t-help').onclick = function () { said('help', '도와줘! 엄마 아빠, 도와주세요!').then(function () { if (G.cur && G.cur.instr) G.cur.say(G.cur.instr); }); };
+  st.querySelector('.t-rest').onclick = function () {
+    said('rest', '쉬고 싶구나. 같이 쉬자.').then(function () { if (G.session) { G.saveSession(); G.session = null; } G.start(G.acts.bubbles ? 'bubbles' : 'breathe'); });
+  };
+  st.querySelector('.t-more').onclick = function () { said('more', '한 번 더!').then(function () { if (G.cur && G.cur.instr) G.cur.say(G.cur.instr); }); };
+  setTimeout(function () { document.addEventListener('pointerdown', function off(e) { if (!st.contains(e.target) && e.target.id !== 'stTalk') { st.remove(); } document.removeEventListener('pointerdown', off, true); }, true); }, 50);
 };
 G.$('#stSay').onclick = function () { if (G.cur && G.cur.instr) G.cur.say(G.cur.instr); };
 G.$('#stJv').onclick = function () { if (G.cur && G.cur.instr) G.cur.say(G.cur.instr); };

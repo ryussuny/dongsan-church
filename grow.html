@@ -141,8 +141,17 @@ h1,h2,h3,.jua{font-family:'Jua','Gowun Dodum',sans-serif;font-weight:400}
 /* ---------- 놀이 무대 ---------- */
 #stage.on{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);z-index:30}
 .st-top{display:flex;align-items:center;gap:8px;padding:calc(8px + var(--safe-t)) 10px 6px}
+.st-talk{width:44px;height:44px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);font-size:19px;flex:none}
+.talk-strip{position:fixed;left:50%;transform:translateX(-50%);top:calc(64px + var(--safe-t));z-index:60;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  background:var(--surface);border-radius:24px;padding:10px;box-shadow:0 12px 34px rgba(0,0,0,.2);width:min(560px,calc(100% - 20px));animation:fade .2s}
+.talk-strip button{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:84px;border-radius:18px;font-family:'Jua',sans-serif;font-size:15px;background:var(--bg)}
+.talk-strip button span{font-size:34px;line-height:1.1}
+.talk-strip .t-stop{background:#ffd9d9}.talk-strip .t-help{background:#fff1bf}.talk-strip .t-rest{background:#d8f3dc}.talk-strip .t-more{background:#dbe9ff}
+.quit-ask .md-opts{grid-template-columns:1fr 1fr}
+.quit-ask .md-opts .btn{min-height:96px;flex-direction:column;font-family:'Jua',sans-serif;font-weight:400}
+.quit-ask .md-opts .btn span{font-size:40px;line-height:1.1}
 .st-tip{width:40px;height:40px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);font-size:17px;flex:none;opacity:.8}
-.st-x,.st-say{width:48px;height:48px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);font-size:20px;flex:none}
+.st-x,.st-say{width:46px;height:46px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);font-size:20px;flex:none}
 .st-title{flex:1;min-width:0;font-family:'Jua',sans-serif;font-size:clamp(17px,4.6vw,22px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .st-title .lv{color:#f5b700;font-size:.75em;letter-spacing:-1px}
 .st-dots{display:flex;gap:5px;flex:none}
@@ -177,7 +186,8 @@ h1,h2,h3,.jua{font-family:'Jua','Gowun Dodum',sans-serif;font-weight:400}
 .choice.right{border-color:var(--good);animation:pop .5s}
 .choice.dim{opacity:.35}
 .choices.locked .choice:not(.right){opacity:.5}
-.hint{animation:glow 1s ease-in-out 3}
+.hint{animation:glow 1s ease-in-out 3;outline:5px solid #ffd54f;outline-offset:2px}
+.calm .hint{animation:none!important;box-shadow:0 0 0 8px #ffd54f,0 0 24px #ffd54f!important}
 @keyframes glow{0%,100%{box-shadow:var(--shadow)}50%{box-shadow:0 0 0 8px color-mix(in srgb,#ffd54f 80%,transparent),0 0 30px #ffd54f}}
 .wiggle{animation:wig .45s}
 @keyframes wig{0%,100%{transform:none}20%{transform:rotate(-6deg)}40%{transform:rotate(6deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(3deg)}}
@@ -300,6 +310,7 @@ textarea.inp{min-height:90px;resize:vertical}
     <button class="st-x" id="stX" aria-label="그만하기">✕</button>
     <div class="st-title" id="stTitle"></div>
     <div class="st-dots" id="stDots"></div>
+    <button class="st-talk" id="stTalk" aria-label="말하기 — 그만·도와줘·쉬고 싶어">💬</button>
     <button class="st-tip" id="stTip" aria-label="부모 도움말 — 함께 노는 법">💡</button>
     <button class="st-say" id="stSay" aria-label="다시 듣기">🔊</button>
   </div>
