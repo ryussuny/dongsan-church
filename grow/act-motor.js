@@ -1039,7 +1039,9 @@ G.act({
       c.strokeStyle = COL.wall; c.lineWidth = FR * 2; c.strokeRect(0, 0, W, H);
       walls.forEach(function (w) {
         c.fillStyle = COL.wall; roundRect(c, w.x, w.y, w.w, w.h, Math.min(w.w, w.h) / 2); c.fill();
-        c.fillStyle = COL.wall2; roundRect(c, w.x + 3, w.y + 3, Math.max(2, w.w - 6), Math.max(2, Math.min(w.h - 6, 6)), 3); c.fill();
+        c.fillStyle = COL.wall2;   /* 긴 쪽을 따라 밝은 결 */
+        if (w.h > w.w) roundRect(c, w.x + w.w * 0.22, w.y + 5, w.w * 0.22, Math.max(2, w.h - 10), 3); else roundRect(c, w.x + 5, w.y + w.h * 0.22, Math.max(2, w.w - 10), w.h * 0.22, 3);
+        c.fill();
       });
     }
     function roundRect(c, x, y, w, h, rr) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, rr); else c.rect(x, y, w, h); }
@@ -1174,16 +1176,20 @@ G.act({
       if (!base) base = { x: x, y: y };
       tx = G.clamp(x - base.x, -40, 40); ty = G.clamp(y - base.y, -40, 40);
     }
-    function wantTilt(then) {
-      var DOE = window.DeviceOrientationEvent;
+    function wantTilt(cb) {
+      var DOE = window.DeviceOrientationEvent, answered = false, waitH = null;
+      function then(ok) { if (answered) return; answered = true; clearTimeout(waitH); cb(ok); }
       function listen() {
         if (!oriOn) { oriOn = true; ctx.on(window, 'deviceorientation', onOri); }
         base = null; gotOri = false;
         ctx.timeout(function () { then(gotOri); }, 800);
       }
       if (!G.has.motion || !DOE) { then(false); return; }
+      /* 허락 창에 아무도 답하지 않으면 기다리지 않고 손가락 놀이로 시작한다 */
+      waitH = ctx.timeout(function () { then(false); }, 6000);
       if (typeof DOE.requestPermission === 'function') {   /* 아이폰 — 손가락으로 누른 그 순간에 물어야 한다 */
-        DOE.requestPermission().then(function (s) { if (s === 'granted') listen(); else then(false); }).catch(function () { then(false); });
+        try { DOE.requestPermission().then(function (s) { if (s === 'granted') listen(); else then(false); }, function () { then(false); }); }
+        catch (e) { then(false); }
       } else listen();
     }
     function setMode(m) {
