@@ -52,6 +52,13 @@ function deck(pool, n) {
   }
   return out;
 }
+/* 칸 맞추기 — 칸(1~3)이 오르면 n 문제 가운데 (칸-1)개만 다음 단계 맛보기(2칸 1개·3칸 2개).
+   첫 문제는 늘 그 단계 그대로 → [false, true, …] */
+function stepMix(ctx, n) {
+  var idx = G.range(n).slice(1);
+  var on = G.sample(idx, Math.min(Math.max(0, (ctx.step || 1) - 1), idx.length));
+  return G.range(n).map(function (i) { return on.indexOf(i) >= 0; });
+}
 function faceHTML(e, showName) {
   return '<span class="ce">' + e.e + '</span><span class="cl fe-name' + (showName ? ' on' : '') + '">' + G.esc(e.name) + '</span>';
 }
@@ -359,19 +366,27 @@ G.act({
     var lv = ctx.level, N = 6, k = lv + 1;
     var pool = D.EMOTIONS.filter(function (e) { return e.lv <= lv; });
     var targets = deck(pool, N);
+    /* 칸이 오르면 여섯 문제 가운데 (칸-1)문제를 다음 단계처럼 — 다음 단계 얼굴 + 보기 하나 더.
+       3단계는 (칸-1)문제에 헷갈리기 쉬운 얼굴(무서운↔놀란 같은)이 하나 섞인다 */
+    var up = lv < 3, mix = stepMix(ctx, N), nextPool = up ? D.EMOTIONS.filter(function (e) { return e.lv <= lv + 1; }) : pool;
+    if (up) {
+      var nx = deck(nextPool.filter(function (e) { return e.lv === lv + 1; }), N);
+      mix.forEach(function (on, i) { if (on) targets[i] = nx[i]; });
+    }
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
       clear(ctx);
-      var t = targets[i];
-      var others = G.sample(pool.filter(function (e) { return e !== t && (CLOSE[t.id] || []).indexOf(e.id) < 0; }), k - 1);
-      if (others.length < k - 1) others = others.concat(G.sample(pool.filter(function (e) { return e !== t && others.indexOf(e) < 0; }), k - 1 - others.length));
+      var t = targets[i], nxt = up && mix[i], P = nxt ? nextPool : pool, kk = nxt ? k + 1 : k;
+      var near = !up && mix[i] ? G.sample(P.filter(function (e) { return (CLOSE[t.id] || []).indexOf(e.id) >= 0; }), 1) : [];
+      var others = near.concat(G.sample(P.filter(function (e) { return e !== t && (CLOSE[t.id] || []).indexOf(e.id) < 0; }), kk - 1 - near.length));
+      if (others.length < kk - 1) others = others.concat(G.sample(P.filter(function (e) { return e !== t && others.indexOf(e) < 0; }), kk - 1 - others.length));
       var q = G.el('<div class="fe-q"><span>🔍</span><span><b></b> 얼굴은 어디?</span></div>');
       q.querySelector('b').textContent = ADJ[t.id];
       ctx.body.appendChild(q);
       ctx.say(i === 0 ? ADJ[t.id] + ' 얼굴을 찾아봐!' : G.pick([ADJ[t.id] + ' 얼굴은 어디 있을까?', ADJ[t.id] + ' 얼굴을 찾아 줘!', '이번엔 ' + ADJ[t.id] + ' 얼굴!']));
       await pickOne(ctx, (function (t) {
         return {
-          items: G.shuffle([t].concat(others)), cols: k > 3 ? 4 : k, size: k > 3 ? 'md' : 'lg',
+          items: G.shuffle([t].concat(others)), cols: kk > 3 ? 4 : kk, size: kk > 3 ? 'md' : 'lg',
           render: function (e) { return faceHTML(e, false); },
           isRight: function (e) { return e === t; },
           praise: function () { return G.pick(['맞아! ' + ADJ[t.id] + ' 얼굴!', '딩동댕! ' + ADJ[t.id] + ' 얼굴이야!', '찾았다! ' + ADJ[t.id] + ' 얼굴!']); },
@@ -407,14 +422,22 @@ G.act({
     var maxEmo = lv;
     var emos = D.EMOTIONS.filter(function (e) { return e.lv <= maxEmo; });
     var pool = D.SITUATIONS.filter(function (s) { var e = emoOf(s.a); return e && (s.lv || 1) <= lv && e.lv <= maxEmo; });
-    var items = G.sample(pool, Math.min(N, pool.length));
+    /* 칸이 오르면 다섯 이야기 가운데 (칸-1)개를 다음 단계 이야기로 — 다음 단계 기분 + 보기 하나 더.
+       3단계는 (칸-1)개를 가장 어려운 이야기(넘어져서 아파요·꼭 안아 줬어요·따뜻한 목욕)로 꼭 넣는다 */
+    var up = lv < 3, mix = stepMix(ctx, Math.min(N, pool.length));
+    var nEmos = up ? D.EMOTIONS.filter(function (e) { return e.lv <= lv + 1; }) : emos;
+    var hard = up ? D.SITUATIONS.filter(function (s) { var e = emoOf(s.a); return e && (s.lv || 1) <= lv + 1 && e.lv <= lv + 1 && pool.indexOf(s) < 0; })
+      : pool.filter(function (s) { return (s.lv || 1) === 3; });
+    var nx = G.sample(hard, mix.filter(Boolean).length);
+    var cur = G.sample(pool.filter(function (s) { return nx.indexOf(s) < 0; }), mix.length - nx.length);
+    var items = mix.map(function (on) { return on && nx.length ? nx.shift() : cur.shift(); });
     N = items.length;
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
       clear(ctx);
-      var s = items[i], ans = emoOf(s.a);
-      var far = emos.filter(function (e) { return e !== ans && (CLOSE[ans.id] || []).indexOf(e.id) < 0; });
-      var opts = [ans].concat(G.sample(far, k - 1));
+      var s = items[i], ans = emoOf(s.a), nxt = pool.indexOf(s) < 0;
+      var far = (nxt ? nEmos : emos).filter(function (e) { return e !== ans && (CLOSE[ans.id] || []).indexOf(e.id) < 0; });
+      var opts = [ans].concat(G.sample(far, (nxt ? k + 1 : k) - 1));
       var scene = G.el('<div class="sit-scene"><div class="sit-e">' + s.e + '</div><div class="sit-t"></div><div class="sit-q">어떤 기분일까?</div></div>');
       scene.querySelector('.sit-t').textContent = s.t;
       ctx.body.appendChild(scene);

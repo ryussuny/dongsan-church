@@ -469,8 +469,9 @@ G.act({
    3. 색칠하기 — 칸을 눌러 색 채우기
    그림은 viewBox 0 0 200 200. 칸마다 [모양, 나오는 단계, 마지막 단계].
    1단계 3~4칸 · 2단계 6~7칸 · 3단계 10칸 이상
+   sw: 앞 단계 칸을 쪼개 바꿔 끼우는 칸(나비 날개·꽃잎·교회 탑·무지개 띠) — 칸 맛보기(picRegs)에 미리 넣지 않는다
    ================================================================= */
-function R(s, lv, max) { return { s: s, lv: lv || 1, max: max || 3 }; }
+function R(s, lv, max, sw) { return { s: s, lv: lv || 1, max: max || 3, sw: !!sw }; }
 function f1(n) { return Math.round(n * 10) / 10; }
 function petals(n, cx, cy, d, rx, ry) {
   var out = [];
@@ -506,7 +507,7 @@ function rainbowParts() {
   var out = [];
   [[1, 2], [2, 4], [3, 7]].forEach(function (cfg) {
     var lv = cfg[0], n = cfg[1], ro = 92, ri = 40, w = (ro - ri) / n;
-    for (var k = 0; k < n; k++) out.push(R(band(100, 150, ro - k * w, ro - (k + 1) * w), lv, lv));
+    for (var k = 0; k < n; k++) out.push(R(band(100, 150, ro - k * w, ro - (k + 1) * w), lv, lv, 1));
   });
   out.push(R(sun(160, 38, 14), 3));
   out.push(R(cloud(40, 150, 1), 1));
@@ -548,7 +549,7 @@ var PICS = [
     R('<path d="M70 150 H130 L121 196 H79 Z"/>', 1),
     R('<rect x="63" y="142" width="74" height="15" rx="5"/>', 2),
     R('<g>' + FL_PET.join('') + '</g>', 1, 2)
-  ].concat(FL_PET.map(function (p) { return R(p, 3); })).concat([
+  ].concat(FL_PET.map(function (p) { return R(p, 3, 3, 1); })).concat([
     R('<circle cx="100" cy="62" r="15"/>', 1)
   ]) },
   { id: 'car', name: '자동차', e: '🚗', parts: [
@@ -568,7 +569,7 @@ var PICS = [
   { id: 'butterfly', name: '나비', e: '🦋', parts: [
     R('<g>' + BF.ul + BF.ll + '</g>', 1, 1),
     R('<g>' + BF.ur + BF.lr + '</g>', 1, 1),
-    R(BF.ul, 2), R(BF.ll, 2), R(BF.ur, 2), R(BF.lr, 2),
+    R(BF.ul, 2, 3, 1), R(BF.ll, 2, 3, 1), R(BF.ur, 2, 3, 1), R(BF.lr, 2, 3, 1),
     R('<circle cx="55" cy="68" r="11"/>', 3),
     R('<circle cx="145" cy="68" r="11"/>', 3),
     R('<circle cx="68" cy="134" r="9"/>', 3),
@@ -584,8 +585,8 @@ var PICS = [
     R('<rect x="38" y="112" width="124" height="70"/>', 1),
     R('<path d="M28 116 L100 80 L172 116 Z"/>', 1),
     R('<path d="M78 182 V68 L100 28 L122 68 V182 Z"/>', 1, 1),
-    R('<rect x="78" y="68" width="44" height="114"/>', 2),
-    R('<path d="M74 70 L100 28 L126 70 Z"/>', 2),
+    R('<rect x="78" y="68" width="44" height="114"/>', 2, 3, 1),
+    R('<path d="M74 70 L100 28 L126 70 Z"/>', 2, 3, 1),
     R('<path d="M96 2 h8 v7 h7 v8 h-7 v11 h-8 v-11 h-7 v-8 h7 Z"/>', 2),
     R('<circle cx="100" cy="94" r="10"/>', 2),
     R('<path d="M100 140 C88 132 86 124 92 120 C96 118 99 120 100 123 C101 120 104 118 108 120 C114 124 112 132 100 140 Z"/>', 3),
@@ -596,9 +597,20 @@ var PICS = [
   { id: 'rainbow', name: '무지개', e: '🌈', parts: rainbowParts() }
 ];
 
+/* 칠할 칸 고르기 — 칸(st)이 오르면 다음 단계에서 새로 생기는 칸을 몇 개 미리 더한다.
+   칸 수는 G.tune 처럼 다음 단계 쪽으로 1/3·2/3 (그림 순서대로, 바꿔 끼우는 칸 sw 은 빼고).
+   3단계는 더 생길 칸이 없어 그대로 */
+function picRegs(pic, lv, st) {
+  function at(l) { return pic.parts.filter(function (p) { return l >= p.lv && l <= p.max; }); }
+  var regs = at(lv);
+  if (lv >= 3 || !(st > 1)) return regs;
+  var add = G.tune([at(1).length, at(2).length, at(3).length], lv, st) - regs.length;
+  var more = pic.parts.filter(function (p) { return p.lv === lv + 1 && !p.sw; }).slice(0, Math.max(0, add));
+  return pic.parts.filter(function (p) { return regs.indexOf(p) >= 0 || more.indexOf(p) >= 0; });
+}
 /* 그림 SVG — 칸에는 data-i, 칠하지 않는 선(눈·입)은 손이 닿지 않게 */
-function picSVG(pic, lv, fills) {
-  var regs = pic.parts.filter(function (p) { return lv >= p.lv && lv <= p.max; });
+function picSVG(pic, lv, fills, st) {
+  var regs = picRegs(pic, lv, st);
   var deco = (pic.deco || []).filter(function (p) { return lv >= p.lv && lv <= p.max; });
   var h = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" aria-hidden="true">' +
     '<g stroke="' + INK + '" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">';
@@ -632,19 +644,19 @@ G.act({
   basis: '소근육·시지각(전경-배경 구분), 색 개념 — 스스로 고르는 경험',
   offline: '색칠 공부 책을 굵은 크레파스로 큰 칸부터 칠하기.',
   run: function (ctx) {
-    var lv = ctx.level;
+    var lv = ctx.level, st = ctx.step;   /* 칸이 오르면 칠할 칸이 한두 개씩 늘어난다(picRegs) */
     ctx.say(G.pick(['무엇을 색칠할까? 하나 골라 봐!', '오늘은 어떤 그림을 칠해 볼까?']));
     ctx.choices(G.sample(PICS, 4), {
       cols: 2, size: 'md',
-      render: function (p) { return '<span class="cp-thumb">' + picSVG(p, lv).html + '</span><span class="cl">' + p.e + ' ' + G.esc(p.name) + '</span>'; },
-      onPick: function (p) { G.voice.stop(); ctx.timeout(function () { paintPic(ctx, p, lv); }, 250); return true; }
+      render: function (p) { return '<span class="cp-thumb">' + picSVG(p, lv, null, st).html + '</span><span class="cl">' + p.e + ' ' + G.esc(p.name) + '</span>'; },
+      onPick: function (p) { G.voice.stop(); ctx.timeout(function () { paintPic(ctx, p, lv, st); }, 250); return true; }
     });
   }
 });
 
-function paintPic(ctx, pic, lv) {
+function paintPic(ctx, pic, lv, st) {
   ctx.body.innerHTML = '';
-  var P = picSVG(pic, lv), fills = G.range(P.n).map(function () { return WHITE; });
+  var P = picSVG(pic, lv, null, st), fills = G.range(P.n).map(function () { return WHITE; });
   var wrap = G.el('<div class="cp"><div class="cp-pic">' + P.html + '</div><div class="cp-side"><div class="cp-pal"></div>' +
     '<div class="cp-row"><button type="button" class="cp-undo" aria-label="되돌리기" disabled>↩️</button><button type="button" class="btn big green cp-done">✔ 다 했어요</button></div></div></div>');
   ctx.body.appendChild(wrap);
