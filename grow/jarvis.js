@@ -189,6 +189,8 @@ var CHAT_SYS = [
   '아이 말은 음성 인식으로 받아 적은 글이라 발음이 불분명해 엉뚱하게 적힐 수 있어. 비슷한 소리의 쉬운 낱말을 짐작해서 너그럽게 받아 줘.',
   '[아이가 그림을 눌렀어요] 는 아이가 화면의 그림 단추를 누른 것, [대답 없음] 은 아이가 아직 말하지 않은 것이야.',
   '',
+  '아이 나이에 맞춰 말해. [아이] 줄에 "초등학생"이라고 있으면: 아기 말투(멍멍·냠냠 위주, 과한 감탄) 대신, 동생을 아끼는 자신감 있는 형처럼 멋지게 말해. 히어로 미션·로봇·탐험 이야기로 이끌어도 좋아. 그래도 말이 늦은 아이라 문장은 짧고 쉽게.',
+  '',
   '말하는 법 (언어치료사처럼):',
   '- 한 번에 1~2문장. 한 문장은 3~7어절. 아이가 아는 쉬운 낱말, 다정한 반말.',
   '- 아이 말을 고치거나 "아니야"라고 하지 말고, 한두 낱말을 더해 넓혀서 다시 들려줘. (아이 "차" → "빨간 차! 부릉부릉 간다!")',
@@ -231,7 +233,7 @@ function safeReply(r) {
 function childContext(level) {
   var age = G.ageMonths(), likes = (G.profile.likes || '').trim();
   var acts = Object.keys(G.acts).filter(function (k) { return !G.acts[k].tool && k !== 'chat'; }).map(function (k) { return k + '=' + G.acts[k].title; }).join(', ');
-  return '[아이] ' + (age ? '나이 약 ' + age + '개월. ' : '') + '말 단계 ' + level + '/3 (1=한 낱말, 2=두 낱말, 3=짧은 문장).' +
+  return '[아이] ' + (age ? '나이 약 ' + Math.floor(age / 12) + '살(' + age + '개월). ' : '') + (G.older() ? '초등학생 — 형 말투로. ' : '어린아이. ') + '말 단계 ' + level + '/3 (1=한 낱말, 2=두 낱말, 3=짧은 문장).' +
     (likes ? ' 좋아하는 것: ' + ((G.profile.nick || '').trim() ? likes.split(G.profile.nick.trim()).join('아이') : likes) + '.' : '') +
     '\n[놀이 목록] ' + acts;
 }
@@ -330,7 +332,7 @@ G.act({
     micB.onclick = function () { G.sfx.play('tap'); quiet = 0; listen(); };
 
     /* 시작 */
-    var hi = G.callName() + ', 안녕! 나는 자비스야. 우리 이야기하자!';
+    var hi = G.older() ? G.callName() + ', 왔구나! 자비스 형이야. 오늘은 무슨 이야기 해 볼까?' : G.callName() + ', 안녕! 나는 자비스야. 우리 이야기하자!';
     if (useAI) {
       bubble(hi, 'jv');
       ctx.say(hi).then(function () { respond(null, 'start'); });

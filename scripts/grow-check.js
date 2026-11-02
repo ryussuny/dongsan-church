@@ -232,6 +232,33 @@ server.listen(0, async function () {
   ok(ctl.ask && ctl.still, '✕ 를 한 번 누르면 바로 끝나 버림');
   ok(ctl.strip === 4, '💬 그만·도와줘·쉬고 싶어·한 번 더 띠가 없음');
 
+  /* 초등학생(10살) 맞춤: 형 말투·히어로 미션·로봇 부품·남자 목소리 고르기·8살 넘으면 2단계부터 */
+  var hero = await page.evaluate(function () {
+    var G = window.G, D = window.GD, keep = JSON.stringify(G.profile);
+    G.profile.birth = '2016-03'; G.profile.style = 'auto';
+    var r = { older: G.older(), praiseHero: D.PRAISE === D.PRAISE_HERO, startLv: G.acts.match ? G.levelFor('match', 3) : 2, speechLv: G.acts.words ? G.levelFor('words', 3) : 1 };
+    G.profile.birth = '2022-03'; r.youngLittle = !G.older() && D.PRAISE === D.PRAISE_LITTLE;
+    G.profile = Object.assign(G.profile, JSON.parse(keep));
+    /* 남자 목소리 고르기 */
+    var fake = [{ name: 'Google 한국의', lang: 'ko-KR', voiceURI: 'Google 한국의' }, { name: 'ko-kr-x-kod-local', lang: 'ko-KR', voiceURI: 'ko-kr-x-kod-local' }, { name: 'Yuna', lang: 'ko-KR', voiceURI: 'Yuna' }];
+    r.maleFirst = fake.slice().sort(function (a, b) { return G.voice.score(b) - G.voice.score(a); })[0].name;
+    r.samsungMale = G.voice.isMale({ name: 'ko-KR-SMTm00', voiceURI: 'ko-KR-SMTm00' }) && !G.voice.isMale({ name: 'ko-KR-SMTf00', voiceURI: 'x' });
+    /* 그림·로봇 부품 */
+    r.ga = !!(window.GA && GA.robot && GA.ROBOTS && GA.ROBOTS.length === 6);
+    r.jvHero = /<svg/.test(G.jarvisSVG('full'));
+    var p6 = G.rewardPart ? G.rewardPart(6) : null, p7 = G.rewardPart ? G.rewardPart(7) : null;
+    r.part6 = p6 && p6.complete && p6.owned === 6; r.part7 = p7 && !p7.complete && p7.owned === 1 && p7.robot.name !== (p6 && p6.robot.name);
+    return r;
+  });
+  ok(hero.older && hero.praiseHero, '10살 아이에게 형 말투·히어로 칭찬이 나오지 않음: ' + JSON.stringify(hero));
+  ok(hero.youngLittle, '어린아이에게는 다정한 말투로 돌아가야 함');
+  ok(hero.startLv === 2 && hero.speechLv === 1, '8살 넘은 아이의 처음 단계(말하기 1·나머지 2)가 맞지 않음: ' + JSON.stringify(hero));
+  ok(hero.maleFirst === 'ko-kr-x-kod-local' && hero.samsungMale, '남자 목소리를 먼저 고르지 않음: ' + JSON.stringify(hero));
+  ok(hero.ga && hero.jvHero, '히어로 로봇 그림(hero-art.js)을 불러오지 못함');
+  ok(hero.part6 && hero.part7, '로봇 부품 모으기가 맞지 않음(6번째=완성, 7번째=다음 로봇 첫 부품): ' + JSON.stringify(hero));
+  var hg = await page.evaluate(function () { document.querySelector('[data-go="book"]').click(); var n = document.querySelectorAll('#hangar .hg-card').length; window.G.home(); return n; });
+  ok(hg === 6, '로봇 격납고에 로봇 여섯이 나오지 않음: ' + hg);
+
   /* 말판: 자주 쓰는 6낱말 고정 줄 */
   var aac = await page.evaluate(function () { var G = window.G; G.start('talkboard'); var n = document.querySelectorAll('#stBody .tb-core .tb-tile').length; G.home(); return n; });
   ok(aac === 6, '말판에 자주 쓰는 말 고정 줄이 없음: ' + aac);
