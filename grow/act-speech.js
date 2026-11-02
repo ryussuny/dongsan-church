@@ -370,7 +370,7 @@ G.css('speech', `
 .act-talkboard .tb-say{width:auto;min-width:64px;padding:0 10px;background:var(--area);color:#fff;flex-direction:column;gap:0}
 .act-talkboard .tb-say b{font-size:22px;line-height:1.1;font-weight:400} .act-talkboard .tb-say small{font-family:Jua,sans-serif;font-size:13px;line-height:1.1}
 .act-talkboard .tb-btn:active{transform:scale(.94)}
-.act-talkboard .tb-tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.act-talkboard .tb-tabs{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .act-talkboard .tb-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:4px 2px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow);min-height:54px}
 .act-talkboard .tb-tab span{font-size:clamp(20px,5.6vw,26px);line-height:1.15}
 .act-talkboard .tb-tab small{font-size:clamp(10px,2.7vw,13px);font-weight:700;line-height:1.15;color:var(--soft);text-align:center}

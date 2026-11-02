@@ -81,7 +81,9 @@ var BY_LEVEL = {
   maze:     { efLv: { 1: ['attend'], 2: ['attend', 'plan'] } },
   pop:      { efLv: { 1: ['attend'], 2: ['attend'] } }
 };
-var FREE = ['draw', 'mirror', 'color', 'feeldraw'];   /* 맞고 틀림이 없는 자유 놀이 — 세 번 하면 단계 올리기 */
+/* 맞고 틀림이 없는 자유 놀이 — 한 칸에서 한 번 하면 한 칸 (한 단계에 세 번).
+   shake 는 1단계(자유 흔들기)만 맞고 틀림이 없다 — 맞고 틀림이 있는 단계에서는 결과로 칸을 정하니 1단계에 갇히지 않는다 */
+var FREE = ['draw', 'mirror', 'color', 'feeldraw', 'shake'];
 
 G.EF_MAP = MAP;
 Object.keys(G.acts).forEach(function (id) {
