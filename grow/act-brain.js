@@ -33,12 +33,15 @@ function floatText(box, text, x, y) {
   box.appendChild(f); setTimeout(function () { f.remove(); }, 1300);
 }
 function centerOf(el) { return G.fx.center(el); }
+/* 진행 점은 10개까지만 (머리줄에 제목이 가려지지 않게) */
+function prog(ctx, i, n) { if (n > 10) { i = Math.round(i * 10 / n); n = 10; } ctx.progress(i, n); }
 
 G.css('brain', `
 .st-body[class*="act-"] .bw{flex:1;display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;min-height:0;position:relative}
-.bw .b-rule{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);
+.bw .b-rule{display:inline-block;max-width:100%;text-align:center;line-height:1.5;padding:7px 16px;border-radius:22px;background:var(--surface);box-shadow:var(--shadow);
   font-family:Jua,sans-serif;font-size:clamp(16px,4.4vw,22px);border:3px solid color-mix(in srgb,var(--area) 40%,transparent)}
-.bw .b-rule b{font-size:1.25em;font-weight:400}
+.bw .b-rule b{font-size:1.2em;font-weight:400;white-space:nowrap;margin:0 3px}
+.bw .b-rule .nw{white-space:nowrap}
 .bf-float{position:absolute;z-index:20;pointer-events:none;transform:translate(-50%,-50%);font-family:Jua,sans-serif;font-size:clamp(18px,5vw,26px);
   color:var(--ink);background:var(--surface);padding:4px 12px;border-radius:999px;box-shadow:var(--shadow);white-space:nowrap;animation:bfUp 1.3s ease-out forwards}
 @keyframes bfUp{0%{opacity:0;transform:translate(-50%,-30%) scale(.8)}15%{opacity:1;transform:translate(-50%,-60%) scale(1)}100%{opacity:0;transform:translate(-50%,-160%)}}
@@ -69,9 +72,10 @@ G.css('brain', `
 .act-daynight .dn-card.blank{background:var(--surface);font-size:0}
 .act-daynight .dn-card.show{animation:pop .35s}
 .act-daynight .dn-btns{display:flex;gap:clamp(14px,4vw,28px);width:min(100%,560px);margin:8px 0 auto}
-.act-daynight .dn-btn{flex:1;min-height:clamp(110px,24vw,150px);border-radius:28px;font-size:clamp(54px,14vw,80px);box-shadow:0 7px 0 rgba(0,0,0,.15);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;transition:transform .1s}
-.act-daynight .dn-btn small{font-family:Jua,sans-serif;font-size:clamp(17px,4.6vw,22px)}
+.act-daynight .dn-btn{flex:1;min-height:clamp(110px,24vw,150px);border-radius:28px;box-shadow:0 7px 0 rgba(0,0,0,.15);padding:8px 4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:transform .1s}
+.act-daynight .dn-btn span{font-size:clamp(50px,13vw,76px);line-height:1.05}
+.act-daynight .dn-btn small{font-family:Jua,sans-serif;font-size:clamp(17px,4.6vw,22px);line-height:1.2}
 .act-daynight .dn-btn.sun{background:#ffe9a6;color:#5b4300}
 .act-daynight .dn-btn.moon{background:#2c3a78;color:#fff}
 .act-daynight .dn-btn:active{transform:translateY(4px);box-shadow:0 3px 0 rgba(0,0,0,.15)}
@@ -320,7 +324,7 @@ G.act({
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
     B.innerHTML = '<div class="bw"><div class="b-rule"></div><div class="dn-card blank"></div>' +
-      '<div class="dn-btns"><button class="dn-btn sun" data-k="sun">☀️<small>해</small></button><button class="dn-btn moon" data-k="moon">🌙<small>달</small></button></div></div>';
+      '<div class="dn-btns"><button class="dn-btn sun" data-k="sun"><span>☀️</span><small>해</small></button><button class="dn-btn moon" data-k="moon"><span>🌙</span><small>달</small></button></div></div>';
     var wrap = G.$('.bw', B), rule = G.$('.b-rule', B), card = G.$('.dn-card', B), btns = G.$$('.dn-btn', B);
     var N = 10, SWITCH_AT = lv >= 3 ? 4 : -1, opposite = lv === 2, i = 0, cur = null, open = false, timer = null, run3 = 0, deck = [];
     for (var k = 0; k < N; k++) { var x; do { x = Math.random() < 0.5 ? 'sun' : 'moon'; } while (k >= 2 && deck[k - 1] === x && deck[k - 2] === x); deck.push(x); }
@@ -462,7 +466,7 @@ G.act({
     var idx = 0, cur = null, open = false, miss = 0, postN = 0, postOk = 0, mode = 'color';
 
     function ruleText(r) {
-      if (lv >= 3 && idx >= mixedAt && mixedAt >= 0) return '✨ 반짝 테두리 → <b>🔷 모양</b> · 그냥 카드 → <b>🎨 색깔</b>';
+      if (lv >= 3 && idx >= mixedAt && mixedAt >= 0) return '<span class="nw">✨ 반짝 테두리 → <b>🔷 모양</b></span> <span class="nw">· 그냥 카드 → <b>🎨 색깔</b></span>';
       return r === 'shape' ? '🔷 모양 게임! <b>' + S.an + '는 ' + S.an + ' 집</b>' : '🎨 색깔 게임! <b>' + C[0].n + '은 ' + C[0].n + ' 집</b>';
     }
     function correctBox(p) { return p.rule === 'color' ? (p.card.col === T[0].col ? 0 : 1) : (p.card.shape === T[0].shape ? 0 : 1); }
@@ -500,7 +504,7 @@ G.act({
         G.sfx.play('good'); G.buzz(15);
         var c = centerOf(boxes[i]); G.fx.burst(c[0], c[1]);
         ctx.bubble(G.pick(FAST));
-        idx++; ctx.progress(idx, plan.length);
+        idx++; prog(ctx, idx, plan.length);
         ctx.timeout(show, pace(700));
       } else {
         miss++;
@@ -534,7 +538,7 @@ G.act({
       ctx.finish({ msg: lv >= 2 ? '규칙이 바뀌어도 척척! 생각을 바꾸는 힘이 정말 멋져!' : '색깔 집을 다 찾아 줬어! 잘했어!' });
     }
 
-    ctx.progress(0, plan.length);
+    prog(ctx, 0, plan.length);
     ctx.say(S.an + ' 친구와 ' + S.bn + ' 친구가 집을 찾아요. 먼저 색깔 게임! 같은 색깔 집에 넣어 줘.').then(show);
   }
 });
@@ -622,11 +626,11 @@ G.act({
    =========================================================== */
 var FA_SETS = [
   { t: '🐞', n: '무당벌레', near: ['🪲', '🕷️', '🐜', '🦗'], mid: ['🐝', '🦋', '🐌', '🐛'] },
-  { t: '🐥', n: '병아리', near: ['🐤', '🐣', '🦆', '🐔'], mid: ['🐶', '🐱', '🐰', '🐸'] },
+  { t: '🐥', n: '병아리', near: ['🐣', '🦆', '🐔', '🐦'], mid: ['🐶', '🐱', '🐰', '🐸'] },
   { t: '🍓', n: '딸기', near: ['🍒', '🍅', '🌶️', '🍎'], mid: ['🍌', '🍇', '🍉', '🍊'] },
   { t: '🚗', n: '자동차', near: ['🚕', '🚙', '🚓', '🏎️'], mid: ['🚌', '🚂', '🚲', '✈️'] },
-  { t: '⭐', n: '별', near: ['🌟', '✨', '💫', '🌙'], mid: ['☀️', '❤️', '🔷', '🌈'] },
-  { t: '🐳', n: '고래', near: ['🐋', '🐬', '🦭', '🐟'], mid: ['🐙', '🦀', '🐢', '🐠'] }
+  { t: '⭐', n: '별', near: ['💫', '✨', '🌙', '🔶'], mid: ['☀️', '❤️', '🔷', '🌈'] },
+  { t: '🐳', n: '고래', near: ['🐬', '🦭', '🐟', '🦈'], mid: ['🐙', '🦀', '🐢', '🐠'] }
 ];
 var FA_FAR = ['🍎', '🚗', '⭐', '🌸', '⚽', '🎈', '🧸', '📖', '🍦', '🌳', '☂️', '🎁', '🥕', '👟', '🎨', '🪁'];
 G.act({
