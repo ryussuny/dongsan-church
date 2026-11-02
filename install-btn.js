@@ -10,6 +10,8 @@
          (아이폰은 애플이 막아 두어 「홈 화면에 추가」를 사람이 눌러야 한다)
    - 이미 설치해서 아이콘으로 열었으면 단추를 감춘다 (data-install-box 칸째).
    - 주소 끝이 #install 이면 열리자마자 안내를 띄운다 (카톡에서 넘어올 때).
+   - 다른 앱(예: 디자인 스튜디오)에서 쓰려면 이 파일보다 먼저
+     window.INSTALL_APP = { name, icon, guide, desktop } 를 정해 둔다. 없으면 「동산 말씀」.
    head 에서 일찍 불러야 휴대폰이 보내는 설치 신호를 놓치지 않는다.
    =========================================================== */
 (function () {
@@ -22,7 +24,11 @@
   var isInApp = isKakao || /NAVER|BAND\/|Instagram|FBAN|FBAV|Line\/|DaumApps|everytimeApp|; wv\)/i.test(ua);
   var isSafari = isIOS && !isInApp && !/CriOS|FxiOS|EdgiOS|Whale/i.test(ua);
   var isSamsung = /SamsungBrowser/i.test(ua);
-  var GUIDE = 'install.html';
+  var APP = window.INSTALL_APP || {};
+  var NAME = APP.name || '동산 말씀';
+  var ICON = APP.icon || 'icons/icon-192.png';
+  var GUIDE = APP.guide === undefined ? 'install.html' : APP.guide;   /* '' 이면 그림 안내 링크를 뺀다 */
+  var DESKTOP = !!APP.desktop;   /* PC 크롬·엣지에서도 설치를 안내한다 */
 
   function installed() {
     return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
@@ -79,8 +85,9 @@
     all('[data-install-slot]', function (el) {
       if (el.firstChild) return;
       el.innerHTML = '<button type="button" class="ib-bar" data-install>' +
-        '<img src="icons/icon-192.png" alt="">' +
-        '<span><b>휴대폰에 앱으로 설치하기</b><small data-install-ready="누르고 「설치」만 누르면 끝나요">첫 화면에 「동산 말씀」 아이콘이 생겨요</small></span>' +
+        '<img src="' + ICON + '" alt="">' +
+        '<span><b>' + (DESKTOP ? '앱으로 설치하기' : '휴대폰에 앱으로 설치하기') + '</b><small data-install-ready="누르고 「설치」만 누르면 끝나요">' +
+        (DESKTOP ? '휴대폰 첫 화면·PC 바탕화면에 「' + NAME + '」 아이콘이 생겨요' : '첫 화면에 「' + NAME + '」 아이콘이 생겨요') + '</small></span>' +
         '<span class="ib-go">설치</span></button>';
     });
     refresh();
@@ -111,8 +118,8 @@
     }
   }
   function body() {
-    var guide = '<a class="ib-btn sub" href="' + GUIDE + '">🖼 그림으로 자세히 보기</a>';
-    if (deferred) return '<h3>📲 「동산 말씀」 설치</h3>' +
+    var guide = GUIDE ? '<a class="ib-btn sub" href="' + GUIDE + '">🖼 그림으로 자세히 보기</a>' : '';
+    if (deferred) return '<h3>📲 「' + NAME + '」 설치</h3>' +
       '<p>아래 단추를 누르고, 나오는 창에서 <span class="k">설치</span> 를 누르면 끝입니다.</p>' +
       '<button type="button" class="ib-btn" data-ib="prompt">📲 지금 설치하기</button>';
     if (isInApp) return '<h3>⚠️ 이 앱 안에서는 설치가 안 돼요</h3>' +
@@ -135,7 +142,12 @@
         ? '<li><i>1</i><span>맨 아래 오른쪽 <span class="k">≡ 메뉴</span></span></li><li><i>2</i><span><span class="k">➕ 현재 페이지 추가</span> → <span class="k">홈 화면</span></span></li>'
         : '<li><i>1</i><span>오른쪽 위 <span class="k">⋮</span> (점 세 개)</span></li><li><i>2</i><span><span class="k">➕ 홈 화면에 추가</span> 또는 <span class="k">앱 설치</span></span></li>') +
       '<li><i>3</i><span><span class="k">설치</span> 또는 <span class="k">추가</span> 를 누르면 끝! 🎉</span></li></ol>' +
-      '<div class="note">이미 설치하셨다면 휴대폰 첫 화면에서 「동산 말씀」 아이콘을 찾아 보세요.</div>' + guide;
+      '<div class="note">이미 설치하셨다면 휴대폰 첫 화면에서 「' + NAME + '」 아이콘을 찾아 보세요.</div>' + guide;
+    if (DESKTOP) return '<h3>💻 PC 에 설치하기</h3><ol>' +
+      '<li><i>1</i><span><b>크롬</b>이나 <b>엣지</b>로 이 화면을 엽니다.</span></li>' +
+      '<li><i>2</i><span>주소창 오른쪽 끝의 <span class="k">⊕ 설치</span> 아이콘을 누릅니다.<br><small>안 보이면 <span class="k">⋮</span> 메뉴 → 「앱 설치」 또는 「앱 › 이 사이트를 앱으로 설치」</small></span></li>' +
+      '<li><i>3</i><span><span class="k">설치</span> 를 누르면 바탕화면·시작 메뉴에 「' + NAME + '」 이 생깁니다. 🎉</span></li></ol>' +
+      '<div class="note">휴대폰에 설치하려면 이 주소를 휴대폰으로 여세요 (카톡으로 나에게 보내 두면 편합니다).<br><span style="word-break:break-all">' + here() + '</span></div>';
     return '<h3>📲 휴대폰에서 열어 주세요</h3><p>이 주소를 휴대폰으로 열면 첫 화면에 설치할 수 있어요. 카톡으로 나에게 보내 두면 편합니다.</p>' +
       '<div class="note" style="word-break:break-all">' + here() + '</div>' + guide;
   }

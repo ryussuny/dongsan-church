@@ -20,6 +20,7 @@
 
 ## 디자인 스튜디오
 - 화면: `design.html` (관리자 앱 홈 「🎨 디자인」). 한 줄 부탁 → Claude 가 HTML 조각을 그리고, 틀(`design-templates.js`)은 AI 없이 그린다.
+- 따로 설치하는 앱 「동산 디자인」: `design-manifest.json`(id `dongsan-design`, scope `./design`) + `icons/design-*.png`. 설치 단추는 말씀 앱과 같은 `install-btn.js` 를 `window.INSTALL_APP` 으로 바꿔 쓴다.
 - 디자인 시스템: 값은 `design-system.js`(테마·크기·AI 규칙), 설명은 `DESIGN.md`. 테마 값을 바꾸면 `DESIGN.md` 표도 같이 고친다.
 - 디자인은 색·글꼴을 CSS 변수(`--bg` `--ink` `--accent` …)로만 쓴다 — 그래야 테마만 바꿔도 전체가 바뀐다.
 - 코딩 에이전트에서는 `.claude/skills/dongsan-design` 스킬과 `node scripts/design-render.js` 를 쓴다. 결과물 `designs/` 는 커밋하지 않는다.
