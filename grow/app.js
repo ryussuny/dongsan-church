@@ -8,6 +8,14 @@ var G = window.G, D = window.GD;
 /* 자비스 얼굴 자리 채우기 */
 G.$('#hmJv').innerHTML = G.jarvisSVG();
 G.$('#stJv').innerHTML = G.jarvisSVG();
+/* 만화 이모지 대신 메카 그림 — 빠른 단추·격납고 제목 */
+if (window.GA && GA.robot) {
+  var qj = G.$('.hm-quick [data-go="chat"] .qe'), qb = G.$('.hm-quick [data-go="book"] .qe');
+  if (qj) qj.innerHTML = GA.jarvis({ full: false, size: 44 });
+  if (qb) qb.innerHTML = GA.robot(0, 6, { size: 44 });
+  var bt = G.$('#bookTitle'); if (bt) bt.innerHTML = '<span class="bt-ic">' + GA.robot(0, 6, { size: 34 }) + '</span>로봇 격납고';
+  G.css('qart', '.hm-quick .qe svg{width:clamp(30px,8vw,44px);height:clamp(30px,8vw,44px);display:block;margin:0 auto}#bookTitle{display:flex;align-items:center;gap:6px}#bookTitle .bt-ic svg{width:34px;height:34px;display:block}');
+}
 
 var DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 function hello() {
