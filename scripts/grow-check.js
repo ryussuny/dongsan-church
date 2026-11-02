@@ -279,6 +279,54 @@ server.listen(0, async function () {
     if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'parent-' + t + '.png'), fullPage: true });
   }
 
+  /* ---------- 말소리 연구실: 패턴 분석 · 아이 말소리 사전 ---------- */
+  var sl = await page.evaluate(function () {
+    var SL = window.G.SL; if (!SL) return { none: true };
+    var P = function (t, h) { return SL.analyzePair(t, h).join(','); };
+    var r = { stop: P('사과', '다과'), front: P('고기', '도기'), syll: P('바나나', '나나'), fin: P('물', '무'), deasp: P('토끼', '도끼'), liquid: P('라면', '아면'), vowel: P('오리', '우리'), junk: P('자동차', '강아지'), junk2: P('강아지', '아과') };
+    var keep = localStorage.getItem('grow_pronDict');
+    SL.last = { id: 'x', t: Date.now(), target: '사과', heard: '아가', ok: false }; SL.judge(true);
+    r.learned = SL.accepts('사과', ['아가']) && !SL.accepts('사과', ['바나나']);
+    if (keep) localStorage.setItem('grow_pronDict', keep); else localStorage.removeItem('grow_pronDict');
+    var E = [{ t: Date.now(), d: 'x', act: 'words', target: '사과', heard: '아과', ok: true }, { t: Date.now(), d: 'x', act: 'words', target: '사과', heard: '다과', ok: false },
+      { t: Date.now(), d: 'x', act: 'words', target: '사과', heard: '', ok: false }, { t: Date.now(), d: 'x', act: 'chat', target: '', heard: '빨간 자동차 좋아', ok: false }];
+    var a = SL.analyze(E, 30); r.mlu = a.mlu; r.ndw = a.ndw; r.hard = a.hard.map(function (h) { return h.w; }).join(',');
+    return r;
+  });
+  ok(!sl.none, '말소리 연구실(speech-lab.js)을 불러오지 못함');
+  ok(sl.stop === 'stop' && sl.front === 'front' && sl.syll === 'syll' && sl.fin === 'final' && sl.deasp === 'deasp' && sl.liquid === 'liquid' && sl.vowel === 'vowel' && sl.junk === '' && sl.junk2 === '', '말소리 패턴 분석이 틀림: ' + JSON.stringify(sl));
+  ok(sl.learned, '부모가 👍 한 발음을 아이 말소리 사전이 배우지 못함');
+  ok(sl.hard === '사과' && sl.ndw >= 4 && sl.mlu > 1, '말소리 요약(어려운 낱말·다른 낱말 수·문장 길이)이 틀림: ' + JSON.stringify(sl));
+
+  /* 자동 녹음: 가짜 음성 인식 + 가짜 마이크로 실제 흐름을 돌려 본다 */
+  var p2 = await ctx.newPage(); var errs2 = [];
+  p2.on('pageerror', function (e) { errs2.push(e.message); });
+  await p2.addInitScript(function () {
+    function FakeSR() {}
+    FakeSR.prototype.start = function () { var me = this; setTimeout(function () { var res = [{ transcript: '아과' }]; res.isFinal = true; if (me.onresult) me.onresult({ results: [res] }); if (me.onend) me.onend(); }, 700); };
+    FakeSR.prototype.abort = function () {}; FakeSR.prototype.stop = function () {};
+    window.SpeechRecognition = FakeSR;
+  });
+  await p2.goto(base); await p2.waitForTimeout(500);
+  var rec = await p2.evaluate(function () {
+    var G = window.G;
+    return G.listen({ expect: ['사과'] }).then(function (r) {
+      return new Promise(function (ok) { setTimeout(function () { G.SL.all().then(function (all) { var e = all[all.length - 1] || {}; ok({ heard: r.text, n: all.length, target: e.target, logged: e.heard, audio: !!e.audio, latency: e.latency }); }); }, 1800); });
+    });
+  });
+  ok(rec.n >= 1 && rec.target === '사과' && rec.logged === '아과', '아이가 한 말이 자동으로 기록되지 않음: ' + JSON.stringify(rec));
+  ok(rec.audio, '소리 녹음이 함께 저장되지 않음(가짜 마이크 기준): ' + JSON.stringify(rec), true);
+  await p2.evaluate(function () { window.G.openParent('speech'); }); await p2.waitForTimeout(800);
+  var tabOk = await p2.evaluate(function () { return document.querySelectorAll('#pBody .note[data-sid]').length; });
+  ok(tabOk >= 1, '부모 화면 「말소리」 탭에 녹음 목록이 나오지 않음');
+  var zipBytes = await p2.evaluate(function () { return window.G.SL.exportData().then(function (b) { return b.arrayBuffer(); }).then(function (buf) { return Array.from(new Uint8Array(buf)); }); });
+  var zpath = path.join(require('os').tmpdir(), 'grow-speech-check.zip'); fs.writeFileSync(zpath, Buffer.from(zipBytes));
+  var zl = '';
+  try { zl = require('child_process').execSync('python3 -c "import zipfile,sys;z=zipfile.ZipFile(sys.argv[1]);assert z.testzip() is None;print(\' \'.join(z.namelist()))" ' + zpath).toString(); } catch (e) { zl = 'ERR ' + e.message; }
+  ok(/manifest\.jsonl/.test(zl) && /utterances\.csv/.test(zl) && /summary\.json/.test(zl) && /README\.txt/.test(zl), '학습 데이터 ZIP 이 올바르지 않음: ' + zl);
+  ok(!errs2.length, '말소리 녹음 흐름 오류: ' + errs2.join(' | '));
+  await p2.close();
+
   /* 태블릿 가로 화면도 한 번 */
   await page.setViewportSize({ width: 1024, height: 768 });
   errs = [];

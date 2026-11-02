@@ -9,7 +9,7 @@
 'use strict';
 var G = window.G, D = window.GD;
 
-var TABS = [['home', '🏠', '오늘'], ['rec', '📈', '기록'], ['diary', '📝', '일지'], ['coach', '🤖', '코치'], ['report', '🖨️', '리포트'], ['set', '⚙️', '설정']];
+var TABS = [['home', '🏠', '오늘'], ['rec', '📈', '기록'], ['speech', '🎙️', '말소리'], ['diary', '📝', '일지'], ['coach', '🤖', '코치'], ['report', '🖨️', '리포트'], ['set', '⚙️', '설정']];
 var tab = 'home', period = 7, coachCtl = null;
 
 /* 차트 색 — 영역 색은 그대로, 노랑만 그래프에서 조금 진하게(밝은 바탕에서 보이게) */
@@ -242,7 +242,7 @@ function renderTabs() {
 G.renderParent = function (t) { if (t) tab = t; renderTabs(); render(); };
 function render() {
   var body = G.$('#pBody'); tip(null);
-  ({ home: tHome, rec: tRec, diary: tDiary, coach: tCoach, report: tReport, set: tSet })[tab](body);
+  ({ home: tHome, rec: tRec, speech: tSpeech, diary: tDiary, coach: tCoach, report: tReport, set: tSet })[tab](body);
   bindTips(body);
 }
 
@@ -421,6 +421,86 @@ function tReport(body) {
       repAI = r.text; render();
     });
   };
+}
+
+/* ===== 말소리 (자동 녹음 · 분석 · 학습 데이터) ===== */
+var spDays = 30;
+function tSpeech(body) {
+  if (!G.SL) { body.innerHTML = card('<p class="muted">말소리 연구실을 불러오지 못했어요.</p>'); return; }
+  body.innerHTML = card('<p class="muted">불러오는 중…</p>');
+  G.SL.all().then(function (all) {
+    var a = G.SL.analyze(all, spDays), St = G.settings, conflict = G.store.get('recConflict', false);
+    var h = card('<h3>🎙️ 말소리 자동 녹음</h3><p class="muted">자비스가 들을 때(🎤 빨간불, 화면 위 ● 녹음)마다 아이가 한 말을 기록해요. <b>모두 이 기기에만 저장되고 저절로 인터넷에 나가지 않아요.</b></p>' +
+      sw('recVoice', '아이가 한 말 기록하기 (글)') + sw('recAudio', '소리도 녹음하기') +
+      '<label class="sw"><span>소리 파일 보관</span><select class="inp" id="spKeep" style="width:40%">' + [30, 90, 180].map(function (d) { return '<option value="' + d + '" ' + ((St.recDays || 90) === d ? 'selected' : '') + '>' + d + '일</option>'; }).join('') + '</select></label>' +
+      (conflict ? '<p class="muted" style="margin-top:6px">⚠️ 이 기기에서는 녹음과 음성 인식이 함께 안 돼서 글만 기록하고 있어요. <button class="btn sm soft" id="spRetry">녹음 다시 시도</button></p>' : '') +
+      '<p class="muted" style="margin-top:6px">기록 ' + all.length + '개 · 소리 파일 ' + all.filter(function (e) { return e.audio; }).length + '개 · 정답 표시 ' + all.filter(function (e) { return e.judge != null || e.label; }).length + '개</p>');
+    h += '<div class="ptools">' + [7, 30, 90].map(function (d) { return '<button class="chip ' + (d === spDays ? 'on' : '') + '" data-spd="' + d + '">최근 ' + d + '일</button>'; }).join('') + '</div>';
+    if (!a.n) h += card('<p class="muted">아직 기록이 없어요. 말하기 놀이나 「자비스랑 이야기」를 하면 여기에 쌓여요.</p>');
+    else {
+      h += card('<h3>📊 한눈에</h3><div class="pstats"><div><b>' + a.n + '</b><small>말한 횟수</small></div><div><b>' + (a.recog == null ? '–' : a.recog + '%') + '</b><small>목표 낱말 성공</small></div><div><b>' + a.ndw + '</b><small>다른 낱말 수</small></div></div>' +
+        '<div class="pstats" style="margin-top:8px"><div><b>' + a.mlu + '</b><small>평균 문장 길이(어절)</small></div><div><b>' + a.newWords.length + '</b><small>이번 주 새 낱말</small></div><div><b>' + (a.latency ? (a.latency / 1000).toFixed(1) + '초' : '–') + '</b><small>반응 시간</small></div></div>' +
+        '<p class="muted" style="margin-top:8px">다른 낱말 수(NDW)와 평균 문장 길이(MLU)는 언어치료에서 표현 언어가 자라는지 보는 지표예요. 음성 인식 기준이라 실제와 다를 수 있어요.</p>');
+      if (a.weekly.length > 1) {
+        var mx = Math.max.apply(null, a.weekly.map(function (w) { return w.n; }));
+        h += card('<h3>📈 주별 말한 횟수 · 문장 길이</h3><div class="hbars">' + a.weekly.slice(-8).map(function (w) {
+          return '<div class="hbar" tabindex="0" data-tip="' + w.n + '번 · 평균 ' + w.mlu + '어절|' + w.wk + ' 주"><span class="lb">' + w.wk.slice(5).replace('-', '/') + ' 주</span><span class="tr"><i style="width:' + Math.max(3, w.n / mx * 100) + '%;--c:#ff7f61"></i></span><span class="v">' + w.n + '번 · ' + w.mlu + '어절</span></div>';
+        }).join('') + '</div>');
+      }
+      h += card('<h3>🔤 말소리 패턴 (추정)</h3>' + (a.procs.length ? a.procs.map(function (p) {
+        return '<div class="note"><div class="nt"><b>' + p.name + '</b><span>' + p.count + '회</span></div><p>예: ' + G.esc(p.examples.join(', ')) + '</p><p class="muted">💡 ' + p.tip + '</p></div>';
+      }).join('') : '<p class="muted">아직 뚜렷한 패턴이 보이지 않아요.</p>') +
+        '<p class="muted">음성 인식은 실제 낱말 쪽으로 고쳐 듣는 경향이 있어 실제보다 적게 잡혀요. 아래 녹음에 「✏️ 실제 말」을 달아 주면 더 정확해져요. 꼭 언어치료 선생님과 확인하세요.</p>');
+      h += card('<h3>🎯 더 연습할 낱말</h3>' + (a.hard.length ? '<div class="wchips">' + a.hard.map(function (x) { return '<span>' + G.esc(x.w) + '<small>' + x.ok + '/' + x.n + '</small></span>'; }).join('') +
+        '</div><p class="muted" style="margin-top:6px">낱말 카드 놀이에서 이 낱말들이 더 자주 나와요.</p>' : '<p class="muted">아직 없어요 (두 번 이상 해 보고 성공이 60% 밑인 낱말).</p>'));
+      h += card('<h3>🗣️ 자주 한 말</h3><div class="wchips">' + a.topWords.slice(0, 24).map(function (x) { return '<span>' + G.esc(x.w) + '<small>' + x.n + '</small></span>'; }).join('') + '</div>' +
+        (a.newWords.length ? '<h4>🆕 이번 주 새로 들린 말</h4><div class="wchips">' + a.newWords.map(function (w) { return '<span>' + G.esc(w) + '</span>'; }).join('') + '</div>' : ''));
+    }
+    var dict = G.SL.dict(), dk = Object.keys(dict);
+    h += card('<h3>📘 아이 말소리 사전 — 자비스가 배운 발음</h3><p class="muted">음성 인식이 못 알아들었지만 부모님이 👍(또는 ✅)해 준 발음이에요. 다음부터는 이 발음도 맞다고 알아들어요.</p>' +
+      (dk.length ? '<div class="wchips">' + dk.map(function (t) { return Object.keys(dict[t]).map(function (v) { return '<span>' + G.esc(t) + ' ← ' + G.esc(v) + '<small>' + dict[t][v] + '</small><button data-fg="' + G.esc(t + '|' + v) + '" aria-label="지우기">×</button></span>'; }).join(''); }).join('') + '</div>' : '<p class="muted">아직 배운 발음이 없어요.</p>'));
+    var recent = all.slice(-40).reverse();
+    h += card('<h3>🎧 최근 녹음 · 정답 표시</h3><p class="muted">정답 표시를 달면 분석과 학습 데이터가 정확해져요.</p>' + (recent.length ? recent.map(function (e) {
+      var at = G.acts[e.act];
+      return '<div class="note" data-sid="' + e.id + '"><div class="nt"><span>' + fmtD(e.t) + ' ' + new Date(e.t).toTimeString().slice(0, 5) + (at ? ' · ' + at.icon + ' ' + G.esc(at.title) : '') + '</span>' + (e.audio ? '<button class="btn sm soft" data-play="' + e.id + '">▶ 듣기</button>' : '') + '</div>' +
+        '<p>' + (e.target ? '목표 <b>' + G.esc(e.target) + '</b> · ' : '') + '들린 말 「' + G.esc(e.heard || '(못 들음)') + '」' + (e.label ? ' · 실제 「' + G.esc(e.label) + '」' : '') + '</p>' +
+        '<div class="row" style="margin-top:4px"><button class="chip ' + (e.judge === true && !e.near ? 'on' : '') + '" data-lb="ok">✅ 정확</button><button class="chip ' + (e.near ? 'on' : '') + '" data-lb="near">〰 비슷</button><button class="chip ' + (e.judge === false ? 'on' : '') + '" data-lb="no">✖ 다름</button><button class="chip" data-lb="edit">✏️ 실제 말</button><button class="chip" data-lb="del" aria-label="지우기">🗑</button></div></div>';
+    }).join('') : '<p class="muted">아직 녹음이 없어요.</p>'));
+    h += card('<h3>📦 학습 데이터 · AI 분석</h3><p class="muted">ZIP 안에 녹음(소리)·글·정답 표시·분석 결과가 들어 있어요(manifest.jsonl·utterances.csv·summary.json·audio/). 언어치료 선생님께 드리거나 아이 맞춤 음성 인식 학습에 쓸 수 있어요. 아이 이름은 넣지 않아요. <b>아이 목소리가 들어 있으니 공개된 곳에 올리지 마세요.</b></p>' +
+      '<div class="row" style="margin-top:8px"><button class="btn" id="spZip">📦 학습 데이터 내보내기</button><button class="btn soft" id="spZipTxt">📄 글만 내보내기</button><button class="btn soft" id="spAI">🤖 AI 말소리 분석</button><button class="btn soft" id="spClear" style="color:#e5484d">🗑 모두 지우기</button></div>');
+    body.innerHTML = h; bindTips(body);
+    G.$$('[data-set]', body).forEach(function (c) { c.onchange = function () { St[c.dataset.set] = c.checked; G.saveSettings(); }; });
+    G.$('#spKeep', body).onchange = function () { St.recDays = +this.value; G.saveSettings(); };
+    var rt = G.$('#spRetry', body); if (rt) rt.onclick = function () { G.store.del('recConflict'); render(); };
+    G.$$('[data-spd]', body).forEach(function (b) { b.onclick = function () { spDays = +b.dataset.spd; render(); }; });
+    G.$$('[data-fg]', body).forEach(function (b) { b.onclick = function () { var x = b.dataset.fg.split('|'); G.SL.forget(x[0], x[1]); render(); }; });
+    function byId(id) { return all.filter(function (e) { return e.id === id; })[0]; }
+    G.$$('[data-play]', body).forEach(function (b) { b.onclick = function () { var e = byId(b.dataset.play); if (!e || !e.audio) return; var u = URL.createObjectURL(e.audio), au = new Audio(u); au.onended = function () { URL.revokeObjectURL(u); }; au.play().catch(function () { G.toast('이 기기에서 재생할 수 없는 형식이에요'); }); }; });
+    G.$$('[data-sid]', body).forEach(function (row) {
+      G.$$('[data-lb]', row).forEach(function (b) {
+        b.onclick = function () {
+          var e = byId(row.dataset.sid); if (!e) return; var k = b.dataset.lb;
+          if (k === 'del') { if (confirm('이 녹음을 지울까요?')) G.SL.del(e.id).then(render); return; }
+          if (k === 'ok') { e.judge = true; e.near = false; if (e.target && e.heard && !e.ok) G.SL.learn(e.target, e.heard); }
+          else if (k === 'near') { e.judge = true; e.near = true; }
+          else if (k === 'no') { e.judge = false; e.near = false; }
+          else if (k === 'edit') { var v = prompt('실제로 아이가 한 말을 소리 나는 대로 적어 주세요 (예: 아과)', e.label || e.heard || ''); if (v == null) return; e.label = v.trim(); }
+          G.SL.update(e).then(render);
+        };
+      });
+    });
+    G.$('#spZip', body).onclick = function () { var b = this; b.disabled = true; b.textContent = '만드는 중…'; G.SL.exportData().then(function (z) { download(z, '함께자라요-말소리-학습데이터-' + G.today() + '.zip'); b.disabled = false; b.textContent = '📦 학습 데이터 내보내기'; }); };
+    G.$('#spZipTxt', body).onclick = function () { G.SL.exportData({ audio: false }).then(function (z) { download(z, '함께자라요-말소리-글-' + G.today() + '.zip'); }); };
+    G.$('#spAI', body).onclick = function () {
+      var qi = -1; G.coach.QUICK.forEach(function (q, i) { if (/말소리/.test(q.t)) qi = i; });
+      G.SL.refresh().then(function () { tab = 'coach'; renderTabs(); render(); setTimeout(function () { var qb = G.$('[data-q="' + qi + '"]'); if (qb) qb.click(); }, 120); });
+    };
+    G.$('#spClear', body).onclick = function () {
+      if (!confirm('말소리 기록과 녹음을 모두 지울까요? (말소리 사전은 남아요)')) return;
+      if (!confirm('정말 지울까요? 먼저 학습 데이터를 내보내 두셨나요?')) return;
+      G.SL.clear().then(function () { G.SL.refresh(); render(); });
+    };
+  });
 }
 
 /* ===== 설정 ===== */
