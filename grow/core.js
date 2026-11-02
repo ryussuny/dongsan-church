@@ -354,7 +354,7 @@ G.listen = function (o) {
 G.stopListen = function () { if (recNow) try { recNow.abort(); } catch (e) {} };
 
 /* ---------- 마이크 소리 크기·바람 소리 ----------
-   G.mic() → {level() 0~1, flat() 0~1(바람 소리일수록 큼), voiced(), stop()}
+   G.mic() → {level() 0~1, flat() 0~1(바람 소리일수록 큼), pitch(), stop()}
    처음 0.6초 동안 방 소음을 재서 그만큼은 빼고 잰다. */
 G.mic = function (o) {
   o = o || {};
@@ -648,12 +648,14 @@ G.start = function (id, o) {
     parentJudge: function (box, labels) {
       if (Array.isArray(box)) { labels = box; box = null; }   /* parentJudge(['👍 …','🔁 …']) 도 된다 */
       labels = labels || ['👍 했어요', '🔁 다시'];
-      return new Promise(function (ok) {
-        var w = G.el('<div class="judge"><button class="btn big yes">' + labels[0] + '</button><button class="btn big soft no">' + labels[1] + '</button></div>');
+      var w = G.el('<div class="judge"><button class="btn big yes">' + labels[0] + '</button><button class="btn big soft no">' + labels[1] + '</button></div>');
+      var p = new Promise(function (ok) {
         (box || ctx.body).appendChild(w);
         w.querySelector('.yes').onclick = function () { G.sfx.play('tap'); w.remove(); ok(true); };
         w.querySelector('.no').onclick = function () { G.sfx.play('tap'); w.remove(); ok(false); };
       });
+      p.cancel = function () { w.remove(); };   /* 음성 인식이 먼저 들으면 단추를 거둔다 (이 약속은 끝나지 않음) */
+      return p;
     },
     finish: function (x) { finish(ctx, x || {}); }
   };
