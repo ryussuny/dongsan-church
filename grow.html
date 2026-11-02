@@ -152,8 +152,19 @@ h1,h2,h3,.jua{font-family:'Jua','Gowun Dodum',sans-serif;font-weight:400}
 .quit-ask .md-opts .btn span{font-size:40px;line-height:1.1}
 .st-tip{width:40px;height:40px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);font-size:17px;flex:none;opacity:.8}
 .st-x,.st-say{width:46px;height:46px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);font-size:20px;flex:none}
-.st-title{flex:1;min-width:0;font-family:'Jua',sans-serif;font-size:clamp(17px,4.6vw,22px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.st-title .lv{color:#f5b700;font-size:.75em;letter-spacing:-1px}
+.st-title{flex:1;min-width:0;display:flex;align-items:center;gap:5px;font-family:'Jua',sans-serif;font-size:clamp(17px,4.6vw,22px);white-space:nowrap;overflow:hidden}
+.st-title>span{flex:none}
+.st-title .tt{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* 단계 ★ · 칸 ●●○ — 자비스 말풍선 줄 오른쪽 (머리말이 좁은 휴대폰에서도 보이게) */
+.st-lv{margin-left:auto;align-self:center;flex:none}
+.st-lv:empty{display:none}
+.st-lv .lv{display:inline-flex;align-items:center;gap:4px;font-family:'Jua',sans-serif;color:#f5b700;font-size:clamp(14px,3.8vw,17px);letter-spacing:-1px;padding:4px 10px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow)}
+.st-lv .lv-st{font-style:normal;font-size:.8em;letter-spacing:1px;color:var(--area,#8a94a6)}
+.rw-up{margin:10px auto 0;padding:8px 14px;border-radius:14px;background:linear-gradient(90deg,#fff6d6,#ffe9a8);color:#7a4b00;font-weight:800;font-size:clamp(15px,4vw,19px);max-width:420px;animation:rwUp .6s ease-out both}
+.rw-up small{display:block;font-weight:600;font-size:.78em;color:#9a6a10;margin-top:2px}
+.reward.hero .rw-up{background:linear-gradient(90deg,rgba(255,213,79,.18),rgba(79,195,247,.18));color:#ffe082;border:1px solid rgba(255,213,79,.45)}
+.reward.hero .rw-up small{color:#b3e5fc}
+@keyframes rwUp{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
 .st-dots{display:flex;gap:5px;flex:none}
 .st-dots i{width:10px;height:10px;border-radius:50%;background:var(--line)}
 .st-dots .dots-n{font-family:'Jua',sans-serif;font-weight:400;font-size:15px;color:var(--area)}
@@ -348,7 +359,7 @@ textarea.inp{min-height:90px;resize:vertical}
 @keyframes partFlash{0%,100%{filter:none}50%{filter:brightness(1.8) drop-shadow(0 0 8px #fff)}}
 .calm .hero-scr::before{opacity:.25}
 /* 녹음 중 표시 — 아이와 부모가 알 수 있게 */
-.rec-on .st-title::after{content:' ● 녹음';color:#ff4d6d;font-size:.6em;vertical-align:middle;animation:jvPulse .8s infinite alternate}
+.rec-on .st-title::after{flex:none;content:'● 녹음';color:#ff4d6d;font-size:.6em;vertical-align:middle;animation:jvPulse .8s infinite alternate}
 /* 실사 자비스 — 말할 때 청록 빛, 들을 때 붉은 빛 */
 .jvi{position:relative;display:block;width:100%;height:100%}
 .jvi img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;border:2px solid rgba(94,234,255,.55);box-shadow:0 0 12px rgba(56,189,248,.4);transition:box-shadow .2s,border-color .2s;background:#0a1430}
@@ -423,7 +434,7 @@ textarea.inp{min-height:90px;resize:vertical}
     <button class="st-say" id="stSay" aria-label="다시 듣기">🔊</button>
   </div>
   <div class="st-sess" id="stSess" hidden></div>
-  <div class="st-jv"><div class="jvm" id="stJv"></div><div class="st-bubble" id="stBubble" aria-live="polite"></div></div>
+  <div class="st-jv"><div class="jvm" id="stJv"></div><div class="st-bubble" id="stBubble" aria-live="polite"></div><div class="st-lv" id="stLv"></div></div>
   <main class="st-body" id="stBody"></main>
 </section>
 

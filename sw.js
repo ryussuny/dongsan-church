@@ -9,7 +9,7 @@
    1)을 "인터넷 먼저"로 둔 이유: 저장해 둔 것을 먼저 보여 주면
    홈페이지를 고쳐도 성도들 화면이 옛날 그대로 머무는 일이 생긴다.
    =========================================================== */
-var VERSION = 'dongsan-v5';
+var VERSION = 'dongsan-v6';
 var SHELL = [
   'word.html', 'word-adult.html', 'word-kids.html', 'word-easy.html', 'word-youth.html', 'word-book.html',
   'word-core.js', 'word-data.js', 'word-config.js', 'word-extra.js', 'install.html', 'install-btn.js',

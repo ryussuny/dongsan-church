@@ -2,13 +2,14 @@
  *
  *   node scripts/grow-check.js            → 검사만
  *   node scripts/grow-check.js --shots    → 놀이마다 화면 사진도 찍는다 (scripts/grow-shots/, 커밋하지 않음)
+ *   node scripts/grow-check.js --only=words,listen → 모든 놀이 돌려 보기를 이 놀이만
  *
  * 두 가지를 본다.
  *  1) 치료 설계 검사 — 놀이마다 목표·함께 하는 법·근거·화면 밖 놀이·실행기능 표시가 있는지,
  *     여섯 가지 생각 힘(실행기능)이 고르게 덮이는지, 오늘의 놀이 꾸러미가 원칙대로 짜이는지
  *     (기분 묻기로 시작 · 생각 힘 하나 · 15분 넘으면 몸놀이 · 쉬어가기로 끝 · 아이가 고르기),
- *     단계 맞추기(85%↑ 올림 · 50%↓ 내림), 발음이 서툴러도 알아듣는 너그러운 맞춤.
- *  2) 실제로 돌려 보기 — 휴대폰 크기 화면에서 모든 놀이를 모든 단계로 열고, 눌러 보고,
+ *     단계 맞추기(단계마다 세 칸 · 한 판 80%↑ 한 칸 올림 · 40%↓ 한 칸 내림 · ctx.tune 보간), 발음이 서툴러도 알아듣는 너그러운 맞춤.
+ *  2) 실제로 돌려 보기 — 휴대폰 크기 화면에서 모든 놀이를 모든 단계(1칸·3칸)로 열고, 눌러 보고,
  *     오류가 없는지·가로로 넘치지 않는지 본다. 상 화면·스티커·기록, 부모 화면 탭도 연다.
  *
  * Playwright(크로미움)가 필요하다. 카메라·마이크는 가짜 장치로 대신한다.
@@ -16,6 +17,8 @@
 var http = require('http'), fs = require('fs'), path = require('path');
 var ROOT = path.join(__dirname, '..');
 var SHOTS = process.argv.indexOf('--shots') > 0 ? path.join(__dirname, 'grow-shots') : null;
+/* --only=words,listen → '모든 놀이 돌려 보기' 를 이 놀이들만 (고치는 중 빨리 볼 때) */
+var ONLY = (process.argv.filter(function (a) { return /^--only=/.test(a); })[0] || '').replace('--only=', '').split(',').filter(Boolean);
 var chromium;
 try { chromium = require('playwright').chromium; } catch (e) { console.error('playwright 가 필요합니다: npm i -D playwright'); process.exit(2); }
 
@@ -67,8 +70,24 @@ server.listen(0, async function () {
     G.settings.sessionMin = 15;
     /* 단계 맞추기 */
     var keep = localStorage.getItem('grow_logs');
-    function setLogs(arr) { localStorage.setItem('grow_logs', JSON.stringify(arr.map(function (x, i) { return { t: i, d: '2026-01-01', id: 'zz', area: 'mind', lv: x[0], n: 10, ok: x[1], ms: 1000 }; }))); }
-    setLogs([[1, 9], [1, 10], [1, 9]]); out.level.up = G.levelFor('zz', 3);
+    function setLogs(arr) { localStorage.setItem('grow_logs', JSON.stringify(arr.map(function (x, i) { return { t: i, d: '2026-01-01', id: 'zz', area: 'mind', lv: x[0], st: x[2], n: 10, ok: x[1], ms: 1000 }; }))); }
+    function stg(arr) { setLogs(arr); var g = G.stageFor('zz', 3); return g.lv + '-' + g.st; }
+    /* 칸: 한 단계에 세 칸. 칸마다 한 판 잘하면(80%) 한 칸, 단계 넘을 때만 85% */
+    out.level.step1 = stg([[1, 9, 1]]);                          /* → 1-2 */
+    out.level.step80 = stg([[1, 8, 1]]);                         /* 80% → 1-2 */
+    out.level.edge80 = stg([[1, 8, 3]]);                         /* 단계 넘는 칸은 80% 로는 안 됨 → 1-3 */
+    out.level.edge90 = stg([[1, 9, 3]]);                         /* → 2-1 */
+    out.level.softDown = stg([[2, 3, 2]]);                       /* 30% → 한 칸만 내림 2-1 (단계째 내리지 않음) */
+    out.level.okStay = stg([[2, 7, 2]]);                         /* 70% → 2-2 그대로 */
+    out.level.top = stg([[3, 10, 3]]);                           /* 끝 칸 3-3 넘지 않음 */
+    out.level.oldLog = stg([[2, 9]]);                            /* 칸이 없던 옛 기록은 1칸으로 본다 → 2-2 */
+    G.profile.level = { zz: 2 };
+    out.level.fixUp = stg([[1, 10, 3]]);                         /* 부모가 2단계로 고정 → 2-1 */
+    out.level.fixCap = stg([[2, 10, 3]]);                        /* 고정된 단계 밖(3단계)으로 안 나감 → 2-3 */
+    G.profile.level = {};
+    out.tune = [G.tune([2200, 1600, 1150], 1, 1), G.tune([2200, 1600, 1150], 1, 2), G.tune([2200, 1600, 1150], 1, 3), G.tune([2200, 1600, 1150], 2, 1), G.tune([2200, 1600, 1150], 3, 3),
+      G.tune([3, 5, 8], 1, 2), G.tune([3, 5, 8], 3, 3), G.tune([0.085, 0.068, 0.052], 1, 1), G.tune(['a', 'b', 'c'], 2, 3)];
+    setLogs([[1, 9, 1], [1, 10, 2], [1, 9, 3]]); out.level.up = G.levelFor('zz', 3);
     setLogs([[2, 3], [2, 4], [2, 5]]); out.level.down = G.levelFor('zz', 3);
     setLogs([[2, 7], [2, 7], [2, 7]]); out.level.stay = G.levelFor('zz', 3);
     setLogs([[3, 10], [3, 10], [3, 10]]); out.level.cap = G.levelFor('zz', 3);
@@ -76,9 +95,9 @@ server.listen(0, async function () {
     /* 검토에서 나온 경우: 다른 단계 기록을 섞지 않는다 */
     setLogs([[1, 10], [1, 10], [2, 6]]); out.level.mixUp = G.levelFor('zz', 3);       /* 2단계 한 판(60%) → 2 그대로 (3으로 뛰지 않음) */
     setLogs([[1, 10], [2, 6], [3, 3]]); out.level.mixDown = G.levelFor('zz', 3);     /* 3단계 30% → 2로 내림 */
-    var qa = [[1, 9], [1, 9], [1, 9]].map(function (x, i) { return { t: i, d: '2026-01-01', id: 'zz', area: 'mind', lv: x[0], n: 10, ok: x[1], ms: 1000 }; });
+    var qa = [[1, 9, 1], [1, 9, 2], [1, 9, 3]].map(function (x, i) { return { t: i, d: '2026-01-01', id: 'zz', area: 'mind', lv: x[0], st: x[2], n: 10, ok: x[1], ms: 1000 }; });
     qa.push({ t: 9, d: '2026-01-01', id: 'zz', area: 'mind', lv: 2, n: 1, ok: 0, ms: 500, x: { quit: 1 } });
-    localStorage.setItem('grow_logs', JSON.stringify(qa)); out.level.quitIgnored = G.levelFor('zz', 3);   /* 그만둔 판은 무시 → 1단계 세 판 90% → 2 */
+    localStorage.setItem('grow_logs', JSON.stringify(qa)); out.level.quitIgnored = G.levelFor('zz', 3);   /* 그만둔 판은 무시 → 1단계 세 칸을 90% 로 → 2 */
     if (G.acts.daynight) { localStorage.setItem('grow_logs', JSON.stringify([{ t: 1, d: '2026-01-01', id: 'daynight', area: 'brain', lv: 1, n: 10, ok: 10, ms: 1000 }])); out.level.warm = G.levelFor('daynight', 3); }
     if (keep) localStorage.setItem('grow_logs', keep); else localStorage.removeItem('grow_logs');
     /* 너그러운 말소리 맞춤 */
@@ -127,7 +146,15 @@ server.listen(0, async function () {
     ok(p.len >= 4 && p.len <= 9, m + '분 꾸러미 길이 이상: ' + p.len);
   });
   ok(design.level.first === 1, '처음 단계가 1이 아님');
-  ok(design.level.up === 2, '잘하면(90%) 단계가 오르지 않음: ' + design.level.up);
+  ok(design.level.up === 2, '잘하면(90%) 세 칸을 지나 단계가 오르지 않음: ' + design.level.up);
+  ok(design.level.step1 === '1-2' && design.level.step80 === '1-2', '한 판 잘해도(80%↑) 한 칸이 오르지 않음: ' + design.level.step1 + ' ' + design.level.step80);
+  ok(design.level.edge80 === '1-3' && design.level.edge90 === '2-1', '단계를 넘는 칸은 85% 여야 함: ' + design.level.edge80 + ' ' + design.level.edge90);
+  ok(design.level.softDown === '2-1', '힘들면 한 칸만 내려와야 함(단계째 아님): ' + design.level.softDown);
+  ok(design.level.okStay === '2-2', '보통(70%)이면 칸 유지: ' + design.level.okStay);
+  ok(design.level.top === '3-3', '끝 칸(3-3)을 넘어감: ' + design.level.top);
+  ok(design.level.oldLog === '2-2', '칸이 없던 옛 기록을 1칸으로 보지 않음: ' + design.level.oldLog);
+  ok(design.level.fixUp === '2-1' && design.level.fixCap === '2-3', '부모가 정한 단계 밖으로 칸이 움직임: ' + design.level.fixUp + ' ' + design.level.fixCap);
+  ok(JSON.stringify(design.tune) === JSON.stringify([2200, 2000, 1800, 1600, 1000, 4, 9, 0.085, 'b']), 'ctx.tune 칸 보간이 이상함: ' + JSON.stringify(design.tune));
   ok(design.level.down === 1, '어려우면(40%) 단계가 내려가지 않음: ' + design.level.down);
   ok(design.level.stay === 2, '보통(70%)이면 단계 유지해야 함: ' + design.level.stay);
   ok(design.level.cap === 3, '최고 단계를 넘어감: ' + design.level.cap);
@@ -147,9 +174,12 @@ server.listen(0, async function () {
   var runs = 0;
   for (var i = 0; i < design.acts.length; i++) {
     var a = design.acts[i];
-    for (var lv = 1; lv <= (a.levels || 1); lv++) {
+    if (ONLY.length && ONLY.indexOf(a.id) < 0) continue;
+    /* 단계마다 1칸(그 단계 그대로)과 3칸(다음 단계 쪽으로 가장 다가간 칸)을 돌린다 */
+    for (var sv = 0; sv < (a.levels || 1) * ((a.levels || 1) > 1 ? 2 : 1); sv++) {
+      var lv = (a.levels || 1) > 1 ? Math.floor(sv / 2) + 1 : 1, stp = (a.levels || 1) > 1 && sv % 2 ? 3 : 1, LB = lv + '-' + stp + '칸';
       errs = [];
-      await page.evaluate(function (x) { window.G.start(x.id, { level: x.lv }); }, { id: a.id, lv: lv });
+      await page.evaluate(function (x) { window.G.start(x.id, { level: x.lv, step: x.st }); }, { id: a.id, lv: lv, st: stp });
       await page.waitForTimeout(900);
       /* 무언가 눌러 본다: 그림 단추 → 큰 단추 → 판정 단추 */
       var tapped = await page.evaluate(function () {
@@ -161,10 +191,10 @@ server.listen(0, async function () {
         var body = document.getElementById('stBody');
         return { kids: body.children.length, wide: document.documentElement.scrollWidth > innerWidth + 2 || body.scrollWidth > body.clientWidth + 2, alive: !!window.G.cur || !!document.querySelector('.reward') };
       });
-      ok(st.kids > 0, a.id + ' ' + lv + '단계: 화면이 비어 있음');
-      ok(!st.wide, a.id + ' ' + lv + '단계: 화면이 가로로 넘침', true);
-      ok(!errs.length, a.id + ' ' + lv + '단계 오류: ' + errs.join(' | '));
-      if (SHOTS && lv === 1) await page.screenshot({ path: path.join(SHOTS, a.area + '-' + a.id + '.png') });
+      ok(st.kids > 0, a.id + ' ' + LB + ': 화면이 비어 있음');
+      ok(!st.wide, a.id + ' ' + LB + ': 화면이 가로로 넘침', true);
+      ok(!errs.length, a.id + ' ' + LB + ' 오류: ' + errs.join(' | '));
+      if (SHOTS && lv === 1 && stp === 1) await page.screenshot({ path: path.join(SHOTS, a.area + '-' + a.id + '.png') });
       await page.evaluate(function () { var r = document.querySelector('.reward'); if (r) r.remove(); window.G.home(); });
       runs++;
     }
@@ -185,6 +215,24 @@ server.listen(0, async function () {
   ok(fin.logged && fin.n === 2 && fin.ok === 1, '기록이 바르게 남지 않음: ' + JSON.stringify(fin));
   ok(fin.sticker, '스티커가 주어지지 않음');
   ok(fin.noFailText, '아이 상 화면에 실패를 뜻하는 말이 있음');
+
+  /* 칸이 오르면 상 화면에 '한 칸 올라갔어' — 내려갈 때는 아무 말 없음(무오류) */
+  var upT = await page.evaluate(function () {
+    var G = window.G, keep = localStorage.getItem('grow_logs'), id = G.acts.listen ? 'listen' : 'words', out = {};
+    localStorage.setItem('grow_logs', '[]');
+    G.start(id, { level: 1, step: 1 }); for (var i = 0; i < 9; i++) G.cur.trial(true); G.cur.trial(false); G.cur.finish();
+    var u = document.querySelector('.reward .rw-up'); out.up = u ? u.textContent : ''; out.title = '';
+    document.querySelector('.reward .home').click();
+    G.start(id); out.title = (document.querySelector('#stLv .lv-st') || {}).textContent || ''; out.step = G.cur.step;
+    G.cur.trial(false); G.cur.trial(false); G.cur.trial(false); G.cur.finish();
+    out.downShown = !!document.querySelector('.reward .rw-up'); out.after = G.stageFor(id).fine;
+    document.querySelector('.reward .home').click();
+    if (keep) localStorage.setItem('grow_logs', keep); else localStorage.removeItem('grow_logs');
+    return out;
+  });
+  ok(/한 칸 올라갔어/.test(upT.up), '잘한 판 뒤 상 화면에 칸 오름이 안 보임: ' + JSON.stringify(upT));
+  ok(upT.step === 2 && upT.title === '●●○', '다음 판이 1-2칸으로 시작하지 않음(머리말 ●●○): ' + JSON.stringify(upT));
+  ok(!upT.downShown && upT.after === 1, '힘든 판 뒤 조용히 한 칸 내려가야 함: ' + JSON.stringify(upT));
 
   /* 오늘의 놀이: 고르기 화면 */
   var pick = await page.evaluate(function () {

@@ -368,7 +368,7 @@ G.coach = {
     var byArea = {}, byAct = {};
     L.forEach(function (l) {
       var a = byArea[l.area] = byArea[l.area] || { n: 0, ms: 0 }; a.n++; a.ms += l.ms || 0;
-      var b = byAct[l.id] = byAct[l.id] || { n: 0, tr: 0, ok: 0, lv: [] }; b.n++; b.tr += l.n || 0; b.ok += l.ok || 0; b.lv.push(l.lv || 1);
+      var b = byAct[l.id] = byAct[l.id] || { n: 0, tr: 0, ok: 0, lv: [] }; b.n++; b.tr += l.n || 0; b.ok += l.ok || 0; b.lv.push(G.stageLabel(l.lv, l.st));
     });
     var lines = [];
     var age = G.ageMonths();
@@ -381,7 +381,7 @@ G.coach = {
     Object.keys(byArea).forEach(function (k) { lines.push('- ' + ((G.AREAS[k] || {}).name || k) + ': ' + byArea[k].n + '번, ' + Math.round(byArea[k].ms / 60000) + '분'); });
     Object.keys(byAct).forEach(function (k) {
       var b = byAct[k], d = G.acts[k];
-      lines.push('  · ' + (d ? d.title : k) + ': ' + b.n + '번' + (b.tr ? ', 정답·반응 ' + Math.round(b.ok / b.tr * 100) + '%' : '') + ', 단계 ' + b.lv.join('→'));
+      lines.push('  · ' + (d ? d.title : k) + ': ' + b.n + '번' + (b.tr ? ', 정답·반응 ' + Math.round(b.ok / b.tr * 100) + '%' : '') + ', 단계(단계-칸) ' + b.lv.filter(function (x, i, a) { return i === 0 || x !== a[i - 1]; }).join('→'));
     });
     var moods = L.filter(function (l) { return l.id === 'checkin' && l.x && l.x.emo; }).map(function (l) { var e = (D.EMOTIONS || []).filter(function (m) { return m.id === l.x.emo; })[0]; return e ? e.name : l.x.emo; });
     if (moods.length) lines.push('[기분 체크] ' + moods.join(', '));
