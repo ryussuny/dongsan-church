@@ -831,7 +831,7 @@ G.act({
       };
       view.querySelector('.del').onclick = function () {
         G.sfx.play('tap');
-        G.grownUp().then(function (ok) {
+        G.grownUp('그림을 지우려면 답을 눌러 주세요.').then(function (ok) {
           if (!ok || !ctx.alive) return;
           G.db.del('art', a.id).then(function () {
             list = list.filter(function (x) { return x.id !== a.id; });

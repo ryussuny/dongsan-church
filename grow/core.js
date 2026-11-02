@@ -471,8 +471,14 @@ G.levelFor = function (id, max) {
   max = max || 3;
   var fixed = G.profile.level && G.profile.level[id];
   if (fixed) return G.clamp(fixed, 1, max);
-  var L = G.logsFor(id).filter(function (l) { return l.n > 0; }).slice(-3);
-  if (!L.length) return 1;
+  var all = G.logsFor(id);
+  var L = all.filter(function (l) { return l.n > 0; }).slice(-3);
+  if (!L.length) {
+    /* 맞고 틀림이 없는 자유 놀이(그리기·기분 묻기)는 한 단계에서 세 번 하면 올린다 */
+    if (!all.length) return 1;
+    var cur = all[all.length - 1].lv || 1, same = all.filter(function (l) { return (l.lv || 1) === cur && !(l.x && l.x.quit); }).length;
+    return same >= 3 ? Math.min(max, cur + 1) : cur;
+  }
   var last = L[L.length - 1].lv || 1;
   var acc = L.reduce(function (s, l) { return s + l.ok / l.n; }, 0) / L.length;
   if (L.length >= 2 && acc >= 0.85) return Math.min(max, last + 1);
@@ -823,11 +829,11 @@ function unlockOnce() { G.sfx.unlock(); G.voice.unlock(); document.removeEventLi
 document.addEventListener('pointerdown', unlockOnce, true);
 
 /* ---------- 어른 확인 (아이가 부모 화면에 들어가지 않게) ---------- */
-G.grownUp = function () {
+G.grownUp = function (why) {
   return new Promise(function (ok) {
     var a = 2 + Math.floor(Math.random() * 6), b = 2 + Math.floor(Math.random() * 6), ans = a + b;
     var opts = G.shuffle([ans, ans + 1, ans - 1, ans + 2].filter(function (v, i, s) { return s.indexOf(v) === i; }));
-    var ov = G.el('<div class="modal"><div class="md-card"><h3>👨‍👩‍👦 어른 확인</h3><p>부모 화면으로 가려면 답을 눌러 주세요.</p>' +
+    var ov = G.el('<div class="modal"><div class="md-card"><h3>👨‍👩‍👦 어른 확인</h3><p>' + G.esc(why || '부모 화면으로 가려면 답을 눌러 주세요.') + '</p>' +
       '<div class="md-q">' + a + ' + ' + b + ' = ?</div><div class="md-opts">' + opts.map(function (v) { return '<button class="btn">' + v + '</button>'; }).join('') + '</div>' +
       '<button class="btn soft md-x">닫기</button></div></div>');
     document.body.appendChild(ov);
