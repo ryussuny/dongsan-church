@@ -23,7 +23,7 @@
 - 엔진 `grow/core.js`(소리·자비스 목소리(남자 목소리 자동·ElevenLabs 고급 목소리)·음성 인식·마이크·카메라·기록·단계 맞추기·오늘의 놀이), 그림 `grow/hero-art.js`(자비스·영역 문장·창작 로봇 6대 — 실존 캐릭터를 베끼지 않는다), 자료 `grow/data.js`, 놀이 `grow/act-*.js`(각 파일이 `G.act({...})` 로 등록), 근거·실행기능 표시 `grow/ef.js`, AI `grow/jarvis.js`, 부모 화면 `grow/parent.js`, 아이 홈 `grow/app.js`.
 - 놀이를 더하면 `goal`(치료 목표)·`how`(함께 하는 법)·`ef`(실행기능)·`basis`(근거)·`offline`(화면 밖 놀이)를 꼭 단다. 아이 화면에는 "틀렸어"를 보이지 않는다(무오류 학습).
 - 고친 뒤 `node scripts/grow-check.js` 로 검증한다(치료 설계 규칙 + 모든 놀이·단계 실행). 설명서는 `함께-자라요-안내.md`.
-- 아이 정보·기록·사진·그림은 기기(localStorage·IndexedDB)에만. AI 로는 이름을 '아이'로 바꿔 보낸다.
+- 아이 정보·기록·사진·그림·**말소리 녹음**은 기기(localStorage·IndexedDB)에만. AI 로는 이름을 '아이'로 바꿔 보낸다. 말소리 녹음(`grow/speech-lab.js`)은 저절로 업로드하지 않고, 학습 데이터 ZIP 은 부모가 직접 내보낼 때만 만든다. 녹음 파일·내보낸 ZIP 은 절대 커밋하지 않는다.
 
 ## 디자인 스튜디오
 - 화면: `design.html` (관리자 앱 홈 「🎨 디자인」). 한 줄 부탁 → Claude 가 HTML 조각을 그리고, 틀(`design-templates.js`)은 AI 없이 그린다.

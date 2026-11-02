@@ -404,7 +404,12 @@ G.act({
   run: async function (ctx) {
     var lv = ctx.level, N = 6;
     var items = lv === 3 ? G.sample(D.PHRASES, N).map(function (p) { return { w: p.t, e: p.e, phrase: true }; })
-      : G.sample(wordPool(lv), N).map(function (w) { return { w: w.w, e: w.e, src: w }; });
+      : (function () {
+        /* 말소리 연구실이 찾은 '어려운 낱말'을 두 개까지 먼저 넣어 더 자주 연습한다 */
+        var pool = wordPool(lv), hardW = G.SL && G.SL.hard ? G.SL.hard() : [];
+        var first = G.shuffle(pool.filter(function (w) { return hardW.indexOf(w.w) >= 0; })).slice(0, 2);
+        return first.concat(G.sample(pool.filter(function (w) { return first.indexOf(w) < 0; }), N - first.length));
+      })().map(function (w) { return { w: w.w, e: w.e, src: w }; });
     ctx.progress(0, N);
     /* 우리 집 사진 카드를 두 장까지 섞는다 — 진짜 사진은 그림보다 잘 배운다 */
     var pics = (await G.db.all('pics')).filter(function (p) { return p && p.img && p.w && String(p.w).trim(); });

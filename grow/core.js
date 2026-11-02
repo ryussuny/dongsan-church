@@ -62,8 +62,8 @@ G.db = (function () {
     if (dbp) return dbp;
     dbp = new Promise(function (ok, no) {
       if (!window.indexedDB) { no(new Error('no idb')); return; }
-      var r = indexedDB.open('grow', 2);
-      r.onupgradeneeded = function () { var d = r.result; ['pics', 'art', 'tts'].forEach(function (n) { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n, { keyPath: 'id' }); }); };
+      var r = indexedDB.open('grow', 3);
+      r.onupgradeneeded = function () { var d = r.result; ['pics', 'art', 'tts', 'speech'].forEach(function (n) { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n, { keyPath: 'id' }); }); };
       r.onsuccess = function () { ok(r.result); };
       r.onerror = function () { no(r.error); };
     });
@@ -95,6 +95,9 @@ G.settings = Object.assign({
   elVoice: 'nbrxrAz3eYm9NgojrmFK',   // Min-joon — 밝고 자신 있는 젊은 남성(한국어)
   elModel: 'eleven_multilingual_v2',
   elName: false,     // 고급 목소리에 아이 별명도 보내기 (기본: 안 보냄)
+  recVoice: true,    // 아이가 한 말 자동 기록 (글)
+  recAudio: true,    // 소리도 녹음 (기기가 허락하면)
+  recDays: 90,       // 소리 파일 보관 일수 (글은 남는다)
   sound: true,       // 효과음
   vibrate: true,     // 진동
   calm: false,       // 감각 예민 모드 — 소리 작게, 반짝임·꽃가루 끄기
@@ -478,8 +481,10 @@ G.listen = function (o) {
     if (!SR) { ok({ unsupported: true, text: '', alts: [], score: 0, ok: false, heard: false }); return; }
     G.voice.stop();
     if (recNow) try { recNow.abort(); } catch (e) {}
-    var r = new SR(), alts = [], fin = false, timer = null, got = false;
+    var r = new SR(), alts = [], fin = false, timer = null, got = false, t0 = Date.now(), firstAt = 0;
     recNow = r;
+    /* 말소리 자동 녹음 (speech-lab.js) — 듣는 동안 소리도 기기에 담는다 */
+    var clip = G.SL && G.SL.startClip ? G.SL.startClip() : null;
     r.lang = 'ko-KR'; r.interimResults = true; r.maxAlternatives = 5; r.continuous = false;
     document.documentElement.classList.add('jv-listen');
     function end(extra) {
@@ -489,12 +494,21 @@ G.listen = function (o) {
       if (recNow === r) recNow = null;
       var text = alts[0] || '', score = 0;
       (o.expect || []).forEach(function (w) { alts.forEach(function (a) { score = Math.max(score, G.similar(a, w)); }); });
-      ok(Object.assign({ text: text, alts: alts, score: score, ok: score >= (o.threshold || 0.5), heard: !!text }, extra || {}));
+      /* 아이 말소리 사전: 부모가 👍 해 준 발음은 다음부터 맞다고 본다 */
+      if (G.SL && G.SL.accepts) (o.expect || []).forEach(function (w) { if (G.SL.accepts(w, alts)) score = Math.max(score, 0.9); });
+      var res = Object.assign({ text: text, alts: alts, score: score, ok: score >= (o.threshold || 0.5), heard: !!text }, extra || {});
+      if (G.SL && G.SL.save) {
+        if (extra && extra.error === 'audio-capture' && clip) G.SL.noteConflict('audio-capture');
+        var meta = { act: G.cur ? G.cur.id : '', lv: G.cur ? G.cur.level : 0, target: (o.expect || [])[0] || '', heard: text, alts: alts.slice(0, 3),
+          score: Math.round(score * 100) / 100, ok: res.ok, latency: firstAt ? firstAt - t0 : 0, err: extra && extra.error || '' };
+        if (clip) clip.stop().then(function (c) { if (text || c) G.SL.save(meta, c); }); else if (text) G.SL.save(meta, null);
+      }
+      ok(res);
     }
     r.onresult = function (e) {
       var res = e.results[e.results.length - 1], list = [];
       for (var i = 0; i < res.length; i++) list.push(res[i].transcript.trim());
-      got = true;
+      got = true; if (!firstAt) firstAt = Date.now();
       if (o.onInterim) try { o.onInterim(list[0]); } catch (er) {}
       if (res.isFinal) { alts = list.concat(alts); end(); }
       else { alts = list; }
@@ -830,8 +844,8 @@ G.start = function (id, o) {
       var w = G.el('<div class="judge"><button class="btn big yes">' + labels[0] + '</button><button class="btn big soft no">' + labels[1] + '</button></div>');
       var p = new Promise(function (ok) {
         (box || ctx.body).appendChild(w);
-        w.querySelector('.yes').onclick = function () { G.sfx.play('tap'); w.remove(); ok(true); };
-        w.querySelector('.no').onclick = function () { G.sfx.play('tap'); w.remove(); ok(false); };
+        w.querySelector('.yes').onclick = function () { G.sfx.play('tap'); w.remove(); if (G.SL) G.SL.judge(true); ok(true); };
+        w.querySelector('.no').onclick = function () { G.sfx.play('tap'); w.remove(); if (G.SL) G.SL.judge(false); ok(false); };
       });
       p.cancel = function () { w.remove(); };   /* 음성 인식이 먼저 들으면 단추를 거둔다 (이 약속은 끝나지 않음) */
       return p;
@@ -846,6 +860,7 @@ G.start = function (id, o) {
   E.st.style.setProperty('--area', (G.AREAS[def.area] || {}).color || '#4f8cff');
   if (G.session) { var s = G.session; E.sess.hidden = false; E.sess.innerHTML = '<b style="width:' + Math.round(s.i / s.list.length * 100) + '%"></b>'; }
   else E.sess.hidden = true;
+  if (G.SL && G.SL.prewarm && (def.area === 'speech')) G.SL.prewarm();
   showScreen('stage');
   var tt = G.$('#toast'); if (tt) tt.classList.remove('on');   /* 알림 띠가 놀이 단추를 가리지 않게 */
   G.wake(true);

@@ -387,6 +387,7 @@ G.coach = {
     if (moods.length) lines.push('[기분 체크] ' + moods.join(', '));
     var said = G.store.get('saidWords', {}), sk = Object.keys(said).sort(function (a, b) { return said[b].n - said[a].n; }).slice(0, 40);
     if (sk.length) lines.push('[음성 인식이 들은 아이 말 (부정확할 수 있음)] ' + sk.map(function (k) { return k + '(' + said[k].n + ')'; }).join(', '));
+    if (G.SL && G.SL.summaryText) lines.push(G.SL.summaryText);
     var diary = G.store.get('diary', []).filter(function (n) { return n.t >= since; }).slice(-12);
     if (diary.length) { lines.push('[부모 메모]'); diary.forEach(function (n) { lines.push('- ' + G.today(new Date(n.t)) + ' ' + (n.tag ? '[' + n.tag + '] ' : '') + mask(n.text)); }); }
     lines.push('[놀이 목록] ' + Object.keys(G.acts).filter(function (k) { return !G.acts[k].tool; }).map(function (k) { var d = G.acts[k]; return d.title + '(' + (G.AREAS[d.area] || {}).name + ': ' + (d.goal || '') + ')'; }).join(' / '));
@@ -403,6 +404,7 @@ G.coach = {
   QUICK: [
     { e: '📅', t: '다음 주 집 놀이 계획', q: '기록을 보고 다음 한 주(월~일) 집 놀이 계획을 세워 주세요. 하루 15~20분, 이 앱 놀이와 앱 밖 놀이(집에 있는 물건)를 섞고, 요일마다 무엇을 왜 하는지 표처럼 정리해 주세요.' },
     { e: '🗣️', t: '언어치료 선생님께 드릴 정리', q: '다음 언어치료 시간에 선생님께 보여 드릴 요약을 써 주세요. 요즘 집에서 본 말·소통 모습, 잘 늘고 있는 점, 궁금한 점(질문 3~5개)을 정리해 주세요.' },
+    { e: '🎙️', t: '말소리 분석 (언어치료 관점)', q: '말소리 기록(음성 인식 기준 추정)을 언어치료 관점에서 풀어 주세요. 1) 표현 어휘·문장 길이가 어떻게 자라고 있는지 2) 자주 보이는 말소리 패턴이 이 나이에 흔한 것인지, 치료사와 상의할 것인지 3) 어려운 낱말을 집에서 연습하는 놀이 3가지 4) 언어치료 선생님께 여쭤볼 질문. 음성 인식은 실제 낱말 쪽으로 고쳐 듣는 경향이 있으니 단정하지 말고, 진단처럼 쓰지 마세요.' },
     { e: '✋', t: '작업치료를 집에서 잇기', q: '작업치료(소근육·감각·일상생활)에서 배운 것을 집에서 이어 갈 수 있는 놀이를 일과(밥·옷 입기·목욕·놀이) 속에 넣어 알려 주세요.' },
     { e: '🎨', t: '그림·기분으로 마음 읽기', q: '기분 체크와 그리기 기록을 보고 아이 마음을 어떻게 읽고 반응해 주면 좋을지, 미술치료 관점에서 집에서 할 수 있는 표현 놀이를 알려 주세요.' },
     { e: '😣', t: '떼쓰기·감각 예민할 때', q: '아이가 떼를 쓰거나 소리·옷·음식에 예민하게 반응할 때 그 자리에서 할 수 있는 것과, 미리 막을 수 있는 것을 단계별로 알려 주세요.' },
