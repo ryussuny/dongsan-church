@@ -62,8 +62,8 @@ G.db = (function () {
     if (dbp) return dbp;
     dbp = new Promise(function (ok, no) {
       if (!window.indexedDB) { no(new Error('no idb')); return; }
-      var r = indexedDB.open('grow', 1);
-      r.onupgradeneeded = function () { var d = r.result; ['pics', 'art'].forEach(function (n) { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n, { keyPath: 'id' }); }); };
+      var r = indexedDB.open('grow', 2);
+      r.onupgradeneeded = function () { var d = r.result; ['pics', 'art', 'tts'].forEach(function (n) { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n, { keyPath: 'id' }); }); };
       r.onsuccess = function () { ok(r.result); };
       r.onerror = function () { no(r.error); };
     });
@@ -88,9 +88,13 @@ G.db = (function () {
 
 /* ---------- 설정·아이 정보 ---------- */
 G.settings = Object.assign({
-  rate: 0.88,        // 자비스 말 빠르기
-  pitch: 1.15,       // 자비스 목소리 높이
-  voice: '',         // 고른 목소리 이름
+  rate: 0.95,        // 자비스 말 빠르기 — 또렷하고 자신 있게
+  pitch: 1.0,        // 자비스 목소리 높이 — 형 목소리
+  voice: '',         // 고른 목소리 이름 (비우면 남자 목소리를 찾아 고른다)
+  elOn: false,       // ElevenLabs 고급 목소리
+  elVoice: 'nbrxrAz3eYm9NgojrmFK',   // Min-joon — 밝고 자신 있는 젊은 남성(한국어)
+  elModel: 'eleven_multilingual_v2',
+  elName: false,     // 고급 목소리에 아이 별명도 보내기 (기본: 안 보냄)
   sound: true,       // 효과음
   vibrate: true,     // 진동
   calm: false,       // 감각 예민 모드 — 소리 작게, 반짝임·꽃가루 끄기
@@ -98,6 +102,13 @@ G.settings = Object.assign({
   praiseVoice: true, // 칭찬을 소리로
   listenMs: 6000     // 말을 기다리는 시간
 }, G.store.get('settings', {}));
+/* 예전 판(아기 목소리) 설정을 형 목소리로 옮긴다 */
+if ((G.settings.v || 1) < 2) {
+  if (G.settings.rate === 0.88) G.settings.rate = 0.95;
+  if (G.settings.pitch === 1.15) G.settings.pitch = 1.0;
+  G.settings.voice = ''; G.settings.v = 2;
+  try { localStorage.setItem('grow_settings', JSON.stringify(G.settings)); } catch (e) {}
+}
 G.saveSettings = function () { G.store.set('settings', G.settings); applyCalm(); };
 
 G.AREAS = {
@@ -125,6 +136,19 @@ G.EF = {
 
 G.profile = Object.assign({ nick: '', birth: '', focus: G.AREA_ORDER.slice(), level: {}, hide: {}, therapies: [] }, G.store.get('profile', {}));
 G.saveProfile = function () { G.store.set('profile', G.profile); };
+/* 초등학생(7살·84개월 이상)이면 '형' 말투·히어로 미션. 부모가 설정에서 바꿀 수 있다 */
+G.older = function () {
+  var st = G.profile.style || 'auto';
+  if (st === 'hero') return true; if (st === 'little') return false;
+  var m = G.ageMonths(); return m == null ? true : m >= 84;
+};
+/* 칭찬·격려·마침 말은 나이에 맞는 묶음을 고른다 (놀이 파일은 D.PRAISE 를 그대로 쓰면 된다) */
+['PRAISE', 'TRY', 'DONE'].forEach(function (k) {
+  var little = D[k];
+  if (!little) return;
+  D[k + '_LITTLE'] = little;
+  Object.defineProperty(D, k, { configurable: true, get: function () { return G.older() && D[k + '_HERO'] ? D[k + '_HERO'] : D[k + '_LITTLE']; } });
+});
 G.nick = function () { return (G.profile.nick || '').trim() || '친구'; };
 /* 부르는 말: 받침 따라 '민준아' / '서아야' */
 G.callName = function () { var n = (G.profile.nick || '').trim(); return n ? G.josa(n, '아', '야') : '친구야'; };
@@ -230,13 +254,23 @@ G.buzz = function (p) { if (G.settings.vibrate && !G.settings.calm && navigator.
 /* ---------- 자비스 목소리 (기기 음성 합성) ---------- */
 G.voice = (function () {
   var voices = [], chosen = null, speaking = false, endT = null, curResolve = null;
-  var PREFER = /yuna|유나|sunhi|선희|heami|해미|injoon|google 한국|korean|ko-kr|female/i;
+  /* 기기마다 목소리 이름이 다르다 — 남자 목소리를 알아보는 이름들
+     안드로이드 구글: ko-kr-x-koc/kod(남) · kob/ism(여) / 삼성: SMTm(남) · SMTf(여) / 윈도우: InJoon·Hyunsu(남) · SunHi(여) / 애플: Minsu 등 */
+  var MALE = /injoon|인준|hyunsu|현수|minsu|민수|jinho|진호|bongjin|봉진|gookmin|국민|junho|준호|male|남성|남자|x-koc|x-kod|smtm|standard-c|standard-d|wavenet-c|wavenet-d|neural2-c/i;
+  var FEMALE = /yuna|유나|sunhi|선희|heami|해미|seoyeon|서연|jimin|지민|yujin|유진|female|여성|여자|x-kob|x-ism|smtf|standard-a|standard-b|wavenet-a|wavenet-b|neural2-a|neural2-b|google 한국/i;
+  function score(v) {
+    var n = (v.name || '') + ' ' + (v.voiceURI || ''), s = 0;
+    if (MALE.test(n)) s += 10; else if (FEMALE.test(n)) s -= 5;
+    if (/enhanced|premium|natural|neural|online|향상/i.test(n)) s += 2;
+    if (/ko[-_]KR/i.test(v.lang)) s += 1;
+    return s;
+  }
+  function isMale(v) { return !!v && MALE.test((v.name || '') + ' ' + (v.voiceURI || '')); }
   function load() {
     if (!G.has.tts) return;
     voices = speechSynthesis.getVoices().filter(function (v) { return /^ko/i.test(v.lang); });
     chosen = voices.filter(function (v) { return v.name === G.settings.voice; })[0] ||
-      voices.filter(function (v) { return /yuna|유나|sunhi|선희|google/i.test(v.name); })[0] ||
-      voices.filter(function (v) { return PREFER.test(v.name); })[0] || voices[0] || null;
+      voices.slice().sort(function (a, b) { return score(b) - score(a); })[0] || null;
   }
   if (G.has.tts) { load(); speechSynthesis.onvoiceschanged = load; }
   function talking(on) {
@@ -245,6 +279,84 @@ G.voice = (function () {
   }
   function clean(t) { /* 이모지·기호는 읽지 않게 */
     return String(t || '').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, ' ').replace(/[~*#_]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  /* ----- ElevenLabs 고급 목소리 (부모가 키를 넣고 켰을 때만) -----
+     만든 소리는 기기(IndexedDB)에 모아 두어 같은 말은 다시 받지 않고, 인터넷이 없어도 나온다.
+     2.5초 안에 못 받으면 이번엔 기기 목소리로 말하고, 받아 온 소리는 다음을 위해 남겨 둔다. */
+  var au = null, elFail = '', inflight = {};
+  function elKey() { return String(G.store.get('elKey', '') || '').trim(); }
+  function elReady() { return G.settings.elOn && !!elKey() && !elFail; }
+  function elText(t) {
+    if (G.settings.elName) return t;
+    var nick = (G.profile.nick || '').trim(); if (!nick) return t;
+    /* 별명은 보내지 않는다: "아인아, 오늘도" → "오늘도" */
+    return t.split(G.callName()).join('').split(nick).join('').replace(/^[\s,!.]+/, '').replace(/\s+([,!.?])/g, '$1').trim() || t;
+  }
+  function elId(t) { return [G.settings.elVoice, G.settings.elModel, Math.round(G.settings.rate * 100), t].join('|'); }
+  function fetchClip(t) {
+    var id = elId(t);
+    if (inflight[id]) return inflight[id];
+    inflight[id] = G.db.get('tts', id).catch(function () { return null; }).then(function (hit) {
+      if (hit && hit.blob) return hit.blob;
+      return fetch('https://api.elevenlabs.io/v1/text-to-speech/' + encodeURIComponent(G.settings.elVoice) + '?output_format=mp3_44100_64', {
+        method: 'POST',
+        headers: { 'xi-api-key': elKey(), 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
+        body: JSON.stringify({ text: t, model_id: G.settings.elModel,
+          voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.35, use_speaker_boost: true, speed: G.clamp(G.settings.rate, 0.7, 1.2) } })
+      }).then(function (r) {
+        if (!r.ok) {
+          return r.json().catch(function () { return {}; }).then(function (d) {
+            var m = (d.detail && (d.detail.message || d.detail.status)) || ('오류 ' + r.status);
+            if (r.status === 401) elFail = 'ElevenLabs 키가 맞지 않아요';
+            else if (r.status === 402 || r.status === 403) elFail = '이 목소리·모델을 지금 요금제로 쓸 수 없어요 (' + m + ')';
+            else if (r.status === 429) { /* 잠깐 붐빔 — 이번만 기기 목소리 */ }
+            throw new Error(m);
+          });
+        }
+        return r.blob();
+      }).then(function (blob) {
+        G.db.put('tts', { id: id, blob: blob, t: Date.now() }).catch(function () {});
+        return blob;
+      });
+    });
+    inflight[id].then(function () { delete inflight[id]; }, function () { delete inflight[id]; });
+    return inflight[id];
+  }
+  function playBlob(blob, done) {
+    if (!au) au = new Audio();
+    var url = URL.createObjectURL(blob);
+    au.onplay = function () { talking(true); };
+    au.onended = au.onerror = function () { URL.revokeObjectURL(url); done(); };
+    au.src = url; au.volume = G.settings.calm ? 0.75 : 1;
+    var p = au.play(); if (p && p.catch) p.catch(function () { URL.revokeObjectURL(url); done(); });
+  }
+
+  /* 0.05초짜리 조용한 WAV — 아이폰에서 소리 재생기를 깨울 때 쓴다 */
+  var silentUrl = null;
+  function silentWav() {
+    if (silentUrl) return silentUrl;
+    var n = 2205, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    function w(o, str) { for (var i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); }
+    w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, 44100, true); v.setUint32(28, 88200, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+    silentUrl = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+    return silentUrl;
+  }
+  function deviceSay(t, o, done, est) {
+    if (!G.has.tts || G.settings.mute) { talking(true); endT = setTimeout(done, est * 0.8); return; }
+    try {
+      var u = new SpeechSynthesisUtterance(t);
+      u.lang = 'ko-KR'; if (chosen) u.voice = chosen;
+      /* 남자 목소리가 없는 기기면 조금 낮춰 아기 같지 않게 */
+      var pitch = o.pitch || G.settings.pitch; if (!isMale(chosen)) pitch = Math.max(0.5, pitch * 0.88);
+      u.rate = o.rate || G.settings.rate; u.pitch = pitch; u.volume = G.settings.calm ? 0.75 : 1;
+      u.onstart = function () { talking(true); };
+      u.onend = done; u.onerror = done;
+      talking(true);
+      speechSynthesis.speak(u);
+      endT = setTimeout(done, est + 4000);   // onend 가 안 오는 기기 대비
+    } catch (e) { done(); }
   }
   function say(text, o) {
     o = o || {};
@@ -255,29 +367,43 @@ G.voice = (function () {
       var est = 700 + t.length * 160 / (o.rate || G.settings.rate);
       function done() { if (curResolve !== done) return; curResolve = null; clearTimeout(endT); talking(false); setTimeout(ok, 60); }
       curResolve = done;
-      if (!G.has.tts || G.settings.mute) { talking(true); endT = setTimeout(done, est * 0.8); return; }
-      try {
-        var u = new SpeechSynthesisUtterance(t);
-        u.lang = 'ko-KR'; if (chosen) u.voice = chosen;
-        u.rate = o.rate || G.settings.rate; u.pitch = o.pitch || G.settings.pitch; u.volume = G.settings.calm ? 0.75 : 1;
-        u.onstart = function () { talking(true); };
-        u.onend = done; u.onerror = done;
+      if (elReady() && !o.device) {
+        var et = elText(t), late = false;
         talking(true);
-        speechSynthesis.speak(u);
-        endT = setTimeout(done, est + 4000);   // onend 가 안 오는 기기 대비
-      } catch (e) { done(); }
+        var wait = setTimeout(function () { late = true; if (curResolve === done) deviceSay(t, o, done, est); }, 2500);
+        fetchClip(et).then(function (blob) {
+          clearTimeout(wait);
+          if (late || curResolve !== done) return;          /* 늦게 온 소리는 다음 번을 위해 남겨만 둔다 */
+          playBlob(blob, done);
+        }, function () { clearTimeout(wait); if (!late && curResolve === done) deviceSay(t, o, done, est); });
+        return;
+      }
+      deviceSay(t, o, done, est);
     });
   }
   function stop() {
     if (G.has.tts) try { speechSynthesis.cancel(); } catch (e) {}
+    if (au) try { au.pause(); } catch (e) {}
     clearTimeout(endT); talking(false);
     if (curResolve) { var r = curResolve; curResolve = null; r(); }
   }
+  /* 자주 하는 말(칭찬·격려·인사)을 미리 받아 둔다 — 고급 목소리가 바로 나오게 */
+  function warm(lines) {
+    if (!elReady()) return;
+    var list = lines.map(function (l) { return elText(clean(l)); }).filter(Boolean), i = 0;
+    (function next() { if (i >= list.length || !elReady()) return; fetchClip(list[i++]).then(function () { setTimeout(next, 250); }, function () { setTimeout(next, 1500); }); })();
+  }
   return {
-    say: say, stop: stop, load: load,
+    say: say, stop: stop, load: load, warm: warm, isMale: isMale, score: score,
     list: function () { return voices; },
+    current: function () { return chosen; },
+    premium: { ready: elReady, error: function () { return elFail; }, reset: function () { elFail = ''; }, test: function (t) { elFail = ''; return fetchClip(elText(clean(t))); } },
     get speaking() { return speaking; },
-    unlock: function () { if (G.has.tts) try { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} }
+    unlock: function () {
+      if (G.has.tts) try { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
+      /* 아이폰: 손이 닿을 때 소리 재생기를 한 번 깨워 둔다 */
+      try { if (!au) au = new Audio(); au.src = silentWav(); var p = au.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+    }
   };
 })();
 G.say = function (t, o) { return G.voice.say(t, o); };
@@ -444,7 +570,15 @@ G.wake = function (on) {
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && G.cur) G.wake(true); });
 
 /* ---------- 자비스 얼굴 ---------- */
+G.JV_IMG = { head: 'assets/grow/jarvis-head.jpg', full: 'assets/grow/jarvis.jpg' };
 G.jarvisSVG = function (cls) {
+  /* 히어로 로봇 그림(hero-art.js)이 있으면 그것을 쓴다 — 'big'·'full' 은 전신 */
+  /* 실사 자비스(assets/grow) — 말할 때·들을 때는 테두리가 빛난다 */
+  if (G.JV_IMG && !/\bsvg\b/.test(cls || '')) {
+    var full = /\b(big|full)\b/.test(cls || '');
+    return '<span class="jvi ' + (full ? 'jvi-full ' : '') + (cls || '') + '"><img src="' + (full ? G.JV_IMG.full : G.JV_IMG.head) + '" alt="자비스"><i class="jvi-eq"><b></b><b></b><b></b><b></b><b></b></i></span>';
+  }
+  if (window.GA && GA.jarvis) try { return GA.jarvis({ full: /\b(big|full)\b/.test(cls || ''), cls: cls || '' }); } catch (e) {}
   return '<svg class="jv ' + (cls || '') + '" viewBox="0 0 120 120" aria-hidden="true">' +
     '<line x1="60" y1="14" x2="60" y2="26" class="jv-ant"/><circle cx="60" cy="11" r="6" class="jv-bulb"/>' +
     '<rect x="14" y="26" width="92" height="76" rx="30" class="jv-head"/>' +
@@ -502,7 +636,11 @@ G.levelFor = function (id, max) {
   var def = G.acts[id] || {};
   /* 중간에 그만둔 판은 빼고, 끝까지 한 판만 본다 */
   var done = G.logsFor(id).filter(function (l) { return !(l.x && l.x.quit); });
-  if (!done.length) return 1;
+  if (!done.length) {
+    /* 처음 하는 놀이: 8살(96개월) 넘은 아이는 말하기 말고는 2단계부터 — 너무 쉬우면 지루하다. 어려우면 한 판 만에 내려온다 */
+    var am = G.ageMonths();
+    return am != null && am >= 96 && def.area !== 'speech' && (def.levels || 1) >= 3 && !def.tool ? 2 : 1;
+  }
   var cur = done[done.length - 1].lv || 1;
   var atCur = done.filter(function (l) { return (l.lv || 1) === cur; });
   var graded = atCur.filter(function (l) { return l.n > 0; }).slice(-3);
@@ -745,11 +883,17 @@ function finish(ctx, x) {
   if (inSess) { G.session.done.push(ctx.id); G.saveSession(); }
   var hard = ctx.id === 'checkin' && G.HARD_MOODS.indexOf(ctx.extra.emo) >= 0;
   var msg = x.msg || (hard ? '마음을 말해 줘서 고마워. 자비스가 옆에 있을게.' : G.pick(D.DONE));
-  var ov = G.el('<div class="reward" role="dialog">' +
+  /* 히어로: 스티커 대신 로봇 부품 — 여섯 개 모으면 로봇 완성(변신!) */
+  var part = G.rewardPart ? G.rewardPart(G.stickers().count) : null;
+  if (part && !x.msg && !hard) msg = part.complete ? part.robot.name + ' 완성! 변신!' + (part.rankUp ? ' 계급이 ' + part.rankUp.name + '(으)로 올랐어!' : '') : G.pick(D.PRAISE) + ' ' + part.partName.replace(/ \(.*\)$/, '') + ' 획득!';
+  var ov = G.el('<div class="reward' + (part ? ' hero' : '') + '" role="dialog">' +
     '<div class="rw-card">' + (hard ? '<div class="rw-stars"><span>💗</span></div>' : '<div class="rw-stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>') +
-    '<div class="rw-jv">' + G.jarvisSVG('big') + '</div>' +
+    (part ? '' : '<div class="rw-jv">' + G.jarvisSVG('big') + '</div>') +
     '<div class="rw-msg">' + G.esc(msg) + '</div>' +
-    '<div class="rw-stk"><small>새 스티커</small><b>' + stk + '</b></div>' +
+    (part ? '<div class="rw-part"><div class="rp-art' + (part.complete ? ' transform' : '') + '">' + part.svg + '</div><div><small>' + (part.complete ? '로봇 완성! 변신!' : '새 부품 획득') + '</small><b>' + G.esc(part.robot.name) + '</b><b class="rp-name">' + G.esc(part.partName) + '</b>' +
+      '<span class="rp-dots">' + [0, 1, 2, 3, 4, 5].map(function (k) { return '<i class="' + (k < part.owned ? 'on' : '') + (k === part.owned - 1 ? ' new' : '') + '"></i>'; }).join('') + '</span>' +
+      (part.rankUp ? '<small class="rp-rank">' + part.rankUp.e + ' 계급 업! 「' + G.esc(part.rankUp.name) + '」</small>' : '') + '</div></div>'
+      : '<div class="rw-stk"><small>새 스티커</small><b>' + stk + '</b></div>') +
     '<div class="rw-btns">' + (inSess ? '<button class="btn big go">다음 놀이 ▶</button>' : '<button class="btn big again">🔁 한 번 더</button>') +
     '<button class="btn big soft home">' + (inSess ? '🏠 쉬었다 할래요' : '🏠 처음으로') + '</button></div></div></div>');
   document.body.appendChild(ov);
@@ -823,7 +967,7 @@ G.startSession = function () {
   var st = G.store.get('sessionsToday', { d: '', n: 0 }); if (st.d !== G.today()) st = { d: G.today(), n: 0 }; st.n++; G.store.set('sessionsToday', st);
   G.session = { list: list, i: 0, start: Date.now(), done: [] };
   G.saveSession();
-  G.say(G.callName() + ', 오늘도 자비스랑 같이 놀자!').then(function () { if (G.session) G.runSlot(G.session.list[0]); });
+  G.say(G.older() ? G.callName() + ', 오늘의 미션 시작! 자비스 형이 함께할게.' : G.callName() + ', 오늘도 자비스랑 같이 놀자!').then(function () { if (G.session) G.runSlot(G.session.list[0]); });
 };
 /* 한 칸 시작 — 둘 중 고르기면 고르는 화면부터 */
 G.runSlot = function (entry) {
@@ -865,12 +1009,15 @@ G.nextInSession = function () {
   if (over && s.i < s.list.length - 1) s.i = s.list.length - 1;
   if (s.i >= s.list.length) {
     G.session = null; G.store.del('sessionSave');
+    /* 오늘의 미션을 끝까지 하면 보너스 부품 하나 (하루 한 번) */
+    var bonus = G.store.get('bonusDay', '') !== G.today() && s.done.length >= 2;
+    if (bonus) { G.store.set('bonusDay', G.today()); G.giveSticker(); }
     G.store.set('lastSession', { d: G.today(), n: s.done.length });
     var sd = G.store.get('sessionDays', []); if (sd.indexOf(G.today()) < 0) { sd.push(G.today()); G.store.set('sessionDays', sd.slice(-400)); }
     G.home();
     if (!G.settings.calm) { G.fx.confetti(50); G.sfx.play('win'); } else G.sfx.play('ding');
-    G.say('오늘의 놀이 끝! ' + G.callName() + ', 정말 멋졌어. 이제 화면은 쉬고, 엄마 아빠랑 몸으로 놀자!');
-    G.toast('🎉 오늘의 놀이를 모두 마쳤어요! 이제 화면을 쉬어요', 4500);
+    G.say(G.older() ? '오늘의 미션 모두 완료! ' + G.callName() + ', 진짜 멋졌어. 이제 화면은 쉬고 몸으로 놀자!' : '오늘의 놀이 끝! ' + G.callName() + ', 정말 멋졌어. 이제 화면은 쉬고, 엄마 아빠랑 몸으로 놀자!');
+    G.toast(bonus ? '🎁 오늘의 미션 완료 보너스 — 부품 하나 더! 이제 화면을 쉬어요' : '🎉 오늘의 놀이를 모두 마쳤어요! 이제 화면을 쉬어요', 4500);
     return;
   }
   G.runSlot(s.list[s.i]);

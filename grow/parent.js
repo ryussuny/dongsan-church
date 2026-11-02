@@ -424,6 +424,13 @@ function tReport(body) {
 }
 
 /* ===== 설정 ===== */
+/* ElevenLabs 한국어 남성 목소리 (라이브러리) — 자신 있는 젊은 형 느낌 순 */
+var EL_VOICES = [
+  ['nbrxrAz3eYm9NgojrmFK', 'Min-joon — 밝고 자신 있는 형 (기본)'],
+  ['GmxqVpFnArU87xslDhfo', 'Minjun — 또렷하고 차분한 자신감'],
+  ['M7AHsCtFdpWTIL58I3ap', 'Dongjae — 다정한 선생님 형'],
+  ['HvCQYI15cbdFVC9pSBfb', 'Mr.H — 친근한 유튜버 형']
+];
 var THERAPIES = ['언어치료', '작업치료', '미술치료', '감각통합', '놀이치료', '인지치료', '물리치료', '음악치료', 'ABA'];
 function tSet(body) {
   var P = G.profile, St = G.settings;
@@ -432,16 +439,26 @@ function tSet(body) {
     '<h4>태어난 달</h4><input class="inp" id="sBirth" type="month" value="' + G.esc(P.birth || '') + '">' +
     '<h4>다니는 치료</h4><div class="wchips" id="sTher">' + THERAPIES.map(function (t) { return '<button class="chip ' + ((P.therapies || []).indexOf(t) >= 0 ? 'on' : '') + '" data-th="' + t + '">' + t + '</button>'; }).join('') + '</div>' +
     '<h4>집중할 영역 (오늘의 놀이에 들어가요)</h4><div class="wchips" id="sFocus">' + G.AREA_ORDER.map(function (k) { var a = G.AREAS[k]; return '<button class="chip ' + ((P.focus || []).indexOf(k) >= 0 ? 'on' : '') + '" style="--c:' + a.color + '" data-fo="' + k + '">' + a.icon + ' ' + a.name + '</button>'; }).join('') + '</div>' +
+    '<h4>말투</h4><div class="wchips" id="sStyle">' + [['auto', '나이에 맞게(자동)'], ['hero', '🦾 초등 — 형 말투·히어로 미션'], ['little', '🧸 어린아이 — 다정한 말투']].map(function (o) { return '<button class="chip ' + ((P.style || 'auto') === o[0] ? 'on' : '') + '" data-st="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div><p class="muted">태어난 달을 넣으면 7살 이상은 자동으로 형 말투가 돼요. 8살 이상은 처음 하는 놀이를 2단계부터 시작해요(어려우면 한 판 만에 내려와요).</p>' +
     '<h4>좋아하는 것</h4><input class="inp" id="sLikes" placeholder="예) 자동차, 공룡, 기차, 뽀로로" value="' + G.esc(P.likes || '') + '"><p class="muted">자비스가 대화할 때 아이 관심사를 따라가요.</p>' +
     '<h4>치료 목표 · 선생님 말씀</h4><textarea class="inp" id="sGoals" placeholder="예) 두 낱말 붙여 말하기, 가위질 준비, 차례 기다리기">' + G.esc(P.goals || '') + '</textarea>' +
     '<button class="btn" id="sSaveP" style="margin-top:10px;width:100%">아이 정보 저장</button>');
   h += card('<h3>📷 우리 집 낱말 (사진 카드)</h3><p class="muted">엄마·아빠·할머니, 우리 강아지, 아이 컵처럼 <b>아이가 매일 보는 진짜 사진</b>은 그림보다 훨씬 잘 배워요. 낱말 카드와 말판 「우리 집」에 나와요.</p>' +
     '<div class="row" style="margin:8px 0"><input class="inp" id="picW" placeholder="낱말 (예: 우리 엄마)" style="flex:1"><label class="btn soft" style="cursor:pointer">📷 사진<input type="file" accept="image/*" id="picF" hidden></label></div><div class="pics" id="picList"></div>');
+  var cur = G.voice.current();
   h += card('<h3>🗣️ 자비스 목소리</h3>' +
-    '<label class="sw"><span>목소리</span><select class="inp" id="sVoice" style="width:55%">' + (G.voice.list().length ? G.voice.list().map(function (v) { return '<option ' + (v.name === St.voice ? 'selected' : '') + '>' + G.esc(v.name) + '</option>'; }).join('') : '<option>기기 기본</option>') + '</select></label>' +
+    '<p class="muted">지금: <b>' + G.esc(cur ? cur.name : '기기 기본') + '</b> ' + (cur ? (G.voice.isMale(cur) ? '👦 남자 목소리' : '⚠️ 이 기기엔 남자 목소리가 안 보여요 — 낮춰서 말해요') : '') + '</p>' +
+    '<label class="sw"><span>기기 목소리</span><select class="inp" id="sVoice" style="width:55%"><option value="">자동(남자 목소리 우선)</option>' + G.voice.list().map(function (v) { return '<option ' + (v.name === St.voice ? 'selected' : '') + ' value="' + G.esc(v.name) + '">' + G.esc(v.name) + (G.voice.isMale(v) ? ' 👦' : '') + '</option>'; }).join('') + '</select></label>' +
     '<label class="sw"><span>말 빠르기 <small class="muted" id="vRateV">' + St.rate + '</small></span><input type="range" id="sRate" min="0.6" max="1.2" step="0.02" value="' + St.rate + '"></label>' +
-    '<label class="sw"><span>목소리 높이 <small class="muted" id="vPitchV">' + St.pitch + '</small></span><input type="range" id="sPitch" min="0.8" max="1.6" step="0.05" value="' + St.pitch + '"></label>' +
-    '<button class="btn soft" id="sTest" style="margin-top:8px">🔊 들어 보기</button><p class="muted" style="margin-top:6px">발달이 늦은 아이에게는 조금 느린 말(0.8~0.9)이 알아듣기 좋아요.</p>');
+    '<label class="sw"><span>목소리 높이 <small class="muted" id="vPitchV">' + St.pitch + '</small></span><input type="range" id="sPitch" min="0.7" max="1.4" step="0.05" value="' + St.pitch + '"></label>' +
+    '<div class="row" style="margin-top:8px"><button class="btn soft" id="sTest">🔊 들어 보기</button><button class="btn soft" id="sHeroV">🦾 자신 있는 형 목소리로</button></div>' +
+    '<p class="muted" style="margin-top:6px">갤럭시: 설정 → 일반 → 글자 읽어주기(TTS)에서 남성 목소리를 받을 수 있어요. 아이폰: 설정 → 손쉬운 사용 → 읽기 및 말하기 → 음성 → 한국어에서 목소리를 내려받을 수 있어요.</p>' +
+    '<h4>✨ 고급 목소리 (ElevenLabs)</h4><p class="muted">사람처럼 자연스러운 형 목소리예요. ElevenLabs 계정의 API 키가 필요하고, 쓴 글자 수만큼 ElevenLabs 크레딧이 들어요. 한 번 만든 말은 기기에 저장돼 다시 받지 않아요. 키가 없거나 인터넷이 끊기면 기기 목소리로 말해요.</p>' +
+    sw('elOn', '고급 목소리 쓰기') +
+    '<div class="row" style="margin-top:6px"><input class="inp" id="sElKey" type="password" placeholder="ElevenLabs API 키" style="flex:1" value="' + G.esc(G.store.get('elKey', '')) + '"><button class="btn" id="sElSave">저장</button></div>' +
+    '<label class="sw"><span>목소리</span><select class="inp" id="sElVoice" style="width:60%">' + EL_VOICES.map(function (v) { return '<option value="' + v[0] + '" ' + (St.elVoice === v[0] ? 'selected' : '') + '>' + v[1] + '</option>'; }).join('') + '</select></label>' +
+    sw('elName', '아이 별명도 고급 목소리로 부르기 (별명이 ElevenLabs 로 가요)') +
+    '<div class="row" style="margin-top:8px"><button class="btn soft" id="sElTest">✨ 고급 목소리 들어 보기</button><span class="muted" id="sElState">' + G.esc(G.voice.premium.error()) + '</span></div>');
   h += card('<h3>🎛️ 소리 · 화면</h3>' +
     sw('sound', '효과음') + sw('vibrate', '진동') + sw('praiseVoice', '칭찬을 소리로') +
     sw('calm', '🌿 감각 예민 모드 (소리 작게 · 반짝임 끄기)') +
@@ -464,12 +481,14 @@ function tSet(body) {
   /* 아이 정보 */
   G.$$('[data-th]', body).forEach(function (b) { b.onclick = function () { b.classList.toggle('on'); }; });
   G.$$('[data-fo]', body).forEach(function (b) { b.onclick = function () { b.classList.toggle('on'); }; });
+  G.$$('[data-st]', body).forEach(function (b) { b.onclick = function () { G.$$('[data-st]', body).forEach(function (x) { x.classList.toggle('on', x === b); }); }; });
   G.$('#sSaveP', body).onclick = function () {
     P.nick = G.$('#sNick', body).value.trim(); P.birth = G.$('#sBirth', body).value;
     P.therapies = G.$$('[data-th].on', body).map(function (b) { return b.dataset.th; });
     P.focus = G.$$('[data-fo].on', body).map(function (b) { return b.dataset.fo; });
     if (!P.focus.length) P.focus = G.AREA_ORDER.slice();
     P.likes = G.$('#sLikes', body).value.trim(); P.goals = G.$('#sGoals', body).value.trim();
+    var stb = G.$('[data-st].on', body); P.style = stb ? stb.dataset.st : 'auto';
     G.saveProfile(); G.toast('저장했어요'); if (G.renderHome) G.renderHome();
   };
   /* 사진 낱말 */
@@ -489,7 +508,19 @@ function tSet(body) {
       .catch(function () { G.toast('사진을 넣지 못했어요'); });
   };
   /* 목소리 */
-  G.$('#sVoice', body).onchange = function () { St.voice = this.value; G.saveSettings(); G.voice.load(); };
+  G.$('#sVoice', body).onchange = function () { St.voice = this.value; G.saveSettings(); G.voice.load(); render(); };
+  G.$('#sHeroV', body).onclick = function () { St.rate = 0.98; St.pitch = 0.95; St.voice = ''; G.saveSettings(); G.voice.load(); G.say((G.profile.nick ? G.callName() + ', ' : '') + '좋아, 오늘도 멋지게 가 보자! 형이 같이 할게!'); render(); };
+  G.$('#sElSave', body).onclick = function () { G.store.set('elKey', G.$('#sElKey', body).value.trim()); G.voice.premium.reset(); G.toast('저장했어요'); };
+  G.$('#sElVoice', body).onchange = function () { St.elVoice = this.value; G.saveSettings(); G.voice.premium.reset(); };
+  G.$('#sElTest', body).onclick = function () {
+    var st = G.$('#sElState'); if (!G.store.get('elKey', '')) { st.textContent = '키를 먼저 저장해 주세요'; return; }
+    if (!St.elOn) { St.elOn = true; G.saveSettings(); }
+    st.textContent = '만드는 중…';
+    var line = (G.profile.nick ? G.callName() + ', ' : '') + '안녕! 자비스 형이야. 오늘도 멋지게 미션 해 보자!';
+    G.voice.premium.test(line).then(function () { st.textContent = '✅ 고급 목소리 준비 완료'; G.say(line);
+      G.voice.warm([].concat(D.PRAISE_HERO || [], D.TRY_HERO || [], D.DONE_HERO || [], D.PRAISE_LITTLE || [], D.TRY_LITTLE || [], D.DONE_LITTLE || []));
+    }, function (e) { st.textContent = '❌ ' + (G.voice.premium.error() || (e && e.message) || '연결 실패') + ' — 기기 목소리로 말해요'; });
+  };
   G.$('#sRate', body).oninput = function () { St.rate = +this.value; G.$('#vRateV').textContent = this.value; G.saveSettings(); };
   G.$('#sPitch', body).oninput = function () { St.pitch = +this.value; G.$('#vPitchV').textContent = this.value; G.saveSettings(); };
   G.$('#sTest', body).onclick = function () { G.say((G.profile.nick ? G.callName() + ', ' : '') + '안녕! 나는 자비스야. 오늘도 같이 놀자!'); };

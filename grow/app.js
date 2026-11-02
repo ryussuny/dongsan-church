@@ -6,13 +6,27 @@
 var G = window.G, D = window.GD;
 
 /* 자비스 얼굴 자리 채우기 */
-G.$('#hmJv').innerHTML = G.jarvisSVG();
+G.$('#hmJv').innerHTML = G.jarvisSVG('full');
 G.$('#stJv').innerHTML = G.jarvisSVG();
+/* 만화 이모지 대신 메카 그림 — 빠른 단추·격납고 제목 */
+if (window.GA && GA.robot) {
+  var qj = G.$('.hm-quick [data-go="chat"] .qe'), qb = G.$('.hm-quick [data-go="book"] .qe');
+  if (qj) qj.innerHTML = G.jarvisSVG();
+  if (qb) qb.innerHTML = GA.robot(0, 6, { size: 44 });
+  var bt = G.$('#bookTitle'); if (bt) bt.innerHTML = '<span class="bt-ic">' + GA.robot(0, 6, { size: 34 }) + '</span>로봇 격납고';
+  G.css('qart', '.hm-quick .qe svg{width:clamp(30px,8vw,44px);height:clamp(30px,8vw,44px);display:block;margin:0 auto}#bookTitle{display:flex;align-items:center;gap:6px}#bookTitle .bt-ic svg{width:34px;height:34px;display:block}');
+}
 
 var DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 function hello() {
   var h = new Date().getHours(), n = (G.profile.nick || '').trim();
   var who = n ? G.callName() : '';
+  if (G.older()) {
+    if (h < 11) return (who ? who + ', ' : '') + '좋은 아침! 오늘 미션 준비됐지? 🚀';
+    if (h < 17) return (who ? who + ', ' : '') + '왔구나! 오늘도 같이 가 보자 ⚡';
+    if (h < 20) return (who ? who + ', ' : '') + '오늘 하루 어땠어? 미션 하나 할까? 🌇';
+    return (who ? who + ', ' : '') + '조용히 미션 하나만 해 볼까? 🌙';
+  }
   if (h < 11) return (who ? who + ', ' : '') + '좋은 아침! 🌞';
   if (h < 17) return (who ? who + ', ' : '') + '안녕! 같이 놀자 🎈';
   if (h < 20) return (who ? who + ', ' : '') + '반가워! 오늘 어땠어? 🌇';
@@ -26,19 +40,23 @@ G.renderHome = function () {
   var last = G.store.get('lastSession', {}), done = last.d === G.today(), saved = G.savedSession();
   var tb = G.$('#todayBtn');
   tb.classList.toggle('done', done && !saved);
-  tb.querySelector('b').textContent = saved ? '이어서 하기 ▶' : done ? '오늘의 놀이 끝! 🎉' : '오늘의 놀이';
+  var word = G.older() ? '미션' : '놀이';
+  tb.querySelector('b').textContent = saved ? '이어서 하기 ▶' : done ? '오늘의 ' + word + ' 끝! 🎉' : '오늘의 ' + word;
   G.$('#todaySub').textContent = saved ? '아까 하던 놀이를 이어서 해요' : done ? '내일 또 만나요 · 이제 몸으로 놀아요' : G.settings.sessionMin + '분 · 자비스가 골라 줘요';
   /* 영역 타일 */
   var box = G.$('#hmAreas'); box.innerHTML = '';
   G.AREA_ORDER.forEach(function (k) {
     var a = G.AREAS[k], n = G.actsIn(k).length;
     if (!n) return;
-    var b = G.el('<button class="area-tile" style="--c:' + a.color + '"><span class="ai">' + a.icon + '</span><b>' + a.name + '</b><small>' + a.desc + '</small></button>');
+    var ic = window.GA && GA.areaIcon ? GA.areaIcon(k, { size: 68 }) : a.icon;
+    var b = G.el('<button class="area-tile" style="--c:' + a.color + '"><span class="ai">' + ic + '</span><b>' + a.name + '</b><small>' + a.desc + '</small></button>');
     b.onclick = function () { G.sfx.play('tap'); openArea(k); };
     box.appendChild(b);
   });
   /* 자라는 나무 — 스티커가 모일수록 자란다 */
-  var tr = G.tree(); G.$('#trE').innerHTML = tr.e + tr.fruit; G.$('#trName').textContent = '내 나무: ' + tr.name; G.$('#trSub').textContent = tr.sub;
+  var rp = G.robotNow();
+  if (rp) { G.$('#trE').innerHTML = rp.svg; G.$('#trName').textContent = rp.robot.name + ' 조립 중'; G.$('#trSub').textContent = '부품 ' + rp.owned + ' / 6 · 다음: ' + (rp.robot.parts ? rp.robot.parts[rp.owned] : '부품'); }
+  else { var tr = G.tree(); G.$('#trE').innerHTML = tr.e + tr.fruit; G.$('#trName').textContent = '내 나무: ' + tr.name; G.$('#trSub').textContent = tr.sub; }
   /* 이번 주 도장 */
   var sd = G.store.get('sessionDays', []), logs = G.logs(), st = G.$('#hmStreak'); st.innerHTML = '';
   for (var i = 6; i >= 0; i--) {
@@ -76,11 +94,32 @@ function openArea(k) {
 G.openArea = openArea;
 
 function openBook() {
-  var s = G.stickers(), all = D.STICKERS;
-  G.$('#bookSum').textContent = '모은 스티커 ' + s.have.length + ' / ' + all.length + '  ·  받은 별 ' + s.stars + '개';
-  G.$('#bookGrid').innerHTML = all.map(function (x) { return '<i class="' + (s.have.indexOf(x) >= 0 ? '' : 'no') + '">' + x + '</i>'; }).join('');
+  if (G.openHangar && window.GR) { G.openHangar(); return; }   /* 로봇 군단 격납고 (robots.js) */
+  var s2 = G.stickers(), c = s2.count;
+  if (!(window.GA && GA.ROBOTS)) {   /* 그림 파일이 없으면 예전 스티커북 */
+    G.$('#bookGrid').hidden = false; G.$('#hangar').hidden = true;
+    G.$('#bookSum').textContent = '모은 스티커 ' + s2.have.length + ' / ' + D.STICKERS.length;
+    G.$('#bookGrid').innerHTML = D.STICKERS.map(function (x) { return '<i class="' + (s2.have.indexOf(x) >= 0 ? '' : 'no') + '">' + x + '</i>'; }).join('');
+    G.showScreen('book'); return;
+  }
+  var n = GA.ROBOTS.length, done = Math.floor(c / 6), box = G.$('#hangar');
+  G.$('#bookSum').textContent = '완성한 로봇 ' + Math.min(done, n) + ' / ' + n + '  ·  모은 부품 ' + c + '개' + (done >= n ? '  ·  🏆 모든 로봇 완성! 이제 황금 로봇!' : '');
+  box.innerHTML = '';
+  GA.ROBOTS.forEach(function (r, i) {
+    var owned = Math.max(0, Math.min(6, c - i * 6)), gold = c >= (n + i) * 6 + 6;
+    var st = owned === 6 ? 'done' : owned > 0 ? 'now' : 'lock';
+    var card = G.el('<button class="hg-card ' + st + '" style="--c:' + r.color + '"><div class="hg-art">' + GA.robot(i, owned, { cls: gold ? 'gold' : '' }) + '</div><b>' + G.esc((gold ? '황금 ' : '') + r.name) + '</b><small>' +
+      (owned === 6 ? G.esc(r.desc) : owned ? '부품 ' + owned + ' / 6 조립 중' : '🔒 부품을 모으면 나타나요') + '</small>' + (owned < 6 ? '<div class="hg-bar"><i style="width:' + (owned / 6 * 100) + '%"></i></div>' : '') + '</button>');
+    card.onclick = function () {
+      G.sfx.play(owned === 6 ? 'great' : 'tap');
+      if (owned === 6) { var art = card.querySelector('.hg-art'); art.classList.remove('transform'); void art.offsetWidth; art.classList.add('transform'); G.say(r.name + ', 변신! ' + r.desc); }
+      else if (owned) G.say(r.name + ' 조립 중이야. 부품 ' + (6 - owned) + '개만 더 모으면 완성!');
+      else G.say('미션을 하면 이 로봇의 부품이 나타나!');
+    };
+    box.appendChild(card);
+  });
   G.showScreen('book');
-  G.say(s.have.length ? '와, 스티커를 ' + s.have.length + '개나 모았어!' : '놀이를 하면 스티커를 받을 수 있어!');
+  G.say(done ? '와, 로봇을 ' + Math.min(done, n) + '대나 완성했어! 멋진 격납고다!' : '미션을 하나 마칠 때마다 로봇 부품을 하나 얻어. 여섯 개 모으면 로봇 완성!');
 }
 
 /* ---------- 단추 연결 ---------- */
@@ -139,6 +178,7 @@ G.$('#stTalk').onclick = function () {
 G.$('#stSay').onclick = function () { if (G.cur && G.cur.instr) G.cur.say(G.cur.instr); };
 G.$('#stJv').onclick = function () { if (G.cur && G.cur.instr) G.cur.say(G.cur.instr); };
 G.$('#hmTree').onclick = function () {
+  if (G.robotNow()) { G.sfx.play('sparkle'); openBook(); return; }
   var t = G.tree(); G.sfx.play('sparkle');
   G.say(t.count ? '놀이를 할 때마다 나무가 쑥쑥 자라! 지금은 ' + t.name + '야. ' + t.sub : '놀이를 하면 씨앗에서 싹이 나!');
 };
@@ -157,7 +197,7 @@ G.$('#stTip').onclick = function () {
   ov.querySelector('.md-x').onclick = function () { ov.remove(); };
   ov.onclick = function (e) { if (e.target === ov) ov.remove(); };
 };
-G.$('#hmJv').onclick = function () { G.say(G.$('#hmHello').textContent + ' 놀고 싶은 그림을 눌러 봐.'); };
+G.$('#hmJv').onclick = function () { G.say(G.$('#hmHello').textContent + (G.older() ? ' 하고 싶은 미션을 골라 봐.' : ' 놀고 싶은 그림을 눌러 봐.')); };
 
 /* 부모 화면 — 1.2초 길게 누른 뒤 어른 확인 */
 (function () {
@@ -175,12 +215,21 @@ G.openParent = function (tab) { if (G.renderParent) { G.showScreen('parent'); G.
 G.renderHome();
 var m = /#\/play\/([\w-]+)/.exec(location.hash);
 if (m && G.acts[m[1]]) { history.replaceState(null, '', location.pathname + location.search); G.start(m[1]); }
-else if (/#parent/.test(location.hash)) { history.replaceState(null, '', location.pathname + location.search); }
+else if (/#parent/.test(location.hash)) openParentLink();
+/* 부모 화면 바로 가기 링크 (grow.html#parent) — 링크로 와도 어른 확인은 거친다 */
+function openParentLink() {
+  history.replaceState(null, '', location.pathname + location.search);
+  setTimeout(function () { G.grownUp('부모 화면 링크로 오셨어요. 답을 눌러 주세요.').then(function (ok) { if (ok) G.openParent(); }); }, 300);
+}
+window.addEventListener('hashchange', function () { if (/#parent/.test(location.hash)) openParentLink(); });
 /* 처음 연 날 — 아이 정보 넣기 안내 */
 if (!G.store.get('welcomed')) {
   G.store.set('welcomed', 1);
   setTimeout(function () { if (!G.cur) G.toast('👨‍👩‍👦 를 길게 눌러 아이 별명·나이·집중할 영역을 먼저 넣어 주세요', 5200); }, 800);
 }
+
+/* 고급 목소리를 켜 두었으면 자주 하는 말을 미리 받아 둔다 */
+if (G.voice.premium.ready()) setTimeout(function () { G.voice.warm([].concat(D.PRAISE, D.TRY, D.DONE)); }, 4000);
 
 /* 앱처럼 설치·오프라인 */
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(function () {});

@@ -11,13 +11,63 @@
   "background_color": "#f3f7fc",
   "theme_color": "#4f8cff",
   "icons": [
-    { "src": "icons/grow-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/grow-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icons/grow-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/grow-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/grow-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/grow-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "shortcuts": [
-    { "name": "말판", "url": "grow.html#/play/talkboard", "icons": [{ "src": "icons/grow-192.png", "sizes": "192x192" }] },
-    { "name": "자비스랑 이야기", "url": "grow.html#/play/chat", "icons": [{ "src": "icons/grow-192.png", "sizes": "192x192" }] },
-    { "name": "오늘 할 일", "url": "grow.html#/play/schedule", "icons": [{ "src": "icons/grow-192.png", "sizes": "192x192" }] }
+    {
+      "name": "말판",
+      "url": "grow.html#/play/talkboard",
+      "icons": [
+        {
+          "src": "icons/grow-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "자비스랑 이야기",
+      "url": "grow.html#/play/chat",
+      "icons": [
+        {
+          "src": "icons/grow-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "오늘 할 일",
+      "url": "grow.html#/play/schedule",
+      "icons": [
+        {
+          "src": "icons/grow-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "부모 화면",
+      "url": "grow.html#parent",
+      "icons": [
+        {
+          "src": "icons/grow-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }
