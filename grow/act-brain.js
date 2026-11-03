@@ -777,6 +777,12 @@ function mazeDFS(N) {
   var corners = [[0, 0], [0, N - 1], [N - 1, 0], [N - 1, N - 1]], s = G.pick(corners);
   return { N: N, start: s, goal: [N - 1 - s[0], N - 1 - s[1]], walls: W, walk: null };
 }
+/* 같은 크기에서 길이 더 긴 미로 — 몇 개 만들어 보고 출발에서 당근까지 가장 먼 것 */
+function mazeLong(N) {
+  var best = null, bl = -1;
+  for (var t = 0; t < 6; t++) { var m = mazeDFS(N), l = mzPath(m, m.start).length; if (l > bl) { best = m; bl = l; } }
+  return best;
+}
 function mzCan(m, a, b) {
   var dr = b[0] - a[0], dc = b[1] - a[1];
   if (Math.abs(dr) + Math.abs(dc) !== 1) return false;
@@ -860,8 +866,8 @@ G.act({
       locked = true; board.classList.add('locked');
       var opt = mzPath(m, m.start).length;
       log.push({ n: m.N, mv: moves, opt: opt, back: back });
-      /* 되돌아온 칸은 미로가 클수록 조금 더 너그럽게 (4칸 미로 2, 5칸 4, 6칸 5) */
-      var ok = m.N === 3 ? true : back <= (m.N >= 6 ? 5 : m.N >= 5 ? 4 : 2);
+      /* 되돌아온 칸은 미로가 클수록 조금 더 너그럽게 (4칸 미로 2, 5칸 4, 6칸 5, 7칸 6) */
+      var ok = m.N === 3 ? true : back <= (m.N >= 7 ? 6 : m.N >= 6 ? 5 : m.N >= 5 ? 4 : 2);
       ctx.trial(ok);
       ctx.extra.mazes = log;
       G.sfx.play('great'); var c = centerOf(cellAt(m.goal)); G.fx.burst(c[0], c[1], ['🥕', '⭐', '✨']);
@@ -872,13 +878,15 @@ G.act({
       });
     }
     function start() {
-      m = plan[mi] ? mazeDFS(plan[mi]) : mazeL1();
+      m = !plan[mi] ? mazeL1() : mi >= LONG_FROM ? mazeLong(plan[mi]) : mazeDFS(plan[mi]);
       pos = m.start.slice(); moves = 0; back = 0; bad = 0; visited = {}; visited[k(pos)] = 1;
       render();
       if (lv >= 3) {
         locked = true; board.classList.add('locked');
         look.textContent = '👀 먼저 눈으로 길을 찾아봐!';
-        ctx.say(mi === 0 ? '먼저 생각하고 출발! 눈으로 당근까지 가는 길을 따라가 봐.' : '눈으로 먼저 길을 찾아봐!').then(function () { return ctx.wait(pace(2500)); }).then(function () {
+        /* 먼저 보는 시간: 3단계 2.5초 그대로, 4·5단계는 미로가 큰 만큼 조금 더 (6칸 3초, 7칸 3.5초) */
+        var lookMs = lv >= 4 ? 2500 + (m.N - 5) * 500 : 2500;
+        ctx.say(mi === 0 ? '먼저 생각하고 출발! 눈으로 당근까지 가는 길을 따라가 봐.' : '눈으로 먼저 길을 찾아봐!').then(function () { return ctx.wait(pace(lookMs)); }).then(function () {
           look.textContent = '🏁 출발!'; G.sfx.play('up'); locked = false; board.classList.remove('locked');
         });
       } else {
@@ -913,16 +921,16 @@ var WT_HELP = [
   { cls: 'song', e: '🎵', t: '노래 불러요', say: '기다리는 동안 자비스랑 노래 부르자! 랄라라~' }
 ];
 G.act({
-  id: 'wait', area: 'brain', title: '기다려! 쿠키', icon: '🍪', order: 7, levels: 3, mins: 2, needs: [],
+  id: 'wait', area: 'brain', title: '기다려! 쿠키', icon: '🍪', order: 7, levels: 5, mins: 2, needs: [],
   ef: ['inhibit', 'regulate'],
   desc: '종이 울리면 쿠키가 두 개!',
   goal: '만족 지연·자기조절 — 지금 당장 갖고 싶은 마음을 참고 기다리며, 기다리는 방법(손 두기·숨쉬기·노래)을 스스로 쓰는 힘',
-  how: '기다리는 동안 자비스가 보여 주는 방법(손 무릎에, 숨쉬기, 노래)을 부모도 같이 해 주세요. 못 기다려도 괜찮아요 — "다음엔 노래하면서 기다려 볼까?"로 끝내요. 화면 밖에서는 간식 앞에서 "모래시계 다 내려가면 먹자", 엘리베이터 기다리며 숫자 세기로 이어 가세요.',
+  how: '기다리는 동안 자비스가 보여 주는 방법(손 무릎에, 숨쉬기, 노래)을 부모도 같이 해 주세요. 못 기다려도 괜찮아요 — "다음엔 노래하면서 기다려 볼까?"로 끝내요. 화면 밖에서는 간식 앞에서 "모래시계 다 내려가면 먹자", 엘리베이터 기다리며 숫자 세기로 이어 가세요. 4·5단계(도전·마스터)는 한 번에 20~38초쯤 기다려요.',
   basis: '만족 지연(마시멜로) 과제 변형 (Mischel) — 기다리기 전략 모델링 포함',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
-    /* 칸이 오르면 기다리는 시간이 다음 단계 쪽으로 조금씩 (초, ctx.tune) */
-    var BASE = ctx.tune([5, 10, 20]), ROUNDS = 3, r = 0, total = 0, waitedN = 0, stopMel = null;
+    /* 칸이 오르면 기다리는 시간이 다음 단계 쪽으로 조금씩 (초, ctx.tune). 4단계 25초 · 5단계 30초 (세 판은 0.8·1·1.2배) */
+    var BASE = ctx.tune([5, 10, 20, 25, 30]), ROUNDS = 3, r = 0, total = 0, waitedN = 0, stopMel = null;
     B.innerHTML = '<div class="bw"><div class="wt-plate"><small>내 접시</small><span class="wt-got"></span></div>' +
       '<div class="wt-main"><div class="wt-cookie" role="button" aria-label="쿠키">🍪<span class="two">×2</span></div>' +
       '<div class="wt-jarbox"><span class="wt-bell">🔔</span><div class="wt-jar"><div class="wt-fill"></div><div class="wt-stars"></div></div></div></div>' +
@@ -998,6 +1006,8 @@ G.act({
    =========================================================== */
 var OP_NAME = { head: '머리', shoulder: '어깨', knee: '무릎', foot: '발' };
 var OP_OPP = { head: 'foot', foot: 'head', shoulder: 'knee', knee: 'shoulder' };
+/* 4·5단계 새 짝꿍 (HTKS 3부): 머리 ↔ 무릎, 어깨 ↔ 발 — 익숙한 짝꿍을 참고 새 짝꿍으로 */
+var OP_NEW = { head: 'knee', knee: 'head', shoulder: 'foot', foot: 'shoulder' };
 function opFigure() {
   return '<svg class="op-fig" viewBox="0 0 200 300" aria-hidden="true">' +
     '<rect x="62" y="84" width="76" height="92" rx="26" fill="#8fb4ff"/>' +

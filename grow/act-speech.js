@@ -77,7 +77,7 @@ function expand(w) {
 var sttOff = false;      // 이 기기에서 음성 인식이 안 되면, 다시 열 때까지 부모 단추로
 function sttReady() { return G.has.stt && !sttOff; }
 /* 세·네 낱말 문장(낱말 카드 4·5단계) — 낱말마다 따로 견주면 점수가 낮게 나온다.
-   띄어쓰기를 빼고 문장 통째로 한 번 더 견준다. 낱말 하나쯤 빠지거나 발음이 서툴러도 70% 면 맞음 */
+   띄어쓰기를 빼고 문장 통째로 한 번 더 견준다. 발음이 조금 서툴러도 70% 비슷하면 맞음 */
 function wholeScore(res, expect) {
   var best = 0, nos = function (x) { return String(x || '').replace(/\s+/g, ''); };
   (res.alts && res.alts.length ? res.alts : [res.text]).forEach(function (a) {
@@ -417,33 +417,53 @@ G.css('speech', `
 /* =================================================================
    1. 낱말 카드 (표현 어휘)
    ================================================================= */
+/* 4·5단계 문장 — 4단계 세 낱말(누가 + 무엇을 + 해요), 5단계 네 낱말(꾸밈말 하나 더·까닭 잇기) */
+var WD_SENT = {
+  4: [
+    { t: '아기가 우유를 마셔요', e: '👶🥛' }, { t: '강아지가 공을 물어요', e: '🐶⚽' }, { t: '고양이가 생선을 먹어요', e: '🐱🐟' },
+    { t: '엄마가 책을 읽어요', e: '👩📖' }, { t: '토끼가 당근을 먹어요', e: '🐰🥕' }, { t: '친구가 그림을 그려요', e: '🧒🖍️' },
+    { t: '할머니가 꽃을 심어요', e: '👵🌷' }, { t: '새가 하늘을 날아요', e: '🐦☁️' }, { t: '아이가 이를 닦아요', e: '🧒🪥' },
+    { t: '곰이 꿀을 먹어요', e: '🐻🍯' }, { t: '아빠가 버스를 타요', e: '👨🚌' }, { t: '나는 손을 씻어요', e: '✋🧼' }
+  ],
+  5: [
+    { t: '아기가 따뜻한 우유를 마셔요', e: '👶🥛' }, { t: '강아지가 빨간 공을 물어요', e: '🐶🔴' }, { t: '고양이가 소파에서 쿨쿨 자요', e: '🐱🛋️' },
+    { t: '엄마가 재미있는 책을 읽어요', e: '👩📖' }, { t: '토끼가 주황색 당근을 먹어요', e: '🐰🥕' }, { t: '새가 파란 하늘을 날아요', e: '🐦🌤️' },
+    { t: '나는 비누로 손을 씻어요', e: '🧼✋' }, { t: '곰이 달콤한 꿀을 먹어요', e: '🐻🍯' }, { t: '할머니가 예쁜 꽃을 심어요', e: '👵🌷' },
+    { t: '비가 와서 우산을 써요', e: '🌧️☂️' }, { t: '배가 고파서 밥을 먹어요', e: '🍚😋' }, { t: '아빠가 노란 버스를 타요', e: '👨🚌' }
+  ]
+};
+
 G.act({
-  id: 'words', area: 'speech', title: '낱말 카드', icon: '🍎', order: 10, levels: 3, mins: 3, needs: [],
+  id: 'words', area: 'speech', title: '낱말 카드', icon: '🍎', order: 10, levels: 5, mins: 3, needs: [],
   ef: ['attend', 'wm'],
   desc: '그림 보고 이름 말하기',
-  goal: '표현 어휘 늘리기 — 그림·우리 집 사진을 보고 이름을 소리 내어 말하기(따라 말하기 → 스스로 이름 대기), 3단계는 두 낱말 잇기("아기가 자요")',
-  how: '자비스가 말한 뒤에는 아이가 입을 뗄 때까지 5초쯤 조용히 기다려 주세요(기다려 주기). "아과"처럼 서툴러도, 소리만 내도 웃으며 "그래, 사과!" 하고 바른 말을 한 번 더 들려주면 충분해요. 아이가 한 낱말을 말하면 "빨간 사과!"처럼 한 낱말을 더해 돌려주세요(확장하기).',
+  goal: '표현 어휘 늘리기 — 그림·우리 집 사진을 보고 이름을 소리 내어 말하기(따라 말하기 → 스스로 이름 대기), 3단계는 두 낱말 잇기("아기가 자요"). 4단계는 세 낱말 문장("아기가 우유를 마셔요"), 5단계는 네 낱말 문장("아기가 따뜻한 우유를 마셔요")',
+  how: '자비스가 말한 뒤에는 아이가 입을 뗄 때까지 5초쯤 조용히 기다려 주세요(기다려 주기). "아과"처럼 서툴러도, 소리만 내도 웃으며 "그래, 사과!" 하고 바른 말을 한 번 더 들려주면 충분해요. 아이가 한 낱말을 말하면 "빨간 사과!"처럼 한 낱말을 더해 돌려주세요(확장하기). 4·5단계 문장은 낱말 하나를 빠뜨려도 "우유를 마셔요!" 하고 문장 전체를 한 번 더 들려주면 돼요.',
   basis: '모방·명명 훈련 + 부모 언어 자극(Hanen: 기다리기·확장하기), 한 낱말 → 두 낱말 표현 발달 단계',
   offline: '밥 먹을 때 숟가락을 들고 "숟가락!" 하고 3초 기다리기. 아이가 소리만 내도 따라 말해 주고 "큰 숟가락!"처럼 한 낱말 더해 주기.',
   run: async function (ctx) {
-    var lv = ctx.level, N = 6;
+    var lv = ctx.level, N = 6, TOP = ctx.def.levels;
     function phraseCard(p) { return { w: p.t, e: p.e, phrase: true }; }
+    function sentCard(p) { return { w: p.t, e: p.e, phrase: true, sent: true }; }
     function wordCardOf(w) { return { w: w.w, e: w.e, src: w }; }
-    /* 칸이 오르면 여섯 장 가운데 (칸-1)장을 다음 단계 카드로 — 1단계엔 2단계 낱말, 2단계엔 두 낱말 잇기.
-       3단계는 조금 긴 두 낱말("강아지가 달려요")을 (칸-1)장 꼭 넣는다 */
-    var mix = stepMix(ctx, N), m = mix.filter(Boolean).length;
-    var next = lv === 3 ? G.sample(D.PHRASES.filter(function (p) { return hangul(p.t).length >= 6; }), m)
-      : lv === 1 ? G.sample(wordPool(2).filter(function (w) { return w.lv === 2; }), m).map(wordCardOf)
-        : G.sample(D.PHRASES, m).map(phraseCard);
-    var cur = lv === 3 ? G.sample(D.PHRASES.filter(function (p) { return next.indexOf(p) < 0; }), N - next.length).map(phraseCard)
-      : (function () {
+    /* 칸이 오르면 여섯 장 가운데 (칸-1)장을 다음 단계 카드로 — 1단계엔 2단계 낱말, 2단계엔 두 낱말 잇기,
+       3단계엔 세 낱말 문장, 4단계엔 네 낱말 문장.
+       5단계(맨 위)는 (칸-1)장을 자비스가 끊어 읽어 주지 않고 한 번에 들려준다(통째로 듣고 따라 말하기) */
+    var mix = stepMix(ctx, N), m = mix.filter(Boolean).length, next, cur;
+    if (lv >= 3) {
+      next = lv < TOP ? G.sample(WD_SENT[lv + 1], m).map(sentCard) : [];
+      cur = G.sample(lv === 3 ? D.PHRASES : WD_SENT[lv], N - next.length).map(lv === 3 ? phraseCard : sentCard);
+    } else {
+      next = lv === 1 ? G.sample(wordPool(2).filter(function (w) { return w.lv === 2; }), m).map(wordCardOf) : G.sample(D.PHRASES, m).map(phraseCard);
+      cur = (function () {
         /* 말소리 연구실이 찾은 '어려운 낱말'을 두 개까지 먼저 넣어 더 자주 연습한다 */
         var pool = wordPool(lv), hardW = G.SL && G.SL.hard ? G.SL.hard() : [], K = N - next.length;
         var first = G.shuffle(pool.filter(function (w) { return hardW.indexOf(w.w) >= 0; })).slice(0, 2);
         return first.concat(G.sample(pool.filter(function (w) { return first.indexOf(w) < 0; }), K - first.length));
       })().map(wordCardOf);
-    if (lv === 3) next = next.map(phraseCard);
+    }
     var items = mix.map(function (on) { return on && next.length ? next.shift() : cur.shift(); });
+    if (lv === TOP) items.forEach(function (it, i) { if (mix[i]) it.whole = true; });
     ctx.progress(0, N);
     /* 우리 집 사진 카드를 두 장까지 섞는다 — 진짜 사진은 그림보다 잘 배운다 (다음 단계 카드 자리는 비켜서) */
     var pics = (await G.db.all('pics')).filter(function (p) { return p && p.img && p.w && String(p.w).trim(); });
@@ -466,8 +486,8 @@ async function wordCard(ctx, it, lv) {
   clear(ctx);
   var chunks = chunksOf(it.w), syl = !it.phrase && chunks.length > 1 && chunks.join('') === it.w;
   var wrap = wrapEl(ctx);
-  var card = G.el('<div class="wd-card">' + (it.photo ? '<span class="wd-tag">📷 우리 집</span><img class="wd-photo" alt="">' : '<div class="wd-pic' + (it.phrase ? ' two' : '') + '">' + it.e + '</div>') +
-    '<div class="wd-word' + (syl ? ' syl' : '') + '">' + chunks.map(function (c) { return '<span>' + G.esc(c) + '</span>'; }).join('') + '</div></div>');
+  var card = G.el('<div class="wd-card">' + (it.photo ? '<span class="wd-tag">📷 우리 집</span><img class="wd-photo" alt="">' : '<div class="wd-pic' + (it.phrase ? ' two' : '') + (it.sent ? ' sent' : '') + '">' + it.e + '</div>') +
+    '<div class="wd-word' + (syl ? ' syl' : '') + (it.sent ? ' long' : '') + '">' + chunks.map(function (c) { return '<span>' + G.esc(c) + '</span>'; }).join('') + '</div></div>');
   if (it.photo) card.querySelector('img').src = it.img;
   wrap.appendChild(card);
   var spans = G.$$('.wd-word span', card);
@@ -483,10 +503,12 @@ async function wordCard(ctx, it, lv) {
   var name = it.phrase ? w + '.' : G.pick(['이건 ' + isYa(w) + '.', '와, ' + G.josa(w, '이다', '다') + '!', w + '!']);
   var ask = G.pick(['따라 해 볼까?', '너도 말해 봐!', '자비스처럼 말해 볼까?', '같이 말해 보자!']);
   await ctx.say(open + name, { repeat: false });
-  if (chunks.length > 1) lightSeq(pace(it.phrase ? 700 : 520));
-  await ctx.say((chunks.length > 1 ? sayChunks + '. ' : '') + ask);
+  /* whole: 끊어 읽기 없이 한 번 들은 문장을 통째로 따라 말하기 (5단계 2·3칸). 어려우면 다시 들려줄 때 끊어 준다 */
+  var cut = chunks.length > 1 && !it.whole;
+  if (cut) lightSeq(pace(it.phrase ? 700 : 520));
+  await ctx.say((cut ? sayChunks + '. ' : '') + ask);
   var r = await speakTurn(ctx, {
-    box: wrap, expect: [w], lenient: lv === 1 || !!it.photo,
+    box: wrap, expect: [w], lenient: lv === 1 || !!it.photo, whole: !!it.sent,
     again: function () {
       if (chunks.length > 1) lightSeq(pace(it.phrase ? 700 : 520));
       return ctx.say(G.pick(['천천히 같이 해 보자. ', '자비스가 한 번 더 말해 줄게. ']) + (chunks.length > 1 ? sayChunks + '. ' : '') + w + '!', { repeat: false });
