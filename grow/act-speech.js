@@ -77,13 +77,13 @@ function expand(w) {
 var sttOff = false;      // 이 기기에서 음성 인식이 안 되면, 다시 열 때까지 부모 단추로
 function sttReady() { return G.has.stt && !sttOff; }
 /* 세·네 낱말 문장(낱말 카드 4·5단계) — 낱말마다 따로 견주면 점수가 낮게 나온다.
-   띄어쓰기를 빼고 문장 통째로 한 번 더 견준다. 발음이 조금 서툴러도 70% 비슷하면 맞음 */
+   띄어쓰기를 빼고 문장 통째로 한 번 더 견준다. 발음이 조금 서툴러도 75% 비슷하면 맞음(낱말 하나를 통째로 빼면 70% 쯤) */
 function wholeScore(res, expect) {
   var best = 0, nos = function (x) { return String(x || '').replace(/\s+/g, ''); };
   (res.alts && res.alts.length ? res.alts : [res.text]).forEach(function (a) {
     (expect || []).forEach(function (w) { best = Math.max(best, G.similar(nos(a), nos(w))); });
   });
-  if (best >= 0.7) { res.ok = true; res.score = Math.max(res.score || 0, best); }
+  if (best >= 0.75) { res.ok = true; res.score = Math.max(res.score || 0, best); }
   return res;
 }
 
@@ -333,6 +333,8 @@ G.css('speech', `
 .act-follow .fo-svg{width:clamp(70px,min(22vw,15vh),130px);height:clamp(70px,min(22vw,15vh),130px);display:block}
 .act-follow .fo-steps{display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:6px 14px;font-size:clamp(26px,7vw,36px);line-height:1.2}
 .act-follow .fo-steps{flex-wrap:wrap;justify-content:center;max-width:100%}
+.act-follow .fo-steps.many{gap:5px;padding:6px 10px;font-size:clamp(22px,6vw,32px)}
+.act-follow .fo-steps.many b{width:22px;height:22px;font-size:14px}
 .act-follow .fo-steps b{width:26px;height:26px;border-radius:50%;background:var(--area);color:#fff;font-family:Jua,sans-serif;font-weight:400;font-size:16px;display:flex;align-items:center;justify-content:center}
 .act-follow .fo-zone{position:relative;width:clamp(160px,min(50vw,28vh),240px);aspect-ratio:1;border-radius:34px;border:5px dashed color-mix(in srgb,var(--area) 55%,transparent);
   background:color-mix(in srgb,var(--surface) 70%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform .15s,border-color .2s,background .2s}
@@ -533,31 +535,35 @@ async function wordCard(ctx, it, lv) {
    2. 듣고 찾기 (수용 어휘)
    ================================================================= */
 G.act({
-  id: 'listen', area: 'speech', title: '듣고 찾기', icon: '👂', order: 20, levels: 3, mins: 2, needs: [],
+  id: 'listen', area: 'speech', title: '듣고 찾기', icon: '👂', order: 20, levels: 5, mins: 2, needs: [],
   ef: ['attend', 'wm'],
   desc: '이름을 듣고 그림을 찾아요',
-  goal: '수용 어휘 — 낱말을 듣고 뜻(그림)과 잇기. 말로 표현하기 전에 먼저 알아듣는 말을 늘려요',
+  goal: '수용 어휘 — 낱말을 듣고 뜻(그림)과 잇기. 말로 표현하기 전에 먼저 알아듣는 말을 늘려요. 4·5단계는 그림이 5·6장으로 늘고, 같은 무리 그림(동물끼리·탈것끼리)이 더 섞여 소리를 끝까지 잘 들어야 해요',
   how: '아이가 고르기 전에 정답을 손가락으로 가리키지 말고 기다려 주세요. 찾으면 "맞아, 강아지! 멍멍!" 하고 이름을 한 번 더 들려주세요. 틀리게 고르면 "이건 고양이야" 하고 그 그림 이름도 알려 주면 두 낱말을 함께 배워요.',
   basis: '수용 어휘 과제(그림 어휘력 검사 형식) + 무오류 학습(두 번째엔 정답 표시)',
   offline: '장난감 두세 개를 바닥에 놓고 "공 어디 있어?" 찾기. 찾으면 "공 굴려!"처럼 이어서 놀기.',
   run: async function (ctx) {
-    var lv = ctx.level, N = 6, k = lv + 1;
+    var lv = ctx.level, N = 6, k = lv + 1, TOP = ctx.def.levels;
+    /* 낱말은 3단계까지 — 4·5단계는 같은 낱말에서 그림이 하나씩 늘고(5·6장) 같은 무리 그림이 더 섞인다 */
+    function wl(L) { return Math.min(L, 3); }
     var pool = wordPool(lv === 1 ? 1 : lv === 2 ? 2 : 3);
-    /* 칸이 오르면 여섯 문제 가운데 (칸-1)문제를 다음 단계처럼 — 다음 단계 낱말 + 그림 하나 더.
-       3단계는 (칸-1)문제에 같은 무리 그림(동물끼리·탈것끼리)이 하나 더 섞인다 */
-    var up = lv < 3, mix = stepMix(ctx, N), nextPool = up ? wordPool(lv + 1) : pool;
-    var nx = up ? G.sample(nextPool.filter(function (w) { return w.lv === lv + 1; }), mix.filter(Boolean).length) : [];
-    var cur = G.sample(pool, N - nx.length);
-    var targets = mix.map(function (on) { return on && nx.length ? nx.shift() : cur.shift(); });
+    /* 칸이 오르면 여섯 문제 가운데 (칸-1)문제를 다음 단계처럼 — 다음 단계 낱말(3단계까지) + 그림 하나 더.
+       5단계(맨 위)는 (칸-1)문제에 같은 무리 그림이 하나 더 섞인다 */
+    var up = lv < TOP, mix = stepMix(ctx, N), nextPool = up ? wordPool(wl(lv + 1)) : pool;
+    var nx = up ? G.sample(nextPool.filter(function (w) { return lv < 3 ? w.lv === lv + 1 : true; }), mix.filter(Boolean).length) : [];
+    var cur = G.sample(pool.filter(function (w) { return nx.indexOf(w) < 0; }), N - nx.length);
+    var isNx = [];
+    var targets = mix.map(function (on, i) { if (on && nx.length) { isNx[i] = 1; return nx.shift(); } return cur.shift(); });
     ctx.progress(0, N);
     await ctx.say(G.pick(['숨바꼭질 놀이! 자비스가 부르는 친구를 찾아 줘. 귀를 쫑긋!', '자비스가 이름을 부르면 콕 찾아 줘! 잘 들어 봐.']));
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
       clear(ctx);
-      var t = targets[i], L = up && pool.indexOf(t) < 0 ? lv + 1 : lv;
-      var P = L > lv ? nextPool : pool, kk = L + 1, S = lv === 3 && mix[i] ? 2 : 1;
+      var t = targets[i], L = isNx[i] ? lv + 1 : lv;
+      /* 같은 무리 그림: 3단계 1장 · 4단계 2장 · 5단계 3장 (5단계 2·3칸은 (칸-1)문제에 한 장 더) */
+      var P = L > lv ? nextPool : pool, kk = L + 1, S = L - 2 + (lv === TOP && mix[i] ? 1 : 0);
       var others = L === 1 ? G.sample(P.filter(function (w) { return w.c !== t.c; }), kk - 1)
-        : L === 3 ? (function () {
+        : L >= 3 ? (function () {
           var same = G.sample(P.filter(function (w) { return w.c === t.c && w !== t; }), S);
           return same.concat(G.sample(P.filter(function (w) { return w !== t && same.indexOf(w) < 0; }), kk - 1 - same.length));
         })()
@@ -577,7 +583,7 @@ function listenItem(ctx, t, others, k) {
   ear.onclick = function () { G.sfx.play('tap'); ask(); };
   ask();
   return pickOne(ctx, {
-    box: wrap, items: G.shuffle([t].concat(others)), label: false, cols: k, size: k >= 4 ? 'md' : 'lg',
+    box: wrap, items: G.shuffle([t].concat(others)), label: false, cols: k > 4 ? 3 : k, size: k >= 4 ? 'md' : 'lg',
     isRight: function (it) { return it === t; },
     onRight: function (it, el) { el.classList.add('jump'); },
     praise: function () { return G.pick(['맞아! ', '찾았다! ', '딩동댕! ', '우와, 잘 들었구나! ']) + t.w + '!'; },
@@ -592,35 +598,46 @@ function listenItem(ctx, t, others, k) {
    3. 누구 소리일까? (소리흉내말)
    ================================================================= */
 G.act({
-  id: 'sounds', area: 'speech', title: '누구 소리일까?', icon: '🐶', order: 30, levels: 3, mins: 3, needs: [],
+  id: 'sounds', area: 'speech', title: '누구 소리일까?', icon: '🐶', order: 30, levels: 5, mins: 3, needs: [],
   ef: ['attend', 'wm'],
   desc: '멍멍! 누구 소리인지 찾아요',
-  goal: '소리흉내말(멍멍·부릉부릉) 이해와 표현 — 첫 낱말이 나오기 쉬운 소리부터. 3단계는 그림을 보고 직접 소리 흉내 내기',
+  goal: '소리흉내말(멍멍·부릉부릉) 이해와 표현 — 첫 낱말이 나오기 쉬운 소리부터. 3단계는 그림을 보고 직접 소리 흉내 내기. 4단계는 흉내 내기가 세 번(탈것 소리까지), 5단계는 소리 둘을 듣고 기억해 두 친구를 다 찾기',
   how: '소리흉내말은 아이가 가장 먼저 따라 하기 쉬운 말이에요. 자비스가 소리를 내면 부모도 몸짓과 함께 크게 따라 해 주세요("멍멍!" 하며 강아지 손). 아이가 소리를 내면 "강아지가 멍멍!"처럼 이름을 붙여 넓혀 주세요.',
   basis: '의성어·의태어 — 초기 표현 어휘의 디딤돌(소리 모방 → 낱말), 청각 변별',
   offline: '동물 그림책을 보며 엄마가 "멍멍!" 하고 아이 차례를 기다리기. 산책길 자동차엔 "빵빵!", 비 오는 날엔 "주룩주룩!"',
   run: async function (ctx) {
-    var lv = ctx.level, N = 6, k = lv + 1, opt = { cats: ['animal', 'vehicle'], sound: true };
-    var pool = wordPool(lv, opt);
-    var kinds = lv === 3 ? ['pick', 'pick', 'say', 'pick', 'pick', 'say'] : ['pick', 'pick', 'pick', 'pick', 'pick', 'pick'];
+    var lv = ctx.level, N = 6, k = Math.min(lv, 3) + 1, TOP = ctx.def.levels, opt = { cats: ['animal', 'vehicle'], sound: true };
+    var pool = wordPool(Math.min(lv, 3), opt);
+    /* 4단계: 고르기 셋 + 흉내 내기 셋(둘은 탈것 소리). 5단계: 흉내 셋 + '두 친구 찾기' 둘(소리 둘을 듣고 둘 다 찾기) */
+    var kinds = lv === 3 ? ['pick', 'pick', 'say', 'pick', 'pick', 'say'] : lv === 4 ? ['pick', 'say', 'pick', 'say', 'pick', 'say']
+      : lv === 5 ? ['pick', 'say', 'two', 'say', 'two', 'say'] : ['pick', 'pick', 'pick', 'pick', 'pick', 'pick'];
     /* 칸이 오르면 여섯 문제 가운데 (칸-1)문제를 다음 단계처럼 — 다음 단계 친구 + 그림 하나 더('next').
        2단계 3칸은 그 둘 중 하나가 '직접 소리 내기'(3단계 맛보기).
-       3단계는 소리 내기 (칸-1)문제에 탈것 소리(부릉부릉·삐뽀삐뽀)도 나온다 */
-    var nextPool = lv < 3 ? wordPool(lv + 1, opt) : pool;
+       3단계는 소리 내기 (칸-1)문제에 탈것 소리(부릉부릉·삐뽀삐뽀)도 나온다(4단계 맛보기).
+       4단계는 고르기 (칸-1)문제가 '두 친구 찾기'(5단계 맛보기), 5단계(맨 위)는 두 친구 찾기 (칸-1)문제에 그림 한 장 더 */
+    var nextPool = lv < 3 ? wordPool(lv + 1, opt) : pool, big = {};
     if (lv < 3) {
       var mixAt = stepMix(ctx, N).map(function (on, i) { return on ? i : -1; }).filter(function (i) { return i >= 0; });
       mixAt.forEach(function (i) { kinds[i] = 'next'; });
       if (lv === 2 && mixAt.length >= 2) kinds[mixAt[mixAt.length - 1]] = 'say';
     }
+    if (lv === 4) G.sample([2, 4], ctx.step - 1).forEach(function (i) { kinds[i] = 'two'; });
+    if (lv === TOP) G.sample([2, 4], ctx.step - 1).forEach(function (i) { big[i] = 1; });
     var easy = pool.filter(function (w) { return w.c === 'animal' && hangul(w.s).length <= 4; });
-    var hardSay = lv === 3 ? ctx.step - 1 : 0, says = 0;
+    /* 몇 번째 흉내부터 탈것 소리인지 — 3단계는 셋째부터(칸이 오르면 앞당김), 4·5단계는 둘째부터 */
+    var hardFrom = lv >= 4 ? 2 : 3 - (lv === 3 ? ctx.step - 1 : 0), says = 0;
     var used = {}, list = [];
     kinds.forEach(function (kind) {
       var src;
+      if (kind === 'two') {
+        var a = G.pick(pool.filter(function (w) { return !used[w.w]; })); used[a.w] = 1;
+        var b = G.pick(pool.filter(function (w) { return !used[w.w] && w.s !== a.s; })); used[b.w] = 1;
+        list.push([a, b]); return;
+      }
       if (kind === 'next') src = nextPool.filter(function (w) { return w.lv === lv + 1 && !used[w.w]; });
       else if (kind === 'say') {
         says++;
-        src = (says > 2 - hardSay ? pool.filter(function (w) { return easy.indexOf(w) < 0; }) : easy).filter(function (w) { return !used[w.w]; });
+        src = (says >= hardFrom ? pool.filter(function (w) { return easy.indexOf(w) < 0; }) : easy).filter(function (w) { return !used[w.w]; });
       } else src = pool.filter(function (w) { return !used[w.w]; });
       if (!src.length) src = pool.filter(function (w) { return !used[w.w]; });
       var w = G.pick(src); used[w.w] = 1; list.push(w);
@@ -630,6 +647,7 @@ G.act({
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
       if (kinds[i] === 'say') await soundSay(ctx, list[i]);
+      else if (kinds[i] === 'two') await soundTwo(ctx, list[i], pool, big[i] ? k + 1 : k);
       else if (kinds[i] === 'next') await soundPick(ctx, list[i], nextPool, k + 1);
       else await soundPick(ctx, list[i], pool, k);
     }
@@ -658,6 +676,73 @@ function soundPick(ctx, t, pool, k) {
     retry: function (it) { return topic(it.w) + ' ' + it.s + '! ' + t.s + ' 소리는 누구일까?'; },
     answer: function () { return '여기 있어! ' + subj(t.w) + ' ' + t.s + '!'; },
     idle: line
+  });
+}
+
+/* 두 친구 찾기 (5단계) — 소리 둘을 듣고 기억해서 두 친구를 다 찾는다. 순서는 상관없다.
+   틀리면 흔들리고, 두 번째에는 남은 친구가 빛난다(실패 없는 배움). 기록은 한 문제에 한 번 */
+function soundTwo(ctx, ts, pool, k) {
+  clear(ctx);
+  var wrap = wrapEl(ctx, '<button class="sd-box" type="button" aria-label="소리 다시 듣기"><span class="sd-q two"><i>❓</i><i>❓</i></span><span class="sd-w"><i></i><i></i><i></i></span></button>');
+  var box = wrap.querySelector('.sd-box'), qs = G.$$('.sd-q i', box);
+  var sounds = {}, others = [];
+  ts.forEach(function (t) { sounds[t.s] = 1; });
+  G.shuffle(pool).forEach(function (w) { if (others.length < k - 2 && ts.indexOf(w) < 0 && !sounds[w.s]) { sounds[w.s] = 1; others.push(w); } });
+  var line = ts[0].s + '! ' + ts[1].s + '! ' + G.pick(['두 친구는 누구 누구일까?', '누구 누구 소리일까? 둘 다 찾아 줘!', '소리가 둘! 두 친구를 다 찾아볼까?']);
+  function play() { box.classList.add('play'); return ctx.say(line).then(function () { box.classList.remove('play'); }); }
+  box.onclick = function () { G.sfx.play('tap'); play(); };
+  play();
+  return new Promise(function (resolve) {
+    var found = [], miss = 0, done = false, idleN = 0, idleH = null, ch = null;
+    function left() { return ts.filter(function (t) { return found.indexOf(t) < 0; }); }
+    function leftSay() { return left().map(function (t) { return t.s; }).join(', '); }
+    function glow() { ch.buttons.filter(function (b) { return left().indexOf(b._item) >= 0; }).forEach(function (b) { G.ui.hint(b); }); }
+    function idle() {
+      clearTimeout(idleH);
+      idleH = ctx.timeout(function () {
+        if (done) return;
+        idleN++;
+        if (idleN >= 2) glow();
+        ctx.say(found.length ? leftSay() + '! 이 소리는 누구일까?' : line, { repeat: false });
+        idle();
+      }, pace(11000));
+    }
+    var items = G.shuffle(ts.concat(others));
+    ch = G.ui.choices(wrap, items, {
+      cols: items.length > 4 ? 3 : items.length, size: items.length >= 4 ? 'md' : 'lg', label: false,
+      onPick: function (it, el) {
+        if (done) return true;
+        idle();
+        if (left().indexOf(it) >= 0) {
+          found.push(it); el.disabled = true; G.ui.good(el);
+          var q = qs[ts.indexOf(it)]; q.textContent = it.e; q.classList.add('got');
+          if (found.length < ts.length) {
+            G.sfx.play('good');
+            ctx.say(G.pick(['맞아! ', '찾았다! ']) + subj(it.w) + ' ' + it.s + '! ' + G.pick(['또 누가 있었지?', '한 친구 더!', '다른 소리는 누구였을까?']), { repeat: false });
+            return false;
+          }
+          done = true; clearTimeout(idleH);
+          if (!miss) ctx.trial(true);
+          box.classList.remove('play'); box.classList.add('open');
+          ctx.cheer(G.pick(['둘 다 찾았어! ', '딩동댕! 두 친구 다! ', '기억 대장! ']) + subj(ts[0].w) + ' ' + ts[0].s + ', ' + subj(ts[1].w) + ' ' + ts[1].s + '!', el)
+            .then(function () { return ctx.wait(pace(400)); })
+            .then(function () { resolve(miss === 0); });
+          return true;
+        }
+        miss++;
+        if (miss === 1) ctx.trial(false);
+        el.classList.add('dim'); el.disabled = true;
+        var open = ch.buttons.filter(function (b) { return !b.disabled; }).length;
+        if (miss >= 2 || open <= left().length) {
+          G.sfx.play('oops'); G.ui.wiggle(el); glow();
+          ctx.say(topic(it.w) + ' ' + it.s + '! 반짝이는 친구가 ' + leftSay() + '!', { repeat: false });
+        } else {
+          ctx.oops(topic(it.w) + ' ' + it.s + '! ' + leftSay() + ' 소리는 누구일까?', el);
+        }
+        return false;
+      }
+    });
+    idle();
   });
 }
 
@@ -694,16 +779,17 @@ var VO_THEMES = [
 var VO_VOWELS = [{ v: '아', e: '😮' }, { v: '오', e: '😯' }, { v: '우', e: '😗' }, { v: '이', e: '😁' }, { v: '음', e: '🙂' }];
 
 G.act({
-  id: 'voice', area: 'speech', title: '소리 내기', icon: '🚀', order: 40, levels: 3, mins: 2, needs: ['mic'],
+  id: 'voice', area: 'speech', title: '소리 내기', icon: '🚀', order: 40, levels: 5, mins: 2, needs: ['mic'],
   ef: ['regulate', 'attend'],
   desc: '아~ 길게! 목소리로 로켓 띄우기',
-  goal: '발성 시작·길게 소리 내기(호흡 지지) — 목소리를 눈으로 보며 크기와 길이를 스스로 조절하기. 1단계 1초 → 3단계 3초',
+  goal: '발성 시작·길게 소리 내기(호흡 지지) — 목소리를 눈으로 보며 크기와 길이를 스스로 조절하기. 1단계 1초 → 3단계 3초 → 4단계 4초 → 5단계 5초(한 숨에 길게)',
   how: '부모가 먼저 "아~" 하고 길게 소리 내 보여 주고, 아이와 함께 소리 내도 괜찮아요(로켓은 함께 낸 소리에도 날아가요). 소리가 작아도 "소리 났다!" 하고 바로 칭찬해 주세요. 마이크가 안 되면 아이가 단추를 꾹 누르며 "아~" 하게 하고, 부모가 소리를 냈는지 눌러 주세요.',
   basis: '발성 유도·호흡 지지 — 소리를 눈으로 보여 주는 시각적 바이오피드백, 모음 연장 발성',
   offline: '휴지 조각을 손바닥에 놓고 "아~" 길게 소리 내며 누가 더 오래 하나 놀이. 엘리베이터에서 "우~" 하며 위로 올라가기.',
   run: function (ctx) {
-    /* 길게 낼 시간 — 칸마다 0.3초쯤 더 길게 (1 → 1.3 → 1.7 → 2초 … 3 → 3.2 → 3.3초) */
-    var lv = ctx.level, GOAL = ctx.tune([10, 20, 30]) / 10, ROUNDS = 5, TH = 0.1;
+    /* 길게 낼 시간 — 칸마다 0.3초쯤 더 길게 (1 → 1.3 → 1.7 → 2초 … 3 → 3.3 → 3.7 → 4초 … 5 → 5.2 → 5.3초).
+       10살 아이가 한 숨에 낼 수 있는 길이(10초 남짓)의 절반쯤까지만 */
+    var lv = ctx.level, GOAL = ctx.tune([10, 20, 30, 40, 50]) / 10, ROUNDS = 5, TH = 0.1;
     var B = ctx.body;
     B.innerHTML = '<div class="sp"><div class="vo-sky"><span class="vo-cloud c1">☁️</span><span class="vo-cloud c2">☁️</span><span class="vo-goal"></span>' +
       '<span class="vo-who"><span class="vo-e"></span><span class="vo-fire">🔥</span></span><div class="vo-meter"><b></b></div></div>' +
@@ -810,28 +896,44 @@ G.act({
 var MO_SETS = {
   1: ['입 크게', '이~ 웃기', '뽀뽀 입', '혀 내밀기', '볼 빵빵'],
   2: ['뽀뽀 입', '볼 빵빵', '혀 위로', '빠빠빠', '후~ 불기', '똑딱 혀'],
-  3: ['혀 위로', '똑딱 혀', '말발굽', '아에이오우', '휘파람 입', '빠빠빠']
+  3: ['혀 위로', '똑딱 혀', '말발굽', '아에이오우', '휘파람 입', '빠빠빠'],
+  /* 4단계 — 혀·입술·볼을 더 섬세하게(돌리기·떨기·옮기기·번갈아 하기) */
+  4: ['혀 돌리기', '입술 부르르', '볼 옮기기', '우이우이', '혀 위아래', '말발굽'],
+  /* 5단계 — 두 동작 잇기와 퍼터커(입술 → 혀끝 → 혀뿌리 차례로) */
+  5: ['퍼터커', '메롱 위로', '빵빵 뽀뽀', '혀 돌리기', '우이우이', '입술 부르르']
 };
-var MO_ANIM = { '똑딱 혀': 'tick', '빠빠빠': 'bounce', '말발굽': 'bounce', '아에이오우': 'bounce' };
+/* 4·5단계 입 운동 (data.js 의 D.MOUTH 와 같은 꼴) */
+var MO_MORE = [
+  { e: '😋', name: '혀 돌리기', say: '혀로 입술을 따라 빙글빙글 한 바퀴 돌려요.' },
+  { e: '🏍️', name: '입술 부르르', say: '입술을 살짝 붙이고 부르르르~ 떨어요. 오토바이 소리처럼!' },
+  { e: '🎈', name: '볼 옮기기', say: '볼에 바람을 넣고, 이쪽 볼에서 저쪽 볼로 옮겨요.' },
+  { e: '🎵', name: '우이우이', say: '입술을 쭉 내밀어 우~, 활짝 웃어 이~. 우, 이, 우, 이!' },
+  { e: '🍭', name: '혀 위아래', say: '혀를 쏙 내밀고 위로, 아래로! 사탕을 핥듯이.' },
+  { e: '🥁', name: '퍼터커', say: '입술로 퍼, 혀끝으로 터, 목 안쪽으로 커. 퍼, 터, 커!' },
+  { e: '😜', name: '메롱 위로', say: '혀를 쏙 내밀었다가, 코 쪽으로 쭉 올려요. 메롱, 위로!' },
+  { e: '😚', name: '빵빵 뽀뽀', say: '볼을 빵빵하게 했다가, 바람을 빼고 쭉 뽀뽀 입!' }
+];
+var MO_ANIM = { '똑딱 혀': 'tick', '빠빠빠': 'bounce', '말발굽': 'bounce', '아에이오우': 'bounce',
+  '혀 돌리기': 'tick', '볼 옮기기': 'tick', '입술 부르르': 'bounce', '우이우이': 'bounce', '혀 위아래': 'bounce', '퍼터커': 'bounce' };
 
 G.act({
-  id: 'mouth', area: 'speech', title: '입 운동 거울', icon: '👄', order: 50, levels: 3, mins: 3, needs: ['cam'],
+  id: 'mouth', area: 'speech', title: '입 운동 거울', icon: '👄', order: 50, levels: 5, mins: 3, needs: ['cam'],
   ef: ['attend', 'plan'],
   desc: '거울 보며 입 모양 따라 하기',
-  goal: '입술·혀·볼 근육 움직이기와 모방 — 또렷한 발음의 바탕. 거울로 자기 입을 보며 움직임을 스스로 맞춰 가기',
+  goal: '입술·혀·볼 근육 움직이기와 모방 — 또렷한 발음의 바탕. 거울로 자기 입을 보며 움직임을 스스로 맞춰 가기. 4단계는 혀 돌리기·입술 떨기처럼 더 섬세한 움직임, 5단계는 두 동작 잇기와 "퍼터커"',
   how: '부모도 아이 옆에서 같이 거울을 보며 과장되게 따라 해 주세요 — 아이는 화면보다 엄마 얼굴을 더 잘 따라 해요. 셋을 세는 동안 자세를 유지하면 최고! 비슷하게만 해도 「따라 했어요」를 눌러 주세요. 카메라가 없어도 할 수 있어요.',
   basis: '구강 운동 모방(입술·혀·볼) — 언어치료 입 근육 놀이, 거울 시각 피드백',
   offline: '양치 전 욕실 거울 앞에서 엄마와 "메롱·뽀뽀·볼 빵빵" 따라 하기. 빨대로 물 마시기, 비눗방울 불기.',
   run: async function (ctx) {
-    var lv = ctx.level, names = MO_SETS[lv].slice();
+    var lv = ctx.level, TOP = ctx.def.levels, names = MO_SETS[lv].slice(), all = D.MOUTH.concat(MO_MORE);
     /* 칸이 오르면 (칸-1)개를 다음 단계 입 운동으로 바꿔 미리 해 본다.
-       3단계는 셋 세는 동안 자세를 조금 더 오래 버티기(한 박자 0.75 → 0.85 → 0.95초) */
-    if (lv < 3) {
+       5단계(맨 위)는 셋 세는 동안 자세를 조금 더 오래 버티기(한 박자 0.75 → 0.85 → 0.95초) */
+    if (lv < TOP) {
       var nx = G.sample(MO_SETS[lv + 1].filter(function (n) { return names.indexOf(n) < 0; }), ctx.step - 1);
       stepMix(ctx, names.length).forEach(function (on, i) { if (on && nx.length) names[i] = nx.shift(); });
     }
-    var beat = 750 + (lv === 3 ? (ctx.step - 1) * 100 : 0);
-    var list = names.map(function (n) { return D.MOUTH.filter(function (m) { return m.name === n; })[0]; }).filter(Boolean);
+    var beat = 750 + (lv === TOP ? (ctx.step - 1) * 100 : 0);
+    var list = names.map(function (n) { return all.filter(function (m) { return m.name === n; })[0]; }).filter(Boolean);
     var N = list.length;
     var wrap = wrapEl(ctx, '<div class="mo-pair"><div class="mo-model"><span class="mo-tag">자비스</span><span class="mo-e"></span><b class="mo-n"></b></div>' +
       '<div class="mo-mirror"><span class="mo-tag">나</span><video playsinline muted autoplay></video><div class="mo-nocam"><span>🪞</span><small>엄마 아빠 얼굴을 보며<br>같이 따라 해요</small></div></div></div>' +
@@ -914,36 +1016,44 @@ var FO_ACT = [
   { e: '👏', t: '박수 쳐 줘' }, { e: '👋', t: '손 흔들어 줘' }, { e: '🙌', t: '만세 해 줘' }, { e: '🦶', t: '발을 쿵쿵 굴러 줘' },
   { e: '👃', t: '코를 짚어 줘' }, { e: '😘', t: '뽀뽀를 보내 줘' }, { e: '🙆', t: '머리에 손을 올려 줘' }
 ];
+/* 여러 가지 심부름(4·5단계)을 이어 말할 때 — '박수 쳐 줘' → '박수 치고' */
+var FO_GO = { '👏': '박수 치고', '👋': '손 흔들고', '🙌': '만세 하고', '🦶': '발을 쿵쿵 구르고', '👃': '코를 짚고', '😘': '뽀뽀를 보내고', '🙆': '머리에 손을 올리고' };
+function foChain(acts) { return acts.map(function (a, j) { return j < acts.length - 1 ? FO_GO[a.e] : a.t; }).join(', '); }
 
 G.act({
-  id: 'follow', area: 'speech', title: '지시 따르기', icon: '🧺', order: 60, levels: 3, mins: 3, needs: [],
+  id: 'follow', area: 'speech', title: '지시 따르기', icon: '🧺', order: 60, levels: 5, mins: 3, needs: [],
   ef: ['wm', 'attend', 'plan'],
   desc: '자비스 말대로 해 봐요',
-  goal: '말 알아듣고 행동하기 — 1단계 지시("강아지 눌러") → 꾸밈말+이름("빨간 공") → 두 단계 지시("사과를 바구니에 넣고, 박수 쳐")',
-  how: '지시는 한 번 말한 뒤 기다려 주세요. 손짓·눈짓으로 답을 알려 주지 않는 것이 연습이에요. 3단계는 두 가지를 기억해야 해서 어려워요 — 아이가 첫 번째만 하면 "그다음은?" 하고 물어봐 주고, 그래도 어려우면 자비스가 다시 알려 줘요.',
+  goal: '말 알아듣고 행동하기 — 1단계 지시("강아지 눌러") → 꾸밈말+이름("빨간 공") → 두 단계 지시("사과를 바구니에 넣고, 박수 쳐") → 4단계 세 가지("넣고, 박수 치고, 만세") → 5단계 네 가지 심부름',
+  how: '지시는 한 번 말한 뒤 기다려 주세요. 손짓·눈짓으로 답을 알려 주지 않는 것이 연습이에요. 3단계는 두 가지를 기억해야 해서 어려워요 — 아이가 첫 번째만 하면 "그다음은?" 하고 물어봐 주고, 그래도 어려우면 자비스가 다시 알려 줘요. 4·5단계는 몸짓이 둘·셋으로 늘어요 — 순서가 조금 바뀌어도 다 해내면 「했어요」를 눌러 주세요.',
   basis: '지시 따르기 단계(1단계 → 속성 → 2단계 지시) — 수용 언어·청각 작업기억',
   offline: '정리 시간에 "블록을 상자에 넣고, 손뼉 쳐!" 두 단계 심부름. 옷 입을 때 "파란 양말 가져와!"처럼 색을 붙여 말하기.',
   run: async function (ctx) {
-    var lv = ctx.level, N = 5;
+    var lv = ctx.level, N = 5, TOP = ctx.def.levels;
     ctx.progress(0, N);
-    await ctx.say(lv === 3 ? '자비스 심부름 놀이! 자비스 말을 끝까지 잘 듣고, 두 가지를 해 줘.' :
+    await ctx.say(lv >= 3 ? '자비스 심부름 놀이! 자비스 말을 끝까지 잘 듣고, ' + NUMK[lv - 1] + ' 가지를 해 줘.' :
       G.pick(['자비스 말 잘 듣기 놀이! 자비스가 말하는 대로 해 줘.', '귀를 쫑긋! 자비스가 부탁하는 걸 찾아 줘.']));
     var pool = wordPool(1), targets = G.sample(pool, N);
     var kinds = G.shuffle(['c3', 'c3', 'g4', 'g4']); kinds.unshift('c3');
     var puts = G.sample(FO_PUT, N), acts = G.sample(FO_ACT, N);
-    /* 칸이 오르면 다섯 문제 가운데 (칸-1)문제를 다음 단계 지시로 — 1단계엔 '빨간 공' 찾기, 2단계엔 두 가지 심부름.
-       3단계는 (칸-1)번, 첫 일을 마친 뒤 "그다음은?" 하고 묻지 않고 기다린다(스스로 떠올리기). 어려우면 부모가 「다시 듣기」 */
+    /* 칸이 오르면 다섯 문제 가운데 (칸-1)문제를 다음 단계 지시로 — 1단계엔 '빨간 공' 찾기, 2단계엔 두 가지 심부름,
+       3단계엔 세 가지, 4단계엔 네 가지 심부름.
+       5단계(맨 위)는 (칸-1)번, 첫 일을 마친 뒤 "그다음은?" 하고 묻지 않고 기다린다(스스로 떠올리기). 어려우면 부모가 「다시 듣기」 */
     var mix = stepMix(ctx, N), putN = 0;
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
       clear(ctx);
-      var L = lv < 3 && mix[i] ? lv + 1 : lv;
+      var L = lv < TOP && mix[i] ? lv + 1 : lv;
       if (L === 1) await followTap(ctx, targets[i], pool);
       else if (L === 2) await followColor(ctx, lv === 1 ? 'c3' : kinds[i]);
-      else await followPut(ctx, puts[i], acts[i], lv === 3 ? i === 0 : putN++ === 0, lv === 3 && mix[i]);
+      else {
+        /* 몸짓 — 3단계 하나, 4단계 둘, 5단계 셋 (서로 다른 것으로) */
+        var acs = L === 3 ? acts[i] : [acts[i]].concat(G.sample(FO_ACT.filter(function (a) { return a !== acts[i]; }), L - 3));
+        await followPut(ctx, puts[i], acs, lv >= 3 ? i === 0 : putN++ === 0, lv === TOP && mix[i]);
+      }
     }
     ctx.progress(N, N);
-    ctx.finish({ msg: lv === 3 ? '심부름을 척척! 두 가지를 다 기억했어!' : G.pick(['자비스 말을 정말 잘 들었어!', '귀 대장! 말한 대로 척척 했어!']) });
+    ctx.finish({ msg: lv >= 3 ? '심부름을 척척! ' + NUMK[lv - 1] + ' 가지를 다 기억했어!' : G.pick(['자비스 말을 정말 잘 들었어!', '귀 대장! 말한 대로 척척 했어!']) });
   }
 });
 
@@ -995,9 +1105,11 @@ function followColor(ctx, kind) {
   });
 }
 
+/* act: 몸짓 하나(3단계) 또는 여러 개 [몸짓, …](4·5단계 — 세·네 가지 심부름) */
 async function followPut(ctx, task, act, first, quiet) {
+  var acts = Array.isArray(act) ? act : [act], na = acts.length;
   var others = G.sample(FO_PUT.filter(function (p) { return p.e !== task.e && p.to !== task.to; }), 2);
-  var wrap = wrapEl(ctx, '<div class="fo-steps" hidden><b>1</b>' + task.e + '➜' + task.to + '<b>2</b>' + act.e + '</div>' +
+  var wrap = wrapEl(ctx, '<div class="fo-steps' + (na >= 3 ? ' many' : '') + '" hidden><b>1</b>' + task.e + '➜' + task.to + acts.map(function (a, j) { return '<b>' + (j + 2) + '</b>' + a.e; }).join('') + '</div>' +
     '<div class="fo-zone"><span class="fz-e">' + task.to + '</span><span class="fz-w">' + G.esc(task.tw) + '</span><div class="fz-in"></div></div><div class="fo-items"></div>');
   var steps = G.$('.fo-steps', wrap), zone = G.$('.fo-zone', wrap), zin = G.$('.fz-in', wrap), itemsBox = G.$('.fo-items', wrap);
   var els = G.shuffle([task].concat(others)).map(function (p) {
@@ -1005,7 +1117,7 @@ async function followPut(ctx, task, act, first, quiet) {
     el._p = p; itemsBox.appendChild(el); return el;
   });
   var right = els.filter(function (el) { return el._p === task; })[0];
-  var line = acc(task.w) + ' ' + task.tw + '에 ' + task.v + ', ' + act.t + '!';
+  var line = acc(task.w) + ' ' + task.tw + '에 ' + task.v + ', ' + foChain(acts) + '!';
   var miss = 0, step2Retry = false;
   await ctx.say((first ? '잘 들어 봐. ' : '') + line);
   await new Promise(function (resolve) {
@@ -1047,16 +1159,16 @@ async function followPut(ctx, task, act, first, quiet) {
   await ctx.wait(pace(500));
   /* quiet: 두 번째 할 일을 묻지 않고 기다린다 (3단계 2·3칸) */
   await ctx.say(subj(task.w) + ' 쏙!' + (quiet ? '' : ' ' + G.pick(['그다음은 뭐였지?', '이제 두 번째!', '또 뭐 하기로 했지?'])), { repeat: false });
-  await ctx.wait(pace(2500));      /* 아이가 몸으로 해 볼 시간 */
+  await ctx.wait(pace(2500 + 1500 * (na - 1)));      /* 아이가 몸으로 해 볼 시간 (몸짓이 늘면 조금 더) */
   var yes = await ctx.parentJudge(wrap, ['👍 했어요', '🔁 다시 듣기']);
   if (!yes) {
     step2Retry = true; steps.hidden = false;
-    await ctx.say('두 번째는, ' + act.t + '!', { repeat: false });
-    await ctx.wait(pace(1500));
+    await ctx.say((na > 1 ? '남은 건, ' : '두 번째는, ') + foChain(acts) + '!', { repeat: false });
+    await ctx.wait(pace(1500 + 1000 * (na - 1)));
     yes = await ctx.parentJudge(wrap, ['👍 했어요', '➡️ 다음']);
   }
   ctx.trial(miss === 0 && !step2Retry);
-  if (yes) await ctx.cheer(G.pick(['두 가지 다 했어! 기억 대장!', '심부름 척척! 최고야!', '끝까지 기억했구나! 멋져!']), zone);
+  if (yes) await ctx.cheer(G.pick([NUMK[na + 1] + ' 가지 다 했어! 기억 대장!', '심부름 척척! 최고야!', '끝까지 기억했구나! 멋져!']), zone);
   else await ctx.say('괜찮아! 다음 심부름도 같이 해 보자.', { repeat: false });
   await ctx.wait(pace(300));
 }
@@ -1069,10 +1181,16 @@ var SY_EXTRA = [
   { w: '바이올린', e: '🎻' }, { w: '선글라스', e: '🕶️' }, { w: '피아노', e: '🎹' }, { w: '캥거루', e: '🦘' }, { w: '햄버거', e: '🍔' },
   { w: '호랑이', e: '🐯' }, { w: '다람쥐', e: '🐿️' }
 ];
-var NUMK = ['', '한', '두', '세', '네', '다섯'];
+/* 4·5단계 — 다섯·여섯 소리 낱말 */
+var SY_LONG = [
+  { w: '크리스마스', e: '🎄' }, { w: '롤러코스터', e: '🎢' }, { w: '장수풍뎅이', e: '🪲' }, { w: '카레라이스', e: '🍛' },
+  { w: '아이스하키', e: '🏒' }, { w: '오케스트라', e: '🎼' }, { w: '다이아몬드', e: '💎' }, { w: '레모네이드', e: '🍋' },
+  { w: '스케이트보드', e: '🛹' }, { w: '롤러스케이트', e: '🛼' }, { w: '트리케라톱스', e: '🦕' }
+];
+var NUMK = ['', '한', '두', '세', '네', '다섯', '여섯', '일곱'];
 function sylPool(n) {
   var seen = {};
-  return wordPool(3).concat(SY_EXTRA).filter(function (w) {
+  return wordPool(3).concat(SY_EXTRA, SY_LONG).filter(function (w) {
     var h = hangul(w.w);
     if (h !== w.w || h.length !== n || seen[w.w]) return false;
     seen[w.w] = 1; return true;
@@ -1080,22 +1198,25 @@ function sylPool(n) {
 }
 
 G.act({
-  id: 'syllable', area: 'speech', title: '말소리 북치기', icon: '🥁', order: 70, levels: 3, mins: 3, needs: [],
+  id: 'syllable', area: 'speech', title: '말소리 북치기', icon: '🥁', order: 70, levels: 5, mins: 3, needs: [],
   ef: ['attend', 'wm', 'inhibit'],
   desc: '한 소리에 북 한 번, 둥!',
-  goal: '음운 인식 — 낱말이 작은 소리(음절)로 나뉜다는 것 알기("사-과" 두 번). 또박또박 끊어 말하기와 읽기 준비의 바탕',
-  how: '아이와 같이 소리 내어 "사, 과" 하며 북을 쳐 주세요. 어려워하면 아이 손을 잡고 함께 쳐도 좋아요. 2·3단계는 자비스가 북 칠 때 소리를 내지 않으니 아이가 스스로 말하며 치게 도와주세요. 3단계는 글자가 숨겨져 있어 귀로만 나눠요.',
+  goal: '음운 인식 — 낱말이 작은 소리(음절)로 나뉜다는 것 알기("사-과" 두 번). 또박또박 끊어 말하기와 읽기 준비의 바탕. 4단계는 네·다섯 소리 낱말("크리스마스"), 5단계는 자비스 시범 없이 혼자 듣고 나누기',
+  how: '아이와 같이 소리 내어 "사, 과" 하며 북을 쳐 주세요. 어려워하면 아이 손을 잡고 함께 쳐도 좋아요. 2·3단계는 자비스가 북 칠 때 소리를 내지 않으니 아이가 스스로 말하며 치게 도와주세요. 3단계는 글자가 숨겨져 있어 귀로만 나눠요. 5단계는 자비스가 먼저 쳐 주지 않아요 — 어려우면 그때 쳐 주니 기다려 주세요.',
   basis: '음운 인식 — 음절 분절(손뼉·북 치기), 읽기 준비 기술',
   offline: '이름을 박수로 나눠 치기: "민-준" 짝짝. 계단을 오르며 "바-나-나" 한 칸에 한 소리.',
   run: async function (ctx) {
-    var lv = ctx.level, N = 5;
-    var counts = lv === 1 ? [1, 2, 1, 2, 2] : lv === 2 ? [2, 3, 2, 3, 3] : [3, 4, 3, 4, 4];
-    /* 칸이 오르면 가운데 세 낱말 중 (칸-1)개를 한 소리 더 긴 낱말로(다음 단계 맛보기). 첫·마지막 낱말은 그대로.
-       3단계(5음절 낱말은 거의 없다)는 (칸-1)개 낱말에서 자비스가 먼저 쳐 주지 않고 귀로만 듣고 친다 — 어려우면 그때 쳐 준다 */
+    var lv = ctx.level, N = 5, TOP = ctx.def.levels;
+    var counts = lv === 1 ? [1, 2, 1, 2, 2] : lv === 2 ? [2, 3, 2, 3, 3] : lv === 3 ? [3, 4, 3, 4, 4] : [4, 5, 4, 5, 5];
+    /* 칸이 오르면 가운데 세 낱말 중 (칸-1)개를 다음 단계처럼. 첫·마지막 낱말은 그대로.
+       1~3단계는 한 소리 더 긴 낱말로, 4단계는 자비스가 먼저 쳐 주지 않고 귀로만 듣고 친다(5단계 맛보기 — 어려우면 그때 쳐 준다).
+       5단계(맨 위)는 첫 낱말 말고는 모두 혼자 치기, 칸이 오르면 (칸-1)개를 한 소리 더 긴 낱말(여섯 소리)로 */
     var mix = stepMix(ctx, N, 1, N - 1);
-    if (lv < 3) counts = counts.map(function (n, i) { return mix[i] ? n + 1 : n; });
+    if (lv !== 4) counts = counts.map(function (n, i) { return mix[i] ? n + 1 : n; });
+    function solo(i) { return lv === TOP ? i > 0 : lv === 4 && mix[i]; }
     var used = {}, list = counts.map(function (n) {
       var p = sylPool(n).filter(function (w) { return !used[w.w]; });
+      while (!p.length && n > 1) { n--; p = sylPool(n).filter(function (w) { return !used[w.w]; }); }   /* 그 길이 낱말이 모자라면 한 소리 짧게 */
       var w = G.pick(p); used[w.w] = 1; return { w: w.w, e: w.e, n: n };
     });
     /* 아이 별명이 맞는 길이면 마지막은 이름 북치기 */
@@ -1105,7 +1226,7 @@ G.act({
     await ctx.say(G.pick(['둥둥 북 놀이! 낱말을 작은 소리로 나눠서, 한 소리에 북 한 번씩 쳐 보자.', '자비스 북이 왔어요! 소리 하나에 둥 한 번!']));
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
-      await syItem(ctx, list[i], lv, i === 0, lv === 3 && mix[i]);
+      await syItem(ctx, list[i], lv, i === 0, solo(i));
     }
     ctx.progress(N, N);
     ctx.finish({ msg: G.pick(['북치기 대장! 소리를 콩콩 잘 나눴어!', '둥둥! 귀가 정말 똑똑해졌어!']) });
@@ -1115,8 +1236,8 @@ G.act({
 async function syItem(ctx, it, lv, first, solo) {
   clear(ctx);
   var n = it.n, ss = it.w.split('');
-  var wrap = wrapEl(ctx, '<div class="sy-card"><span class="sy-e">' + it.e + '</span><div class="sy-word' + (lv === 3 ? ' hide' : '') + '">' + ss.map(function (s) { return '<span>' + G.esc(s) + '</span>'; }).join('') + '</div></div>' +
-    '<div class="sy-dots' + (lv === 3 ? ' hide' : '') + '">' + ss.map(function () { return '<i></i>'; }).join('') + '</div>' +
+  var wrap = wrapEl(ctx, '<div class="sy-card"><span class="sy-e">' + it.e + '</span><div class="sy-word' + (lv >= 3 ? ' hide' : '') + '">' + ss.map(function (s) { return '<span>' + G.esc(s) + '</span>'; }).join('') + '</div></div>' +
+    '<div class="sy-dots' + (lv >= 3 ? ' hide' : '') + '">' + ss.map(function () { return '<i></i>'; }).join('') + '</div>' +
     '<button class="sy-drum wait" type="button" aria-label="북 치기"><span class="dr-e">🥁</span></button>');
   var word = G.$('.sy-word', wrap), spans = G.$$('.sy-word span', wrap), dots = G.$$('.sy-dots i', wrap), drum = G.$('.sy-drum', wrap);
   var onTap = null;
@@ -1187,7 +1308,7 @@ async function syItem(ctx, it, lv, first, solo) {
   G.sfx.play('pop');
   var intro = it.name ? '마지막은 우리 친구 이름이야! ' + it.w + '!' : G.pick(['이건 ' + isYa(it.w) + '.', it.w + '!', '와, ' + G.josa(it.w, '이다', '다') + '!']);
   await ctx.say(intro, { repeat: false });
-  /* solo: 자비스 시범 없이 바로 아이 차례 (3단계 2·3칸) */
+  /* solo: 자비스 시범 없이 바로 아이 차례 (4단계 2·3칸 · 5단계) */
   if (!solo) await demo(first ? '자비스가 먼저 쳐 볼게. 잘 들어 봐!' : (n > 1 ? G.pick(['자비스가 먼저!', '들어 봐!']) : null));
   var prompt = (solo ? G.pick(['이번엔 혼자 해 볼까? 귀로 잘 듣고, 한 소리에 북 한 번! ', '자비스는 쉿! 네가 먼저 쳐 봐. ']) :
     first ? '이제 네 차례! 한 소리에 북 한 번! ' : G.pick(['네 차례! ', '이제 너도! '])) + it.w + '!';

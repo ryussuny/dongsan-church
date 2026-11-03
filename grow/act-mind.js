@@ -13,7 +13,8 @@
 var G = window.G, D = window.GD;
 if (!G || !D) return;
 
-var NUM = ['', '하나', '둘', '셋', '넷', '다섯', '여섯', '일곱', '여덟', '아홉', '열'];
+var NUM = ['', '하나', '둘', '셋', '넷', '다섯', '여섯', '일곱', '여덟', '아홉', '열',
+  '열하나', '열둘', '열셋', '열넷', '열다섯', '열여섯', '열일곱', '열여덟', '열아홉', '스물'];   /* 11~20 은 숫자 세기 4·5단계 */
 
 /* ---------- 모양 ---------- */
 G.css('mind', [
@@ -50,6 +51,8 @@ G.css('mind', [
   '.act-order .oslot.now{border-color:color-mix(in srgb,var(--area) 70%,transparent)}',
   '.act-order .choice.gone{visibility:hidden}',
   '.act-order .choices{margin:0 auto auto}',
+  /* 다섯·여섯 칸 순서(4·5단계)는 좁은 화면에서 세 칸씩 두 줄로 */
+  '@media (max-width:620px){.act-order .oslots.wrap{grid-template-columns:repeat(3,1fr)}}',
 
   /* 숫자 세기 */
   '.act-count .cfield{display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:clamp(6px,2vw,14px);margin:auto 0 8px;max-width:640px}',
@@ -132,13 +135,14 @@ G.act({
   id: 'match', area: 'mind', title: '짝 맞추기', icon: '🃏', order: 10,
   desc: '같은 그림 두 장을 찾아요',
   goal: '시각 기억·작업 기억, 차례로 살펴보는 주의력, 그림 이름(어휘)',
-  how: '카드를 뒤집을 때마다 그림 이름을 아이와 같이 소리 내어 말해 주세요. 못 찾고 헤매면 "아까 강아지가 어디 있었지?" 하고 위치를 함께 떠올려 주세요. 1단계는 그림을 먼저 2초쯤 보여 주고, 칸이 오를수록 조금씩 짧아집니다.',
-  levels: 3, needs: [], mins: 3,
+  how: '카드를 뒤집을 때마다 그림 이름을 아이와 같이 소리 내어 말해 주세요. 못 찾고 헤매면 "아까 강아지가 어디 있었지?" 하고 위치를 함께 떠올려 주세요. 1단계는 그림을 먼저 2초쯤 보여 주고, 칸이 오를수록 조금씩 짧아집니다. 4·5단계(도전·마스터)는 짝이 8쌍·10쌍으로 늘어요.',
+  levels: 5, needs: [], mins: 3,
   run: async function (ctx) {
     var lv = ctx.level;
-    /* 칸이 오르면 — 1단계: 미리 보는 시간이 2단계 쪽으로 조금씩 짧아진다. 2·3단계: 마지막 판 짝이 하나씩 는다 (ctx.tune) */
+    /* 칸이 오르면 — 1단계: 미리 보는 시간이 2단계 쪽으로 조금씩 짧아진다. 2·3단계: 마지막 판 짝이 하나씩 는다 (ctx.tune).
+       4단계 8쌍(→9), 5단계 10쌍(→11) */
     var plan = lv === 1 ? [{ p: 2, pre: ctx.tune([2000, 1200, 0]) }, { p: 2, pre: ctx.tune([2000, 0, 0]) }] :
-      lv === 2 ? [{ p: 3, pre: 1200 }, { p: ctx.tune([2, 3, 6]), pre: 0 }] : [{ p: ctx.tune([2, 3, 6]), pre: 0 }];
+      lv === 2 ? [{ p: 3, pre: 1200 }, { p: ctx.tune([2, 3, 6, 8, 10]), pre: 0 }] : [{ p: ctx.tune([2, 3, 6, 8, 10]), pre: 0 }];
     var pool = G.shuffle(wordPool(lv === 1 ? 1 : lv === 2 ? 2 : 3));
     for (var b = 0; b < plan.length; b++) {
       ctx.progress(b, plan.length);
@@ -153,7 +157,8 @@ G.act({
 function board(ctx, words, preview) {
   clear(ctx);
   var n = words.length * 2, land = innerWidth > innerHeight * 1.1;
-  var cols = n === 4 ? 2 : n === 6 ? (land ? 3 : 2) : (land ? 4 : 3);
+  /* 카드 16장 넘으면(4·5단계) 세로 화면 네 줄·가로 화면 여섯 줄 — 카드가 너무 작아지지 않게 */
+  var cols = n === 4 ? 2 : n === 6 ? (land ? 3 : 2) : n >= 16 ? (land ? 6 : 4) : (land ? 4 : 3);
   var rows = Math.ceil(n / cols);
   var grid = G.el('<div class="mgrid" style="--cols:' + cols + ';--rows:' + rows + '"></div>');
   var cards = G.shuffle(words.concat(words)).map(function (w) {
@@ -216,20 +221,21 @@ G.act({
   id: 'same', area: 'mind', title: '같은 그림 찾기', icon: '🔍', order: 20,
   desc: '똑같은 그림을 찾아요',
   goal: '시각 변별·짝짓기 (그림 인지의 첫걸음), 눈으로 비교하며 찾는 힘',
-  how: '위 그림을 손가락으로 가리키며 "이거랑 똑같은 거 어디 있지?" 하고 물어 주세요. 3단계는 비슷한 그림(같은 무리)이 섞여 나와 더 꼼꼼히 봐야 합니다. 찾으면 그림 이름도 같이 말해 주세요.',
-  levels: 3, needs: [], mins: 2,
+  how: '위 그림을 손가락으로 가리키며 "이거랑 똑같은 거 어디 있지?" 하고 물어 주세요. 3단계는 비슷한 그림(같은 무리)이 섞여 나와 더 꼼꼼히 봐야 합니다. 찾으면 그림 이름도 같이 말해 주세요. 4·5단계(도전·마스터)는 같은 무리 그림이 넷·다섯으로 늘어요.',
+  levels: 5, needs: [], mins: 2,
   run: async function (ctx) {
     var lv = ctx.level, N = 6;
     var pool = wordPool(lv === 1 ? 2 : 3);
     var targets = G.sample(pool, N);
-    /* 칸이 오르면 한두 문제는 다음 단계 문제로 — 3단계는 그 문제에 비슷한 그림이 하나 더 */
+    /* 칸이 오르면 한두 문제는 다음 단계 문제로 — 3단계는 그 문제에 비슷한 그림이 하나 더.
+       정답 말고 고를 그림 수 = 단계 수 (1 · 2 · 3 · 4 · 5), 3단계부터는 같은 무리 그림. 5단계 2·3칸은 6 */
     var mix = stepMix(ctx, N);
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
-      var tl = mix[i] ? Math.min(3, lv + 1) : lv, k = tl === 1 ? 1 : tl === 2 ? 2 : lv === 3 && mix[i] ? 4 : 3;
+      var tl = mix[i] ? lv + 1 : lv, k = tl;
       var t = targets[i], others;
       if (tl === 1) others = G.sample(pool.filter(function (w) { return w.c !== t.c; }), k);
-      else if (tl === 3) {
+      else if (tl >= 3) {
         var same = pool.filter(function (w) { return w.c === t.c && w !== t; });
         others = G.sample(same, Math.min(k, same.length));
         if (others.length < k) others = others.concat(G.sample(pool.filter(function (w) { return w !== t && others.indexOf(w) < 0; }), k - others.length));
@@ -252,14 +258,37 @@ G.act({
 /* =================================================================
    3. 순서 맞추기 (차례·인과)
    ================================================================= */
+/* 4·5단계 순서 — 다섯 칸(4단계)·여섯 칸(5단계). 순서가 하나로만 정해지는 일(원인→결과)만 골랐다.
+   k: 같은 이야기(다섯 칸·여섯 칸)가 한 판에 두 번 나오지 않게 */
+var SEQ5 = [
+  { k: 'seed', t: '씨앗 심기', steps: [{ e: '🕳️', w: '구멍 파기' }, { e: '🌰', w: '씨앗 넣기' }, { e: '💧', w: '물 주기' }, { e: '🌱', w: '싹이 나요' }, { e: '🌻', w: '꽃이 펴요' }] },
+  { k: 'letter', t: '편지 보내기', steps: [{ e: '✏️', w: '편지 쓰기' }, { e: '✉️', w: '봉투에 넣기' }, { e: '📮', w: '우체통에 넣기' }, { e: '🚚', w: '배달해요' }, { e: '📬', w: '편지가 왔어요' }] },
+  { k: 'butterfly', t: '나비가 되어요', steps: [{ e: '🥚', w: '알' }, { e: '🐛', w: '애벌레' }, { e: '🍃', w: '잎을 먹어요' }, { e: '🛌', w: '번데기' }, { e: '🦋', w: '나비' }] },
+  { k: 'snow', t: '눈사람', steps: [{ e: '❄️', w: '눈이 와요' }, { e: '🤲', w: '눈 뭉치기' }, { e: '⛄', w: '눈사람' }, { e: '☀️', w: '해가 떠요' }, { e: '💧', w: '녹아요' }] },
+  { k: 'back', t: '거꾸로 세기', steps: [{ e: '5️⃣', w: '다섯' }, { e: '4️⃣', w: '넷' }, { e: '3️⃣', w: '셋' }, { e: '2️⃣', w: '둘' }, { e: '1️⃣', w: '하나' }] },
+  { k: 'cake', t: '생일 파티', steps: [{ e: '🎂', w: '케이크 놓기' }, { e: '🕯️', w: '초 꽂기' }, { e: '🔥', w: '촛불 켜기' }, { e: '🎵', w: '노래 부르기' }, { e: '🌬️', w: '후~ 불기' }] },
+  { k: 'apple', t: '사과가 열려요', steps: [{ e: '🌱', w: '새싹' }, { e: '🌳', w: '나무' }, { e: '🌸', w: '꽃' }, { e: '🍏', w: '초록 사과' }, { e: '🍎', w: '빨간 사과' }] }
+];
+var SEQ6 = [
+  { k: 'seed', t: '씨앗 심기', steps: [{ e: '🕳️', w: '구멍 파기' }, { e: '🌰', w: '씨앗 넣기' }, { e: '🟫', w: '흙 덮기' }, { e: '💧', w: '물 주기' }, { e: '🌱', w: '싹이 나요' }, { e: '🌻', w: '꽃이 펴요' }] },
+  { k: 'letter', t: '편지 보내기', steps: [{ e: '✏️', w: '편지 쓰기' }, { e: '✉️', w: '봉투에 넣기' }, { e: '📮', w: '우체통에 넣기' }, { e: '🚚', w: '배달해요' }, { e: '📬', w: '편지가 왔어요' }, { e: '😊', w: '읽고 기뻐요' }] },
+  { k: 'snow', t: '눈사람', steps: [{ e: '❄️', w: '눈이 와요' }, { e: '🤲', w: '눈 뭉치기' }, { e: '⚪', w: '굴려서 크게' }, { e: '⛄', w: '눈사람' }, { e: '☀️', w: '해가 떠요' }, { e: '💧', w: '녹아요' }] },
+  { k: 'back', t: '거꾸로 세기', steps: [{ e: '6️⃣', w: '여섯' }, { e: '5️⃣', w: '다섯' }, { e: '4️⃣', w: '넷' }, { e: '3️⃣', w: '셋' }, { e: '2️⃣', w: '둘' }, { e: '1️⃣', w: '하나' }] },
+  { k: 'cake', t: '생일 파티', steps: [{ e: '🎂', w: '케이크 놓기' }, { e: '🕯️', w: '초 꽂기' }, { e: '🔥', w: '촛불 켜기' }, { e: '🎵', w: '노래 부르기' }, { e: '🌬️', w: '후~ 불기' }, { e: '🍰', w: '나눠 먹기' }] },
+  { k: 'apple', t: '사과가 열려요', steps: [{ e: '🌰', w: '씨앗' }, { e: '🌱', w: '새싹' }, { e: '🌳', w: '나무' }, { e: '🌸', w: '꽃' }, { e: '🍏', w: '초록 사과' }, { e: '🍎', w: '빨간 사과' }] }
+];
+/* 5단계 2·3칸에 끼워 넣는 '이 순서에 없는 카드' — 순서와 상관없는 그림 */
+var SEQ_DECOY = [{ e: '⚽', w: '공차기' }, { e: '🎈', w: '풍선' }, { e: '🧸', w: '곰인형' }, { e: '🚲', w: '자전거' }, { e: '🎨', w: '그림 그리기' }];
+
 G.act({
   id: 'order', area: 'mind', title: '순서 맞추기', icon: '🔢', order: 30,
   desc: '무엇이 먼저일까요?',
   goal: '순서·인과 이해, 일상 절차(손 씻기·이 닦기) 익히기, "먼저-그다음" 말 이해',
-  how: '"먼저 뭐 하지? 그다음은?" 하고 순서 말을 또박또박 써 주세요. 다 맞추면 실제로 손 씻기·이 닦기를 할 때 같은 말로 다시 해 보면 효과가 큽니다. 틀려도 괜찮아요 — 두 번째에는 정답 카드가 빛납니다.',
-  levels: 3, needs: [], mins: 3,
+  how: '"먼저 뭐 하지? 그다음은?" 하고 순서 말을 또박또박 써 주세요. 다 맞추면 실제로 손 씻기·이 닦기를 할 때 같은 말로 다시 해 보면 효과가 큽니다. 틀려도 괜찮아요 — 두 번째에는 정답 카드가 빛납니다. 4·5단계(도전·마스터)는 다섯 칸·여섯 칸으로 길어져요.',
+  levels: 5, needs: [], mins: 3,
   run: async function (ctx) {
     var lv = ctx.level;
+    if (lv >= 4) { await longSeqs(ctx, lv); return; }
     var pool = D.SEQUENCES.filter(function (s) { return (s.lv || 1) <= lv; });
     var pick = G.sample(pool, 3);
     /* 칸이 오르면 한두 개는 다음 단계 묶음에서 뽑는다 (3단계는 가장 어려운 묶음에서). 첫 번째는 늘 지금 단계 */
@@ -280,20 +309,50 @@ G.act({
   }
 });
 
-function oneSeq(ctx, seq, first) {
+/* 4단계: 다섯 칸 셋 — 칸이 오르면 한두 개는 여섯 칸(5단계 맛보기).
+   5단계: 여섯 칸 셋 — 칸이 오르면 한두 개에 '이 순서에 없는 카드'가 하나 섞인다 */
+async function longSeqs(ctx, lv) {
+  var base = lv >= 5 ? SEQ6 : SEQ5, pick = G.sample(base, 3), mix = stepMix(ctx, 3), decoy = [false, false, false];
+  mix.forEach(function (m, j) {
+    if (!m) return;
+    if (lv >= 5) { decoy[j] = true; return; }
+    var more = SEQ6.filter(function (s) { return pick.every(function (p, q) { return q === j || p.k !== s.k; }); });
+    if (more.length) pick[j] = G.pick(more);
+  });
+  for (var i = 0; i < pick.length; i++) {
+    ctx.progress(i, pick.length);
+    await oneSeq(ctx, pick[i], i === 0, decoy[i] ? G.pick(SEQ_DECOY) : null);
+  }
+  ctx.progress(pick.length, pick.length);
+  ctx.finish();
+}
+
+function oneSeq(ctx, seq, first, decoy) {
   clear(ctx);
   var N = seq.steps.length;
   var steps = seq.steps.map(function (s, k) { return { e: s.e, w: s.w, k: k }; });
   ctx.body.appendChild(G.el('<div class="otitle">' + G.esc(seq.t) + '</div>'));
-  var slots = G.el('<div class="oslots" style="--n:' + N + '"></div>');
+  var slots = G.el('<div class="oslots' + (N >= 5 ? ' wrap' : '') + '" style="--n:' + N + '"></div>');
   var slotEls = steps.map(function (s, k) { var e = G.el('<div class="oslot' + (k === 0 ? ' now' : '') + '"><b>' + (k + 1) + '</b></div>'); slots.appendChild(e); return e; });
   ctx.body.appendChild(slots);
-  ctx.say((first ? '순서대로 눌러 봐. ' : '') + G.josa(seq.t, '은', '는') + ' 무엇이 먼저일까?');
+  ctx.say((first ? '순서대로 눌러 봐. ' : '') + G.josa(seq.t, '은', '는') + ' 무엇이 먼저일까?' + (decoy ? ' 이 순서에 없는 카드도 하나 숨어 있어!' : ''));
+  var cards = G.shuffle(decoy ? steps.concat([{ e: decoy.e, w: decoy.w, k: -1 }]) : steps);
   return new Promise(function (resolve) {
     var next = 0, miss = 0, ch = null;
-    ch = ctx.choices(G.shuffle(steps), {
-      cols: N > 3 ? 4 : N, size: 'md',
+    ch = ctx.choices(cards, {
+      cols: N >= 5 ? 3 : N > 3 ? 4 : N, size: 'md',
       onPick: function (it, el) {
+        if (it.k < 0) {
+          /* 순서에 없는 카드 — 흐리게 두고 다시 고르기 */
+          miss++;
+          if (miss === 1) ctx.trial(false);
+          el.classList.add('dim'); el.disabled = true; G.ui.wiggle(el);
+          var rt = ch.buttons.filter(function (b) { return b._item.k === next; })[0];
+          if (miss >= 2) G.ui.hint(rt);
+          ctx.say('이건 ' + seq.t + ' 순서에 없는 카드야. ' + (miss >= 2 ? '반짝이는 걸 눌러 봐.' : '다른 걸 골라 봐!'), { repeat: false });
+          G.sfx.play('oops');
+          return false;
+        }
         if (it.k === next) {
           var lastOne = next === N - 1;
           if (!miss && !lastOne) ctx.trial(true);
@@ -338,13 +397,16 @@ G.act({
   id: 'count', area: 'mind', title: '숫자 세기', icon: '🍎', order: 40,
   desc: '하나씩 눌러서 세어요',
   goal: '일대일 대응(하나에 한 번씩 세기), 수 이름(하나·둘·셋), 마지막 수가 전체 개수라는 개념(기수)',
-  how: '아이 손을 잡고 하나씩 짚으며 같이 "하나, 둘, 셋" 소리 내어 세어 주세요. 손으로 누르기 어려우면 "자비스가 세어 줄게" 단추를 눌러 보여 주세요. 3단계에는 "어느 쪽이 더 많아?" 문제가 섞입니다.',
-  levels: 3, needs: [], mins: 3,
+  how: '아이 손을 잡고 하나씩 짚으며 같이 "하나, 둘, 셋" 소리 내어 세어 주세요. 손으로 누르기 어려우면 "자비스가 세어 줄게" 단추를 눌러 보여 주세요. 3단계에는 "어느 쪽이 더 많아?" 문제가 섞입니다. 4·5단계(도전·마스터)는 열다섯·스물까지 세어요.',
+  levels: 5, needs: [], mins: 3,
   run: async function (ctx) {
     /* 칸이 오르면 세는 수의 끝이 다음 단계 쪽으로 커진다 (1단계 3→4→4, 2단계 5→7→8, 10 까지).
-       3단계는 끝이 10 그대로, 대신 아주 작은 수가 덜 나온다 (가장 작은 수 1→3→4) */
-    var lv = ctx.level, max = Math.min(10, ctx.tune([3, 5, 10])), lo = lv === 3 ? [1, 3, 4][G.clamp(ctx.step || 1, 1, 3) - 1] : 1, N = 5;
-    var kinds = lv === 3 ? G.shuffle(['n', 'n', 'n', 'cmp', 'cmp']) : ['n', 'n', 'n', 'n', 'n'];
+       3단계는 끝이 10 그대로, 대신 아주 작은 수가 덜 나온다 (가장 작은 수 1→3→4).
+       4단계 끝 15→17→18 (가장 작은 수 5→6→7), 5단계 끝 20 그대로 (가장 작은 수 8→10→12) */
+    var lv = ctx.level, st = G.clamp(ctx.step || 1, 1, 3), N = 5;
+    var max = Math.min(lv >= 4 ? 20 : 10, ctx.tune([3, 5, 10, 15, 20]));
+    var LO = { 3: [1, 3, 4], 4: [5, 6, 7], 5: [8, 10, 12] }, lo = LO[lv] ? LO[lv][st - 1] : 1;
+    var kinds = lv >= 3 ? G.shuffle(['n', 'n', 'n', 'cmp', 'cmp']) : ['n', 'n', 'n', 'n', 'n'];
     var lastN = 0;
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
@@ -404,8 +466,9 @@ async function countItem(ctx, n, max, first) {
 
 async function compareItem(ctx, max) {
   clear(ctx);
-  var e = G.pick(COUNT_THINGS), a, b;
-  do { a = 1 + Math.floor(Math.random() * Math.min(max, 8)); b = 1 + Math.floor(Math.random() * Math.min(max, 8)); } while (Math.abs(a - b) < 2);
+  /* 비교하는 수: 3단계 8 까지, 4·5단계 12 까지 */
+  var e = G.pick(COUNT_THINGS), a, b, top = Math.min(max, ctx.level >= 4 ? 12 : 8);
+  do { a = 1 + Math.floor(Math.random() * top); b = 1 + Math.floor(Math.random() * top); } while (Math.abs(a - b) < 2);
   var big = Math.max(a, b);
   ctx.body.appendChild(G.el('<div class="mind-q"><div class="mind-num">⚖️</div></div>'));
   ctx.say('어느 쪽이 더 많을까?');
@@ -429,16 +492,19 @@ G.act({
   id: 'shape', area: 'mind', title: '모양과 색', icon: '🔺', order: 50,
   desc: '동그라미·세모·빨강을 찾아요',
   goal: '모양·색 이름 이해(수용 언어), 두 가지 특징을 함께 보기(3단계 "파란 세모")',
-  how: '집에 있는 물건으로도 이어서 해 보세요 — "동그란 거 찾아볼까? 접시!" 3단계 "파란 세모"는 색과 모양을 함께 기억해야 해서 어려워요. 처음엔 손가락으로 색부터 짚어 주세요.',
-  levels: 3, needs: [], mins: 2,
+  how: '집에 있는 물건으로도 이어서 해 보세요 — "동그란 거 찾아볼까? 접시!" 3단계 "파란 세모"는 색과 모양을 함께 기억해야 해서 어려워요. 처음엔 손가락으로 색부터 짚어 주세요. 4·5단계(도전·마스터)는 색이나 모양만 같은 헷갈리는 그림이 하나·둘 더 나와요.',
+  levels: 5, needs: [], mins: 2,
   run: async function (ctx) {
     var lv = ctx.level, N = 6, cols = colorsUsed(), shapes = D.SHAPES;
-    /* 칸이 오르면 한두 문제는 다음 단계 문제로 — 3단계는 그 문제에 같은 색 다른 모양이 하나 더 */
+    /* 칸이 오르면 한두 문제는 다음 단계 문제로 — 3단계는 그 문제에 같은 색 다른 모양이 하나 더.
+       3단계부터는 '파란 세모' 문제에 헷갈리는 그림(색만 같거나 모양만 같은 것)이 단계마다 하나씩 더:
+       3단계 0 · 4단계 1 · 5단계 2 (칸이 오르면 다음 단계 수, 5단계 2·3칸은 3) */
+    var LURE = [[2, 0], [0, 2], [3, 0]];   /* [모양, 색] 번호 — 같은 색 다른 모양, 같은 모양 다른 색, 같은 색 다른 모양 */
     var mix = stepMix(ctx, N);
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
       clear(ctx);
-      var tl = mix[i] ? Math.min(3, lv + 1) : lv;
+      var tl = mix[i] ? lv + 1 : lv, lures = Math.max(0, tl - 3);
       var kind = tl === 1 ? 'shape' : tl === 2 ? (i % 2 ? 'color' : 'shape') : 'both';
       var items, target, name;
       if (kind === 'shape') {
@@ -450,10 +516,10 @@ G.act({
         items = cc.map(function (c) { return { s: sh, c: c }; });
         target = items[0]; name = target.c.name;
       } else {
-        var S = G.sample(shapes, 3), C = G.sample(cols, 3);
+        var S = G.sample(shapes, lures >= 3 ? 4 : 3), C = G.sample(cols, 3);
         target = { s: S[0], c: C[0] };
         items = [target, { s: S[0], c: C[1] }, { s: S[1], c: C[0] }, { s: S[2], c: C[2] }];
-        if (lv === 3 && mix[i]) items.push({ s: S[2], c: C[0] });
+        for (var q = 0; q < lures; q++) items.push({ s: S[LURE[q][0]], c: C[LURE[q][1]] });
         name = target.c.adj + ' ' + target.s.name;
       }
       ctx.body.appendChild(G.el('<div class="mind-q"><div class="mind-num">' + (kind === 'color' ? '🎨' : kind === 'shape' ? '🔷' : '🔍') + '</div></div>'));
@@ -481,24 +547,59 @@ var CAT_NOT = { food: '먹을 수 없어', animal: '동물이 아니야', vehicl
 var FAR = { food: ['vehicle', 'clothes', 'body'], animal: ['vehicle', 'home', 'clothes'], vehicle: ['food', 'animal', 'body'] };
 var NEAR = { food: ['nature'], vehicle: ['home'], clothes: ['home', 'body'], home: ['clothes'], nature: ['food'], body: ['clothes'], animal: ['nature'] };
 var CAT_ALL = ['food', 'animal', 'vehicle', 'body', 'home', 'clothes', 'nature', 'people'];
+/* 4·5단계 — 더 촘촘한 무리. is/not 은 자비스가 이유를 말할 때 ("당근은 과일이 아니야. 채소야!") */
+var FINE = {
+  fruit: { is: '과일이야', not: '과일이 아니야', w: [['🍎', '사과'], ['🍌', '바나나'], ['🍓', '딸기'], ['🍇', '포도'], ['🍉', '수박'], ['🍊', '귤'], ['🍑', '복숭아'], ['🍒', '체리'], ['🍍', '파인애플'], ['🥝', '키위']] },
+  veg: { is: '채소야', not: '채소가 아니야', w: [['🥕', '당근'], ['🥦', '브로콜리'], ['🥒', '오이'], ['🍆', '가지'], ['🥔', '감자'], ['🌶️', '고추']] },
+  car: { is: '땅 위를 달리는 탈것이야', not: '땅 위를 달리지 않아', w: [['🚗', '자동차'], ['🚌', '버스'], ['🚂', '기차'], ['🚲', '자전거'], ['🚒', '소방차'], ['🚚', '트럭'], ['🚕', '택시']] },
+  sky: { is: '하늘을 나는 탈것이야', not: '하늘을 날지 않아', w: [['✈️', '비행기'], ['🚁', '헬리콥터'], ['🚀', '로켓'], ['🛩️', '작은 비행기']] },
+  boat: { is: '물 위로 다니는 탈것이야', not: '물 위로 다니지 않아', w: [['⛵', '돛단배'], ['🚤', '보트'], ['🛳️', '유람선'], ['⛴️', '여객선'], ['🛶', '카누']] },
+  sea: { is: '바다에 사는 동물이야', not: '바다에 살지 않아', w: [['🐟', '물고기'], ['🐙', '문어'], ['🐬', '돌고래'], ['🐳', '고래'], ['🐠', '열대어'], ['🦑', '오징어']] },
+  land: { is: '땅 위에 사는 동물이야', not: '땅 위에 살지 않아', w: [['🐶', '강아지'], ['🐱', '고양이'], ['🐰', '토끼'], ['🐻', '곰'], ['🦁', '사자'], ['🐘', '코끼리'], ['🐴', '말'], ['🐷', '돼지']] },
+  kitchen: { is: '부엌에서 쓰는 물건이야', not: '부엌에서 쓰는 물건이 아니야', w: [['🥄', '숟가락'], ['🥢', '젓가락'], ['🍳', '프라이팬'], ['🥣', '그릇']] },
+  bath: { is: '욕실에서 쓰는 물건이야', not: '욕실에서 쓰는 물건이 아니야', w: [['🪥', '칫솔'], ['🧼', '비누'], ['🛁', '욕조'], ['🚿', '샤워기'], ['🧴', '로션']] },
+  school: { is: '공부할 때 쓰는 학용품이야', not: '학용품이 아니야', w: [['✏️', '연필'], ['🖊️', '볼펜'], ['✂️', '가위'], ['📒', '공책'], ['🖍️', '크레파스'], ['📐', '삼각자']] },
+  toy: { is: '가지고 노는 장난감이야', not: '장난감이 아니야', w: [['🧸', '곰인형'], ['🪀', '요요'], ['🪁', '연'], ['🧩', '퍼즐'], ['🎮', '게임기']] },
+  wear: { is: '몸에 입는 옷이야', not: '몸에 입는 옷이 아니야', w: [['👕', '티셔츠'], ['👖', '바지'], ['👗', '원피스'], ['🧥', '외투'], ['👔', '셔츠']] },
+  shoes: { is: '발에 신는 신발이야', not: '신발이 아니야', w: [['👟', '운동화'], ['👞', '구두'], ['👢', '장화'], ['🥾', '등산화'], ['👡', '샌들']] },
+  bird: { is: '새야', not: '새가 아니야', w: [['🐦', '작은 새'], ['🦉', '부엉이'], ['🦆', '오리'], ['🐧', '펭귄'], ['🐔', '닭'], ['🦅', '독수리'], ['🦜', '앵무새']] },
+  bug: { is: '곤충이야', not: '곤충이 아니야', w: [['🐝', '벌'], ['🦋', '나비'], ['🐞', '무당벌레'], ['🐜', '개미'], ['🦗', '귀뚜라미']] },
+  summer: { is: '더운 여름에 어울리는 거야', not: '여름에 어울리는 게 아니야', w: [['🍉', '수박'], ['🍦', '아이스크림'], ['🕶️', '선글라스'], ['🌻', '해바라기'], ['🏖️', '해수욕장'], ['🩳', '반바지']] },
+  winter: { is: '추운 겨울에 어울리는 거야', not: '겨울에 어울리는 게 아니야', w: [['⛄', '눈사람'], ['🧣', '목도리'], ['🧤', '장갑'], ['🎿', '스키'], ['🧥', '외투'], ['❄️', '눈송이']] },
+  redfruit: { is: '과일이야', not: '과일이 아니야', w: [['🍎', '사과'], ['🍓', '딸기'], ['🍒', '체리'], ['🍉', '수박']] },
+  redveg: { is: '채소야', not: '채소가 아니야', w: [['🌶️', '고추'], ['🥕', '당근']] }
+};
+/* [모아 놓은 무리, 다른 하나] — 4단계: 촘촘한 이웃 무리, 5단계: 더 닮은 무리(날개가 있어도 새·곤충, 빨간 과일 속 빨간 채소) */
+var FINE_PAIRS = {
+  4: [['fruit', 'veg'], ['veg', 'fruit'], ['car', 'sky'], ['sky', 'car'], ['sea', 'land'], ['land', 'sea'], ['kitchen', 'bath'], ['bath', 'kitchen'], ['school', 'toy'], ['toy', 'school'], ['wear', 'shoes'], ['shoes', 'wear']],
+  5: [['bird', 'bug'], ['bug', 'bird'], ['sky', 'boat'], ['boat', 'sky'], ['summer', 'winter'], ['winter', 'summer'], ['redfruit', 'redveg']]
+};
+function buildFine(lv, more) {
+  var pr = G.pick(FINE_PAIRS[lv >= 5 ? 5 : 4]), B = FINE[pr[0]], O = FINE[pr[1]], n = 3 + (more ? 1 : 0);
+  var items = G.sample(B.w, Math.min(n, B.w.length)).map(function (x) { return { e: x[0], w: x[1] }; });
+  var o = G.pick(O.w.filter(function (x) { return items.every(function (it) { return it.e !== x[0]; }); }));
+  var odd = { e: o[0], w: o[1] };
+  return { odd: odd, items: items.concat([odd]), why: G.josa(odd.w, '은', '는') + ' ' + B.not + '. ' + O.is + '!' };
+}
 
 G.act({
   id: 'odd', area: 'mind', title: '다른 하나 찾기', icon: '🙃', order: 60,
   desc: '하나만 달라요! 어떤 걸까?',
   goal: '범주화(먹는 것·동물·탈것), 같고 다름 비교, "왜냐하면" 설명 이해',
-  how: '답을 맞히면 "왜 달라?" 하고 한 번 물어봐 주세요. 말로 못 해도 괜찮아요 — 자비스가 이유를 말해 줍니다. 장 볼 때 "먹는 거? 아니면 쓰는 거?" 하고 물건을 나눠 보면 좋아요.',
-  levels: 3, needs: [], mins: 2,
+  how: '답을 맞히면 "왜 달라?" 하고 한 번 물어봐 주세요. 말로 못 해도 괜찮아요 — 자비스가 이유를 말해 줍니다. 장 볼 때 "먹는 거? 아니면 쓰는 거?" 하고 물건을 나눠 보면 좋아요. 4·5단계(도전·마스터)는 과일·채소, 새·곤충처럼 더 촘촘한 무리로 나눠요.',
+  levels: 5, needs: [], mins: 2,
   run: async function (ctx) {
     var lv = ctx.level, N = 5;
-    /* 칸이 오르면 한두 문제는 다음 단계 문제로 — 3단계는 그 문제에 같은 무리 그림이 하나 더 */
+    /* 칸이 오르면 한두 문제는 다음 단계 문제로 — 3단계는 그 문제에 같은 무리 그림이 하나 더.
+       4단계 2·3칸은 5단계 무리 맛보기, 5단계 2·3칸은 같은 무리 그림이 하나 더 */
     var mix = stepMix(ctx, N);
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
       clear(ctx);
-      var set = buildOdd(mix[i] ? Math.min(3, lv + 1) : lv, lv === 3 && mix[i]);
+      var set = buildOdd(mix[i] ? (lv === 3 ? 3 : Math.min(5, lv + 1)) : lv, (lv === 3 || lv >= 5) && mix[i]);
       ctx.body.appendChild(G.el('<div class="mind-q"><div class="mind-num">🤔</div></div>'));
       ctx.say(i === 0 ? '하나만 달라! 다른 하나는 뭘까?' : '다른 하나는 뭘까?');
-      var why = G.josa(set.odd.w, '은', '는') + ' ' + CAT_NOT[set.base] + '. ' + CAT_IS[set.odd.c] + '!';
+      var why = set.why || G.josa(set.odd.w, '은', '는') + ' ' + CAT_NOT[set.base] + '. ' + CAT_IS[set.odd.c] + '!';
       await pickItem(ctx, {
         items: G.shuffle(set.items), cols: set.items.length > 3 ? 4 : 3, size: set.items.length > 3 ? 'md' : 'lg',
         isRight: function (it) { return it === set.odd; },
@@ -513,6 +614,7 @@ G.act({
 });
 
 function buildOdd(lv, more) {
+  if (lv >= 4) return buildFine(lv, more);
   var maxLv = lv === 1 ? 2 : 3, base, oddCat, nBase = (lv === 3 ? 3 : 2) + (more ? 1 : 0);
   for (var tries = 0; tries < 30; tries++) {
     if (lv === 1) { base = G.pick(Object.keys(FAR)); oddCat = G.pick(FAR[base]); }
@@ -538,28 +640,34 @@ G.act({
   id: 'big', area: 'mind', title: '크다 작다', icon: '🐘', order: 70,
   desc: '큰 것, 작은 것을 찾아요',
   goal: '크기·길이·양 개념어(크다/작다, 길다/짧다, 많다/적다) 이해와 비교',
-  how: '찾고 나면 손을 크게 벌리며 "커~다란 곰!", 작게 오므리며 "쪼끄만 곰!" 하고 몸짓을 함께 해 주세요. 간식 시간에 "많이 줄까, 조금 줄까?" 하고 같은 말을 써 보면 개념이 단단해집니다.',
-  levels: 3, needs: [], mins: 2,
+  how: '찾고 나면 손을 크게 벌리며 "커~다란 곰!", 작게 오므리며 "쪼끄만 곰!" 하고 몸짓을 함께 해 주세요. 간식 시간에 "많이 줄까, 조금 줄까?" 하고 같은 말을 써 보면 개념이 단단해집니다. 4·5단계(도전·마스터)는 길이·양의 차이가 점점 작아져 더 꼼꼼히 비교해요.',
+  levels: 5, needs: [], mins: 2,
   run: async function (ctx) {
     var lv = ctx.level, N = 6;
     var kinds = lv === 1 ? ['bs', 'bs', 'bs', 'bs', 'bs', 'bs'] : lv === 2 ? G.shuffle(['bs', 'bs', 'bs', 'three', 'three', 'three'])
       : G.shuffle(['bs', 'three', 'long', 'long', 'many', 'many']);
     /* 칸이 오르면 한두 문제는 다음 단계 문제로 (1단계 → 셋 중에서, 2단계 → 길다·많다).
-       3단계는 길이·양 문제 한두 개가 조금 더 비슷해진다 */
-    var close = {};
+       3단계는 길이·양 문제 한두 개가 조금 더 비슷해진다.
+       비슷한 정도(close): 0 보통 · 1 비슷(기차 2칸·과자 3개 차이) · 2 아주 비슷(1칸·2개) · 3 아주 비슷한 것 셋 중에서.
+       4단계는 길이·양 문제가 모두 1, 칸이 오르면 한두 개가 2 / 5단계는 모두 2, 칸이 오르면 한두 개가 3 */
+    var close = {}, cBase = lv >= 5 ? 2 : lv === 4 ? 1 : 0;
     if (lv < 3) stepMix(ctx, N).forEach(function (m, j) { if (m) kinds[j] = lv === 1 ? 'three' : G.pick(['long', 'many']); });
-    else G.sample(G.range(N).filter(function (j) { return kinds[j] === 'long' || kinds[j] === 'many'; }), Math.max(0, (ctx.step || 1) - 1)).forEach(function (j) { close[j] = true; });
+    else {
+      var lm = G.range(N).filter(function (j) { return kinds[j] === 'long' || kinds[j] === 'many'; });
+      lm.forEach(function (j) { close[j] = cBase; });
+      G.sample(lm, Math.max(0, (ctx.step || 1) - 1)).forEach(function (j) { close[j] = cBase + 1; });
+    }
     for (var i = 0; i < N; i++) {
       ctx.progress(i, N);
       clear(ctx);
-      await bigItem(ctx, kinds[i], !!close[i]);
+      await bigItem(ctx, kinds[i], close[i] || 0);
     }
     ctx.progress(N, N);
     ctx.finish();
   }
 });
 
-/* close: 길이·양이 조금 더 비슷하게 (기차 칸 차이 2, 과자 차이 3) */
+/* close: 길이·양이 조금 더 비슷하게 — 1: 기차 칸 차이 2·과자 차이 3, 2: 1·2, 3: 2 와 같고 셋 중에서 '가장' 고르기 */
 function bigItem(ctx, kind, close) {
   var e = G.pick(BIG_THINGS), w = countWord(e), wantBig = Math.random() < 0.5, items, target, phrase, answer, cols = 2, render;
   if (kind === 'bs' || kind === 'three') {
@@ -571,17 +679,19 @@ function bigItem(ctx, kind, close) {
     answer = '여기! 이게 ' + phrase + G.josa(w, '이야', '야').slice(w.length) + '.';
     render = function (it) { return '<span class="ce" style="font-size:' + SZ[it.s] + '">' + e + '</span>'; };
   } else if (kind === 'long') {
-    var long = 4 + Math.floor(Math.random() * 2), short = close ? long - 2 : 1 + Math.floor(Math.random() * 2);
+    var long = 4 + Math.floor(Math.random() * 2), short = close >= 2 ? long - 1 : close ? long - 2 : 1 + Math.floor(Math.random() * 2);
     items = [{ n: long, s: 'big' }, { n: short, s: 'small' }];
-    target = wantBig ? items[0] : items[1];
-    phrase = wantBig ? '긴 기차' : '짧은 기차'; cols = 1;
+    if (close >= 3) { long++; items = [{ n: long, s: 'big' }, { n: long - 1, s: 'mid' }, { n: long - 2, s: 'small' }]; }   /* 셋: 5~6·4~5·3~4칸 */
+    target = wantBig ? items[0] : items[items.length - 1];
+    phrase = (close >= 3 ? '가장 ' : '') + (wantBig ? '긴 기차' : '짧은 기차'); cols = 1;
     answer = '여기! 이게 ' + phrase + '야.';
     render = function (it) { return '<span class="train">🚂' + '🚃'.repeat(it.n) + '</span>'; };
   } else {
-    var food = G.pick(['🍪', '🍓', '🍬', '🍇', '🧁']), many = 6 + Math.floor(Math.random() * 3), few = close ? many - 3 : 1 + Math.floor(Math.random() * 2);
+    var food = G.pick(['🍪', '🍓', '🍬', '🍇', '🧁']), many = 6 + Math.floor(Math.random() * 3), few = close >= 2 ? many - 2 : close ? many - 3 : 1 + Math.floor(Math.random() * 2);
     items = [{ n: many, s: 'big' }, { n: few, s: 'small' }];
-    target = wantBig ? items[0] : items[1];
-    phrase = wantBig ? '많은 쪽' : '적은 쪽'; cols = 2;
+    if (close >= 3) items = [{ n: many, s: 'big' }, { n: many - 2, s: 'mid' }, { n: many - 4, s: 'small' }];   /* 셋: 6~8·4~6·2~4개 */
+    target = wantBig ? items[0] : items[items.length - 1];
+    phrase = (close >= 3 ? '가장 ' : '') + (wantBig ? '많은 쪽' : '적은 쪽'); cols = items.length;
     answer = '여기! 이게 ' + phrase + '이야.';
     render = function (it) { return '<span class="grp">' + G.range(it.n).map(function () { return '<span>' + food + '</span>'; }).join('') + '</span>'; };
   }

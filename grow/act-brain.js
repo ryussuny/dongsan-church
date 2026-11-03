@@ -116,6 +116,7 @@ G.css('brain', `
 .act-gonogo .gn-demo{display:flex;gap:16px;justify-content:center;align-items:center;margin:auto 0}
 .act-gonogo .gn-demo div{background:var(--surface);border-radius:24px;padding:12px 18px;box-shadow:var(--shadow);text-align:center;font-family:Jua,sans-serif;font-size:20px}
 .act-gonogo .gn-demo div span{display:block;font-size:clamp(60px,18vw,96px);line-height:1.2}
+.act-gonogo .gn-demo.three div span{font-size:clamp(40px,12vw,80px)}
 
 /* ── wait ── */
 .act-wait .wt-plate{display:flex;align-items:center;gap:6px;min-height:48px;background:var(--surface);border-radius:18px;padding:6px 14px;box-shadow:var(--shadow);font-size:26px}
@@ -643,7 +644,7 @@ G.act({
       ctx.finish({ msg: '물고기 ' + st.hit + '마리를 구했어! 상어는 꾹 참았지? 정말 멋져!' });
     }
     /* 보여 주며 알려 주기 */
-    var demo = G.el('<div class="gn-demo"><div><span>🐟</span>콕!</div><div><span>' + NOGO.join('') + '</span>쉿! 🤫</div></div>');
+    var demo = G.el('<div class="gn-demo' + (NOGO.length > 2 ? ' three' : '') + '"><div><span>🐟</span>콕!</div><div><span>' + NOGO.join('') + '</span>쉿! 🤫</div></div>');
     sea.appendChild(demo); demo.style.position = 'absolute'; demo.style.inset = '0';
     ctx.say('물고기 친구들을 그물로 구해 줘요! 물고기는 콕! 그런데 ' + (NOGO.length > 2 ? '상어, 복어, 게는' : NOGO.length > 1 ? '상어랑 복어는' : '상어는') + ' 쉿! 손을 멈춰요.').then(function () {
       return ctx.say('준비, 시작!');
@@ -829,6 +830,8 @@ G.act({
     function render() {
       board.innerHTML = ''; cells = [];
       board.style.gridTemplateColumns = 'repeat(' + m.N + ',1fr)';
+      /* 4·5단계 큰 미로는 줄 높이도 똑같이 — 그림 있는 줄만 커져 빈 줄이 손가락보다 작아지지 않게 */
+      if (lv >= 4) board.style.gridTemplateRows = 'repeat(' + m.N + ',minmax(0,1fr))';
       board.style.setProperty('--fs', 'calc(min(100vw,560px,62vh) / ' + m.N + ' * .52)');
       for (var r = 0; r < m.N; r++) for (var c = 0; c < m.N; c++) {
         var el = G.el('<div class="mz-cell"></div>'); el.dataset.r = r; el.dataset.c = c;
@@ -1022,20 +1025,26 @@ function opFigure() {
     '</svg>';
 }
 G.act({
-  id: 'opposite', area: 'brain', title: '반대로 해요', icon: '🙃', order: 8, levels: 3, mins: 3, needs: [],
+  id: 'opposite', area: 'brain', title: '반대로 해요', icon: '🙃', order: 8, levels: 5, mins: 3, needs: [],
   ef: ['inhibit', 'wm', 'attend'],
   desc: '"머리!" 하면 발을 짚어요',
   goal: '억제·작업기억·주의 — 들은 말을 바로 따라 하지 않고, 규칙을 기억해 반대 행동으로 바꾸는 힘(몸으로 하는 실행기능)',
-  how: '부모가 옆에서 같이 일어나 함께 해 주세요. 아이가 헷갈리면 천천히 말하고, 맞으면 크게 손뼉! 화면 밖에서는 차 안·목욕 시간에 "머리-발" 반대 놀이, "가라 하면 서기, 서라 하면 가기" 놀이로 짧게 이어 가세요.',
+  how: '부모가 옆에서 같이 일어나 함께 해 주세요. 아이가 헷갈리면 천천히 말하고, 맞으면 크게 손뼉! 화면 밖에서는 차 안·목욕 시간에 "머리-발" 반대 놀이, "가라 하면 서기, 서라 하면 가기" 놀이로 짧게 이어 가세요. 4단계(도전)는 익숙한 짝꿍으로 시작했다가 새 짝꿍(머리 ↔ 무릎, 어깨 ↔ 발)으로 바뀌고, 5단계(마스터)는 처음부터 새 짝꿍이에요.',
   basis: '머리-발가락-무릎-어깨 과제 HTKS (Ponitz 외, 2008)',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level, st = ctx.step || 1;
     /* 칸이 오르면 — 2단계: 어깨·무릎 명령이 한 번(2칸)·두 번(3칸) 섞인다(3단계 맛보기). 3단계: 명령이 하나씩 더 */
     var N = 6 + (lv >= 3 ? st - 1 : 0), parts = lv === 1 ? ['head', 'shoulder', 'knee', 'foot'] : lv === 2 ? ['head', 'foot'] : ['head', 'foot', 'shoulder', 'knee'];
     var opposite = lv >= 2, extra = lv === 2 ? st - 1 : 0;
+    /* 4·5단계 — 새 짝꿍(OP_NEW). 4단계는 익숙한 짝꿍 명령(PRE개: 1칸 3 → 2칸 2 → 3칸 1) 뒤에 새 짝꿍으로 바뀐다(모두 7개).
+       5단계는 처음부터 새 짝꿍, 명령 7개에 칸마다 하나씩 더 */
+    var newRule = lv >= 4, PRE = lv === 4 ? 4 - G.clamp(st, 1, 3) : 0, told = PRE === 0;
+    if (lv === 4) N = 7; else if (lv >= 5) N = 7 + st - 1;
+    function mapOf(k) { return newRule && k >= PRE ? OP_NEW : OP_OPP; }
+    var RULE_OLD = '🔄 반대로! <b>머리 ↔ 발</b> · <b>어깨 ↔ 무릎</b>', RULE_NEW = '🔀 새 짝꿍! <b>머리 ↔ 무릎</b> · <b>어깨 ↔ 발</b>';
     B.innerHTML = '<div class="bw"><div class="b-rule"></div><div class="op-wrap">' + opFigure() + '<div class="op-say"></div></div></div>';
     var rule = G.$('.b-rule', B), say = G.$('.op-say', B), svg = G.$('.op-fig', B);
-    rule.innerHTML = !opposite ? '👯 똑같이 짚어요!' : lv === 2 && !extra ? '🔄 반대로! <b>머리 ↔ 발</b>' : '🔄 반대로! <b>머리 ↔ 발</b> · <b>어깨 ↔ 무릎</b>';
+    rule.innerHTML = !opposite ? '👯 똑같이 짚어요!' : lv === 2 && !extra ? '🔄 반대로! <b>머리 ↔ 발</b>' : newRule && PRE === 0 ? RULE_NEW : RULE_OLD;
     var deck = [];
     for (var k = 0; k < N; k++) { var p; do { p = G.pick(parts); } while (k > 0 && deck[k - 1] === p); deck.push(p); }
     /* 첫 명령은 늘 머리·발 — 어깨·무릎은 그 뒤 아무 자리에 (둘이면 어깨 하나, 무릎 하나) */
@@ -1044,8 +1053,15 @@ G.act({
     function mark(p, cls) { G.$$('.op-part', svg).forEach(function (el) { el.classList.toggle(cls, el.dataset.p === p); }); }
     function clear() { G.$$('.op-part', svg).forEach(function (el) { el.classList.remove('on', 'ans'); }); }
     function step(tries) {
-      if (i >= N) { ctx.finish({ msg: opposite ? '반대로 척척! 몸으로 생각하는 힘이 정말 멋져!' : '머리, 어깨, 무릎, 발! 다 짚었어!' }); return; }
-      var cmd = deck[i], target = opposite ? OP_OPP[cmd] : cmd;
+      if (i >= N) { ctx.finish({ msg: newRule ? '새 짝꿍도 척척! 헷갈리지 않고 바꾸는 힘이 정말 멋져!' : opposite ? '반대로 척척! 몸으로 생각하는 힘이 정말 멋져!' : '머리, 어깨, 무릎, 발! 다 짚었어!' }); return; }
+      /* 4단계: 새 짝꿍으로 바뀌는 자리에서 한 번 알려 준다 */
+      if (!told && i === PRE) {
+        told = true; clear(); rule.innerHTML = RULE_NEW; G.sfx.play('up');
+        say.innerHTML = '🔀<small>새 짝꿍!</small>';
+        ctx.say('규칙이 바뀌었어요! 새 짝꿍! 머리 하면 무릎, 무릎 하면 머리. 어깨 하면 발, 발 하면 어깨!').then(function () { return ctx.wait(pace(500)); }).then(function () { step(0); });
+        return;
+      }
+      var cmd = deck[i], target = opposite ? mapOf(i)[cmd] : cmd;
       clear(); mark(cmd, 'on');
       say.innerHTML = OP_NAME[cmd] + '!<small>' + (opposite ? '반대는 어디?' : '여기를 짚어요') + '</small>';
       if (tries >= 1) { mark(target, 'ans'); say.innerHTML = OP_NAME[cmd] + '!<span class="op-arrow">→ ' + OP_NAME[target] + '</span>'; }
@@ -1071,7 +1087,8 @@ G.act({
     ctx.progress(0, N);
     var intro = !opposite ? '자비스가 말하는 곳을 짚어 볼까? 일어나서 같이 해요!' :
       lv === 2 ? '반대로 놀이! 자비스가 "머리!" 하면 발을, "발!" 하면 머리를 짚어요. 헷갈리지 않게!' + (extra ? ' 가끔은 어깨 하면 무릎, 무릎 하면 어깨!' : '') :
-        '반대로 놀이! 머리 하면 발, 발 하면 머리. 어깨 하면 무릎, 무릎 하면 어깨! 할 수 있어!';
+        newRule && PRE === 0 ? '새 짝꿍 반대 놀이! 머리 하면 무릎, 무릎 하면 머리. 어깨 하면 발, 발 하면 어깨! 천천히 생각하고 짚어요.' :
+          '반대로 놀이! 머리 하면 발, 발 하면 머리. 어깨 하면 무릎, 무릎 하면 어깨! ' + (newRule ? '조금 뒤에 새 짝꿍 규칙으로 바뀌어요. 잘 들어 봐!' : '할 수 있어!');
     ctx.say(intro).then(function () { step(0); });
   }
 });

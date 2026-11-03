@@ -2,7 +2,7 @@
    함께 자라요 — 마음 (사회·정서: 감정·관계·이야기)
 
      checkin     오늘 기분        오늘의 놀이 첫 칸 — 기분 고르기, 힘든 마음엔 진정 방법 고르기
-     emotion     감정 찾기        "기쁜 얼굴을 찾아봐" — 표정 읽기 + 몸 신호
+     emotion     감정 찾기        "기쁜 얼굴을 찾아봐" — 표정 읽기 + 몸 신호 (4·5단계는 걱정·신남·실망 같은 마음 낱말)
      situation   이럴 땐 어떤 기분? 상황 → 감정, 그리고 마음을 말로 하는 법
      facemirror  표정 따라 하기   앞 카메라 거울 + 부모 판정 (카메라 없어도 된다)
      stories     사회 이야기      병원·미용실·차례 기다리기… 미리 보면 덜 불안하다
@@ -18,8 +18,37 @@ var G = window.G, D = window.GD;
 if (!G || !D) return;
 
 /* ---------- 마음 낱말 ---------- */
-var ADJ = { happy: '기쁜', sad: '슬픈', angry: '화난', scared: '무서운', surprised: '놀란', sleepy: '졸린', calm: '편안한', hurt: '아픈', love: '사랑하는', shy: '부끄러운' };
-var WHEN = { happy: '기쁠 땐', sad: '슬플 땐', angry: '화날 땐', scared: '무서울 땐', surprised: '놀랄 땐', sleepy: '졸릴 땐', calm: '편안할 땐', hurt: '아플 땐', love: '사랑할 땐', shy: '부끄러울 땐' };
+var ADJ = { happy: '기쁜', sad: '슬픈', angry: '화난', scared: '무서운', surprised: '놀란', sleepy: '졸린', calm: '편안한', hurt: '아픈', love: '사랑하는', shy: '부끄러운',
+  worried: '걱정되는', excited: '신나는', curious: '궁금한', disappointed: '실망한', embarrassed: '당황한', bored: '심심한' };
+var WHEN = { happy: '기쁠 땐', sad: '슬플 땐', angry: '화날 땐', scared: '무서울 땐', surprised: '놀랄 땐', sleepy: '졸릴 땐', calm: '편안할 땐', hurt: '아플 땐', love: '사랑할 땐', shy: '부끄러울 땐',
+  worried: '걱정될 땐', excited: '신날 땐', curious: '궁금할 땐', disappointed: '실망했을 땐', embarrassed: '당황했을 땐', bored: '심심할 땐' };
+/* 4·5단계 마음 낱말 — 초등 중학년이 배우는 조금 더 섬세한 기분 (D.EMOTIONS 와 같은 꼴, 감정 찾기·이럴 땐 어떤 기분에만 쓴다) */
+var EMO_MORE = [
+  { id: 'worried', name: '걱정돼요', e: '😟', col: '#7986cb', body: '눈썹이 가운데로 모이고 손을 만지작거려요', lv: 4 },
+  { id: 'excited', name: '신나요', e: '🤩', col: '#ffb300', body: '눈이 반짝이고 몸이 들썩들썩해요', lv: 4 },
+  { id: 'curious', name: '궁금해요', e: '🤔', col: '#4db6ac', body: '고개를 갸웃하고 손을 턱에 대요', lv: 4 },
+  { id: 'disappointed', name: '실망했어요', e: '😞', col: '#78909c', body: '어깨가 축 처지고 고개가 숙여져요', lv: 5 },
+  { id: 'embarrassed', name: '당황했어요', e: '😅', col: '#ff8a65', body: '얼굴이 화끈하고 머리를 긁적여요', lv: 5 },
+  { id: 'bored', name: '심심해요', e: '😑', col: '#bcaaa4', body: '표정이 없어지고 몸이 축 늘어져요', lv: 5 }
+];
+/* 4·5단계 이야기 */
+var SIT_MORE = [
+  { e: '📝', t: '내일 받아쓰기 시험이 있어요', a: 'worried', lv: 4 },
+  { e: '🎒', t: '준비물을 집에 두고 왔어요', a: 'worried', lv: 4 },
+  { e: '🤒', t: '동생이 열이 나서 누워 있어요', a: 'worried', lv: 4 },
+  { e: '🎢', t: '내일 놀이공원에 가기로 했어요', a: 'excited', lv: 4 },
+  { e: '⚽', t: '친구들과 운동장에서 축구를 해요', a: 'excited', lv: 4 },
+  { e: '📦', t: '문 앞에 커다란 상자가 와 있어요', a: 'curious', lv: 4 },
+  { e: '🥚', t: '알이 톡톡 흔들려요. 안에 누가 있는지 보고 싶어요', a: 'curious', lv: 4 },
+  { e: '🌧️', t: '소풍 가는 날 비가 와서 못 가게 됐어요', a: 'disappointed', lv: 5 },
+  { e: '🍰', t: '케이크를 나눴는데 내 조각만 작아요', a: 'disappointed', lv: 5 },
+  { e: '👕', t: '친구들 앞에서 옷을 거꾸로 입은 걸 알았어요', a: 'embarrassed', lv: 5 },
+  { e: '🙋', t: '발표하다가 할 말을 깜빡 잊었어요', a: 'embarrassed', lv: 5 },
+  { e: '🪟', t: '비 오는 날 집에서 할 일이 없어요', a: 'bored', lv: 5 },
+  { e: '🚗', t: '차를 오래오래 타고 가요. 할 게 없어요', a: 'bored', lv: 5 }
+];
+function allEmo() { return D.EMOTIONS.concat(EMO_MORE); }
+function allSit() { return D.SITUATIONS.concat(SIT_MORE); }
 var HARD = { sad: 1, angry: 1, scared: 1, hurt: 1 };
 /* 마음을 말로 — 이럴 땐 이렇게 해요 */
 var COPE = {
@@ -32,13 +61,26 @@ var COPE = {
   calm: '편안할 땐 몸이 말랑말랑해요. 이 기분을 기억해요.',
   hurt: '아플 땐 "아파요" 하고 말하고 아픈 곳을 손으로 알려 줘요.',
   love: '사랑할 땐 "사랑해요" 하고 말하고 꼭 안아 줘요.',
-  shy: '부끄러울 땐 엄마 뒤에 잠깐 숨어도 괜찮아요. 준비되면 "안녕" 해요.'
+  shy: '부끄러울 땐 엄마 뒤에 잠깐 숨어도 괜찮아요. 준비되면 "안녕" 해요.',
+  worried: '걱정될 땐 엄마 아빠한테 "걱정돼요" 하고 말해요. 같이 방법을 찾을 수 있어요.',
+  excited: '신날 땐 "신나요!" 하고 말해요. 너무 들뜨면 숨을 한 번 크게 쉬어요.',
+  curious: '궁금할 땐 "이게 뭐예요?" 하고 물어봐요.',
+  disappointed: '실망했을 땐 "아쉬워요" 하고 말해요. 다음에 할 수 있는 걸 같이 찾아봐요.',
+  embarrassed: '당황했을 땐 숨을 한 번 쉬고 "괜찮아" 하고 다시 해 봐요.',
+  bored: '심심할 땐 "뭐 하고 놀까요?" 하고 물어보거나 좋아하는 놀이를 골라요.'
 };
 /* 헷갈리기 쉬운 기분끼리는 같은 문제에 내지 않는다 */
 var CLOSE = { angry: ['sad'], sad: ['angry', 'hurt'], scared: ['surprised'], surprised: ['scared', 'happy'], happy: ['love', 'surprised', 'calm'],
-  love: ['happy', 'calm'], calm: ['happy', 'love', 'sleepy'], hurt: ['sad'], sleepy: ['calm'], shy: [] };
+  love: ['happy', 'calm'], calm: ['happy', 'love', 'sleepy'], hurt: ['sad'], sleepy: ['calm'], shy: [],
+  worried: ['scared', 'sad', 'embarrassed'], excited: ['happy', 'surprised', 'love'], curious: ['surprised', 'excited'],
+  disappointed: ['sad', 'worried', 'bored'], embarrassed: ['shy', 'worried', 'surprised'], bored: ['sleepy', 'calm', 'disappointed'] };
+/* 새 마음 낱말 쪽에서도 헷갈리는 짝이 보이게 (3단계까지의 짝은 그대로 두고, 새 낱말만 더한다) */
+Object.keys(CLOSE).forEach(function (id) {
+  if (!EMO_MORE.some(function (e) { return e.id === id; })) return;
+  CLOSE[id].forEach(function (o) { if (CLOSE[o] && CLOSE[o].indexOf(id) < 0) CLOSE[o] = CLOSE[o].concat(id); });
+});
 
-function emoOf(id) { return D.EMOTIONS.filter(function (e) { return e.id === id; })[0]; }
+function emoOf(id) { return allEmo().filter(function (e) { return e.id === id; })[0]; }
 function calm() { return !!G.settings.calm; }
 function clear(ctx) { ctx.body.innerHTML = ''; }
 /* 같은 것이 연달아 나오지 않게 n 개 뽑기 */
@@ -355,20 +397,27 @@ G.act({
    2. 감정 찾기 — 표정 읽기
    ================================================================= */
 G.act({
-  id: 'emotion', area: 'feel', title: '감정 찾기', icon: '🎭', order: 10, levels: 3, needs: [], mins: 2,
+  id: 'emotion', area: 'feel', title: '감정 찾기', icon: '🎭', order: 10, levels: 5, needs: [], mins: 2,
   ef: ['attend', 'wm'],
   desc: '기쁜 얼굴, 슬픈 얼굴 찾기',
-  goal: '얼굴 표정 읽기(정서 인식), 감정 낱말 이해, 표정과 몸 신호 잇기',
+  goal: '얼굴 표정 읽기(정서 인식), 감정 낱말 이해, 표정과 몸 신호 잇기. 4단계는 걱정돼요·신나요·궁금해요, 5단계는 실망했어요·당황했어요·심심해요처럼 더 섬세한 마음 낱말과 얼굴 5·6개',
   how: '찾고 나면 거울 앞에서 같은 얼굴을 함께 지어 보세요. "입꼬리가 올라갔네!"처럼 얼굴 어디가 달라지는지 짚어 주면 표정 읽기가 쉬워져요. 틀려도 괜찮아요 — 자비스가 그 얼굴 이름을 알려 주고, 두 번째에는 정답이 반짝여요.',
   basis: '얼굴 표정 재인 — 사회 인지·마음 읽기의 첫걸음',
   offline: '그림책 속 인물 얼굴을 보며 "이 친구 기분은 어때?" 하고 묻기.',
   run: async function (ctx) {
-    var lv = ctx.level, N = 6, k = lv + 1;
-    var pool = D.EMOTIONS.filter(function (e) { return e.lv <= lv; });
+    var lv = ctx.level, N = 6, k = lv + 1, TOP = ctx.def.levels;
+    var pool = allEmo().filter(function (e) { return e.lv <= lv; });
     var targets = deck(pool, N);
     /* 칸이 오르면 여섯 문제 가운데 (칸-1)문제를 다음 단계처럼 — 다음 단계 얼굴 + 보기 하나 더.
-       3단계는 (칸-1)문제에 헷갈리기 쉬운 얼굴(무서운↔놀란 같은)이 하나 섞인다 */
-    var up = lv < 3, mix = stepMix(ctx, N), nextPool = up ? D.EMOTIONS.filter(function (e) { return e.lv <= lv + 1; }) : pool;
+       5단계(맨 위)는 (칸-1)문제에 헷갈리기 쉬운 얼굴(걱정되는↔무서운 같은)이 하나 섞인다 */
+    var up = lv < TOP, mix = stepMix(ctx, N), nextPool = up ? allEmo().filter(function (e) { return e.lv <= lv + 1; }) : pool;
+    /* 4·5단계는 그 단계에서 새로 배우는 마음 얼굴이 꼭 두 번은 나오게 (첫 문제와 맛보기 자리는 비켜서) */
+    if (lv >= 4) {
+      var fresh = deck(pool.filter(function (e) { return e.lv === lv; }), 2);
+      G.sample(G.range(N).filter(function (i) { return i > 0 && !mix[i]; }), 2).forEach(function (p, j) {
+        if (targets[p - 1] !== fresh[j] && targets[p + 1] !== fresh[j]) targets[p] = fresh[j];
+      });
+    }
     if (up) {
       var nx = deck(nextPool.filter(function (e) { return e.lv === lv + 1; }), N);
       mix.forEach(function (on, i) { if (on) targets[i] = nx[i]; });
@@ -386,7 +435,7 @@ G.act({
       ctx.say(i === 0 ? ADJ[t.id] + ' 얼굴을 찾아봐!' : G.pick([ADJ[t.id] + ' 얼굴은 어디 있을까?', ADJ[t.id] + ' 얼굴을 찾아 줘!', '이번엔 ' + ADJ[t.id] + ' 얼굴!']));
       await pickOne(ctx, (function (t) {
         return {
-          items: G.shuffle([t].concat(others)), cols: kk > 3 ? 4 : kk, size: kk > 3 ? 'md' : 'lg',
+          items: G.shuffle([t].concat(others)), cols: kk > 4 ? 3 : kk > 3 ? 4 : kk, size: kk > 3 ? 'md' : 'lg',
           render: function (e) { return faceHTML(e, false); },
           isRight: function (e) { return e === t; },
           praise: function () { return G.pick(['맞아! ' + ADJ[t.id] + ' 얼굴!', '딩동댕! ' + ADJ[t.id] + ' 얼굴이야!', '찾았다! ' + ADJ[t.id] + ' 얼굴!']); },
@@ -410,26 +459,33 @@ G.act({
    3. 이럴 땐 어떤 기분? — 상황과 감정 잇기, 마음을 말로
    ================================================================= */
 G.act({
-  id: 'situation', area: 'feel', title: '이럴 땐 어떤 기분?', icon: '🤔', order: 20, levels: 3, needs: [], mins: 3,
+  id: 'situation', area: 'feel', title: '이럴 땐 어떤 기분?', icon: '🤔', order: 20, levels: 5, needs: [], mins: 3,
   ef: ['regulate', 'shift'],
   desc: '이럴 땐 어떤 기분일까?',
-  goal: '상황과 감정 잇기(마음 읽기의 기초), 감정을 말로 표현하고 도움 청하는 말 배우기',
+  goal: '상황과 감정 잇기(마음 읽기의 기초), 감정을 말로 표현하고 도움 청하는 말 배우기. 4·5단계는 학교·놀이 이야기(받아쓰기 시험·소풍·발표)로 걱정·신남·실망·당황 같은 마음을 읽고, 보기가 5·6개로 늘어요',
   how: '"너라면 어떤 기분일 것 같아?" 하고 물어 주세요. 아이가 다른 기분을 골라도 "그럴 수도 있겠다" 하고 받아 준 뒤 이야기를 나눠요. 자비스가 알려 주는 말("슬퍼요", "화났어요")을 같이 따라 말해 보세요.',
   basis: '상황-감정 이해와 대처 말 연습 — 사회정서학습(SEL)·마음 이론의 기초',
   offline: '오늘 있었던 일을 이야기하며 "그때 어떤 기분이었어?" 묻고 기분 이름을 말해 주기.',
   run: async function (ctx) {
-    var lv = ctx.level, N = 5, k = lv + 1;
+    var lv = ctx.level, N = 5, k = lv + 1, TOP = ctx.def.levels;
     var maxEmo = lv;
-    var emos = D.EMOTIONS.filter(function (e) { return e.lv <= maxEmo; });
-    var pool = D.SITUATIONS.filter(function (s) { var e = emoOf(s.a); return e && (s.lv || 1) <= lv && e.lv <= maxEmo; });
+    var emos = allEmo().filter(function (e) { return e.lv <= maxEmo; });
+    var pool = allSit().filter(function (s) { var e = emoOf(s.a); return e && (s.lv || 1) <= lv && e.lv <= maxEmo; });
     /* 칸이 오르면 다섯 이야기 가운데 (칸-1)개를 다음 단계 이야기로 — 다음 단계 기분 + 보기 하나 더.
-       3단계는 (칸-1)개를 가장 어려운 이야기(넘어져서 아파요·꼭 안아 줬어요·따뜻한 목욕)로 꼭 넣는다 */
-    var up = lv < 3, mix = stepMix(ctx, Math.min(N, pool.length));
-    var nEmos = up ? D.EMOTIONS.filter(function (e) { return e.lv <= lv + 1; }) : emos;
-    var hard = up ? D.SITUATIONS.filter(function (s) { var e = emoOf(s.a); return e && (s.lv || 1) <= lv + 1 && e.lv <= lv + 1 && pool.indexOf(s) < 0; })
-      : pool.filter(function (s) { return (s.lv || 1) === 3; });
-    var nx = G.sample(hard, mix.filter(Boolean).length);
-    var cur = G.sample(pool.filter(function (s) { return nx.indexOf(s) < 0; }), mix.length - nx.length);
+       5단계(맨 위)는 (칸-1)개를 그 단계의 가장 어려운 이야기(실망·당황·심심)로 꼭 넣는다 */
+    var up = lv < TOP, mix = stepMix(ctx, Math.min(N, pool.length));
+    var nEmos = up ? allEmo().filter(function (e) { return e.lv <= lv + 1; }) : emos;
+    var hard = up ? allSit().filter(function (s) { var e = emoOf(s.a); return e && (s.lv || 1) <= lv + 1 && e.lv <= lv + 1 && pool.indexOf(s) < 0; })
+      : pool.filter(function (s) { return (s.lv || 1) === lv; });
+    var nx = G.sample(hard, mix.filter(Boolean).length), cur;
+    if (lv < 4) cur = G.sample(pool.filter(function (s) { return nx.indexOf(s) < 0; }), mix.length - nx.length);
+    else {
+      /* 4·5단계는 그 단계의 새 이야기가 두 개는 나오게 (첫 이야기는 익숙한 것으로 쉽게 시작) */
+      var rest = pool.filter(function (s) { return nx.indexOf(s) < 0; }), M = mix.length - nx.length;
+      var news = G.sample(rest.filter(function (s) { return (s.lv || 1) === lv; }), Math.min(2, M - 1));
+      var olds = G.sample(rest.filter(function (s) { return news.indexOf(s) < 0 && (s.lv || 1) < lv; }), M - news.length);
+      cur = olds.slice(0, 1).concat(G.shuffle(olds.slice(1).concat(news)));
+    }
     var items = mix.map(function (on) { return on && nx.length ? nx.shift() : cur.shift(); });
     N = items.length;
     for (var i = 0; i < N; i++) {
@@ -444,7 +500,7 @@ G.act({
       ctx.say(s.t + '. ' + (i === 0 ? '이럴 땐 어떤 기분일까?' : G.pick(['어떤 기분일까?', '이럴 땐 마음이 어떨까?'])));
       await pickOne(ctx, (function (ans) {
         return {
-          items: G.shuffle(opts), cols: opts.length > 3 ? 4 : opts.length, size: opts.length > 3 ? 'md' : 'lg',
+          items: G.shuffle(opts), cols: opts.length > 4 ? 3 : opts.length > 3 ? 4 : opts.length, size: opts.length > 3 ? 'md' : 'lg',
           color: function (e) { return e.col; },
           render: function (e) { return faceHTML(e, true); },
           isRight: function (e) { return e === ans; },
