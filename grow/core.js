@@ -681,11 +681,20 @@ G.stageFor = function (id, max) {
   var pool = graded.reduce(function (s, l) { return [s[0] + l.ok, s[1] + l.n]; }, [0, 0]), acc = pool[0] / pool[1];
   if (lastAcc < 0.4 || (graded.length >= 2 && acc < 0.5)) return out(cur - 1);
   if (def.warm && cur <= S) return out(lastAcc >= 0.85 ? S + 1 : cur);
-  return out(lastAcc >= (cur % S === 0 ? 0.85 : 0.8) ? cur + 1 : cur);
+  /* 오르는 기준 — 높은 단계일수록 조금 더 깐깐하게.
+     칸 오르기: 1~3단계 80% · 4~5단계 85%. 단계 넘기: 1→2·2→3 85% · 3→4·4→5 90% */
+  var curLv = Math.ceil(cur / S), edge = cur % S === 0;
+  var need = edge ? (curLv >= 3 ? 0.9 : 0.85) : (curLv >= 4 ? 0.85 : 0.8);
+  return out(lastAcc >= need ? cur + 1 : cur);
 };
 G.levelFor = function (id, max) { return G.stageFor(id, max).lv; };
 /* '2-3' 처럼 — 부모 화면·기록용 */
 G.stageLabel = function (lv, st) { return (lv || 1) + '-' + (st || 1); };
+/* 단계 이름 — 4·5단계는 3단계를 다 익힌 아이를 위한 도전·마스터 단계 */
+G.LEVEL_NAME = { 1: '1단계', 2: '2단계', 3: '3단계', 4: '4단계 · 도전', 5: '5단계 · 마스터' };
+G.levelName = function (lv) { return G.LEVEL_NAME[lv] || lv + '단계'; };
+/* 단계 표시: 1~3 은 ★, 4 는 🔥도전, 5 는 👑마스터 */
+G.levelBadge = function (lv) { return lv >= 5 ? '👑<b class="lv-n">마스터</b>' : lv >= 4 ? '🔥<b class="lv-n">도전</b>' : '★'.repeat(lv); };
 
 /* 단계별 숫자를 칸에 맞게 고르기. arr = [1단계, 2단계, 3단계] 값.
    1칸은 그 단계 값 그대로, 2칸·3칸은 다음 단계 값 쪽으로 1/3, 2/3 다가간다.
@@ -889,7 +898,7 @@ G.start = function (id, o) {
   G.cur = ctx;
   E.title.innerHTML = '<span>' + def.icon + '</span><span class="tt">' + G.esc(def.title) + '</span>';
   /* ★ 단계 ●●○ 칸 — 말풍선 줄 오른쪽에 늘 보이게 */
-  if (E.lv) E.lv.innerHTML = def.levels > 1 ? '<small class="lv" title="' + lv + '단계 ' + sg.st + '칸" aria-label="' + lv + '단계 ' + sg.st + '칸">' + '★'.repeat(lv) + '<i class="lv-st">' + G.range(G.STEPS).map(function (k) { return k < sg.st ? '●' : '○'; }).join('') + '</i></small>' : '';
+  if (E.lv) E.lv.innerHTML = def.levels > 1 ? '<small class="lv" title="' + lv + '단계 ' + sg.st + '칸" aria-label="' + lv + '단계 ' + sg.st + '칸">' + G.levelBadge(lv) + '<i class="lv-st">' + G.range(G.STEPS).map(function (k) { return k < sg.st ? '●' : '○'; }).join('') + '</i></small>' : '';
   E.dots.innerHTML = ''; E.bubble.textContent = ''; E.bubble.classList.remove('on');
   var tk = G.$('#stTalk'); if (tk) tk.hidden = !!def.tool;   /* 말판·도구 화면에선 💬 가 겹친다 */
   E.body.innerHTML = ''; E.body.className = 'st-body act-' + id;
@@ -934,27 +943,32 @@ function finish(ctx, x) {
   if (inSess) { G.session.done.push(ctx.id); G.saveSession(); }
   var hard = ctx.id === 'checkin' && G.HARD_MOODS.indexOf(ctx.extra.emo) >= 0;
   var msg = x.msg || (hard ? '마음을 말해 줘서 고마워. 자비스가 옆에 있을게.' : G.pick(D.DONE));
-  /* 히어로: 스티커 대신 로봇 부품 — 여섯 개 모으면 로봇 완성(변신!) */
-  var part = G.rewardPart ? G.rewardPart(G.stickers().count) : null;
-  if (part && !x.msg && !hard) msg = part.complete ? part.robot.name + ' 완성! 변신!' + (part.rankUp ? ' 계급이 ' + G.josa(part.rankUp.name, '으로', '로') + ' 올랐어!' : '') : G.pick(D.PRAISE) + ' ' + part.partName.replace(/ \(.*\)$/, '') + ' 획득!';
   /* 칸 오르기 알림 — 오를 때만 보인다. 내려갈 때는 아이에게 아무 말도 하지 않는다(무오류 학습) */
-  var up = '';
+  var up = '', upKind = '', nx = null;
   if (!def.tool && def.levels > 1 && !hard) {
-    var nx = G.stageFor(ctx.id, def.levels), was = (ctx.level - 1) * G.STEPS + ctx.step;
+    nx = G.stageFor(ctx.id, def.levels); var was = (ctx.level - 1) * G.STEPS + ctx.step;
     if (nx.fine > was) {
-      up = nx.lv > ctx.level ? (G.older() ? '레벨 업! ' : '와, 실력이 쑥! ') + nx.lv + '단계로 올라갔어!' : '실력이 쑥! 한 칸 올라갔어!';
-      msg += ' ' + up;
+      upKind = nx.lv > ctx.level ? 'level' : 'step';
+      up = nx.lv > ctx.level ? (G.older() ? '레벨 업! ' : '와, 실력이 쑥! ') + (nx.lv >= 4 ? G.levelName(nx.lv).replace(' · ', '(') + ')' : nx.lv + '단계') + '로 올라갔어!' : '실력이 쑥! 한 칸 올라갔어!';
     }
   }
-  var ov = G.el('<div class="reward' + (part ? ' hero' : '') + '" role="dialog">' +
+  /* 로봇: ⚡ 에너지를 모아 부품을 만든다 (robots.js) — 완주·정확·칸 오름·단계 오름이 에너지 */
+  var earn = !def.tool && G.earnEnergy ? G.earnEnergy({ id: ctx.id, n: ctx.n, ok: ctx.ok, level: ctx.level, up: upKind }) : null;
+  var part = earn && earn.made.length && G.rewardPart ? G.rewardPart(earn.made[earn.made.length - 1]) : null;
+  if (part && !x.msg && !hard) msg = part.complete ? part.robot.name + ' 완성! 변신!' + (part.rankUp ? ' 계급이 ' + G.josa(part.rankUp.name, '으로', '로') + ' 올랐어!' : '') : G.pick(D.PRAISE) + ' ' + part.partName.replace(/ \(.*\)$/, '') + ' 획득!';
+  else if (earn && earn.gain && !x.msg && !hard) msg = G.pick(D.PRAISE) + ' 에너지 ' + earn.gain + ' 충전!';
+  if (up) msg += ' ' + up;
+  var enHTML = earn ? '<div class="rw-en"><b>⚡ +' + earn.gain + '</b><small>' + earn.items.map(function (it) { return it.t + ' +' + it.v; }).join(' · ') +
+    (earn.capped ? (earn.items.length ? ' · ' : '') + '오늘 에너지는 가득! 내일 또 모으자' : '') + (earn.same ? ' · 같은 놀이는 하루 두 번까지 — 다른 놀이도 해 보자!' : '') + '</small>' + (G.energyBar ? G.energyBar(earn.next) : '') + '</div>' : '';
+  var ov = G.el('<div class="reward' + (part || earn ? ' hero' : '') + '" role="dialog">' +
     '<div class="rw-card">' + (hard ? '<div class="rw-stars"><span>💗</span></div>' : '<div class="rw-stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>') +
     (part ? '' : '<div class="rw-jv">' + G.jarvisSVG('big') + '</div>') +
     '<div class="rw-msg">' + G.esc(up ? msg.slice(0, msg.length - up.length - 1) : msg) + '</div>' +
-    (up ? '<div class="rw-up">⬆️ ' + G.esc(up) + '<small>' + '★'.repeat(nx.lv) + ' ' + G.range(G.STEPS).map(function (k) { return k < nx.st ? '●' : '○'; }).join('') + ' · 다음엔 조금 더 멋진 도전!</small></div>' : '') +
+    (up ? '<div class="rw-up">⬆️ ' + G.esc(up) + '<small>' + G.levelBadge(nx.lv).replace(/<[^>]+>/g, '') + ' ' + G.range(G.STEPS).map(function (k) { return k < nx.st ? '●' : '○'; }).join('') + ' · 다음엔 조금 더 멋진 도전!</small></div>' : '') +
     (part ? '<div class="rw-part"><div class="rp-art' + (part.complete ? ' transform' : '') + '">' + part.svg + '</div><div><small>' + (part.complete ? '로봇 완성! 변신!' : '새 부품 획득') + '</small><b>' + G.esc(part.robot.name) + '</b><b class="rp-name">' + G.esc(part.partName) + '</b>' +
       '<span class="rp-dots">' + [0, 1, 2, 3, 4, 5].map(function (k) { return '<i class="' + (k < part.owned ? 'on' : '') + (k === part.owned - 1 ? ' new' : '') + '"></i>'; }).join('') + '</span>' +
-      (part.rankUp ? '<small class="rp-rank">' + part.rankUp.e + ' 계급 업! 「' + G.esc(part.rankUp.name) + '」</small>' : '') + '</div></div>'
-      : '<div class="rw-stk"><small>새 스티커</small><b>' + stk + '</b></div>') +
+      (part.rankUp ? '<small class="rp-rank">' + part.rankUp.e + ' 계급 업! 「' + G.esc(part.rankUp.name) + '」</small>' : '') + '</div></div>' + enHTML
+      : earn ? enHTML : '<div class="rw-stk"><small>새 스티커</small><b>' + stk + '</b></div>') +
     '<div class="rw-btns">' + (inSess ? '<button class="btn big go">다음 놀이 ▶</button>' : '<button class="btn big again">🔁 한 번 더</button>') +
     '<button class="btn big soft home">' + (inSess ? '🏠 쉬었다 할래요' : '🏠 처음으로') + '</button></div></div></div>');
   document.body.appendChild(ov);
@@ -1070,15 +1084,15 @@ G.nextInSession = function () {
   if (over && s.i < s.list.length - 1) s.i = s.list.length - 1;
   if (s.i >= s.list.length) {
     G.session = null; G.store.del('sessionSave');
-    /* 오늘의 미션을 끝까지 하면 보너스 부품 하나 (하루 한 번) */
-    var bonus = G.store.get('bonusDay', '') !== G.today() && s.done.length >= 2;
-    if (bonus) { G.store.set('bonusDay', G.today()); G.giveSticker(); }
+    /* 오늘의 미션을 끝까지 하면 보너스 에너지 ⚡3 (하루 한 번) — 모자라던 부품이 생길 수도 있다 */
+    var bonus = G.store.get('bonusDay', '') !== G.today() && s.done.length >= 2, bres = null;
+    if (bonus) { G.store.set('bonusDay', G.today()); if (G.energyBonus) bres = G.energyBonus(3); else G.giveSticker(); }
     G.store.set('lastSession', { d: G.today(), n: s.done.length });
     var sd = G.store.get('sessionDays', []); if (sd.indexOf(G.today()) < 0) { sd.push(G.today()); G.store.set('sessionDays', sd.slice(-400)); }
     G.home();
     if (!G.settings.calm) { G.fx.confetti(50); G.sfx.play('win'); } else G.sfx.play('ding');
     G.say(G.older() ? '오늘의 미션 모두 완료! ' + G.callName() + ', 진짜 멋졌어. 이제 화면은 쉬고 몸으로 놀자!' : '오늘의 놀이 끝! ' + G.callName() + ', 정말 멋졌어. 이제 화면은 쉬고, 엄마 아빠랑 몸으로 놀자!');
-    G.toast(bonus ? '🎁 오늘의 미션 완료 보너스 — 부품 하나 더! 이제 화면을 쉬어요' : '🎉 오늘의 놀이를 모두 마쳤어요! 이제 화면을 쉬어요', 4500);
+    G.toast(bonus ? '🎁 오늘의 미션 완료 보너스 ⚡3' + (bres && bres.made.length ? ' — 새 부품 완성!' : '') + ' 이제 화면을 쉬어요' : '🎉 오늘의 놀이를 모두 마쳤어요! 이제 화면을 쉬어요', 4500);
     return;
   }
   G.runSlot(s.list[s.i]);

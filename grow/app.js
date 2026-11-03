@@ -55,7 +55,12 @@ G.renderHome = function () {
   });
   /* 자라는 나무 — 스티커가 모일수록 자란다 */
   var rp = G.robotNow();
-  if (rp) { G.$('#trE').innerHTML = rp.svg; G.$('#trName').textContent = rp.robot.name + ' 조립 중'; G.$('#trSub').textContent = '부품 ' + rp.owned + ' / 6 · 다음: ' + (rp.robot.parts ? rp.robot.parts[rp.owned] : '부품'); }
+  if (rp) {
+    var ni = window.GR && GR.nextInfo ? GR.nextInfo() : null;
+    G.$('#trE').innerHTML = rp.svg; G.$('#trName').textContent = rp.robot.name + (ni && ni.locked ? ' — 열쇠 필요' : ' 조립 중');
+    G.$('#trSub').textContent = ni && ni.locked ? '🔒 ' + ni.locked.text + ' (' + ni.locked.have + '/' + ni.locked.need + ')' :
+      '부품 ' + rp.owned + ' / 6 · ⚡' + (ni ? ni.have + '/' + ni.cost : '') + ' · 다음: ' + (rp.robot.parts ? rp.robot.parts[rp.owned] : '부품');
+  }
   else { var tr = G.tree(); G.$('#trE').innerHTML = tr.e + tr.fruit; G.$('#trName').textContent = '내 나무: ' + tr.name; G.$('#trSub').textContent = tr.sub; }
   /* 이번 주 도장 */
   var sd = G.store.get('sessionDays', []), logs = G.logs(), st = G.$('#hmStreak'); st.innerHTML = '';

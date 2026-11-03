@@ -569,6 +569,13 @@ function tSet(body) {
     '<h4>오늘의 놀이 시간</h4><div class="wchips">' + [10, 15, 20].map(function (m) { return '<button class="chip ' + (St.sessionMin === m ? 'on' : '') + '" data-sm="' + m + '">' + m + '분</button>'; }).join('') + '</div>' +
     '<p class="muted" style="margin-top:6px">WHO·미국소아과학회는 2~5세 화면 시간을 하루 1시간 이하, 어른과 함께하기를 권해요.</p>');
   h += card('<h3>📶 놀이 단계 · 보이기</h3><p class="muted">단계(1~3)마다 작은 칸이 셋 있어요. 「자동」이면 한 판을 80% 넘게 해내면 한 칸 올라가고(다음 단계로 넘어갈 때는 85%), 힘들어하면(40% 밑) 한 칸 내려와요. 칸이 오를 때마다 속도·개수·시간이 다음 단계 쪽으로 1/3씩만 바뀌어서 갑자기 어려워지지 않아요. 치료사 선생님이 정한 단계가 있으면 고정하세요 — 그 단계 안에서만 칸이 움직여요.</p><div id="lvList"></div>');
+  /* 로봇 부품 — 에너지로 만든다 (robots.js) */
+  if (window.GR && GR.nextInfo) {
+    var ni = GR.nextInfo(), en = GR.energy(), pc = St.partPace || 'normal';
+    h += card('<h3>🤖 로봇 부품 속도</h3><p class="muted">놀이를 마치기만 해도 부품이 나오던 것을 바꿔, 이제는 <b>⚡ 에너지</b>를 모아 부품을 만들어요. 완주 +1 · 정확(80%↑) +1 · 칸 오름 +2 · 단계 오름 +4 · 도전 단계 +1 · 오늘의 미션 완주 +3. 같은 놀이는 하루 두 번까지, 하루 최대 ⚡' + GR.DAY_MAX + '. 시즌 4부터는 단계 열쇠가 있어야 새 로봇이 열려요(놀이 실력이 늘어야 만나요).</p>' +
+      '<div class="wchips" id="sPace">' + [['fast', '빠르게 (부품 값 ×0.7)'], ['normal', '보통'], ['slow', '천천히 (×1.5)']].map(function (o) { return '<button class="chip ' + (pc === o[0] ? 'on' : '') + '" data-pace="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>' +
+      '<p class="muted" style="margin-top:6px">지금: ' + G.esc(ni.robot.name) + ' 부품 ' + ni.owned + '/6 · 다음 부품까지 ⚡' + ni.left + ' · 오늘 ⚡' + en.today + '/' + GR.DAY_MAX + ' · 모은 에너지 ⚡' + en.total + (ni.locked ? ' · 🔒 ' + G.esc(ni.locked.season.name) + ': ' + G.esc(ni.locked.text) + ' (' + ni.locked.have + '/' + ni.locked.need + ')' : '') + '</p>');
+  }
   h += card('<h3>🤖 자비스 AI (Claude)</h3><p class="muted">키를 넣으면 「자비스랑 이야기」가 아이 말에 맞춰 대답하고, 코치·리포트 요약을 쓸 수 있어요. 키가 없어도 모든 놀이는 그대로 돼요. 보내는 것: 아이가 한 말(음성 인식 글)·나이·좋아하는 것·기록 요약. 이름은 보내지 않아요.</p>' +
     '<div class="row" style="margin-top:8px"><input class="inp" id="sKey" type="password" placeholder="sk-ant-..." style="flex:1" value="' + G.esc(G.store.get('apiKey', '')) + '"><button class="btn" id="sKeySave">저장</button></div>' +
     (!G.store.get('apiKey', '') && G.ai.churchKey() ? '<button class="btn soft sm" id="sKeyChurch" style="margin-top:6px">⛪ 교회 관리자 앱 키 가져오기</button>' : '') +
@@ -630,6 +637,7 @@ function tSet(body) {
   G.$('#sTest', body).onclick = function () { G.say((G.profile.nick ? G.callName() + ', ' : '') + '안녕! 나는 자비스야. 오늘도 같이 놀자!'); };
   G.$$('[data-set]', body).forEach(function (c) { c.onchange = function () { St[c.dataset.set] = c.checked; G.saveSettings(); }; });
   G.$$('[data-sm]', body).forEach(function (b) { b.onclick = function () { St.sessionMin = +b.dataset.sm; G.saveSettings(); render(); }; });
+  G.$$('[data-pace]', body).forEach(function (b) { b.onclick = function () { St.partPace = b.dataset.pace; G.saveSettings(); render(); }; });
   /* 단계 */
   var lv = G.$('#lvList', body), lh = '';
   G.AREA_ORDER.forEach(function (k) {
@@ -638,7 +646,7 @@ function tSet(body) {
     lh += '<h4>' + G.AREAS[k].icon + ' ' + G.AREAS[k].name + '</h4>' + list.map(function (d) {
       var cur = (P.level || {})[d.id] || 0, hidden = (P.hide || {})[d.id];
       return '<div class="lvrow"><span>' + d.icon + ' ' + G.esc(d.title) + ' <small class="muted">지금 ' + (function (g) { return d.levels > 1 ? g.lv + '단계 ' + g.st + '칸' : '한 단계'; })(G.stageFor(d.id, d.levels)) + '</small></span>' +
-        (d.levels > 1 ? '<select data-lv="' + d.id + '"><option value="0">자동</option>' + G.range(d.levels).map(function (i) { return '<option value="' + (i + 1) + '" ' + (cur === i + 1 ? 'selected' : '') + '>' + (i + 1) + '단계</option>'; }).join('') + '</select>' : '<span></span>') +
+        (d.levels > 1 ? '<select data-lv="' + d.id + '"><option value="0">자동</option>' + G.range(d.levels).map(function (i) { return '<option value="' + (i + 1) + '" ' + (cur === i + 1 ? 'selected' : '') + '>' + G.levelName(i + 1) + '</option>'; }).join('') + '</select>' : '<span></span>') +
         '<label class="muted"><input type="checkbox" data-hide="' + d.id + '" ' + (hidden ? '' : 'checked') + '> 보이기</label></div>';
     }).join('');
   });

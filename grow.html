@@ -160,6 +160,7 @@ h1,h2,h3,.jua{font-family:'Jua','Gowun Dodum',sans-serif;font-weight:400}
 .st-lv:empty{display:none}
 .st-lv .lv{display:inline-flex;align-items:center;gap:4px;font-family:'Jua',sans-serif;color:#f5b700;font-size:clamp(14px,3.8vw,17px);letter-spacing:-1px;padding:4px 10px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow)}
 .st-lv .lv-st{font-style:normal;font-size:.8em;letter-spacing:1px;color:var(--area,#8a94a6)}
+.st-lv .lv-n{font-weight:400;font-size:.85em;letter-spacing:0;color:#ff7a1a}
 .rw-up{margin:10px auto 0;padding:8px 14px;border-radius:14px;background:linear-gradient(90deg,#fff6d6,#ffe9a8);color:#7a4b00;font-weight:800;font-size:clamp(15px,4vw,19px);max-width:420px;animation:rwUp .6s ease-out both}
 .rw-up small{display:block;font-weight:600;font-size:.78em;color:#9a6a10;margin-top:2px}
 .reward.hero .rw-up{background:linear-gradient(90deg,rgba(255,213,79,.18),rgba(79,195,247,.18));color:#ffe082;border:1px solid rgba(255,213,79,.45)}
@@ -349,6 +350,16 @@ textarea.inp{min-height:90px;resize:vertical}
 /* 상 화면 — 히어로 */
 .reward.hero .rw-card{background:linear-gradient(165deg,#13244f,#0c1733);color:#eaf2ff;border:1px solid rgba(120,180,255,.35);box-shadow:0 0 40px rgba(80,160,255,.35),0 20px 60px rgba(0,0,0,.4)}
 .reward.hero .rw-msg{font-family:'Black Han Sans','Jua',sans-serif;font-weight:400;text-shadow:0 0 14px rgba(120,190,255,.5)}
+.rw-en{max-width:440px;margin:0 auto 14px;text-align:center}
+.rw-en>b{font-family:'Black Han Sans','Jua',sans-serif;font-weight:400;font-size:clamp(24px,7vw,32px);color:#ffd54f;text-shadow:0 0 14px rgba(255,213,79,.55)}
+.rw-en>small{display:block;color:#cfe0ff;font-size:13px;margin:2px 0 4px}
+.en-box{text-align:left;background:rgba(255,213,79,.10);border:1px solid rgba(255,213,79,.42);border-radius:14px;padding:8px 12px;margin-top:6px}
+.en-box b{font-family:'Jua',sans-serif;font-weight:400;color:#ffd54f;font-size:17px}
+.en-box small{display:block;color:#cfe0ff;font-size:12.5px;line-height:1.4}
+.en-bar{height:9px;border-radius:9px;background:rgba(255,255,255,.15);margin-top:6px;overflow:hidden}
+.en-bar i{display:block;height:100%;background:linear-gradient(90deg,#ffd54f,#ff9f1c);transition:width .8s}
+.en-box.locked{background:rgba(148,163,184,.14);border-color:rgba(148,163,184,.45)}
+.en-box.locked b{color:#e2e8f0}.en-box.locked .en-bar i{background:linear-gradient(90deg,#94a3b8,#cbd5e1)}
 .reward.hero .rw-part{display:flex;align-items:center;gap:12px;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:8px 12px;margin-bottom:14px}
 .reward.hero .rw-part .rp-art{width:110px;height:130px}
 .reward.hero .rw-part .rp-art svg{width:100%;height:100%}
