@@ -664,16 +664,17 @@ var FA_SETS = [
 ];
 var FA_FAR = ['🍎', '🚗', '⭐', '🌸', '⚽', '🎈', '🧸', '📖', '🍦', '🌳', '☂️', '🎁', '🥕', '👟', '🎨', '🪁'];
 G.act({
-  id: 'findall', area: 'brain', title: '숨은 친구 찾기', icon: '🔍', order: 5, levels: 3, mins: 3, needs: [],
+  id: 'findall', area: 'brain', title: '숨은 친구 찾기', icon: '🔍', order: 5, levels: 5, mins: 3, needs: [],
   ef: ['attend', 'inhibit'],
   desc: '숨어 있는 친구를 모두 찾기',
   goal: '선택적 주의 — 여러 가지가 섞여 있어도 찾는 것에만 눈을 모으고, 비슷한 것에 속지 않는 힘',
-  how: '빨리 찾기보다 꼼꼼히 찾기를 칭찬해 주세요("하나도 안 빠뜨렸네!"). 화면 밖에서는 그림책에서 숨은 그림 찾기, 마트에서 "빨간 상자 찾기", 장난감 통에서 "자동차만 꺼내기"로 이어 가세요.',
+  how: '빨리 찾기보다 꼼꼼히 찾기를 칭찬해 주세요("하나도 안 빠뜨렸네!"). 화면 밖에서는 그림책에서 숨은 그림 찾기, 마트에서 "빨간 상자 찾기", 장난감 통에서 "자동차만 꺼내기"로 이어 가세요. 4단계(도전)는 그림이 더 많고, 5단계(마스터)는 아주 닮은 친구들 사이에서 찾아요.',
   basis: '시각 탐색·지우기(cancellation) 과제 — 선택적 주의 측정',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
-    /* 칸이 오르면 찾을 친구·전체 그림 수가 다음 단계 쪽으로 조금씩 (ctx.tune) */
-    var BOARDS = 3, TARGETS = ctx.tune([3, 5, 8]), TOTAL = ctx.tune([12, 20, 30]);
+    /* 칸이 오르면 찾을 친구·전체 그림 수가 다음 단계 쪽으로 조금씩 (ctx.tune).
+       4단계 찾을 친구 10·그림 35, 5단계 12·40 (휴대폰에서도 그림이 손가락 크기 밑으로 작아지지 않는다) */
+    var BOARDS = 3, TARGETS = ctx.tune([3, 5, 8, 10, 12]), TOTAL = ctx.tune([12, 20, 30, 35, 40]);
     B.innerHTML = '<div class="bw"><div class="fa-head"><span class="ft"></span><span class="fc"></span></div><div class="fa-field"></div></div>';
     var field = G.$('.fa-field', B), ft = G.$('.ft', B), fc = G.$('.fc', B);
     var sets = G.sample(FA_SETS, BOARDS), bi = 0, found = 0, cur = null, items = [], idleH = null, falseTaps = 0;
@@ -687,7 +688,8 @@ G.act({
     function board() {
       cur = sets[bi]; found = 0; items = []; field.innerHTML = '';
       ft.textContent = cur.t;
-      var pool = lv === 1 ? FA_FAR.filter(function (x) { return x !== cur.t; }) : lv === 2 ? cur.mid.concat(G.sample(FA_FAR, 4)) : cur.near.concat(cur.mid.slice(0, 2));
+      /* 헷갈리게 하는 그림: 1단계 전혀 다른 것 · 2단계 조금 닮은 것 · 3·4단계 닮은 것 · 5단계 아주 닮은 것만 */
+      var pool = lv === 1 ? FA_FAR.filter(function (x) { return x !== cur.t; }) : lv === 2 ? cur.mid.concat(G.sample(FA_FAR, 4)) : lv >= 5 ? cur.near.slice() : cur.near.concat(cur.mid.slice(0, 2));
       var list = [];
       for (var k = 0; k < TOTAL; k++) list.push(k < TARGETS ? cur.t : G.pick(pool));
       list = G.shuffle(list);
@@ -698,7 +700,7 @@ G.act({
         var el = G.el('<span class="fa-it"></span>'); el.textContent = e;
         el.style.left = ((c + 0.5 + (Math.random() - 0.5) * 0.35) / cols * 100) + '%';
         el.style.top = ((rr + 0.5 + (Math.random() - 0.5) * 0.35) / rows * 100) + '%';
-        el.style.setProperty('--r', Math.round((Math.random() - 0.5) * (lv === 3 ? 40 : 20)) + 'deg');
+        el.style.setProperty('--r', Math.round((Math.random() - 0.5) * (lv >= 3 ? 40 : 20)) + 'deg');
         var it = { el: el, target: e === cur.t, done: false };
         el.addEventListener('pointerdown', function (ev) { ev.preventDefault(); tap(it); });
         field.appendChild(el); items.push(it);
@@ -798,18 +800,22 @@ function mzPath(m, from) {
   return out;
 }
 G.act({
-  id: 'maze', area: 'brain', title: '길 찾기', icon: '🐰', order: 6, levels: 3, mins: 3, needs: [],
+  id: 'maze', area: 'brain', title: '길 찾기', icon: '🐰', order: 6, levels: 5, mins: 3, needs: [],
   ef: ['plan', 'attend', 'inhibit'],
   desc: '토끼가 당근까지 가는 길 찾기',
   goal: '계획 — 움직이기 전에 머릿속으로 길을 먼저 그려 보고, 막히면 돌아가 다른 길을 찾는 힘',
-  how: '출발 전에 "손가락으로 먼저 길을 따라가 볼까?" 하고 눈으로 먼저 가 보게 해 주세요. 막다른 길에 가도 "돌아가면 돼!" 하고 다시 찾는 것을 칭찬해요. 화면 밖에서는 방석·의자로 거실 미로 만들기, 그림책 미로를 손가락으로 따라가기로 이어 가세요.',
+  how: '출발 전에 "손가락으로 먼저 길을 따라가 볼까?" 하고 눈으로 먼저 가 보게 해 주세요. 막다른 길에 가도 "돌아가면 돼!" 하고 다시 찾는 것을 칭찬해요. 화면 밖에서는 방석·의자로 거실 미로 만들기, 그림책 미로를 손가락으로 따라가기로 이어 가세요. 4·5단계(도전·마스터)는 6칸·7칸 미로를 먼저 조금 더 오래 보고 출발해요.',
   basis: '미로 계획 과제(Porteus 미로 형식) — 3단계는 먼저 보고 길을 계획한 뒤 출발',
   run: function (ctx) {
-    var B = ctx.body, lv = ctx.level;
+    var B = ctx.body, lv = ctx.level, st = G.clamp(ctx.step || 1, 1, 3);
     var COUNT = 4, mi = 0, m = null, pos = null, moves = 0, back = 0, bad = 0, visited = {}, locked = true, log = [];
-    /* 판마다 미로 크기 (0 = ㄱ자 길). 칸이 오르면 쉬운 판 하나가 한 크기 큰 미로로 바뀐다 — 뒤쪽 판부터 */
-    var SIZES = lv === 1 ? [[0, 0, 3, 3], [0, 3, 3, 3], [0, 3, 3, 4]] : lv === 2 ? [[4, 4, 4, 4], [4, 4, 4, 5], [4, 4, 5, 5]] : [[5, 5, 5, 5], [5, 5, 5, 6], [5, 5, 6, 6]];
-    var plan = SIZES[G.clamp(ctx.step || 1, 1, 3) - 1];
+    /* 판마다 미로 크기 (0 = ㄱ자 길). 칸이 오르면 쉬운 판 하나가 한 크기 큰 미로로 바뀐다 — 뒤쪽 판부터.
+       4단계 6칸(2·3칸은 7칸 맛보기), 5단계 7칸. 휴대폰 화면에 칸이 손가락보다 작아지지 않게 7칸까지만 */
+    var SIZES = lv === 1 ? [[0, 0, 3, 3], [0, 3, 3, 3], [0, 3, 3, 4]] : lv === 2 ? [[4, 4, 4, 4], [4, 4, 4, 5], [4, 4, 5, 5]] : lv === 3 ? [[5, 5, 5, 5], [5, 5, 5, 6], [5, 5, 6, 6]] :
+      lv === 4 ? [[6, 6, 6, 6], [6, 6, 6, 7], [6, 6, 7, 7]] : [[7, 7, 7, 7], [7, 7, 7, 7], [7, 7, 7, 7]];
+    var plan = SIZES[st - 1];
+    /* 5단계 2·3칸: 뒤쪽 한두 판은 길이 더 긴 미로(여러 개 만들어 가장 긴 것)로 — 크기는 그대로 */
+    var LONG_FROM = lv >= 5 ? COUNT - (st - 1) : COUNT;
     B.innerHTML = '<div class="bw"><div class="mz-look"></div><div class="mz-board locked"></div></div>';
     var board = G.$('.mz-board', B), look = G.$('.mz-look', B), cells = [];
     function k(p) { return p[0] + ',' + p[1]; }

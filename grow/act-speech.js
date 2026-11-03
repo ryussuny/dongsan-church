@@ -1,13 +1,13 @@
 /* ===========================================================
    함께 자라요 — 말하기 (언어치료: 말·듣기·입 운동)
 
-     words     낱말 카드        표현 어휘 — 보고 따라 말하기, 3단계는 두 낱말 잇기
-     listen    듣고 찾기        수용 어휘 — 이름을 듣고 그림 고르기
-     sounds    누구 소리일까?   소리흉내말 — 듣고 찾기, 3단계는 직접 흉내 내기
-     voice     소리 내기        발성·호흡 — 목소리를 길게 내면 로켓이 날아간다
+     words     낱말 카드        표현 어휘 — 보고 따라 말하기, 3단계는 두 낱말 잇기, 4·5단계는 세·네 낱말 문장
+     listen    듣고 찾기        수용 어휘 — 이름을 듣고 그림 고르기 (4·5단계는 그림 5·6장)
+     sounds    누구 소리일까?   소리흉내말 — 듣고 찾기, 3단계는 직접 흉내 내기, 5단계는 소리 둘 기억하기
+     voice     소리 내기        발성·호흡 — 목소리를 길게 내면 로켓이 날아간다 (1초 → 5초)
      mouth     입 운동 거울     구강 운동 모방 — 거울(앞 카메라)로 보며 따라 하기
-     follow    지시 따르기      1단계 지시 → 꾸밈말+이름 → 두 단계 지시
-     syllable  말소리 북치기    음운 인식 — 한 소리에 북 한 번
+     follow    지시 따르기      1단계 지시 → 꾸밈말+이름 → 두 단계 지시 → 세·네 가지 심부름
+     syllable  말소리 북치기    음운 인식 — 한 소리에 북 한 번 (5단계는 시범 없이 혼자)
      talkboard 말판 (도구)      보완대체의사소통(AAC) — 그림을 눌러 말하기
 
    ▸ '말해야 넘어가는' 놀이가 아니다. 소리만 내도 칭찬하고, 음성 인식이 없거나
@@ -72,10 +72,20 @@ function expand(w) {
 /* ---------- 말하기 한 차례 ----------
    들어 보고 → 못 들었으면 자비스가 다시 들려주고, 부모 단추를 보여 주며 한 번 더 듣는다.
    음성 인식이 없거나 막혔으면 바로 부모 단추.
-   o: {box, expect:[낱말], lenient(소리만 내도 맞음), again()→Promise, labels}
+   o: {box, expect:[낱말], lenient(소리만 내도 맞음), whole(문장 통째로 견주기), again()→Promise, labels}
    → Promise<{ok, heard, said, judged}> */
 var sttOff = false;      // 이 기기에서 음성 인식이 안 되면, 다시 열 때까지 부모 단추로
 function sttReady() { return G.has.stt && !sttOff; }
+/* 세·네 낱말 문장(낱말 카드 4·5단계) — 낱말마다 따로 견주면 점수가 낮게 나온다.
+   띄어쓰기를 빼고 문장 통째로 한 번 더 견준다. 낱말 하나쯤 빠지거나 발음이 서툴러도 70% 면 맞음 */
+function wholeScore(res, expect) {
+  var best = 0, nos = function (x) { return String(x || '').replace(/\s+/g, ''); };
+  (res.alts && res.alts.length ? res.alts : [res.text]).forEach(function (a) {
+    (expect || []).forEach(function (w) { best = Math.max(best, G.similar(nos(a), nos(w))); });
+  });
+  if (best >= 0.7) { res.ok = true; res.score = Math.max(res.score || 0, best); }
+  return res;
+}
 
 function speakTurn(ctx, o) {
   var box = o.box;
@@ -108,6 +118,7 @@ function speakTurn(ctx, o) {
         if (res.denied || res.unsupported || /network|audio-capture|not-allowed|service|language|start/.test(res.error || '')) { off(); return null; }
         if (!res.heard) { heard.textContent = ''; return null; }
         heard.textContent = '“' + res.text + '”';
+        if (o.whole && !res.ok) wholeScore(res, o.expect);
         ctx.extra.spoken = (ctx.extra.spoken || 0) + 1;
         if (G.noteSaid) try { G.noteSaid(res.text, (o.expect || [])[0]); } catch (e) {}
         return res;
@@ -217,6 +228,8 @@ G.css('speech', `
 .act-words .wd-card.right{box-shadow:0 0 0 6px var(--good),var(--shadow)}
 .act-words .wd-pic{font-size:clamp(100px,min(42vw,25vh),220px);line-height:1.15;filter:drop-shadow(0 8px 12px rgba(0,0,0,.12))}
 .act-words .wd-pic.two{font-size:clamp(76px,min(30vw,19vh),170px);line-height:1.25;letter-spacing:4px;white-space:nowrap}
+.act-words .wd-pic.sent{font-size:clamp(60px,min(22vw,15vh),140px)}
+.act-words .wd-word.long{font-size:clamp(26px,7.4vw,48px);gap:2px 8px}
 .act-words .wd-photo{width:clamp(150px,min(54vw,30vh),290px);aspect-ratio:1;object-fit:cover;border-radius:24px;margin-top:6px;display:block}
 .act-words .wd-word{font-family:Jua,sans-serif;font-size:clamp(32px,9vw,58px);line-height:1.3;display:flex;gap:2px 10px;flex-wrap:wrap;justify-content:center;letter-spacing:1px}
 .act-words .wd-word.syl{gap:2px}
@@ -241,6 +254,9 @@ G.css('speech', `
 .act-sounds .sd-q{font-size:clamp(70px,min(22vw,14vh),120px);line-height:1;transition:transform .3s}
 .act-sounds .sd-box.open{border-style:solid;border-color:var(--good)}
 .act-sounds .sd-box.open .sd-q{animation:spIn .45s}
+.act-sounds .sd-q.two{font-size:clamp(44px,min(15vw,10vh),80px);display:flex;gap:2px}
+.act-sounds .sd-q.two i{font-style:normal;display:inline-block}
+.act-sounds .sd-q.two i.got{animation:spIn .45s}
 .act-sounds .sd-w{position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:36px;height:70px;pointer-events:none}
 .act-sounds .sd-w i{position:absolute;top:50%;left:0;border:4px solid var(--area);border-color:transparent var(--area) transparent transparent;border-radius:50%;opacity:0;transform:translateY(-50%)}
 .act-sounds .sd-w i:nth-child(1){width:24px;height:24px}
@@ -316,6 +332,7 @@ G.css('speech', `
 /* ── follow ── */
 .act-follow .fo-svg{width:clamp(70px,min(22vw,15vh),130px);height:clamp(70px,min(22vw,15vh),130px);display:block}
 .act-follow .fo-steps{display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:6px 14px;font-size:clamp(26px,7vw,36px);line-height:1.2}
+.act-follow .fo-steps{flex-wrap:wrap;justify-content:center;max-width:100%}
 .act-follow .fo-steps b{width:26px;height:26px;border-radius:50%;background:var(--area);color:#fff;font-family:Jua,sans-serif;font-weight:400;font-size:16px;display:flex;align-items:center;justify-content:center}
 .act-follow .fo-zone{position:relative;width:clamp(160px,min(50vw,28vh),240px);aspect-ratio:1;border-radius:34px;border:5px dashed color-mix(in srgb,var(--area) 55%,transparent);
   background:color-mix(in srgb,var(--surface) 70%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform .15s,border-color .2s,background .2s}
