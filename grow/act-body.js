@@ -16,6 +16,8 @@
    ▸ 몸놀이는 아이가 화면에서 떨어져 움직이므로 그림을 크게 그리고, 말은 자비스가 읽는다.
    ▸ 아이에게는 틀림이 보이지 않는다. 맞고 틀림은 부모 판정이나 기기 판정(리듬 수·바람)이
      있는 곳에서만 ctx.trial 로 남긴다. 숨쉬기·물방울은 기록 없이 시간만 남는다.
+   ▸ 4단계(도전)·5단계(마스터)는 3단계를 다 익힌 아이를 위해 한 가지씩만 더 어렵게 한다.
+     숨쉬기는 마음을 가라앉히는 놀이라 3단계에서 멈추고, 촛불 끄기는 촛불 하나·바람 조금만 더한다.
    ▸ 감각 예민 모드(G.settings.calm): 소리를 줄이고, 반짝임·음표를 끄고, 박자를 늦춘다.
      숨쉬기 공·타이머 원판·남은 시간 고리처럼 '움직임이 곧 정보'인 것은 CSS 전환이 아니라
      JS 로 그려서 예민 모드(전환을 끈다)에서도 부드럽게 보인다.
@@ -350,34 +352,57 @@ G.css('body', `
    1. 따라 움직이기 — 동작 모방·운동 계획
    ================================================================= */
 var MV_ANIM = { '👏': 'clap', '🥁': 'clap', '🙌': 'up', '🙆': 'up', '🦘': 'jump', '🐸': 'jump', '✈️': 'sway', '🤸': 'sway',
-  '🌳': 'still', '🦩': 'still', '🧘': 'still', '🐻': 'walk', '🦆': 'walk', '🐢': 'slow', '🦀': 'side', '🐍': 'side' };
+  '🌳': 'still', '🦩': 'still', '🧘': 'still', '🐻': 'walk', '🦆': 'walk', '🐢': 'slow', '🦀': 'side', '🐍': 'side',
+  '⭐': 'jump', '🕺': 'sway', '🦭': 'walk', '🐇': 'jump', '🩰': 'slow', '🎯': 'clap', '🌟': 'jump' };
+/* 4·5단계 동작 (data.js 의 MOVES 는 1~3단계) — 4단계(도전): 균형·몸 가운데 넘기·팔 힘이 더 드는 한 동작,
+   5단계(마스터): 두 동작을 순서대로 잇는 동작(운동 계획 + 순서 기억). 넘어질 수 있는 동작은 어른이 곁에서 */
+var MV_MORE = [
+  { e: '⭐', say: '별 모양 점프! 팔다리를 쫙 벌렸다 모아요. 다섯 번!', sec: 10, lv: 4 },
+  { e: '🕺', say: '오른손으로 왼쪽 무릎 콕, 왼손으로 오른쪽 무릎 콕! 번갈아 해요.', sec: 10, lv: 4 },
+  { e: '🦭', say: '물개처럼 엎드려서 두 팔로만 몸을 끌고 앞으로 가요!', sec: 10, lv: 4 },
+  { e: '🐇', say: '토끼처럼 두 발을 모아 앞으로 콩, 콩, 콩! 세 번 뛰어요.', sec: 8, lv: 4 },
+  { e: '🩰', say: '발끝으로 서서 살금살금 걸어요. 뒤꿈치는 들고!', sec: 10, lv: 4 },
+  { e: '🦩', say: '홍학처럼 한 발로 서서 열까지 세어요. 그다음 다른 발로도!', sec: 14, lv: 4 },
+  { e: '🎯', say: '박수 두 번, 그다음 제자리 점프 한 번! 짝짝, 콩! 세 번 해요.', sec: 12, lv: 5 },
+  { e: '🦩', say: '한 발로 서서 박수 다섯 번! 짝, 짝, 짝, 짝, 짝!', sec: 12, lv: 5 },
+  { e: '🌟', say: '별 모양 점프 세 번, 그다음 한 발로 서서 셋까지 세어요!', sec: 14, lv: 5 },
+  { e: '🦀', say: '꽃게처럼 옆으로 세 걸음, 그다음 반대쪽으로 세 걸음!', sec: 12, lv: 5 },
+  { e: '🙆', say: '머리, 어깨, 무릎, 발! 그다음 거꾸로 발, 무릎, 어깨, 머리!', sec: 14, lv: 5 },
+  { e: '✈️', say: '비행기 자세! 한 발을 뒤로 들고 두 팔 벌려 몸을 앞으로 숙여요. 다섯까지!', sec: 12, lv: 5 }
+];
+function mvAll() {
+  var seen = {};
+  return D.MOVES.concat(MV_MORE).filter(function (m) { var k = m.e + m.say; if (seen[k]) return false; seen[k] = 1; return true; });
+}
 var MV_GO = ['잘한다! 계속!', '좋아, 조금만 더!', '그렇지! 멋져!', '우와, 몸이 척척!', '힘내! 거의 다 왔어!'];
 var MV_PRAISE = ['우와, 정말 멋지게 했어!', '짝짝짝! 몸이 척척!', '튼튼 대장이다!', '자비스도 따라 하고 싶어!', '최고야! 힘이 세구나!', '와, 똑같이 했네!'];
 var MV_NEXT = ['다음은 이거야! ', '이번엔? ', '자, 다음! ', '이것도 할 수 있지? '];
 
 G.act({
-  id: 'move', area: 'body', title: '따라 움직이기', icon: '🤸', order: 10, levels: 3, mins: 3, needs: [],
+  id: 'move', area: 'body', title: '따라 움직이기', icon: '🤸', order: 10, levels: 5, mins: 3, needs: [],
   ef: ['plan', 'wm', 'attend'],
   desc: '자비스 따라 몸을 움직여요',
   goal: '운동 계획(실행)·동작 모방 — 듣고 본 동작을 순서대로 몸으로 옮기는 힘, 균형과 대근육 조절',
-  how: '부모가 먼저 같이 해 보이면 아이가 훨씬 잘 따라 해요. 화면에서 두세 걸음 떨어진 넓은 자리에서 하고, 동작이 서툴러도 해 보려 했다면 👍 를 눌러 주세요. 한 발 서기·게걸음이 어려우면 손을 잡아 주어도 괜찮아요.',
-  basis: '운동 계획(praxis)·동작 모방 — 감각통합 치료의 대근육 활동',
+  how: '부모가 먼저 같이 해 보이면 아이가 훨씬 잘 따라 해요. 화면에서 두세 걸음 떨어진 넓은 자리에서 하고, 동작이 서툴러도 해 보려 했다면 👍 를 눌러 주세요. 한 발 서기·게걸음이 어려우면 손을 잡아 주어도 괜찮아요. 4단계(도전)는 균형·몸 가운데 넘기 동작, 5단계(마스터)는 "먼저 ~, 그다음 ~" 두 동작을 이어 해요 — 곁에서 넘어지지 않게 지켜봐 주세요.',
+  basis: '운동 계획(praxis)·동작 모방 — 감각통합 치료의 대근육 활동. 4·5단계는 양측 협응·정중선 넘기·순서 있는 동작(sequencing)',
   offline: '"곰처럼 엉금엉금 소파까지, 개구리처럼 폴짝 문까지!" 동물 흉내로 집 안을 이동해 보세요.',
   run: async function (ctx) {
-    var B = ctx.body, lv = ctx.level, N = 5, C = 2 * Math.PI * 46;
-    var pool = D.MOVES.filter(function (m) { return (m.lv || 1) <= lv; });
+    var B = ctx.body, lv = ctx.level, N = 5, C = 2 * Math.PI * 46, TOP = ctx.def.levels || 5, ALL = mvAll();
+    var pool = ALL.filter(function (m) { return (m.lv || 1) <= lv; });
     var list;
     if (lv === 1) list = G.sample(pool, N);
     else {
-      /* 쉬운 동작으로 몸을 풀고, 이 단계의 새 동작을 사이사이에 */
-      var top = G.sample(pool.filter(function (m) { return (m.lv || 1) === lv; }), 3), low = G.sample(pool.filter(function (m) { return (m.lv || 1) < lv; }), N - 3);
+      /* 쉬운 동작으로 몸을 풀고, 이 단계의 새 동작을 사이사이에 (같은 그림이 두 번 나오지 않게) */
+      var top = G.sample(pool.filter(function (m) { return (m.lv || 1) === lv; }), 3), te = top.map(function (m) { return m.e; });
+      var low = G.sample(pool.filter(function (m) { return (m.lv || 1) < lv && te.indexOf(m.e) < 0; }), N - 3);
       list = [low[0], top[0], low[1], top[1], top[2]].filter(Boolean);
     }
     /* 칸이 오르면 다음 단계 동작을 1~2개 미리 섞는다 (쉬운 동작 사이사이에).
-       3단계는 새 동작이 없어서 3단계 동작을 1~2초만 더 오래 한다 */
-    var NX = lv < 3 ? ctx.step - 1 : 0, LONGER = lv === 3 ? ctx.step - 1 : 0;
+       끝 단계(5)는 다음 동작이 없어서 5단계 동작을 1~2초만 더 오래 한다 */
+    var NX = lv < TOP ? ctx.step - 1 : 0, LONGER = lv >= TOP ? ctx.step - 1 : 0;
     if (NX) {
-      var nxt = G.sample(D.MOVES.filter(function (m) { return (m.lv || 1) === lv + 1; }), NX);
+      var le = list.map(function (m) { return m.e; });
+      var nxt = G.sample(ALL.filter(function (m) { return (m.lv || 1) === lv + 1 && le.indexOf(m.e) < 0; }), NX);
       (lv === 1 ? [4, 2] : [4, 1]).slice(0, NX).forEach(function (at, j) { if (nxt[j] && list[at]) list[at] = nxt[j]; });
     }
     B.innerHTML = '<div class="bd"><div class="mv-ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="mv-trk" cx="50" cy="50" r="46"/><circle class="mv-arc" cx="50" cy="50" r="46"/></svg>' +
@@ -412,7 +437,7 @@ G.act({
       ctx.progress(i, list.length);
       var m = list[i], tries = 0, done = false;
       while (!done) {
-        var s = m.sec + (tries ? 2 : 0) + ((m.lv || 1) === 3 ? LONGER : 0);
+        var s = m.sec + (tries ? 2 : 0) + ((m.lv || 1) === lv ? LONGER : 0);
         emo.className = 'mv-e a-' + (MV_ANIM[m.e] || 'jump'); emo.textContent = m.e;
         cap.textContent = m.say; sec.textContent = s; arc.style.strokeDashoffset = '0';
         G.sfx.play('whoosh');
@@ -452,19 +477,30 @@ var FZ_SONGS = [
   [['G4', .5], ['C5', .5], ['E5', .5], ['C5', .5], ['G4', .5], ['C5', .5], ['E5', 1], ['F5', .5], ['E5', .5], ['D5', .5], ['C5', .5], ['D5', .5], ['E5', .5], ['C5', 1]]
 ];
 var FZ_DANCERS = ['💃', '🕺', '🐧', '🐻', '🐰', '🐥', '🐸', '🦄', '🐼'];
+/* 4·5단계 얼음 자세 — 빨간불에 자비스가 말한 자세로 멈춘다 (억제 + 운동 계획·균형) */
+var FZ_POSES = [
+  { e: '🙌', w: '만세 자세', say: '만세 자세로' },
+  { e: '🦩', w: '한 발 자세', say: '홍학처럼 한 발로' },
+  { e: '⭐', w: '별 자세', say: '별처럼 팔다리 쫙 벌리고' },
+  { e: '🌳', w: '나무 자세', say: '나무처럼 두 팔 벌리고' },
+  { e: '🐸', w: '개구리 자세', say: '개구리처럼 쪼그려 앉아서' },
+  { e: '🤖', w: '로봇 자세', say: '로봇처럼 팔을 네모로 하고' }
+];
 
 G.act({
-  id: 'freeze', area: 'body', title: '멈춰 놀이', icon: '🧊', order: 20, levels: 3, mins: 2, needs: [],
+  id: 'freeze', area: 'body', title: '멈춰 놀이', icon: '🧊', order: 20, levels: 5, mins: 2, needs: [],
   ef: ['inhibit', 'attend', 'regulate'],
   desc: '음악이 멈추면 꽁꽁 얼음!',
   goal: '억제 조절 — 신나게 움직이다가도 신호에 맞춰 몸을 멈추고, 노래 빠르기에 맞춰 움직임을 조절하는 힘',
-  how: '아이와 같이 일어나 춤추다가 "멈춰!" 하면 같이 꽁꽁 얼어 주세요. 아이가 멈췄으면 큰 👍 단추를 눌러 주세요 — 별이 하나씩 모여요. 2단계는 빠른 노래엔 빨리, 느린 노래엔 천천히 춤추고, 3단계는 신호등(초록불 춤·빨간불 멈춤)을 보고 움직여요.',
-  basis: '억제 조절 — 얼음 놀이(Tools of the Mind의 Freeze Game)·빨간불 초록불 놀이',
+  how: '아이와 같이 일어나 춤추다가 "멈춰!" 하면 같이 꽁꽁 얼어 주세요. 아이가 멈췄으면 큰 👍 단추를 눌러 주세요 — 별이 하나씩 모여요. 2단계는 빠른 노래엔 빨리, 느린 노래엔 천천히 춤추고, 3단계는 신호등(초록불 춤·빨간불 멈춤)을 보고 움직여요. 4단계(도전)는 빨간불에 자비스가 말한 자세(만세·한 발·별…)로 멈추고, 5단계(마스터)는 빨간불에도 노래가 계속 나와요 — 귀보다 눈으로 신호등을 봐야 해요.',
+  basis: '억제 조절 — 얼음 놀이(Tools of the Mind의 Freeze Game)·빨간불 초록불 놀이. 4단계는 자세 잡고 멈추기(억제+운동 계획), 5단계는 노래가 이어져도 멈추기(더 센 억제)',
   offline: '노래를 틀고 춤추다가 엄마가 노래를 끄면 "얼음!" 빠른 노래엔 빠르게, 느린 노래엔 천천히 춤춰 보세요.',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
-    /* 칸이 오르면 멈춤이 조금 더 많아지고, 춤추는 시간이 조금 짧고 들쭉날쭉해진다 — 언제 멈출지 더 잘 들어야 한다 */
-    var ROUNDS = ctx.tune([5, 6, 8]), DMIN = ctx.tune([7000, 4000, 2500]), DMAX = ctx.tune([7000, 7000, 5500]);
+    /* 칸이 오르면 멈춤이 조금 더 많아지고, 춤추는 시간이 조금 짧고 들쭉날쭉해진다 — 언제 멈출지 더 잘 들어야 한다.
+       4단계: 빨간불에 자세 잡고 멈추기, 5단계: 빨간불에도 노래가 계속 나온다 */
+    var ROUNDS = ctx.tune([5, 6, 8, 9, 10]), DMIN = ctx.tune([7000, 4000, 2500, 1750, 1500]), DMAX = ctx.tune([7000, 7000, 5500, 4750, 4500]);
+    var POSE = lv >= 4, KEEP = lv >= 5, lastPose = null;
     B.innerHTML = '<div class="bd"><div class="fz-stars"></div><div class="fz-stage">' +
       (lv >= 3 ? '<div class="fz-light" aria-hidden="true"><i class="r"></i><i class="g"></i></div>' : '<div class="fz-hand" aria-hidden="true">✋</div>') +
       '<div class="fz-dancer"></div><div class="fz-word">준비!</div><div class="fz-sub"></div></div>' +
@@ -478,7 +514,7 @@ G.act({
       mid: { bpm: 116, spd: '.7s', w: '춤춰요!', e: '🎵', say: ['춤춰요!', '신나게 춤춰요!', '흔들흔들!'] }
     };
     dancer.textContent = G.pick(FZ_DANCERS);
-    sub.textContent = lv >= 3 ? '🟢 초록불 춤춰 · 🔴 빨간불 멈춰' : lv === 2 ? '🐇 빠른 노래 · 🐢 느린 노래 · ✋ 멈춰' : '🎵 음악이 나오면 춤 · ✋ 멈추면 꽁꽁';
+    sub.textContent = POSE ? '🟢 초록불 춤춰 · 🔴 빨간불 자세 잡고 멈춰' : lv >= 3 ? '🟢 초록불 춤춰 · 🔴 빨간불 멈춰' : lv === 2 ? '🐇 빠른 노래 · 🐢 느린 노래 · ✋ 멈춰' : '🎵 음악이 나오면 춤 · ✋ 멈추면 꽁꽁';
 
     function setLight(c) { if (!lamps) return; lamps[0].classList.toggle('on', c === 'r'); lamps[1].classList.toggle('on', c === 'g'); }
     function pickSpeed() {
@@ -505,6 +541,7 @@ G.act({
       dancer.textContent = d;
       var sp = pickSpeed(), t = T[sp];
       dancer.style.setProperty('--spd', t.spd);
+      if (stopTune) { stopTune(); stopTune = null; }   /* 5단계는 멈춤 동안 이어지던 노래를 여기서 바꾼다 */
       if (lv >= 3) { setLight('g'); word.textContent = '초록불!'; sub.textContent = t.e + ' ' + t.w; ctx.say('초록불! ' + (sp === 'mid' ? '' : t.say[0]), { repeat: false }); }
       else { word.textContent = t.w; sub.textContent = sp === 'mid' ? '🎵 신나게 흔들흔들' : t.e + ' ' + (sp === 'fast' ? '빠른 노래' : '느린 노래'); ctx.say(G.pick(t.say), { repeat: false }); }
       stopTune = tune(ctx, G.pick(FZ_SONGS), t.bpm * (calm() ? 0.85 : 1), { bass: true, vol: 0.15 });
@@ -514,13 +551,19 @@ G.act({
     }
     function freeze() {
       if (!ctx.alive) return;
-      phase = 'stop'; if (stopTune) { stopTune(); stopTune = null; }
+      phase = 'stop'; if (stopTune && !KEEP) { stopTune(); stopTune = null; }
       stage.classList.add('stop');
       G.sfx.tone(G.sfx.N.E5, 0.3, 'sine', 0.22); G.buzz(40);
-      if (lv >= 3) { setLight('r'); word.textContent = '빨간불!'; sub.textContent = '🧊 꽁꽁 멈춰요'; ctx.say('빨간불!', { repeat: false }); }
+      if (POSE) {
+        var ps; do { ps = G.pick(FZ_POSES); } while (ps === lastPose); lastPose = ps;
+        setLight('r'); word.textContent = '빨간불!'; dancer.textContent = ps.e;
+        sub.textContent = '🧊 ' + ps.w + (KEEP ? ' — 노래가 나와도 꽁꽁' : '로 꽁꽁');
+        ctx.say('빨간불! ' + ps.say + ' 꽁꽁!', { repeat: false });
+      }
+      else if (lv >= 3) { setLight('r'); word.textContent = '빨간불!'; sub.textContent = '🧊 꽁꽁 멈춰요'; ctx.say('빨간불!', { repeat: false }); }
       else { word.textContent = '멈춰!'; sub.textContent = '🧊 꽁꽁 얼음~'; ctx.say(G.pick(['멈춰!', '얼음!', '멈춰! 꽁꽁!']), { repeat: false }); }
       okBtn.disabled = false; okBtn.textContent = '👍 멈췄어요!';
-      var dur = lv === 1 ? 4000 : lv === 2 ? rnd(3000, 4000) : rnd(2500, 3500);
+      var dur = lv === 1 ? 4000 : lv === 2 || POSE ? rnd(3000, 4000) : rnd(2500, 3500);   /* 자세 잡는 4·5단계는 조금 더 길게 */
       ctx.timeout(function () {
         marks.push(tapped);
         round++; ctx.progress(round, ROUNDS);
@@ -549,7 +592,9 @@ G.act({
     ctx.progress(0, ROUNDS);
     var intro = lv === 1 ? '음악이 나오면 신나게 춤추고, 멈춰! 하면 꽁꽁 얼음처럼 멈춰요.' :
       lv === 2 ? '빠른 노래엔 빨리빨리, 느린 노래엔 천천히 춤춰요. 멈춰! 하면 꽁꽁 얼음!' :
-        '신호등 놀이! 초록불이면 춤추고, 빨간불이면 꽁꽁 멈춰요. 잘 보고 해요!';
+        KEEP ? '신호등 마스터! 빨간불이면 노래가 계속 나와도 자비스가 말한 자세로 꽁꽁 멈춰요. 귀보다 눈으로 신호등을 잘 봐요!' :
+          POSE ? '신호등 도전! 초록불이면 춤추고, 빨간불이면 자비스가 말한 자세로 꽁꽁 멈춰요.' :
+            '신호등 놀이! 초록불이면 춤추고, 빨간불이면 꽁꽁 멈춰요. 잘 보고 해요!';
     ctx.say(intro).then(function () { return ctx.say('준비, 시작!', { repeat: false }); }).then(dance);
   }
 });
@@ -568,12 +613,12 @@ var MARACA = '<svg viewBox="0 0 120 220" aria-hidden="true">' +
 var SK_SONG = [['C5', 1], ['E5', 1], ['G5', 1], ['E5', 1], ['F5', 1], ['A5', 1], ['G5', 2], ['E5', 1], ['G5', 1], ['C6', 1], ['G5', 1], ['F5', 1], ['D5', 1], ['C5', 2]];
 
 G.act({
-  id: 'shake', area: 'body', title: '흔들흔들 마라카스', icon: '🎵', order: 30, levels: 3, mins: 2, needs: ['motion'],
+  id: 'shake', area: 'body', title: '흔들흔들 마라카스', icon: '🎵', order: 30, levels: 5, mins: 2, needs: ['motion'],
   ef: ['attend', 'wm', 'inhibit'],
   desc: '흔들면 찰찰 소리가 나요',
   goal: '리듬 따라 하기 — 소리 수를 듣고 기억해 똑같이 흔드는 청각 작업기억·타이밍, 팔 흔들기로 전정·고유수용 감각 깨우기',
-  how: '기기를 아이 손에 쥐여 주고 떨어뜨리지 않게 부모 손을 살짝 받쳐 주세요. 흔들어도 소리가 안 나는 기기는 화면의 마라카스를 톡톡 누르면 돼요. 2·3단계는 자비스가 흔든 만큼 똑같이 — 부모가 "하나, 둘" 같이 세어 주면 좋아요. 자비스 차례에는 "쉿, 들어 보자" 하고 기다리게 해 주세요.',
-  basis: '리듬 모방 — 청각 작업기억·타이밍, 전정·고유수용 감각 자극(감각통합)',
+  how: '기기를 아이 손에 쥐여 주고 떨어뜨리지 않게 부모 손을 살짝 받쳐 주세요. 흔들어도 소리가 안 나는 기기는 화면의 마라카스를 톡톡 누르면 돼요. 2·3단계는 자비스가 흔든 만큼 똑같이 — 부모가 "하나, 둘" 같이 세어 주면 좋아요. 자비스 차례에는 "쉿, 들어 보자" 하고 기다리게 해 주세요. 4단계(도전)는 네다섯 번, 5단계(마스터)는 자비스가 조금 더 빠르게 흔들고 여섯 번까지 나와요.',
+  basis: '리듬 모방 — 청각 작업기억·타이밍, 전정·고유수용 감각 자극(감각통합). 4·5단계는 기억할 수(폭)를 하나씩 늘리고 5단계는 빠르기를 조금 더함',
   offline: '쌀을 넣은 페트병 마라카스로 엄마가 "찰찰찰" 세 번 흔들면 아이가 똑같이 따라 흔들기.',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
@@ -658,9 +703,11 @@ G.act({
 
     /* ---- 2·3단계: 자비스 리듬 따라 하기 ---- */
     function rhythm() {
-      /* 칸이 오르면 흔들 수가 하나씩 늘어난다 (2단계: 3번 → 다음 단계의 4번, 3단계: 2번 → 3·4번). 첫 판은 늘 두 번 */
-      var SK_PLAN = { 2: [[2, 3, 3, 3], [2, 3, 3, 4], [2, 3, 4, 4]], 3: [[3, 3, 4, 4, 2], [3, 3, 4, 4, 3], [3, 4, 4, 4, 3]] };
-      var plan = [2].concat(G.shuffle(SK_PLAN[lv][ctx.step - 1]));
+      /* 칸이 오르면 흔들 수가 하나씩 늘어난다 (2단계: 3번 → 다음 단계의 4번, 3단계: 2번 → 3·4번). 첫 판은 늘 두 번
+         (4·5단계는 몸풀기 첫 판도 세 번). 4단계: 4·5번, 5단계: 5·6번에 자비스가 조금 더 빠르게 흔든다 */
+      var SK_PLAN = { 2: [[2, 3, 3, 3], [2, 3, 3, 4], [2, 3, 4, 4]], 3: [[3, 3, 4, 4, 2], [3, 3, 4, 4, 3], [3, 4, 4, 4, 3]],
+        4: [[4, 4, 4, 5, 3], [4, 4, 5, 5, 3], [4, 5, 5, 5, 4]], 5: [[4, 5, 5, 5, 4], [5, 5, 5, 6, 4], [5, 5, 6, 6, 4]] };
+      var plan = [lv >= 4 ? 3 : 2].concat(G.shuffle(SK_PLAN[lv][ctx.step - 1]));
       var R = plan.length;
       top.innerHTML = '<div class="sk-dots"></div>';
       var dots = q('.sk-dots', top);
@@ -669,7 +716,7 @@ G.act({
         return new Promise(function (res) {
           listen = false; dots.classList.remove('hide'); drawDots(N);
           turn.textContent = '👂 쉿, 자비스 차례 — 잘 들어 봐!';
-          var k = 0, gap = counting ? pace(950) : pace(640);
+          var k = 0, gap = counting ? pace(950) : pace(lv >= 5 ? 540 : 640);
           function beat() {
             if (k >= N) { ctx.timeout(res, 450); return; }
             k++;
@@ -836,26 +883,27 @@ G.act({
 var HAPPY_BIRTHDAY = [['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['C5', 1], ['B4', 2], ['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['D5', 1], ['C5', 2]];
 
 G.act({
-  id: 'blow', area: 'calm', title: '촛불 끄기', icon: '🕯️', order: 20, levels: 3, mins: 2, needs: ['mic'],
+  id: 'blow', area: 'calm', title: '촛불 끄기', icon: '🕯️', order: 20, levels: 5, mins: 2, needs: ['mic'],
   ef: ['regulate', 'inhibit'],
   desc: '후~ 불어서 촛불을 꺼요',
   goal: '호흡 조절·입술 근육 — 입을 동그랗게 모아 길고 세게 내쉬는 힘(말소리의 바탕), 숨으로 몸 가라앉히기',
-  how: '부모가 먼저 "후~" 하고 입 모양을 크게 보여 주세요. 기기 마이크(보통 아래쪽)에서 한 뼘쯤 떨어져 불면 잘 돼요 — 목소리("아~")보다 바람 소리에 반응해요. 마이크를 쓸 수 없으면 아이가 후~ 불면서 촛불을 누르고, 다 끈 뒤 부모가 👍 로 알려 주면 돼요.',
+  how: '부모가 먼저 "후~" 하고 입 모양을 크게 보여 주세요. 기기 마이크(보통 아래쪽)에서 한 뼘쯤 떨어져 불면 잘 돼요 — 목소리("아~")보다 바람 소리에 반응해요. 마이크를 쓸 수 없으면 아이가 후~ 불면서 촛불을 누르고, 다 끈 뒤 부모가 👍 로 알려 주면 돼요. 4단계(도전)는 촛불이 하나 더(여섯 개), 5단계(마스터)는 조금 더 길고 고른 바람이 들어요 — 어지러워하면 숨을 쉬고 쉬었다 해요.',
   basis: '호흡 조절·입술 오므리기 — 언어치료 불기 활동(구강 운동), 바람을 눈으로 보여 주는 바이오피드백',
   offline: '빨대로 탁구공이나 휴지 조각 불어 굴리기, 비눗방울 천천히 불기, 생일 초 불기 연습.',
   run: async function (ctx) {
     var B = ctx.body, lv = ctx.level;
-    /* 칸이 오르면: 바람 세기·양이 아주 조금씩 더(TH·NEED), 1·2단계 3칸은 촛불이 하나 더(다음 단계 미리).
-       판 수(ROUNDS)는 단계마다 놀이 길이를 맞춘 값이라 칸으로 바꾸지 않는다 — 촛불이 늘어도 판이 줄지 않게 */
-    var PER = [1, 3, 5][lv - 1] + (lv < 3 && ctx.step === 3 ? 1 : 0), ROUNDS = [3, 2, 2][lv - 1], TOTAL = PER * ROUNDS;
+    /* 칸이 오르면: 바람 세기·양이 아주 조금씩 더(TH·NEED), 다음 단계 촛불이 더 많으면 3칸은 촛불이 하나 더(다음 단계 미리).
+       판 수(ROUNDS)는 단계마다 놀이 길이를 맞춘 값이라 칸으로 바꾸지 않는다 — 촛불이 늘어도 판이 줄지 않게.
+       쉬어가기 놀이라 4·5단계도 아주 조금만: 4단계 촛불 여섯, 5단계는 촛불 그대로 바람만 조금 더 길게 */
+    var PT = [1, 3, 5, 6, 6], PER = PT[lv - 1] + (ctx.step === 3 && PT[lv] > PT[lv - 1] ? 1 : 0), ROUNDS = [3, 2, 2, 2, 2][lv - 1], TOTAL = PER * ROUNDS;
     function prog(outN) { if (TOTAL > 6) ctx.progress(outN, PER); else ctx.progress(round * PER + outN, TOTAL); }   /* 점이 너무 많으면 제목이 가려져 이번 판 촛불만 */
-    var TH = ctx.tune([0.08, 0.11, 0.14]);     /* 이보다 센 바람부터 불꽃이 줄어든다 */
-    var NEED = ctx.tune([0.55, 0.7, 0.8]);     /* 촛불 하나 끄는 데 드는 바람 양 */
+    var TH = ctx.tune([0.08, 0.11, 0.14, 0.155, 0.165]);     /* 이보다 센 바람부터 불꽃이 줄어든다 */
+    var NEED = ctx.tune([0.55, 0.7, 0.8, 0.85, 0.9]);       /* 촛불 하나 끄는 데 드는 바람 양 */
     var CFG = [
       { cw: 'clamp(52px,14vw,78px)', ch: 'clamp(140px,26vh,230px)', gap: '0px' },
       { cw: 'clamp(38px,10vw,56px)', ch: 'clamp(110px,20vh,180px)', gap: 'clamp(24px,7vw,46px)', kw: 'clamp(260px,74vw,420px)', kh: 'clamp(90px,14vh,130px)' },
       { cw: 'clamp(30px,8vw,46px)', ch: 'clamp(90px,16vh,150px)', gap: 'clamp(16px,4.6vw,30px)', kw: 'clamp(300px,86vw,480px)', kh: 'clamp(100px,16vh,150px)' }
-    ][lv - 1];
+    ][Math.min(lv, 3) - 1];   /* 4·5단계는 3단계 케이크 그대로 (촛불 여섯도 휴대폰 폭에 들어간다) */
     if (PER > 1 && CFG.gap === '0px') CFG.gap = 'clamp(14px,4vw,24px)';   /* 1단계 3칸: 촛불 두 개가 붙지 않게 */
     B.innerHTML = '<div class="bd"><div class="bl-meter"><span>🌬️</span><div><b></b></div></div><div class="bl-scene"></div><div class="bl-foot"></div></div>';
     var scene = q('.bl-scene', B), meter = q('.bl-meter', B), meterB = q('.bl-meter b', B), foot = q('.bl-foot', B);
@@ -941,7 +989,7 @@ G.act({
       active = false; helped = false; hinted = false; helpShown = false; foot.innerHTML = '';
       build(); G.sfx.play('sparkle'); prog(0);
       var line = again ? '괜찮아, 입을 동그랗게 하고 후~ 다시 해 보자!' :
-        round === 0 ? (lv === 3 ? '생일 케이크다! 촛불 ' + CNT[PER] + ' 개를 후~ 불어서 꺼 볼까?' : PER > 1 ? '촛불이 ' + CNT[PER] + ' 개! 후~ 불어서 꺼 볼까?' : '촛불에 후~ 바람을 불어 봐!') :
+        round === 0 ? (lv >= 5 ? '생일 케이크다! 이번 촛불은 조금 단단해. 후~ 길게 불어서 ' + CNT[PER] + ' 개를 꺼 볼까?' : lv >= 3 ? '생일 케이크다! 촛불 ' + CNT[PER] + ' 개를 후~ 불어서 꺼 볼까?' : PER > 1 ? '촛불이 ' + CNT[PER] + ' 개! 후~ 불어서 꺼 볼까?' : '촛불에 후~ 바람을 불어 봐!') :
           G.pick(['짠! 다시 불을 켰어. 후~ 불어 봐!', '촛불이 또 켜졌어! 후~', '한 번 더! 후~ 바람을 보내 줘.']);
       if (mode === 'tap' && round === 0 && !again) line += ' 후~ 불면서 촛불을 톡 눌러 봐!';
       await ctx.say(line);
@@ -958,8 +1006,8 @@ G.act({
         if (!ok) { await ctx.say('괜찮아! 다음 촛불도 같이 해 보자.', { repeat: false }); tries = 0; next(); return; }
         tries = 0;
       }
-      var stopSong = lv === 3 ? tune(ctx, HAPPY_BIRTHDAY, 120, { once: true, vol: calm() ? 0.08 : 0.12 }) : null;
-      await ctx.cheer(lv === 3 ? '후~ 촛불을 다 껐다! 생일 축하해!' : PER > 1 ? '촛불을 다 껐어! 바람이 정말 세다!' : G.pick(['후~ 꺼졌다! 최고야!', '와, 촛불이 꺼졌어! 바람 대장!', '후~ 정말 잘 불었어!']));
+      var stopSong = lv >= 3 ? tune(ctx, HAPPY_BIRTHDAY, 120, { once: true, vol: calm() ? 0.08 : 0.12 }) : null;
+      await ctx.cheer(lv >= 3 ? '후~ 촛불을 다 껐다! 생일 축하해!' : PER > 1 ? '촛불을 다 껐어! 바람이 정말 세다!' : G.pick(['후~ 꺼졌다! 최고야!', '와, 촛불이 꺼졌어! 바람 대장!', '후~ 정말 잘 불었어!']));
       if (stopSong) await ctx.wait(2500);
       next();
     }
@@ -967,13 +1015,13 @@ G.act({
       round++;
       if (round >= ROUNDS) {
         ctx.extra.mic = mode === 'mic' ? 1 : 0;
-        ctx.finish({ msg: lv === 3 ? '생일 케이크 촛불을 모두 껐어! 바람 대장, 생일 축하해!' : '촛불을 ' + TOTAL + '개나 껐어! 후~ 바람이 정말 멋져!' });
+        ctx.finish({ msg: lv >= 3 ? '생일 케이크 촛불을 모두 껐어! 바람 대장, 생일 축하해!' : '촛불을 ' + TOTAL + '개나 껐어! 후~ 바람이 정말 멋져!' });
       } else startRound();
     }
 
     prog(0);
     build();
-    await ctx.say(lv === 3 ? '오늘은 생일 파티! 자비스가 케이크를 준비했어.' : '촛불 끄기 놀이 하자!');
+    await ctx.say(lv >= 3 ? '오늘은 생일 파티! 자비스가 케이크를 준비했어.' : '촛불 끄기 놀이 하자!');
     try { mic = await ctx.mic(); } catch (e) { mic = null; }
     if (mic) {
       mode = 'mic';

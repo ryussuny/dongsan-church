@@ -60,7 +60,7 @@ function ghost(ctx, box, pts, secs) {
   g.style.left = pts[0].x + 'px'; g.style.top = pts[0].y + 'px';
   ctx.loop(function (dt, t) {
     if (!g.isConnected) return false;
-    var k = Math.min(1, t / secs), p = pts[Math.min(n - 1, Math.floor(k * (n - 1)))];
+    var k = G.clamp(t / secs, 0, 1), p = pts[Math.min(n - 1, Math.floor(k * (n - 1)))];   /* 첫 장면 시각이 시작보다 살짝 앞설 수 있어 0 밑은 0 으로 */
     g.style.left = p.x + 'px'; g.style.top = p.y + 'px';
     if (k >= 1) { g.remove(); return false; }
   });
@@ -172,6 +172,9 @@ G.css('motor', `
 .dt-dot.on{background:color-mix(in srgb,var(--area) 22%,var(--surface));border-color:var(--area)}
 .dt-dot.next{background:var(--area);border-color:var(--area);color:#fff;animation:dtPulse 1.1s ease-in-out infinite}
 .dt-dot.hint{animation:glow 1s ease-in-out 3}
+.dt-board.calm-next .dt-dot.next{animation:none}
+.dt-board.soft-next .dt-dot.next{animation:none;background:var(--surface);color:var(--ink);border-color:var(--area);box-shadow:0 0 0 3px color-mix(in srgb,var(--area) 30%,transparent),var(--shadow)}
+.dt-board .dt-dot.next.hint{animation:glow 1s ease-in-out 3}
 .dt-dot.mt-wig{animation:mtWig .5s}
 @keyframes dtPulse{0%,100%{scale:1;box-shadow:0 0 0 0 color-mix(in srgb,var(--area) 60%,transparent)}50%{scale:1.16;box-shadow:0 0 0 12px color-mix(in srgb,var(--area) 0%,transparent)}}
 .dt-board.done .dt-dot{opacity:0}
@@ -225,6 +228,7 @@ G.css('motor', `
 .so-bk .bwv{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:clamp(26px,7vw,40px);opacity:.22;pointer-events:none;line-height:1}
 .so-bk.over{transform:scale(1.05);box-shadow:0 0 0 6px color-mix(in srgb,var(--c) 45%,transparent)}
 .so-bk.got{animation:pop .4s}
+.so-baskets.so-cat4 .bh{flex-direction:column;gap:0;font-size:clamp(14px,3.8vw,20px);line-height:1.15}   /* 범주 바구니 넷: 그림 위·이름 아래 (휴대폰 폭에 맞게) */
 
 /* ── tilt ── */
 .act-tilt{--tl-felt:#a9dd8a;--tl-dot:rgba(255,255,255,.28);--tl-wall:#c98b4f;--tl-wall2:#e2ad73;--tl-hole:#26331f;--tl-rim:#7cb85a}
@@ -260,7 +264,7 @@ G.css('motor', `
 .pz-hole.done .sil{opacity:0}
 .pz-pc{position:relative;width:var(--s,110px);height:var(--s,110px);cursor:grab;touch-action:none}
 .pz-pc .pc{stroke:rgba(0,0,0,.22);stroke-width:3;stroke-linejoin:round}
-.pz-pc svg{filter:drop-shadow(0 5px 5px rgba(0,0,0,.18))}
+.pz-pc svg{filter:drop-shadow(0 5px 5px rgba(0,0,0,.18));transition:transform .4s cubic-bezier(.3,1.4,.6,1)}
 .pz-pc.sel svg{filter:drop-shadow(0 0 6px var(--area)) drop-shadow(0 0 12px var(--area))}
 .pz-pc.in{position:absolute;left:0;top:0;cursor:default}
 `);
@@ -277,6 +281,22 @@ var TR_SHAPES = (function () {
   }
   function wave() { var p = []; for (var i = 0; i <= 48; i++) { var X = i / 24; p.push([X, 0.5 - 0.32 * Math.sin(1.5 * Math.PI * X)]); } return p; }
   function star() { var p = []; for (var k = 0; k < 10; k++) { var a = (-90 + 36 * k) * Math.PI / 180, r = k % 2 ? 0.19 : 0.47; p.push([0.5 + r * Math.cos(a), 0.53 + r * Math.sin(a)]); } return p; }
+  /* 4·5단계 곡선 — 키를 h 로 맞추고 왼쪽 위에 붙여 { s, ar } 로 돌려준다 */
+  function fit(p, h) {
+    var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    p.forEach(function (q) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]); });
+    var k = h / (y1 - y0), m = (1 - h) / 2;
+    return { s: [p.map(function (q) { return [m + (q[0] - x0) * k, m + (q[1] - y0) * k]; })], ar: (x1 - x0) * k + 2 * m };
+  }
+  /* 달팽이 — 바깥에서 안으로 두 바퀴 (한 바퀴마다 반지름이 0.17 씩 줄어 길이 겹치지 않는다) */
+  function spiral() { var p = []; for (var i = 0; i <= 120; i++) { var t = i / 120, a = (-90 + 720 * t) * Math.PI / 180, r = 0.46 - 0.34 * t; p.push([0.5 + r * Math.cos(a), 0.5 + r * Math.sin(a)]); } return p; }
+  /* 하트 — 위 가운데 오목한 곳에서 왼쪽으로 내려가 뾰족, 오른쪽으로 올라온다 */
+  function heart() { var p = []; for (var i = 0; i <= 64; i++) { var t = i / 64 * (2 * Math.PI - 0.7); p.push([-16 * Math.pow(Math.sin(t), 3), -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))]); } return fit(p, 0.9); }
+  /* 누운 8자 — 가운데에서 왼쪽 위로 한 바퀴, 가운데를 건너 오른쪽 한 바퀴 (몸 가운데 넘기) */
+  function eight() { var p = []; for (var i = 0; i <= 96; i++) { var t = i / 96 * (2 * Math.PI - 0.4); p.push([-Math.sin(t), -0.9 * Math.sin(t) * Math.cos(t)]); } return fit(p, 0.84); }
+  /* 용수철 고리 둘 — 아래에서 올라가 위에서 동그랗게 돌아 내려온다 */
+  function loops() { var p = []; for (var i = 0; i <= 100; i++) { var t = Math.PI + i / 100 * 4 * Math.PI; p.push([t - 3.2 * Math.sin(t), 1 - 3.2 * Math.cos(t)]); } return fit(p, 0.86); }
+  var HE = heart(), EI = eight(), LO = loops();
   return {
     v:        { ar: 0.5, say: '위에서 아래로 쭉!', s: [[[0.25, 0], [0.25, 1]]] },
     h:        { ar: 2, say: '왼쪽에서 오른쪽으로 쭉!', s: [[[0, 0.5], [2, 0.5]]] },
@@ -292,15 +312,32 @@ var TR_SHAPES = (function () {
     n:        { ar: 0.9, k: 'ㄴ', n: '니은', say: '니은 길이에요!', s: [[[0.08, 0.04], [0.08, 0.92], [0.84, 0.92]]] },
     d:        { ar: 0.9, k: 'ㄷ', n: '디귿', say: '디귿 길이에요! 1번 길부터 차례로.', s: [[[0.08, 0.06], [0.84, 0.06]], [[0.08, 0.06], [0.08, 0.92], [0.86, 0.92]]] },
     m:        { ar: 1, k: 'ㅁ', n: '미음', say: '미음 길이에요! 1번, 2번, 3번 차례로.', s: [[[0.08, 0.06], [0.08, 0.94]], [[0.08, 0.06], [0.92, 0.06], [0.92, 0.94]], [[0.08, 0.94], [0.92, 0.94]]] },
-    o:        { ar: 1, k: 'ㅇ', n: '이응', say: '이응 길이에요! 위에서 시작해서 동그랗게.', s: [arc(0.5, 0.5, 0.44, 0.46, -90, -420, 60)] }
+    o:        { ar: 1, k: 'ㅇ', n: '이응', say: '이응 길이에요! 위에서 시작해서 동그랗게.', s: [arc(0.5, 0.5, 0.44, 0.46, -90, -420, 60)] },
+    /* 4단계(도전) — 사선·꺾임이 많은 길, 곡선이 조금씩 작아지는 길 */
+    diamond:  { ar: 0.8, say: '마름모 길이에요! 뾰족한 곳에서 방향을 바꿔요.', s: [[[0.4, 0.04], [0.76, 0.5], [0.4, 0.96], [0.04, 0.5], [0.27, 0.2]]] },
+    s:        { ar: 1, k: 'ㅅ', n: '시옷', say: '시옷 길이에요! 1번은 왼쪽 아래로, 2번은 오른쪽 아래로.', s: [[[0.5, 0.06], [0.08, 0.94]], [[0.32, 0.44], [0.92, 0.94]]] },
+    heart:    { ar: HE.ar, say: '하트 길이에요! 둥글게 내려가서 뾰족, 다시 둥글게!', s: HE.s },
+    r:        { ar: 0.9, k: 'ㄹ', n: '리을', say: '리을 길이에요! 1번, 2번, 3번 차례로.', s: [[[0.08, 0.06], [0.82, 0.06], [0.82, 0.5]], [[0.08, 0.5], [0.82, 0.5]], [[0.08, 0.5], [0.08, 0.94], [0.86, 0.94]]] },
+    spiral:   { ar: 1, say: '달팽이 집처럼 빙글빙글 안으로!', s: [spiral()] },
+    /* 5단계(마스터) — 획이 넷인 글자, 길이 서로 건너는 길, 고리 */
+    house:    { ar: 1, say: '집 길이에요! 1번 네모를 그리고, 2번 지붕을 그려요.', s: [[[0.14, 0.44], [0.86, 0.44], [0.86, 0.96], [0.14, 0.96], [0.14, 0.6]], [[0.04, 0.46], [0.5, 0.04], [0.96, 0.46]]] },
+    b:        { ar: 0.9, k: 'ㅂ', n: '비읍', say: '비읍 길이에요! 1번부터 4번까지 차례로.', s: [[[0.1, 0.06], [0.1, 0.94]], [[0.8, 0.06], [0.8, 0.94]], [[0.1, 0.5], [0.8, 0.5]], [[0.1, 0.94], [0.8, 0.94]]] },
+    p:        { ar: 0.92, k: 'ㅍ', n: '피읖', say: '피읖 길이에요! 1번부터 4번까지 차례로.', s: [[[0.08, 0.08], [0.84, 0.08]], [[0.28, 0.08], [0.28, 0.9]], [[0.64, 0.08], [0.64, 0.9]], [[0.04, 0.9], [0.88, 0.9]]] },
+    h:        { ar: 0.9, k: 'ㅎ', n: '히읗', say: '히읗 길이에요! 1번 꼭지, 2번 가로, 3번 동그라미.', s: [[[0.3, 0.06], [0.6, 0.06]], [[0.08, 0.26], [0.82, 0.26]], arc(0.45, 0.65, 0.28, 0.29, -90, -420, 50)] },
+    eight:    { ar: EI.ar, say: '누운 8자 길이에요! 가운데에서 왼쪽으로 한 바퀴, 오른쪽으로 한 바퀴!', s: EI.s },
+    loops:    { ar: LO.ar, say: '용수철처럼 동글동글 고리를 이어 그려요!', s: LO.s }
   };
 })();
-/* 발달 순서: 세로·가로(2~3세) → 둥근 선·원·+(3~4세) → 사선·네모·세모(4~5세) → 별·글자 */
-var TR_LEVEL = { 1: ['v', 'h', 'v', 'h', 'v'], 2: ['arch', 'wave', 'circle', 'cross', 'zigzag'], 3: ['square', 'triangle', 'gn', 'dmo', 'star'] };
-/* 칸이 오르면 다음 단계 길을 끝에 하나씩 섞는다 (2칸: 1개, 3칸: 2개). 3단계는 길 폭만 조금 좁아진다 */
+/* 발달 순서: 세로·가로(2~3세) → 둥근 선·원·+(3~4세) → 사선·네모·세모(4~5세) → 별·글자
+   → 4단계: 마름모(6~7세)·사선 글자·달팽이 → 5단계: 획 넷인 글자·누운 8자·고리 */
+var TR_LEVEL = { 1: ['v', 'h', 'v', 'h', 'v'], 2: ['arch', 'wave', 'circle', 'cross', 'zigzag'], 3: ['square', 'triangle', 'gn', 'dmo', 'star'],
+  4: ['diamond', 's', 'heart', 'r', 'spiral'], 5: ['house', 'bp', 'h', 'eight', 'loops'] };
+/* 칸이 오르면 다음 단계 길을 끝에 하나씩 섞는다 (2칸: 1개, 3칸: 2개). 끝 단계(5)는 길 폭만 조금 좁아진다 */
 var TR_STEP = {
   1: { 2: ['v', 'h', 'v', 'h', 'arch'], 3: ['v', 'h', 'v', 'arch', 'wave'] },
-  2: { 2: ['arch', 'circle', 'cross', 'zigzag', 'square'], 3: ['arch', 'circle', 'cross', 'square', 'triangle'] }
+  2: { 2: ['arch', 'circle', 'cross', 'zigzag', 'square'], 3: ['arch', 'circle', 'cross', 'square', 'triangle'] },
+  3: { 2: ['square', 'triangle', 'gn', 'dmo', 'diamond'], 3: ['square', 'triangle', 'gn', 'diamond', 's'] },
+  4: { 2: ['diamond', 's', 'heart', 'r', 'house'], 3: ['diamond', 's', 'heart', 'house', 'bp'] }
 };
 var TR_STORY = [
   { c: '🐛', cn: '애벌레', g: '🍎', gn: '사과', go: '애벌레가 사과까지 가요', yum: '냠냠! 사과 맛있다!' },
@@ -332,23 +369,26 @@ function trResample(strokes) {
 }
 
 G.act({
-  id: 'trace', area: 'motor', title: '선 따라 그리기', icon: '✏️', order: 10, levels: 3, mins: 3, needs: [],
+  id: 'trace', area: 'motor', title: '선 따라 그리기', icon: '✏️', order: 10, levels: 5, mins: 3, needs: [],
   ef: ['attend', 'plan', 'inhibit'],
   desc: '애벌레 길을 따라 쭉 그려요',
   goal: '시각-운동 통합 — 눈으로 길을 보며 손가락을 원하는 쪽으로 움직이기. 글씨 쓰기 전 선 긋기(세로·가로·원·+·네모·세모·한글 자음)',
   how: '검지 하나만 펴고 나머지 손가락은 살짝 접게 도와주세요(연필 잡기 전 단계). 팔꿈치와 손목을 바닥에 대고 손가락·손목으로 그리게 하면 더 정확해요. 길을 조금 벗어나도 "애벌레가 사과까지 갔네!" 하고 끝까지 간 것을 칭찬해 주세요.',
-  basis: '시각-운동 통합(VMI) — Beery 선 긋기 발달 순서(세로→가로→원→+→네모→세모), 넓은 길에서 좁은 길로 정확도 요구를 조금씩 높임',
+  basis: '시각-운동 통합(VMI) — Beery 선 긋기 발달 순서(세로→가로→원→+→네모→세모→마름모), 넓은 길에서 좁은 길로 정확도 요구를 조금씩 높임. 4단계(도전)는 마름모·사선 글자·달팽이, 5단계(마스터)는 획이 넷인 글자·누운 8자·고리 길',
   offline: '쟁반에 소금이나 밀가루를 얇게 깔고 손가락 하나로 세로줄·동그라미를 그린 뒤, 굵은 크레용으로 종이 위 같은 길을 따라 그려 보세요.',
   run: async function (ctx) {
     var lv = ctx.level, B = ctx.body, AREA = areaHex(ctx);
-    /* 칸이 오르면 길 폭이 조금 좁아지고(TOLF), 자비스가 도와주기 전 기다림이 조금 길어진다(AUTO) */
-    var TOLF = ctx.tune([0.085, 0.068, 0.052]), AUTO = ctx.tune([30000, 40000, 50000]);
+    /* 칸이 오르면 길 폭이 조금 좁아지고(TOLF), 자비스가 도와주기 전 기다림이 조금 길어진다(AUTO).
+       (길 폭은 손가락 굵기를 생각해 휴대폰에서 반폭 16px 밑으로는 좁히지 않는다) */
+    var TOLF = ctx.tune([0.085, 0.068, 0.052, 0.044, 0.038]), AUTO = ctx.tune([30000, 40000, 50000, 55000, 60000]);
+    /* 끝 단계 2·3칸: 가운데 점선 길잡이가 조금 옅어진다 (넓은 길은 그대로) */
+    var DOTA = lv >= topLv(ctx) && ctx.step > 1 ? (ctx.step === 2 ? 0.4 : 0.28) : 0.55;
     B.innerHTML = '<div class="mt-wrap"><div class="mt-board tr-board"><div class="tr-name"></div></div></div>';
     var board = G.$('.tr-board', B), nameEl = G.$('.tr-name', board);
     var K = ctx.canvas(board, { onResize: layout });
     var goalEl = G.el('<span class="tr-goal" aria-hidden="true"></span>'), charEl = G.el('<span class="tr-char" aria-hidden="true"></span>');
     board.appendChild(goalEl); board.appendChild(charEl);
-    var list = ((TR_STEP[lv] || {})[ctx.step] || TR_LEVEL[lv]).map(function (k) { return k === 'gn' ? G.pick(['g', 'n']) : k === 'dmo' ? G.pick(['d', 'm', 'o']) : k; });
+    var list = ((TR_STEP[lv] || {})[ctx.step] || TR_LEVEL[lv]).map(function (k) { return k === 'gn' ? G.pick(['g', 'n']) : k === 'dmo' ? G.pick(['d', 'm', 'o']) : k === 'bp' ? G.pick(['b', 'p']) : k; });
     var stories = TR_STORY.slice(0, 2).concat(G.shuffle(TR_STORY.slice(2)));
     var P = null, pid = null, helped = 0, accSum = 0, accN = 0;
     var idle = idler(ctx, pace(8000), nudge);
@@ -381,7 +421,7 @@ G.act({
       P.def.s.forEach(function (s) { strokePath(c, s); c.strokeStyle = hexA(AREA, 0.17); c.lineWidth = P.tol * 2; c.stroke(); });
       /* 가운데 점선 */
       c.setLineDash([1, 15]);
-      P.def.s.forEach(function (s) { strokePath(c, s); c.strokeStyle = hexA(AREA, 0.55); c.lineWidth = 7; c.stroke(); });
+      P.def.s.forEach(function (s) { strokePath(c, s); c.strokeStyle = hexA(AREA, DOTA); c.lineWidth = 7; c.stroke(); });
       c.setLineDash([]);
       /* 가는 쪽 화살표 */
       c.strokeStyle = hexA(AREA, 0.6); c.lineWidth = 4;
@@ -577,27 +617,45 @@ var DT_PICS = {
     { e: '🚀', w: '로켓', p: [[50, 3], [66, 26], [66, 66], [84, 92], [60, 82], [50, 97], [40, 82], [16, 92], [34, 66], [34, 26]], c: [50, 50] },
     { e: '🐱', w: '고양이', p: [[18, 6], [40, 28], [60, 28], [82, 6], [90, 46], [84, 74], [64, 92], [36, 92], [16, 74], [10, 46]], c: [50, 58] },
     { e: '🐠', w: '물고기', p: [[2, 44], [26, 22], [54, 18], [76, 40], [96, 20], [96, 80], [76, 60], [54, 82], [26, 78], [12, 62]], c: [44, 50] }
+  ],
+  /* 4단계(도전): 점 11~13개 — 점 사이가 가까워 더 정확히 짚어야 한다 (가장 가까운 두 점도 16 이상 떨어지게) */
+  4: [
+    { e: '👑', w: '왕관', p: [[6, 88], [6, 14], [17, 46], [28, 14], [39, 46], [50, 14], [61, 46], [72, 14], [83, 46], [94, 14], [94, 88], [50, 88]], c: [50, 64] },
+    { e: '🌲', w: '나무', p: [[50, 4], [76, 36], [60, 36], [90, 70], [58, 70], [58, 96], [42, 96], [42, 70], [10, 70], [40, 36], [24, 36]], c: [50, 50] },
+    { e: '🏰', w: '성', p: [[6, 94], [6, 10], [26, 10], [26, 38], [42, 38], [42, 20], [58, 20], [58, 38], [74, 38], [74, 10], [94, 10], [94, 94]], c: [50, 64] },
+    { e: '🍄', w: '버섯', p: [[4, 52], [10, 30], [26, 12], [50, 6], [74, 12], [90, 30], [96, 52], [62, 52], [64, 90], [36, 90], [38, 52]], c: [50, 40] },
+    { e: '🏡', w: '굴뚝 집', p: [[8, 94], [8, 48], [50, 8], [64, 21], [64, 5], [80, 5], [80, 37], [92, 48], [92, 94], [60, 94], [60, 66], [40, 66], [40, 94]], c: [50, 52] }
+  ],
+  /* 5단계(마스터): 점 14~15개 */
+  5: [
+    { e: '✈️', w: '비행기', p: [[50, 4], [58, 26], [58, 42], [96, 54], [96, 70], [58, 62], [58, 80], [72, 94], [28, 94], [42, 80], [42, 62], [4, 70], [4, 54], [42, 42], [42, 26]], c: [50, 56] },
+    { e: '🍎', w: '사과', p: [[50, 26], [61, 14], [77, 11], [90, 24], [95, 46], [88, 72], [70, 92], [50, 86], [30, 92], [12, 72], [5, 46], [10, 24], [23, 11], [39, 14]], c: [50, 54] },
+    { e: '🦋', w: '나비', p: [[50, 34], [68, 8], [92, 12], [90, 40], [68, 52], [88, 78], [64, 92], [50, 68], [36, 92], [12, 78], [32, 52], [10, 40], [8, 12], [32, 8]], c: [50, 50] },
+    { e: '🏆', w: '트로피', p: [[22, 6], [78, 6], [94, 14], [88, 36], [70, 46], [58, 60], [58, 76], [74, 94], [26, 94], [42, 76], [42, 60], [30, 46], [12, 36], [6, 14]], c: [50, 34] },
+    { e: '🎄', w: '크리스마스 나무', p: [[50, 2], [74, 26], [58, 26], [84, 48], [66, 48], [94, 74], [58, 74], [58, 96], [42, 96], [42, 74], [6, 74], [34, 48], [16, 48], [42, 26], [26, 26]], c: [50, 54] }
   ]
 };
 var DT_NOTE = [523.3, 587.3, 659.3, 784, 880, 1046.5, 1174.7, 1318.5, 1568, 1760];
 
 G.act({
-  id: 'dots', area: 'motor', title: '점 잇기', icon: '⭐', order: 20, levels: 3, mins: 3, needs: [],
+  id: 'dots', area: 'motor', title: '점 잇기', icon: '⭐', order: 20, levels: 5, mins: 3, needs: [],
   ef: ['plan', 'attend'],
   desc: '숫자 점을 이으면 그림이 짠!',
   goal: '눈손 협응·시각 주사 — 다음 점을 눈으로 찾아 손가락으로 정확히 짚고 이어 가기, 수 순서(1→10)',
   how: '처음엔 부모가 "하나, 둘…" 같이 세며 다음 점을 손가락으로 가리켜 주세요. 손가락을 떼지 않고 쭉 끌어 이어도 되고 점을 하나씩 눌러도 돼요. 다 이으면 "무엇이 나왔지?" 하고 그림 이름을 말해 보게 해요.',
-  basis: '시각-운동 협응·시각 주사(차례로 훑어보기) + 수 순서 — 점선·점 잇기는 글씨 쓰기 전 단계 활동',
+  basis: '시각-운동 협응·시각 주사(차례로 훑어보기) + 수 순서 — 점선·점 잇기는 글씨 쓰기 전 단계 활동. 4단계(도전)는 점 11~13개, 5단계(마스터)는 점 14~15개로 길게 이어 간다',
   offline: '종이에 큰 점 4~6개를 찍고 번호를 써서 굵은 크레용으로 이어 보고, 바닥에 숫자 종이를 놓고 1→2→3 순서로 밟아 보세요.',
   run: async function (ctx) {
-    var lv = ctx.level, B = ctx.body, AREA = areaHex(ctx), NP = lv === 3 ? 3 : 4;
+    var lv = ctx.level, B = ctx.body, AREA = areaHex(ctx), NP = lv >= 3 ? 3 : 4, TOP = topLv(ctx);
     B.innerHTML = '<div class="mt-wrap"><div class="mt-board dt-board"></div></div>';
     var board = G.$('.dt-board', B);
     var K = ctx.canvas(board, { onResize: layout });
-    /* 칸이 오르면 마지막 그림 1~2개를 다음 단계 그림(점이 더 많은)으로 — 3단계는 점만 조금 작아진다 */
-    var NX = lv < 3 ? ctx.step - 1 : 0;
+    /* 칸이 오르면 마지막 그림 1~2개를 다음 단계 그림(점이 더 많은)으로 — 끝 단계(5)는 점이 조금 작아지고,
+       다음 점 표시가 옅어진다 (2칸: 두근두근 멈춤, 3칸: 테두리만 — 숫자를 보고 찾기) */
+    var NX = lv < TOP ? ctx.step - 1 : 0;
     var pics = G.sample(DT_PICS[lv], NP - NX).concat(NX ? G.sample(DT_PICS[lv + 1], NX) : []), P = null, pid = null, finger = null, missAll = 0, autoN = 0;
-    var DOTR = ctx.tune([0.085, 0.072, 0.06]);   /* 점 크기 — 칸이 오르면 조금씩 작게 */
+    var DOTR = ctx.tune([0.085, 0.072, 0.06, 0.054, 0.05]);   /* 점 크기 — 칸이 오르면 조금씩 작게 (휴대폰에서는 지름 40px 밑으로 안 작아진다) */
+    if (lv >= TOP && ctx.step > 1) board.classList.add(ctx.step === 2 ? 'calm-next' : 'soft-next');
     var idle = idler(ctx, pace(7000), nudge);
 
     function layout() {
@@ -737,7 +795,8 @@ G.act({
 });
 
 /* ===========================================================
-   3. 풍선 터뜨리기 — 움직이는 목표 겨냥 (3단계: 빨간 풍선만 — 참기)
+   3. 풍선 터뜨리기 — 움직이는 목표 겨냥 (3단계: 빨간 풍선만 — 참기,
+      4단계: 중간에 한 번 '이번엔 파란 풍선만!' 규칙 바꾸기, 5단계: 규칙이 두 번 바뀐다)
    =========================================================== */
 var PP_GIFT = [['🐥', '병아리'], ['⭐', '별'], ['🍬', '사탕'], ['🐰', '토끼'], ['🦋', '나비'], ['🌸', '꽃'], ['🐻', '곰돌이'], ['🍓', '딸기']];
 var PP_CHEER = ['펑! 펑! 신난다!', '손가락이 정말 빨라!', '풍선 대장이다!', '우와, 또 터뜨렸어!', '콕콕 잘 누른다!'];
@@ -747,21 +806,26 @@ function ppSVG() {
 }
 
 G.act({
-  id: 'pop', area: 'motor', title: '풍선 터뜨리기', icon: '🎈', order: 30, levels: 3, mins: 1, needs: [],
+  id: 'pop', area: 'motor', title: '풍선 터뜨리기', icon: '🎈', order: 30, levels: 5, mins: 1, needs: [],
   ef: ['attend', 'inhibit'],
   desc: '날아오는 풍선을 콕! 펑!',
   goal: '눈-손 협응·시각 추적 — 움직이는 목표를 눈으로 따라가며 검지 하나로 정확히 짚기 (3단계: 정해진 색만 누르고 나머지는 참기)',
-  how: '검지 하나로 콕 누르게 해 주세요 — 손바닥으로 치면 "손가락 총!" 하고 모양을 보여 줘요. 풍선을 눈으로 따라가는 것도 연습이에요. 3단계에서 다른 색 풍선을 참으면 "참았네!" 하고 크게 칭찬해 주세요.',
-  basis: '눈-손 협응·움직이는 목표 겨냥(시각 추적) — 3단계는 Go/No-Go(반응 억제) 규칙',
+  how: '검지 하나로 콕 누르게 해 주세요 — 손바닥으로 치면 "손가락 총!" 하고 모양을 보여 줘요. 풍선을 눈으로 따라가는 것도 연습이에요. 3단계에서 다른 색 풍선을 참으면 "참았네!" 하고 크게 칭찬해 주세요. 4·5단계는 중간에 누를 색이 바뀌어요 — "이번엔 무슨 색?" 하고 같이 말해 주세요.',
+  basis: '눈-손 협응·움직이는 목표 겨냥(시각 추적) — 3단계는 Go/No-Go(반응 억제) 규칙, 4·5단계(도전·마스터)는 규칙 바꾸기(인지 유연성)를 더함',
   offline: '비눗방울을 불어 주고 검지 하나로 콕 터뜨려 보세요. 익숙해지면 "높이 있는 방울만!", "큰 방울만!" 규칙을 붙여요.',
   run: function (ctx) {
     var lv = ctx.level, B = ctx.body;
     /* 칸이 오르면 풍선이 조금 더 자주·빨리 오고, 조금 작아진다 (다음 단계 쪽으로 1/3씩) */
-    var DUR = ctx.tune([30, 38, 45]), SPAWN = pace(ctx.tune([1450, 1050, 850])) / 1000, RISE = ctx.tune([8.5, 6.2, 4.8]) * (calm() ? 1.35 : 1), MAXON = ctx.tune([4, 6, 7]);
-    var WF = ctx.tune([0.27, 0.21, 0.165]), WMIN = ctx.tune([84, 66, 54]), WMAX = ctx.tune([130, 104, 86]);
-    var RED = colorOf('red'), COLS = ['red', 'yellow', 'blue', 'green', 'orange', 'purple', 'pink'].map(colorOf), OTHERS = COLS.filter(function (c) { return c !== RED; });
+    /* 4·5단계 숫자는 3단계에서 조금만 더 (풍선 너비는 손가락 크기를 생각해 46px 밑으로 내리지 않는다) */
+    var DUR = ctx.tune([30, 38, 45, 48, 50]), SPAWN = pace(ctx.tune([1450, 1050, 850, 750, 680])) / 1000, RISE = ctx.tune([8.5, 6.2, 4.8, 4.1, 3.8]) * (calm() ? 1.35 : 1), MAXON = ctx.tune([4, 6, 7, 7, 8]);
+    var WF = ctx.tune([0.27, 0.21, 0.165, 0.1425, 0.13]), WMIN = ctx.tune([84, 66, 54, 48, 46]), WMAX = ctx.tune([130, 104, 86, 77, 72]);
+    var COLS = ['red', 'yellow', 'blue', 'green', 'orange', 'purple', 'pink'].map(colorOf);
+    /* 3단계부터 정해진 색만 (Go/No-Go). 4단계는 중간에 한 번, 5단계는 두 번 누를 색이 바뀐다 */
+    var GN = lv >= 3, RULES = lv >= 5 ? ['red', 'blue', 'yellow'] : lv === 4 ? ['red', 'blue'] : ['red'];
+    RULES = RULES.map(colorOf);
+    var target = RULES[0], OTHERS = COLS.filter(function (c) { return c !== target; }), rule = 0, sinceRule = 0, hold = 0;
     B.innerHTML = '<div class="mt-wrap"><div class="mt-top"><span class="mt-pill pp-count">🎈 <b>0</b></span>' +
-      (lv === 3 ? '<span class="mt-pill pp-rule">' + ppSVG() + ' 빨간 풍선만 콕!</span>' : '') + '</div>' +
+      (GN ? '<span class="mt-pill pp-rule">' + ppSVG() + ' <span class="pp-rt">빨간 풍선만 콕!</span></span>' : '') + '</div>' +
       '<div class="mt-bar pp-time"><b style="width:100%"></b></div><div class="pp-sky"><i class="pp-cloud c1"></i><i class="pp-cloud c2"></i><i class="pp-cloud c3"></i></div></div>';
     var sky = G.$('.pp-sky', B), cntEl = G.$('.pp-count b', B), tbar = G.$('.pp-time b', B), ruleEl = G.$('.pp-rule', B);
     var balloons = [], running = false, ended = false, el = 0, acc = SPAWN, spawned = 0, lastPi = -1, gifts = 0;
@@ -771,15 +835,15 @@ G.act({
     function spawn() {
       var W = sky.clientWidth, H = sky.clientHeight; if (!W || !H) return;
       var w = G.clamp(W * WF, WMIN, WMAX), h = w * 1.43;
-      var col = lv === 3 ? (spawned < 2 || Math.random() < 0.45 ? RED : G.pick(OTHERS)) : G.pick(COLS);
+      var col = GN ? (sinceRule < 2 || Math.random() < 0.45 ? target : G.pick(OTHERS)) : G.pick(COLS);
       var x, tries = 0;
       do { x = w / 2 + Math.random() * Math.max(1, W - w); }
       while (tries++ < 8 && balloons.some(function (o) { return Math.abs(o.x - x) < w * 0.85 && o.y > H - h * 1.3; }));
       var b = { x: x, y: H + 8, w: w, h: h, vy: (H + h * 1.5) / RISE, ph: Math.random() * 6.28, fr: 0.25 + Math.random() * 0.25, amp: w * 0.12, col: col,
-        gift: (lv < 3 || col === RED) && Math.random() < 0.3 ? G.pick(PP_GIFT) : null, dead: false, no: false };
+        go: !GN || col === target, gift: (!GN || col === target) && Math.random() < 0.3 ? G.pick(PP_GIFT) : null, dead: false, no: false, old: false };
       b.el = G.el('<div class="pp-b" role="button" aria-label="' + col.name + ' 풍선" style="--c:' + col.hex + ';--w:' + Math.round(w) + 'px">' + ppSVG() + '</div>');
       b.el.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(b); });
-      sky.appendChild(b.el); balloons.push(b); spawned++; place(b);
+      sky.appendChild(b.el); balloons.push(b); spawned++; sinceRule++; place(b);
     }
     function bits(b, x, y) {
       for (var i = 0, n = calm() ? 4 : 8; i < n; i++) {
@@ -789,12 +853,12 @@ G.act({
       }
     }
     function tap(b) {
-      if (b.dead || !running) return;
+      if (b.dead || !running || b.old) return;   /* 규칙이 바뀌기 전 풍선은 날아가는 중 — 누르지 않는다 */
       var sr = sky.getBoundingClientRect(), r = b.el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.width * 0.52;
-      if (lv === 3 && b.col !== RED) {
+      if (!b.go) {
         if (!b.no) { b.no = true; st.wrong++; ctx.trial(false); b.vy *= 1.3; }
         G.sfx.play('oops'); b.el.classList.remove('no'); void b.el.offsetWidth; b.el.classList.add('no');
-        floatText(sky, G.pick(['빨간 풍선만!', '이건 그냥 보내 줘요~', '쉿, 참아요!']), cx, cy - 30);
+        floatText(sky, G.pick([target.adj + ' 풍선만!', '이건 그냥 보내 줘요~', '쉿, 참아요!']), cx, cy - 30);
         return;
       }
       b.dead = true; st.popped++; ctx.trial(true); cntEl.textContent = st.popped;
@@ -808,23 +872,33 @@ G.act({
       if (st.popped % 5 === 0) { var line = G.pick(PP_CHEER); if (st.popped % 10 === 0) ctx.say(line, { repeat: false }); else ctx.bubble(line); }
     }
     function escape(b) {
-      if (el >= DUR) return;            /* 끝난 뒤 날아간 풍선은 세지 않는다 */
-      if (lv < 3) { st.escaped++; ctx.trial(false); }
-      else if (b.col === RED) st.missedRed++;
+      if (el >= DUR || b.old) return;   /* 끝난 뒤·규칙이 바뀌며 날아간 풍선은 세지 않는다 */
+      if (!GN) { st.escaped++; ctx.trial(false); }
+      else if (b.go) st.missedRed++;
+    }
+    /* 규칙 바꾸기 (4·5단계) — 떠 있는 풍선은 흐려져 빨리 날아가고, 잠깐 쉬었다가 새 색 풍선부터 온다 */
+    function switchRule() {
+      rule++; target = RULES[rule]; OTHERS = COLS.filter(function (c) { return c !== target; }); sinceRule = 0; hold = pace(2600) / 1000;
+      balloons.forEach(function (b) { b.old = true; b.el.style.opacity = '.45'; b.el.style.pointerEvents = 'none'; });
+      if (ruleEl) { ruleEl.style.setProperty('--c', target.hex); G.$('.pp-rt', ruleEl).textContent = target.adj + ' 풍선만 콕!'; popEl(ruleEl); }
+      G.sfx.play('up'); st.switches = rule;
+      ctx.say('규칙이 바뀌었어! 이번엔 ' + target.adj + ' 풍선만 콕!', { repeat: false });
     }
     function end() {
       if (ended) return; ended = true; running = false;
       Object.assign(ctx.extra, st);
       ctx.progress(5, 5);
-      ctx.finish({ msg: !st.popped ? '풍선이랑 신나게 놀았어! 다음엔 콕 눌러 보자!' : lv === 3 ? '빨간 풍선을 ' + st.popped + '개나 터뜨렸어! 다른 색은 꾹 참았지? 최고야!' : '풍선 ' + st.popped + '개를 펑펑! 손가락 대장이야!' });
+      ctx.finish({ msg: !st.popped ? '풍선이랑 신나게 놀았어! 다음엔 콕 눌러 보자!' : lv >= 4 ? '풍선을 ' + st.popped + '개나 터뜨렸어! 규칙이 바뀌어도 척척, 다른 색은 꾹 참았지? 최고야!' : lv === 3 ? '빨간 풍선을 ' + st.popped + '개나 터뜨렸어! 다른 색은 꾹 참았지? 최고야!' : '풍선 ' + st.popped + '개를 펑펑! 손가락 대장이야!' });
     }
     ctx.loop(function (dt) {
       if (!running) return;
       el += dt; acc += dt;
-      if (el < DUR && acc >= SPAWN && balloons.length < MAXON) { acc = 0; spawn(); }
+      if (rule + 1 < RULES.length && el >= DUR * (rule + 1) / RULES.length) switchRule();
+      if (hold > 0) { hold -= dt; acc = 0; }
+      if (el < DUR && hold <= 0 && acc >= SPAWN && balloons.length < MAXON) { acc = 0; spawn(); }
       for (var i = balloons.length - 1; i >= 0; i--) {
         var b = balloons[i];
-        b.y -= b.vy * dt * (el >= DUR ? 1.8 : 1); place(b);
+        b.y -= b.vy * dt * (el >= DUR || b.old ? 1.8 : 1); place(b);
         if (b.y < -b.h * 1.05) { balloons.splice(i, 1); b.el.remove(); if (!b.dead) escape(b); }
       }
       tbar.style.width = Math.max(0, 100 - el / DUR * 100) + '%';
@@ -833,14 +907,16 @@ G.act({
     });
     ctx.progress(0, 5);
     if (ruleEl) popEl(ruleEl);
-    ctx.say(lv === 3 ? '풍선이 날아와요! 빨간 풍선만 손가락으로 콕! 다른 색은 그냥 보내 줘요.' : '풍선이 둥둥 날아와요! 손가락 하나로 콕 눌러서 펑 터뜨려 봐!')
+    ctx.say(lv >= 4 ? '풍선이 날아와요! 먼저 빨간 풍선만 콕! 중간에 규칙이 ' + (lv >= 5 ? '두 번' : '한 번') + ' 바뀌니까 자비스 말을 잘 들어 봐!' :
+      lv === 3 ? '풍선이 날아와요! 빨간 풍선만 손가락으로 콕! 다른 색은 그냥 보내 줘요.' : '풍선이 둥둥 날아와요! 손가락 하나로 콕 눌러서 펑 터뜨려 봐!')
       .then(function () { return ctx.say('준비, 시작!', { repeat: false }); })
       .then(function () { running = true; G.sfx.play('up'); });
   }
 });
 
 /* ===========================================================
-   4. 색깔 나누기 — 누른 채 끌어 옮기기 · 분류 (3단계 끝판은 범주로 규칙 바꾸기)
+   4. 색깔 나누기 — 누른 채 끌어 옮기기 · 분류 (3단계 끝판은 범주로 규칙 바꾸기,
+      4단계: 범주 바구니가 넷(옷 더하기), 5단계: 범주 판 뒤에 '다시 색깔로' 한 번 더 바꾸기)
    =========================================================== */
 var SO_ITEMS = {
   red:    [['🍎', '사과'], ['🍓', '딸기'], ['🍅', '토마토'], ['🚒', '소방차'], ['❤️', '하트'], ['🌹', '장미']],
@@ -850,7 +926,7 @@ var SO_ITEMS = {
   orange: [['🍊', '귤'], ['🥕', '당근'], ['🦊', '여우'], ['🏀', '농구공'], ['🧡', '하트'], ['🎃', '호박']],
   purple: [['🍇', '포도'], ['🍆', '가지'], ['💜', '하트'], ['🔮', '구슬']]
 };
-var SO_CATS = { food: '#ef6c57', animal: '#e0a000', vehicle: '#3b9cf0' };
+var SO_CATS = { food: '#ef6c57', animal: '#e0a000', vehicle: '#3b9cf0', clothes: '#a066d3' };   /* 앞에서부터 k 개 (옷은 4단계부터) */
 function soWords(cat) {
   var seen = {}, icon = (D.CATS[cat] || {}).e;
   return D.WORDS.filter(function (w) { if (w.c !== cat || w.e === icon || seen[w.e]) return false; seen[w.e] = 1; return true; })
@@ -858,31 +934,35 @@ function soWords(cat) {
 }
 
 G.act({
-  id: 'sort', area: 'motor', title: '색깔 나누기', icon: '🧺', order: 40, levels: 3, mins: 3, needs: [],
+  id: 'sort', area: 'motor', title: '색깔 나누기', icon: '🧺', order: 40, levels: 5, mins: 3, needs: [],
   ef: ['shift', 'attend'],
   desc: '같은 색끼리 바구니에 쏙',
   goal: '끌어 옮기기 조절 — 손가락으로 누른 채 원하는 곳까지 옮기고 놓기, 색·범주(먹을 것·동물·탈것) 분류',
   how: '손가락으로 꾹 누른 채 바구니까지 끌고 가는 것이 목표예요(누르고·옮기고·놓기). 끌기가 어려우면 그림을 한 번 누르고 바구니를 눌러도 돼요. 넣을 때마다 "빨간 사과!"처럼 색 이름을 같이 말해 주세요.',
-  basis: '지속적으로 누르며 끌기(잡기-옮기기-놓기)와 분류 — 색 → 범주 규칙 바꾸기(카드 나누기 DCCS의 기초)',
+  basis: '지속적으로 누르며 끌기(잡기-옮기기-놓기)와 분류 — 색 → 범주 규칙 바꾸기(카드 나누기 DCCS의 기초). 4단계(도전)는 범주 바구니 넷, 5단계(마스터)는 색 → 범주 → 다시 색으로 두 번 바꾸기',
   offline: '빨래 갤 때 "양말은 여기, 수건은 저기" 나누고, 색 블록을 집게로 집어 같은 색 컵에 옮겨 보세요.',
   run: async function (ctx) {
     var lv = ctx.level;
     var plan = lv === 1 ? [{ m: 'color', k: 2, n: 6 }, { m: 'color', k: 2, n: 6 }]
       : lv === 2 ? [{ m: 'color', k: 3, n: 6 }, { m: 'color', k: 3, n: 6 }]
-      : [{ m: 'color', k: 4, n: 8 }, { m: 'cat', k: 3, n: 6 }];
-    /* 칸이 오르면 둘째 판만 조금 어렵게 — 2칸: 그림이 조금 더 많이, 3칸: 바구니가 하나 더(다음 단계처럼).
-       3단계는 바구니를 늘리지 않고 범주 판 그림만 3개씩 더 */
+      : lv === 3 ? [{ m: 'color', k: 4, n: 8 }, { m: 'cat', k: 3, n: 6 }]
+      : lv === 4 ? [{ m: 'color', k: 4, n: 8 }, { m: 'cat', k: 4, n: 8 }]
+      : [{ m: 'color', k: 4, n: 8 }, { m: 'cat', k: 4, n: 8 }, { m: 'color', k: 4, n: 8, back: true }];
+    /* 칸이 오르면 끝판만 조금 어렵게 — 2칸: 그림이 조금 더 많이, 3칸: 다음 단계처럼(바구니 하나 더 · 다시 바꾸는 판).
+       끝 단계(5)는 판을 늘리지 않고 그림만 조금 더 */
     var last = plan[plan.length - 1], st = ctx.step;
     if (lv === 1) { if (st === 2) last.n = 8; else if (st === 3) last.k = 3; }
     else if (lv === 2) { if (st === 2) last.n = 9; else if (st === 3) { last.k = 4; last.n = 8; } }
-    else if (st > 1) last.n = 6 + 3 * (st - 1);
+    else if (lv === 3) { if (st === 2) last.n = 9; else if (st === 3) { last.k = 4; last.n = 8; } }
+    else if (lv === 4) { if (st === 2) last.n = 12; else if (st === 3) plan.push({ m: 'color', k: 3, n: 6, back: true }); }
+    else if (st > 1) { last.n = 12; if (st === 3) plan[1].n = 12; }
     var pool = lv === 1 ? ['red', 'yellow', 'blue', 'green'] : ['red', 'yellow', 'blue', 'green', 'orange', 'purple'];
     var used = [], misses = 0;
     var idle = idler(ctx, pace(12000), null);
     for (var b = 0; b < plan.length; b++) {
       ctx.progress(b, plan.length);
       var fresh = pool.filter(function (id) { return used.indexOf(id) < 0; });
-      var ids = plan[b].m === 'color' ? (fresh.length >= plan[b].k ? G.sample(fresh, plan[b].k) : G.sample(pool, plan[b].k)) : Object.keys(SO_CATS);
+      var ids = plan[b].m === 'color' ? (fresh.length >= plan[b].k ? G.sample(fresh, plan[b].k) : G.sample(pool, plan[b].k)) : Object.keys(SO_CATS).slice(0, plan[b].k);
       used = used.concat(ids);
       misses += await sortBoard(ctx, plan[b], b, ids, idle);
     }
@@ -909,6 +989,7 @@ function sortBoard(ctx, spec, bi, ids, idle) {
     var wrap = G.el('<div class="mt-wrap"><div class="so-tray"></div><div class="so-baskets" style="--n:' + groups.length + '"></div></div>');
     B.appendChild(wrap);
     var tray = G.$('.so-tray', wrap), bks = G.$('.so-baskets', wrap), sel = null, placed = 0, bmiss = 0, busy = false;
+    if (!color && groups.length >= 4) bks.classList.add('so-cat4');
     var baskets = groups.map(function (g) {
       var el = G.el('<div class="so-bk" style="--c:' + g.hex + '"><div class="bh">' + g.label + '</div><div class="bin"></div><div class="bwv" aria-hidden="true">🧺</div></div>');
       bks.appendChild(el);
@@ -957,7 +1038,7 @@ function sortBoard(ctx, spec, bi, ids, idle) {
         else {
           busy = true; idle.stop();
           ctx.say(line, { repeat: false }).then(function () {
-            return ctx.cheer(G.pick(color ? ['다 나눴다! 같은 색끼리 척척!', '색깔 박사네! 최고야!'] : ['먹을 것, 동물, 탈것! 다 나눴어!', '규칙이 바뀌어도 척척! 최고야!']));
+            return ctx.cheer(G.pick(color ? (spec.back ? ['다시 색깔로도 척척! 규칙 바꾸기 대장!', '규칙이 바뀌어도 척척! 최고야!'] : ['다 나눴다! 같은 색끼리 척척!', '색깔 박사네! 최고야!']) : [groups.map(function (g) { return g.name; }).join(', ') + '! 다 나눴어!', '규칙이 바뀌어도 척척! 최고야!']));
           }).then(function () { return ctx.wait(400); }).then(function () { resolve(bmiss); });
         }
         return true;
@@ -976,9 +1057,10 @@ function sortBoard(ctx, spec, bi, ids, idle) {
     };
     ctx.on(window, 'resize', layoutItems);
     requestAnimationFrame(layoutItems);
-    if (!color) {
+    if (!color || spec.back) {
       busy = true; idle.stop();
-      announce(ctx, wrap, '🔄', '이번엔 규칙이 바뀌어요!', '먹을 것, 동물, 탈것끼리 나눠 줘!').then(function () { busy = false; idle.go(); });
+      (spec.back ? announce(ctx, wrap, '🎨', '이번엔 다시 색깔이에요!', '같은 색끼리 나눠 줘!')
+        : announce(ctx, wrap, '🔄', '이번엔 규칙이 바뀌어요!', groups.map(function (g) { return g.name; }).join(', ') + '끼리 나눠 줘!')).then(function () { busy = false; idle.go(); });
     } else {
       idle.go();
       ctx.say(bi === 0 ? '같은 색깔끼리 바구니에 넣어 줘! 손가락으로 꾹 눌러서 끌고 가 봐.' : G.pick(['이번엔 다른 색깔이야! 같은 색끼리 쏙!', '또 나눠 볼까? 같은 색끼리!']));
@@ -997,10 +1079,20 @@ function tlLayout(lv) {
   var L = { walls: [], way: [] }, r = function (a, b) { return a + Math.random() * (b - a); };
   if (lv === 1) { L.start = { a: 0.14, b: r(0.25, 0.75) }; L.hole = { a: 0.86, b: r(0.2, 0.8) }; }
   else if (lv === 2) { L.walls.push({ a: 0.5, b0: 0, b1: 0.62 }); L.way.push({ a: 0.5, b: 0.82 }); L.start = { a: 0.14, b: 0.26 }; L.hole = { a: 0.86, b: 0.26 }; }
-  else {
+  else if (lv === 3) {
     L.walls.push({ a: 0.36, b0: 0, b1: 0.64 }, { a: 0.66, b0: 0.36, b1: 1 });
     L.way.push({ a: 0.36, b: 0.83 }, { a: 0.66, b: 0.17 });
     L.start = { a: 0.12, b: 0.24 }; L.hole = { a: 0.88, b: 0.76 };
+  }
+  else if (lv === 4) {   /* 도전: 벽 셋 — 지그재그로 세 번 돌아간다 */
+    L.walls.push({ a: 0.3, b0: 0, b1: 0.66 }, { a: 0.5, b0: 0.34, b1: 1 }, { a: 0.7, b0: 0, b1: 0.66 });
+    L.way.push({ a: 0.3, b: 0.83 }, { a: 0.5, b: 0.17 }, { a: 0.7, b: 0.83 });
+    L.start = { a: 0.12, b: 0.24 }; L.hole = { a: 0.88, b: 0.24 };
+  }
+  else {                 /* 마스터: 벽 넷 — 벽 사이 길이 조금 좁아진다 (공 지름의 1.5배쯤은 남는다) */
+    L.walls.push({ a: 0.25, b0: 0, b1: 0.66 }, { a: 0.42, b0: 0.34, b1: 1 }, { a: 0.59, b0: 0, b1: 0.66 }, { a: 0.76, b0: 0.34, b1: 1 });
+    L.way.push({ a: 0.25, b: 0.83 }, { a: 0.42, b: 0.17 }, { a: 0.59, b: 0.83 }, { a: 0.76, b: 0.17 });
+    L.start = { a: 0.09, b: 0.24 }; L.hole = { a: 0.91, b: 0.76 };
   }
   L.way.push(L.hole);
   L.flip = Math.random() < 0.5; L.mir = Math.random() < 0.5;
@@ -1008,18 +1100,18 @@ function tlLayout(lv) {
 }
 
 G.act({
-  id: 'tilt', area: 'motor', title: '공 굴리기', icon: '⛳', order: 50, levels: 3, mins: 3, needs: ['motion'],
+  id: 'tilt', area: 'motor', title: '공 굴리기', icon: '⛳', order: 50, levels: 5, mins: 3, needs: ['motion'],
   ef: ['plan', 'attend'],
   desc: '살살 기울여 공을 구멍에 쏙',
   goal: '양측 협응·힘 조절 — 두 손으로 기기를 잡고 조금씩 기울여 공의 움직임을 조절하기, 벽을 돌아가는 운동 계획',
   how: '기기 양옆을 두 손으로 잡고 아주 살살 기울이게 해 주세요 — 양손을 같이 쓰는 연습이에요. 너무 세게 기울이면 "거북이처럼 천천히~" 하고 말해 줘요. 기울기가 안 되는 기기는 손가락으로 공을 끌어도 돼요.',
-  basis: '양손으로 잡고 기울이기(양측 협응)·고유수용 감각 — 조금씩 조절하는 힘 조절(graded control)과 운동 계획',
+  basis: '양손으로 잡고 기울이기(양측 협응)·고유수용 감각 — 조금씩 조절하는 힘 조절(graded control)과 운동 계획. 4단계(도전)는 나무 벽 셋, 5단계(마스터)는 벽 넷과 조금 작은 구멍',
   offline: '쟁반에 구슬이나 탁구공을 올리고 두 손으로 기울여 종이컵 안에 넣어 보세요.',
   run: function (ctx) {
     var lv = ctx.level, B = ctx.body, GOALS = 4;
     /* 칸이 오르면 마지막 판(2칸: 1판, 3칸: 2판)을 다음 단계 길(나무 벽 하나 더)로 미리 해 본다.
-       구멍은 조금씩 작아지고, 구멍이 커지기·자비스 도움 전 기다림은 조금 길어진다 */
-    var PRE = lv < 3 ? ctx.step - 1 : 0, HOLE = ctx.tune([1.9, 1.6, 1.4]), GROW = ctx.tune([15000, 20000, 25000]), HELP = ctx.tune([40000, 50000, 60000]);
+       구멍은 조금씩 작아지고, 구멍이 커지기·자비스 도움 전 기다림은 조금 길어진다 (끝 단계는 숫자만) */
+    var PRE = lv < topLv(ctx) ? ctx.step - 1 : 0, HOLE = ctx.tune([1.9, 1.6, 1.4, 1.3, 1.2]), GROW = ctx.tune([15000, 20000, 25000, 27500, 30000]), HELP = ctx.tune([40000, 50000, 60000, 65000, 70000]);
     function goalLv(i) { return i >= GOALS - PRE ? lv + 1 : lv; }
     B.innerHTML = '<div class="mt-wrap"><div class="mt-top"><span class="mt-pill tl-count">⛳ <b>0</b> / ' + GOALS + '</span><button class="btn sm soft tl-mode" type="button" hidden></button></div>' +
       '<div class="tl-board"><div class="tl-start"><div class="te">⛳</div><div class="tt">기기를 <b>두 손</b>으로 꼭 잡고<br>살살 기울여서 공을 구멍에 쏙!</div>' +
@@ -1086,7 +1178,7 @@ G.act({
       var s = toXY(L.start.a, L.start.b);
       ball = { x: G.clamp(s.x, FR + r, K.w - FR - r), y: G.clamp(s.y, FR + r, K.h - FR - r), vx: 0, vy: 0, rot: 0, e: TL_BALLS[k % TL_BALLS.length], hide: false };
       holeR = holeR0; guide = null; sink = null; t0 = performance.now();
-      if (k > 0 && glv > lv && goalLv(k - 1) === lv) ctx.say(glv === 2 ? '이번엔 나무 벽이 생겼어! 벽을 돌아서 가 봐!' : '이번엔 나무 벽이 두 개야! 천천히 돌아서 가 봐!');   /* 처음 보는 길은 미리 알려 준다 */
+      if (k > 0 && glv > lv && goalLv(k - 1) === lv) ctx.say(glv === 2 ? '이번엔 나무 벽이 생겼어! 벽을 돌아서 가 봐!' : glv === 3 ? '이번엔 나무 벽이 두 개야! 천천히 돌아서 가 봐!' : '이번엔 나무 벽이 ' + (glv === 4 ? '세' : '네') + ' 개야! 지그재그로 천천히 가 봐!');   /* 처음 보는 길은 미리 알려 준다 */
       else if (k > 0) ctx.say(glv === 1 ? G.pick(['이번엔 저쪽 구멍이야!', '또 해 볼까? 살살~']) : G.pick(['나무 벽을 돌아서 가 봐!', '벽을 피해서 구멍까지!', '어느 쪽으로 돌아갈까?']));
     }
     function tiltAcc(deg) { var d = Math.abs(deg) < 1.5 ? 0 : deg - (deg > 0 ? 1.5 : -1.5); return Math.sin(G.clamp(d, -30, 30) * Math.PI / 180); }
@@ -1275,11 +1367,11 @@ function scWords(lv, n) {
 }
 
 G.act({
-  id: 'scratch', area: 'motor', title: '쓱쓱 지우기', icon: '✨', order: 60, levels: 3, mins: 2, needs: [],
+  id: 'scratch', area: 'motor', title: '쓱쓱 지우기', icon: '✨', order: 60, levels: 5, mins: 2, needs: [],
   ef: ['attend'],
   desc: '쓱쓱 문지르면 뭐가 나올까?',
   goal: '손가락 힘·분리 운동 — 검지 끝으로 꾹 누르며 오래 문지르기(지속 동작), 끝까지 하는 주의 집중',
-  how: '검지 끝으로 꾹 누르며 문지르게 해 주세요 — 손가락 힘과 오래 하기를 기르는 놀이예요. 반쯤 보이면 "뭘까?" 하고 맞혀 보게 하면 말하기 연습도 돼요. 3단계는 붓이 작아서 더 꼼꼼히 문질러야 해요.',
+  how: '검지 끝으로 꾹 누르며 문지르게 해 주세요 — 손가락 힘과 오래 하기를 기르는 놀이예요. 반쯤 보이면 "뭘까?" 하고 맞혀 보게 하면 말하기 연습도 돼요. 3단계는 붓이 작아서 더 꼼꼼히 문질러야 해요. 4단계(도전)는 붓이 더 작고, 5단계(마스터)는 거의 다 지워야 그림이 나와요 — 구석까지 차례로 문지르게 도와주세요.',
   basis: '손가락 분리 운동·지속적으로 눌러 문지르기(힘 조절) — 감각 되먹임이 큰 반복 동작',
   offline: '김 서린 창문·거울에 손가락으로 그림을 그리고, 크레용을 칠한 종이 위를 검게 덮은 뒤 이쑤시개로 긁어 숨은 색을 찾아보세요(스크래치 아트).',
   run: async function (ctx) {
@@ -1289,8 +1381,10 @@ G.act({
     var K = ctx.canvas(card, { onResize: function () { if (cur && !cur.done) coat(); } });
     var grid = new Uint8Array(GN * GN), cleared = 0, cur = null, pid = null, last = null, lastSnd = 0, helped = 0;
     var words = scWords(lv, NP), idle = idler(ctx, pace(9000), nudge);
-    /* 칸이 오르면 붓이 조금씩 작아진다 (자비스가 같이 해 주기 전 기다림은 그만큼 조금 길게) */
-    var BRUSH = ctx.tune([0.1, 0.07, 0.048]), HELP = ctx.tune([45000, 55000, 65000]);
+    /* 칸이 오르면 붓이 조금씩 작아진다 (자비스가 같이 해 주기 전 기다림은 그만큼 조금 길게).
+       5단계는 붓은 4단계 그대로, 그림이 나오려면 더 많이(62% → 72%) 지워야 한다 — 끝까지 꼼꼼히 */
+    var BRUSH = ctx.tune([0.1, 0.07, 0.048, 0.037, 0.037]), HELP = ctx.tune([45000, 55000, 65000, 70000, 80000]);
+    var OPEN = ctx.tune([0.62, 0.62, 0.62, 0.62, 0.72]);
 
     function star4(c, x, y, s) {
       c.beginPath(); c.moveTo(x, y - s); c.quadraticCurveTo(x, y, x + s, y); c.quadraticCurveTo(x, y, x, y + s);
@@ -1331,8 +1425,8 @@ G.act({
     }
     function check() {
       var pct = cleared / (GN * GN);
-      bar.style.width = Math.min(100, pct / 0.62 * 100) + '%';
-      if (pct >= 0.62) { reveal(true); return; }
+      bar.style.width = Math.min(100, pct / OPEN * 100) + '%';
+      if (pct >= OPEN) { reveal(true); return; }
       if (pct >= 0.3 && !cur.said) { cur.said = true; ctx.bubble(G.pick(['뭘까? 조금 더 쓱쓱!', '뭐가 보이니? 더 문질러 봐!', '거의 보인다! 쓱쓱!'])); }
     }
     function reveal(ok) {
@@ -1369,7 +1463,7 @@ G.act({
         if (!cur || cur.done) return false;
         var steps = Math.max(1, Math.round(pts.length * dt / 1.3));
         for (var k = 0; k < steps && i < pts.length; k++, i++) { if (i % 13 === 0) last = null; rub(pts[i].x, pts[i].y, br); }
-        bar.style.width = Math.min(100, cleared / (GN * GN) / 0.62 * 100) + '%';
+        bar.style.width = Math.min(100, cleared / (GN * GN) / OPEN * 100) + '%';
         if (i >= pts.length) { reveal(false); return false; }
       });
     }
@@ -1415,30 +1509,47 @@ G.act({
 /* ===========================================================
    7. 모양 맞추기 — 형태 지각·끌어 맞추기 (모양 맞추기 상자)
    1·2단계는 자리에 같은 색이 비쳐 보인다(색 단서). 3단계는 모양만 보고 찾는다.
+   4단계(도전): 조각 반쯤이 빙글 돌아가 있다(형태 항상성). 5단계(마스터): 오각형·육각형처럼 비슷한 모양이 섞인다.
    =========================================================== */
 var PZ_COL = ['#ef5350', '#42a5f5', '#ffca28', '#66bb6a', '#ab47bc', '#ffa726'];
-function pzShape(id) { return D.SHAPES.filter(function (s) { return s.id === id; })[0]; }
+/* 5단계에만 나오는 모양 (2학년 수학의 오각형·육각형 + 비슷해서 헷갈리기 쉬운 모양) */
+var PZ_MORE = [
+  { id: 'pentagon', name: '오각형', svg: '<polygon points="50,6 93,37 77,90 23,90 7,37"/>' },
+  { id: 'hexagon', name: '육각형', svg: '<polygon points="27,10 73,10 95,50 73,90 27,90 5,50"/>' },
+  { id: 'half', name: '반원', svg: '<path d="M6 72 A44 44 0 0 1 94 72 Z"/>' },
+  { id: 'cross', name: '십자', svg: '<polygon points="36,6 64,6 64,36 94,36 94,64 64,64 64,94 36,94 36,64 6,64 6,36 36,36"/>' },
+  { id: 'oval', name: '타원', svg: '<ellipse cx="50" cy="50" rx="44" ry="27"/>' },
+  { id: 'rect', name: '긴 네모', svg: '<rect x="6" y="27" width="88" height="46" rx="4"/>' }
+];
+function pzShape(id) { return D.SHAPES.concat(PZ_MORE).filter(function (s) { return s.id === id; })[0]; }
+/* 돌렸을 때 달라 보이는 각도 — 동그라미·네모·마름모·십자는 돌려도 같아 보여 돌리지 않는다 */
+var PZ_TURN = { circle: [], square: [], diamond: [], cross: [], hexagon: [90, 270], rect: [90, 270], oval: [90, 270] };
+function pzTurns(id) { return PZ_TURN[id] || [90, 180, 270]; }
 
 G.act({
-  id: 'puzzle', area: 'motor', title: '모양 맞추기', icon: '🧩', order: 70, levels: 3, mins: 3, needs: [],
+  id: 'puzzle', area: 'motor', title: '모양 맞추기', icon: '🧩', order: 70, levels: 5, mins: 3, needs: [],
   ef: ['plan', 'attend'],
   desc: '모양 친구의 집을 찾아 줘요',
   goal: '형태 지각·공간 관계 — 모양을 비교해 같은 자리를 찾고, 끌어다 정확히 맞춰 넣기',
-  how: '"동그라미 집은 어디 있지?" 하고 모양 이름을 같이 말해 주세요. 끌기가 어려우면 조각을 한 번 누르고 자리를 눌러도 돼요. 3단계는 색 단서 없이 모양만 보고 찾아야 해서 어려워요 — 손가락으로 테두리를 같이 따라 그려 보세요.',
-  basis: '형태 지각·공간 관계 — 모양 맞추기 상자(형태판) 과제, 색 단서 → 모양만 보기로 단서를 줄여 감',
+  how: '"동그라미 집은 어디 있지?" 하고 모양 이름을 같이 말해 주세요. 끌기가 어려우면 조각을 한 번 누르고 자리를 눌러도 돼요. 3단계는 색 단서 없이 모양만 보고 찾아야 해서 어려워요 — 손가락으로 테두리를 같이 따라 그려 보세요. 4단계(도전)는 조각이 돌아가 있어 "머릿속으로 돌려 볼까?" 하고, 5단계(마스터)는 오각형·육각형처럼 비슷한 모양의 변(곧은 줄)을 같이 세어 보세요.',
+  basis: '형태 지각·공간 관계 — 모양 맞추기 상자(형태판) 과제, 색 단서 → 모양만 보기로 단서를 줄여 감. 4단계는 돌아간 조각(형태 항상성), 5단계는 비슷한 모양 가려내기(형태 변별)',
   offline: '그릇과 뚜껑 짝 맞추기, 모양 맞추기 상자 놀이, 종이에 블록 테두리를 그려 두고 그 위에 같은 블록 올리기를 해 보세요.',
   run: async function (ctx) {
-    /* 칸이 오르면 조각이 하나씩 늘어난다 (모양은 여섯 가지뿐이라 3단계는 늘리지 않고 맞춰 넣는 자리만 조금 정확하게) */
-    var lv = ctx.level, plan = ({ 1: [[2, 2, 2], [2, 2, 3], [2, 3, 3]], 2: [[3, 4], [3, 5], [4, 5]], 3: [[5, 6], [5, 6], [5, 6]] })[lv][ctx.step - 1];
-    var easy = ['circle', 'square', 'triangle', 'heart', 'star'], all = D.SHAPES.map(function (s) { return s.id; }), last = '', misses = 0;
+    /* 칸이 오르면 조각이 하나씩 늘어난다 (모양은 여섯 가지뿐이라 3단계는 늘리지 않고 맞춰 넣는 자리만 조금 정확하게).
+       칸이 오르면 다음 단계를 조금 섞는다 — 3단계: 돌아간 조각 1·2개, 4단계: 5단계 모양 1·2개 */
+    var lv = ctx.level, st = ctx.step, plan = ({ 1: [[2, 2, 2], [2, 2, 3], [2, 3, 3]], 2: [[3, 4], [3, 5], [4, 5]], 3: [[5, 6], [5, 6], [5, 6]],
+      4: [[5, 6], [6, 6], [6, 7]], 5: [[6, 7], [6, 8], [7, 8]] })[lv][st - 1];
+    var ROT = function (n) { return lv >= 4 ? Math.ceil(n / 2) : lv === 3 ? st - 1 : 0; };                  /* 판마다 돌아간 조각 수 */
+    var MORE = function (n) { return lv >= 5 ? Math.ceil(n / 2) : lv === 4 ? st - 1 : 0; };                 /* 판마다 5단계 모양 수 */
+    var easy = ['circle', 'square', 'triangle', 'heart', 'star'], all = D.SHAPES.map(function (s) { return s.id; }), more = PZ_MORE.map(function (s) { return s.id; }), last = '', misses = 0;
     var idle = idler(ctx, pace(12000), null);
     for (var b = 0; b < plan.length; b++) {
       ctx.progress(b, plan.length);
-      var ids;
+      var ids, mn = MORE(plan[b]);
       if (lv === 1 && b === 0) ids = ['circle', 'square'];
-      else { var tries = 0; do { ids = G.sample(lv === 1 ? easy : all, plan[b]); } while (ids.slice().sort().join() === last && tries++ < 10); }
+      else { var tries = 0; do { ids = mn ? G.shuffle(G.sample(all, plan[b] - mn).concat(G.sample(more, mn))) : G.sample(lv === 1 ? easy : all, plan[b]); } while (ids.slice().sort().join() === last && tries++ < 10); }
       last = ids.slice().sort().join();
-      misses += await pzBoard(ctx, ids.map(pzShape), b, idle);
+      misses += await pzBoard(ctx, ids.map(pzShape), b, idle, ROT(plan[b]));
     }
     ctx.progress(plan.length, plan.length);
     ctx.extra.misses = misses;
@@ -1446,14 +1557,17 @@ G.act({
   }
 });
 
-function pzBoard(ctx, shapes, bi, idle) {
+function pzBoard(ctx, shapes, bi, idle, rot) {
   return new Promise(function (resolve) {
     var B = ctx.body, lv = ctx.level, cue = lv < 3;
-    var SNAP = lv === 3 ? [0.75, 0.68, 0.62][ctx.step - 1] : 0.75;   /* 3단계는 칸이 오르면 조금 더 가까이 가져가야 쏙 */
+    /* 3단계는 칸이 오르면 조금 더 가까이 가져가야 쏙. 4단계는 3단계 끝 그대로, 끝 단계(5)는 2·3칸에서 조금 더 */
+    var SNAP = lv === 3 ? [0.75, 0.68, 0.62][ctx.step - 1] : lv === 4 ? 0.62 : lv >= 5 ? [0.62, 0.58, 0.54][ctx.step - 1] : 0.75;
     B.innerHTML = '<div class="mt-wrap pz-wrap"><div class="pz-area pz-holes"></div><div class="pz-tip" aria-hidden="true">⬆️</div><div class="pz-area pz-tray"></div></div>';
     var wrap = G.$('.pz-wrap', B), holesBox = G.$('.pz-holes', B), tray = G.$('.pz-tray', B);
     var cols = G.shuffle(PZ_COL), sel = null, placed = 0, bmiss = 0, busy = false;
-    var parts = shapes.map(function (s, k) { return { s: s, hex: cols[k % cols.length], hints: 0 }; });
+    var parts = shapes.map(function (s, k) { return { s: s, hex: cols[k % cols.length], hints: 0, deg: 0 }; });
+    /* 돌아간 조각 — 90°·180°·270° (45° 는 네모가 마름모처럼 보여 쓰지 않는다). 돌려도 똑같아 보이는 모양은 빼고 고른다 */
+    if (rot) G.sample(parts.filter(function (p) { return pzTurns(p.s.id).length; }), rot).forEach(function (p) { p.deg = G.pick(pzTurns(p.s.id)); });
     G.shuffle(parts).forEach(function (p) {
       var h = G.el('<div class="pz-hole" aria-label="' + p.s.name + ' 자리"><svg viewBox="0 0 100 100" aria-hidden="true"><g class="sil">' + p.s.svg + '</g></svg></div>');
       if (cue) { h.style.setProperty('--hc', hexA(p.hex, 0.26)); h.style.setProperty('--hs', p.hex); }
@@ -1461,7 +1575,7 @@ function pzBoard(ctx, shapes, bi, idle) {
       ctx.on(h, 'click', function () { if (sel && !busy && !p.done) { var s = sel; select(null); put(s, p); } });
     });
     G.shuffle(parts).forEach(function (p) {
-      p.el = G.el('<div class="pz-pc" role="button" aria-label="' + p.s.name + '"><svg viewBox="0 0 100 100" aria-hidden="true"><g class="pc" style="fill:' + p.hex + '">' + p.s.svg + '</g></svg></div>');
+      p.el = G.el('<div class="pz-pc" role="button" aria-label="' + p.s.name + '"><svg viewBox="0 0 100 100" aria-hidden="true"' + (p.deg ? ' style="transform:rotate(' + p.deg + 'deg)"' : '') + '><g class="pc" style="fill:' + p.hex + '">' + p.s.svg + '</g></svg></div>');
       tray.appendChild(p.el);
       liftDrag(ctx, p.el, {
         can: function () { return !p.done && !busy; },
@@ -1498,6 +1612,7 @@ function pzBoard(ctx, shapes, bi, idle) {
         p.done = true; placed++;
         if (!p.missed) ctx.trial(true);
         flyInto(p.el, p.hole, 'in'); p.hole.classList.add('done');
+        if (p.deg) { var sv = G.$('svg', p.el); ctx.timeout(function () { sv.style.transform = 'rotate(0deg)'; }, 60); }   /* 돌아간 조각은 자리에 들어가며 똑바로 돌아간다 */
         G.sfx.play('pop'); G.buzz(12);
         var c = G.fx.center(p.hole); G.fx.burst(c[0], c[1]);
         if (placed < parts.length) ctx.say(G.pick(['', '딩동! ', '쏙! ']) + p.s.name + ' 쏙!', { repeat: false });
@@ -1527,7 +1642,8 @@ function pzBoard(ctx, shapes, bi, idle) {
     ctx.on(window, 'resize', size);
     size(); requestAnimationFrame(size);
     idle.go();
-    ctx.say(bi === 0 ? (lv === 3 ? '모양 친구들이 집을 찾아요. 이번엔 색깔 힌트가 없어! 모양만 잘 보고 끌어다 쏙!' : '모양 친구들이 자기 집을 찾아요. 같은 모양 자리에 끌어다 쏙 넣어 줘!')
+    ctx.say(bi === 0 ? (lv >= 5 ? '비슷한 모양 친구들이 많아! 곧은 줄이 몇 개인지 잘 보고 끌어다 쏙!' : lv === 4 ? '이번엔 조각이 빙글 돌아가 있어! 머릿속으로 돌려 보고 같은 모양 자리에 쏙!' :
+      lv === 3 ? '모양 친구들이 집을 찾아요. 이번엔 색깔 힌트가 없어! 모양만 잘 보고 끌어다 쏙!' : '모양 친구들이 자기 집을 찾아요. 같은 모양 자리에 끌어다 쏙 넣어 줘!')
       : G.pick(['이번엔 모양 친구가 더 많아!', '또 집을 찾아 줄까? 같은 모양끼리!']));
   });
 }
