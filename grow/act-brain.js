@@ -199,11 +199,11 @@ var SM_PADS = [
   { e: '🦊', c: '#ff7043', f: 659 }
 ];
 G.act({
-  id: 'simon', area: 'brain', title: '자비스 따라 하기', icon: '🎶', order: 1, levels: 3, mins: 3, needs: [],
+  id: 'simon', area: 'brain', title: '자비스 따라 하기', icon: '🎶', order: 1, levels: 5, mins: 3, needs: [],
   ef: ['wm', 'attend'],
   desc: '동물 친구 노래 순서 기억하기',
   goal: '작업기억 — 본 것·들은 순서를 머릿속에 담아 두었다가 그대로 꺼내 쓰는 힘',
-  how: '처음엔 부모가 옆에서 "개구리, 병아리!" 하고 이름을 같이 말해 주면 기억하기 쉬워요. 화면 밖에서는 손뼉·발 구르기 순서 따라 하기("짝-쿵-짝"), 심부름 두 가지 기억하기("컵 갖다 놓고 신발 가져와")로 이어 가세요. 길이가 늘어도 한 번에 하나씩만 늘려요.',
+  how: '처음엔 부모가 옆에서 "개구리, 병아리!" 하고 이름을 같이 말해 주면 기억하기 쉬워요. 화면 밖에서는 손뼉·발 구르기 순서 따라 하기("짝-쿵-짝"), 심부름 두 가지 기억하기("컵 갖다 놓고 신발 가져와")로 이어 가세요. 길이가 늘어도 한 번에 하나씩만 늘려요. 4·5단계(도전·마스터)는 처음부터 다섯·여섯 마리 순서예요.',
   basis: 'Simon 게임·Corsi 블록 따라 하기 폭 과제(작업기억 폭 측정)',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
@@ -214,6 +214,7 @@ G.act({
       b.addEventListener('pointerdown', function (e) { e.preventDefault(); onTap(i); });
       padsBox.appendChild(b); return b;
     });
+    /* 처음 길이: 1단계 2 · 2단계 3 · 3단계 4 · 4단계(도전) 5 · 5단계(마스터) 6 — 아무리 늘어도 7까지 */
     var ROUNDS = 6, round = 0, span = lv + 1, streak = 0, best = 0, seq = [], pos = 0, accepting = false, misses = 0, idleH = null;
     var LIT = pace(560), GAP = pace(240);
     /* 칸이 오르면 마지막 한 판(2칸)·두 판(3칸)은 하나 더 길게 — 다음 단계 길이를 살짝 맛보기 */
@@ -322,11 +323,11 @@ G.act({
    2. 낮과 밤 — 억제 (Day–Night Stroop)
    =========================================================== */
 G.act({
-  id: 'daynight', area: 'brain', title: '낮과 밤', icon: '🌗', order: 2, levels: 3, mins: 2, needs: [],
+  id: 'daynight', area: 'brain', title: '낮과 밤', icon: '🌗', order: 2, levels: 5, mins: 2, needs: [],
   ef: ['inhibit', 'wm'],
   desc: '해가 나오면 달! 반대로 누르기',
   goal: '억제(참기) — 눈에 보이는 대로 바로 누르고 싶은 마음을 멈추고 규칙대로 하는 힘',
-  how: '반대로 하기는 어른에게도 어려워요. 틀려도 "생각하고 눌렀네!" 하고 멈춘 것을 칭찬해 주세요. 화면 밖에서는 "엄마가 \'크게\' 하면 작게 말하기", "손 올려 하면 내리기"처럼 반대로 하기 놀이를 짧게 해 보세요.',
+  how: '반대로 하기는 어른에게도 어려워요. 틀려도 "생각하고 눌렀네!" 하고 멈춘 것을 칭찬해 주세요. 화면 밖에서는 "엄마가 \'크게\' 하면 작게 말하기", "손 올려 하면 내리기"처럼 반대로 하기 놀이를 짧게 해 보세요. 4·5단계(도전·마스터)는 반대로 하다가 "다시 똑같이!"로 규칙이 두세 번 바뀌어요.',
   basis: 'Day–Night Stroop 과제 (Gerstadt, Hong & Diamond, 1994)',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
@@ -337,6 +338,12 @@ G.act({
     /* 칸이 오르면 — 2단계: '똑같이'를 몇 장 하다가 반대로 바뀐다(3단계 맛보기). 2칸은 1장, 3칸은 3장 뒤에 (3단계는 4장)
        3단계: 바뀐 뒤 반대로 하는 카드가 한 장씩 더 */
     var N = 10 + (lv >= 3 ? st - 1 : 0), SWITCH_AT = lv >= 3 ? 4 : lv === 2 && st > 1 ? ctx.tune([0, 0, 4]) : -1;
+    /* 4·5단계: 규칙이 여러 번 바뀐다 [카드 수, 바뀌는 자리]. 4단계는 똑같이 → 반대로 → 다시 똑같이(두 번),
+       5단계는 세 장마다(세 번). 4단계 2·3칸은 세 번째 바뀜을 맛보기, 5단계 2·3칸은 마지막 카드가 한 장씩 더 */
+    var DN_MORE = { 4: [[12, [4, 8]], [13, [4, 8, 11]], [13, [4, 7, 10]]], 5: [[12, [3, 6, 9]], [13, [3, 6, 9]], [14, [3, 6, 9]]] };
+    var more = DN_MORE[lv] ? DN_MORE[lv][G.clamp(st, 1, 3) - 1] : null;
+    if (more) N = more[0];
+    var SW = more ? more[1].slice() : SWITCH_AT >= 0 ? [SWITCH_AT] : [];
     var opposite = lv === 2 && SWITCH_AT < 0, i = 0, cur = null, open = false, timer = null, run3 = 0, deck = [];
     for (var k = 0; k < N; k++) { var x; do { x = Math.random() < 0.5 ? 'sun' : 'moon'; } while (k >= 2 && deck[k - 1] === x && deck[k - 2] === x); deck.push(x); }
 
@@ -353,9 +360,9 @@ G.act({
     }
     function show() {
       if (i >= N) { end(); return; }
-      if (i === SWITCH_AT) {
-        opposite = true; setRule();
-        announce('🔄', '규칙이 바뀌었어요!', '이제 반대로! 해가 나오면 달, 달이 나오면 해!', 300).then(function () { SWITCH_AT = -1; show(); });
+      if (SW.length && i === SW[0]) {
+        SW.shift(); opposite = !opposite; setRule();
+        announce(opposite ? '🔄' : '👯', '규칙이 바뀌었어요!', opposite ? '이제 반대로! 해가 나오면 달, 달이 나오면 해!' : '다시 똑같이! 해가 나오면 해, 달이 나오면 달!', 300).then(show);
         return;
       }
       cur = deck[i]; card.className = 'dn-card ' + cur; void card.offsetWidth; card.classList.add('show');
@@ -395,13 +402,13 @@ G.act({
       });
     });
     function end() {
-      ctx.finish({ msg: opposite ? '해와 달을 반대로 척척! 생각하고 누르는 힘이 쑥쑥 자랐어!' : '해는 해, 달은 달! 아주 잘 봤어!' });
+      ctx.finish({ msg: more ? '규칙이 몇 번 바뀌어도 척척! 생각하고 누르는 힘이 정말 멋져!' : opposite ? '해와 달을 반대로 척척! 생각하고 누르는 힘이 쑥쑥 자랐어!' : '해는 해, 달은 달! 아주 잘 봤어!' });
     }
 
     setRule(); ctx.progress(0, N);
     var intro = opposite ?
       '해님과 달님 놀이! 이번엔 반대로 해요. 해가 나오면 달을, 달이 나오면 해를 눌러요.' :
-      '해님과 달님 놀이! 해가 나오면 해를, 달이 나오면 달을 눌러요.';
+      '해님과 달님 놀이! 해가 나오면 해를, 달이 나오면 달을 눌러요.' + (more ? ' 중간에 규칙이 여러 번 바뀌어요. 바뀔 때마다 자비스가 알려 줄게!' : '');
     ctx.say(intro).then(function () {
       if (!opposite) return null;
       /* 반대 규칙 보여 주기 */
@@ -439,11 +446,11 @@ var DC_COLS = [
   [{ hex: '#f5b700', adj: '노란', n: '노랑' }, { hex: '#43a047', adj: '초록', n: '초록' }]
 ];
 G.act({
-  id: 'switch', area: 'brain', title: '규칙 바꾸기', icon: '🔄', order: 3, levels: 3, mins: 3, needs: [],
+  id: 'switch', area: 'brain', title: '규칙 바꾸기', icon: '🔄', order: 3, levels: 5, mins: 3, needs: [],
   ef: ['shift', 'inhibit', 'wm'],
   desc: '색깔 게임에서 모양 게임으로!',
   goal: '인지적 유연성 — 규칙이 바뀌면 방금까지 하던 방식을 내려놓고 새 규칙으로 바꿔 생각하는 힘',
-  how: '규칙이 바뀌는 순간이 가장 어려워요. 바뀔 때 부모가 "이제 모양 게임!" 하고 한 번 더 말해 주고, 처음 몇 장은 천천히 해도 돼요. 화면 밖에서는 빨래 개기·장난감 정리를 "이번엔 색깔끼리, 이번엔 종류끼리"로 바꿔 가며 해 보세요.',
+  how: '규칙이 바뀌는 순간이 가장 어려워요. 바뀔 때 부모가 "이제 모양 게임!" 하고 한 번 더 말해 주고, 처음 몇 장은 천천히 해도 돼요. 화면 밖에서는 빨래 개기·장난감 정리를 "이번엔 색깔끼리, 이번엔 종류끼리"로 바꿔 가며 해 보세요. 4·5단계(도전·마스터)는 반짝 카드 몇 장 뒤에 규칙 글씨가 숨어서, 규칙을 머릿속에 기억하고 해요(헷갈리면 다시 보여 줘요).',
   basis: 'Dimensional Change Card Sort — DCCS (Zelazo, 2006), 테두리판 포함',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level, st = ctx.step || 1;
@@ -460,9 +467,12 @@ G.act({
     var switchAt = -1, mixedAt = -1;
     /* 칸이 오르면 바뀐 규칙으로 하는 카드가 한 장씩 더 (2단계: 모양 카드 6→7→8, 3단계: 반짝 섞인 카드 8→9→10) */
     if (lv >= 2) { switchAt = plan.length; add('shape', lv === 2 ? 6 + st - 1 : 4); shufflePart(switchAt); }
+    /* 4·5단계: 반짝 카드 게임이 길어지고(10장, 5단계 2·3칸은 11·12장), 앞의 몇 장(CUED)만 규칙 글씨를 보여 준다.
+       4단계는 4→3→2장, 5단계는 첫 장만 — 그 뒤엔 규칙을 머릿속에 들고 한다(헷갈리면 그 카드에서 다시 보여 줌) */
+    var MIXN = lv >= 5 ? 10 + st - 1 : lv === 4 ? 10 : 8 + st - 1, CUED = lv >= 5 ? 1 : lv === 4 ? 5 - st : 99, reveal = false;
     if (lv >= 3) {
       mixedAt = plan.length;
-      for (var k = 0; k < 8 + st - 1; k++) { var gold = k % 2 === 0; plan.push({ rule: gold ? 'shape' : 'color', card: CARDS[(k >> 1) % 2], gold: gold }); }
+      for (var k = 0; k < MIXN; k++) { var gold = k % 2 === 0; plan.push({ rule: gold ? 'shape' : 'color', card: CARDS[(k >> 1) % 2], gold: gold }); }
       shufflePart(mixedAt);
     }
 
@@ -478,7 +488,10 @@ G.act({
     var idx = 0, cur = null, open = false, miss = 0, postN = 0, postOk = 0, mode = 'color';
 
     function ruleText(r) {
-      if (lv >= 3 && idx >= mixedAt && mixedAt >= 0) return '<span class="nw">✨ 반짝 테두리 → <b>🔷 모양</b></span> <span class="nw">· 그냥 카드 → <b>🎨 색깔</b></span>';
+      if (lv >= 3 && idx >= mixedAt && mixedAt >= 0) {
+        if (idx >= mixedAt + CUED && !reveal) return '<span class="nw">✨ 반짝 카드 게임!</span> <span class="nw">· 🤔 규칙을 기억해요</span>';
+        return '<span class="nw">✨ 반짝 테두리 → <b>🔷 모양</b></span> <span class="nw">· 그냥 카드 → <b>🎨 색깔</b></span>';
+      }
       return r === 'shape' ? '🔷 모양 게임! <b>' + S.an + '는 ' + S.an + ' 집</b>' : '🎨 색깔 게임! <b>' + C[0].n + '은 ' + C[0].n + ' 집</b>';
     }
     function correctBox(p) { return p.rule === 'color' ? (p.card.col === T[0].col ? 0 : 1) : (p.card.shape === T[0].shape ? 0 : 1); }
@@ -492,8 +505,9 @@ G.act({
       if (idx >= plan.length) { end(); return; }
       var p = plan[idx], step = Promise.resolve();
       if (idx === switchAt) step = announce('🔷', '이제 모양 게임!', S.an + '는 ' + S.an + ' 집, ' + S.bn + '는 ' + S.bn + ' 집! 색깔은 이제 안 봐요.');
-      else if (idx === mixedAt) step = announce('✨', '반짝 카드 게임!', '반짝 테두리가 있으면 모양 게임, 없으면 색깔 게임!');
+      else if (idx === mixedAt) step = announce('✨', '반짝 카드 게임!', '반짝 테두리가 있으면 모양 게임, 없으면 색깔 게임!' + (CUED < 99 ? ' 조금 뒤엔 규칙 글씨가 숨어요. 머릿속에 기억해 둬!' : ''));
       step.then(function () {
+        reveal = false;
         mode = p.rule; rule.innerHTML = ruleText(p.rule);
         cur = p; miss = 0;
         card.className = 'sw-card' + (p.gold ? ' gold' : ''); card.style.transform = ''; void card.offsetWidth; card.classList.add('show');
@@ -522,6 +536,7 @@ G.act({
         miss++;
         if (miss === 1) { ctx.trial(false); if (post) postN++; }
         G.sfx.play('oops'); G.ui.wiggle(boxes[i]);
+        if (!reveal && CUED < 99 && idx >= mixedAt + CUED) { reveal = true; rule.innerHTML = ruleText(mode); }   /* 숨은 규칙 글씨를 다시 보여 준다 */
         var why = mode === 'color' ? '지금은 색깔 게임이야! ' + C[cur.card.col].n + '은 어느 집이지?' : '지금은 모양 게임이야! ' + (cur.card.shape === S.a ? S.an : S.bn) + '는 어느 집이지?';
         if (miss >= 2) { G.ui.hint(boxes[right]); why = '반짝이는 집이야! ' + why.split('!')[0] + '!'; }
         ctx.oops(why);
@@ -559,17 +574,19 @@ G.act({
    4. 멈춰! 잡아! — 억제·주의 (Go/No-Go)
    =========================================================== */
 G.act({
-  id: 'gonogo', area: 'brain', title: '멈춰! 잡아!', icon: '🐟', order: 4, levels: 3, mins: 2, needs: [],
+  id: 'gonogo', area: 'brain', title: '멈춰! 잡아!', icon: '🐟', order: 4, levels: 5, mins: 2, needs: [],
   ef: ['inhibit', 'attend'],
   desc: '물고기는 콕! 상어는 쉿!',
   goal: '억제·주의 — 계속 누르다가도 "멈춰야 할 때" 손을 멈추는 힘, 끝까지 눈을 떼지 않는 힘',
-  how: '상어를 참았을 때 "와, 손이 멈췄네!" 하고 참은 것을 크게 칭찬해 주세요. 화면 밖에서는 "빨간불 멈춰, 초록불 걸어" 놀이, 음악이 멈추면 얼음 놀이, "사과 하면 손뼉, 다른 과일이면 가만히" 놀이로 이어 가세요.',
+  how: '상어를 참았을 때 "와, 손이 멈췄네!" 하고 참은 것을 크게 칭찬해 주세요. 화면 밖에서는 "빨간불 멈춰, 초록불 걸어" 놀이, 음악이 멈추면 얼음 놀이, "사과 하면 손뼉, 다른 과일이면 가만히" 놀이로 이어 가세요. 4단계(도전)는 조금 더 빠르고 길게, 5단계(마스터)는 참을 친구(게)가 하나 더 나와요.',
   basis: 'Go/No-Go 과제 — 반응 억제 측정(유아용 동물 버전)',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
-    /* 칸이 오르면 보이는 시간·사이 시간·마릿수가 다음 단계 쪽으로 1/3씩 (ctx.tune) */
-    var EXPO = pace(ctx.tune([2200, 1600, 1150])), ISI = pace(ctx.tune([850, 700, 600])), COUNT = ctx.tune([14, 18, 22]);
-    var NOGO = lv >= 3 ? ['🦈', '🐡'] : ['🦈'];
+    /* 칸이 오르면 보이는 시간·사이 시간·마릿수가 다음 단계 쪽으로 1/3씩 (ctx.tune).
+       4·5단계 값은 3단계 3칸이 다가가던 값 그대로 이어진다 (보이는 시간 0.93초·0.88초, 24·26마리) */
+    var EXPO = pace(ctx.tune([2200, 1600, 1150, 925, 875])), ISI = pace(ctx.tune([850, 700, 600, 550, 525])), COUNT = ctx.tune([14, 18, 22, 24, 26]);
+    var NOGO = lv >= 5 ? ['🦈', '🐡', '🦀'] : lv >= 3 ? ['🦈', '🐡'] : ['🦈'];
+    var NG_NAME = { '🦈': '상어', '🐡': '복어', '🦀': '게' };
     B.innerHTML = '<div class="bw"><div class="gn-top"><div class="gn-net"><b>🪣</b><span>0</span><em></em></div></div><div class="gn-time"><b></b></div><div class="gn-sea"></div></div>';
     var wrap = G.$('.bw', B), sea = G.$('.gn-sea', B), netN = G.$('.gn-net span', B), netE = G.$('.gn-net em', B), tbar = G.$('.gn-time b', B);
     var HOLES = [[20, 38], [50, 30], [80, 38], [20, 76], [50, 68], [80, 76]];
@@ -602,7 +619,7 @@ G.act({
         } else {
           st.fa++; ctx.trial(false); crRun = 0;
           G.sfx.play('oops'); m.classList.add('bye');
-          floatText(wrap, e === '🦈' ? '앗, 상어는 쉿! 🤫' : '앗, 복어는 쉿! 🤫', c[0], c[1] - 50);
+          floatText(wrap, '앗, ' + NG_NAME[e] + '는 쉿! 🤫', c[0], c[1] - 50);
         }
         ctx.timeout(function () { m.remove(); }, 500);
         ctx.timeout(spawn, ISI);
@@ -628,7 +645,7 @@ G.act({
     /* 보여 주며 알려 주기 */
     var demo = G.el('<div class="gn-demo"><div><span>🐟</span>콕!</div><div><span>' + NOGO.join('') + '</span>쉿! 🤫</div></div>');
     sea.appendChild(demo); demo.style.position = 'absolute'; demo.style.inset = '0';
-    ctx.say('물고기 친구들을 그물로 구해 줘요! 물고기는 콕! 그런데 ' + (NOGO.length > 1 ? '상어랑 복어는' : '상어는') + ' 쉿! 손을 멈춰요.').then(function () {
+    ctx.say('물고기 친구들을 그물로 구해 줘요! 물고기는 콕! 그런데 ' + (NOGO.length > 2 ? '상어, 복어, 게는' : NOGO.length > 1 ? '상어랑 복어는' : '상어는') + ' 쉿! 손을 멈춰요.').then(function () {
       return ctx.say('준비, 시작!');
     }).then(function () { demo.remove(); net(); ctx.timeout(spawn, 400); });
   }
