@@ -48,6 +48,7 @@ async function until(fn, ms, what) { const t0 = Date.now(); while (Date.now() - 
     return p;
   };
   const H = await ctx({ width: 1280, height: 720 });
+  await H.addInitScript(() => { try { sessionStorage.setItem('dongsan_adminOpen', '1'); } catch (e) {} });   // 관리자 앱을 풀고 들어온 인도자
   const st = () => H.evaluate(() => { const x = window.QuizBattle.state(), S = x.S, L = x.LIVE; const q = S && (S.phase === 'q' || S.phase === 'fq') ? (S.phase === 'fq' ? S.final : S.rounds[S.ri].qs[S.qi]) : null; return { phase: S && S.phase, rev: S && S.rev, picked: S && S.picked, q: q && { t: q.t, a: q.a, ai: q.ai, sh: q.sh, n: q.items && q.items.length, style: window.QuizBattle.styleOf(q) }, seq: L.seq, nAns: Object.keys(L.ans).length, buzz: L.buzz, lock: L.lock, players: Object.keys(L.players).length, code: L.code, on: L.on }; });
 
   // 1) 인도자: 준비 → 휴대폰 참여 켜기

@@ -2,13 +2,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>동산 퀴즈 배틀</title>
-<meta name="description" content="누구나 팀으로 겨루는 말씀·상식·넌센스 퀴즈. 빔·TV 한 화면으로 진행하고, 휴대폰으로 방 코드에 들어와 함께 답하거나 혼자 도전할 수 있어요.">
+<meta name="description" content="어린이부터 어른까지 누구나 참여하는 말씀·상식·넌센스 퀴즈. 다 함께 팀으로 겨루고, 휴대폰으로 방 코드에 들어와 답하거나 혼자 도전할 수 있어요.">
 <meta name="theme-color" content="#090d22">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="favicon.png" type="image/png">
 <meta property="og:title" content="동산 퀴즈 배틀">
-<meta property="og:description" content="팀으로 겨루는 말씀·상식·넌센스 퀴즈 — 오늘의 도전 12문제, 너도 해 봐!">
+<meta property="og:description" content="누구나 다 함께 — 말씀·상식·넌센스 퀴즈. 오늘의 도전 12문제, 함께 해 봐요!">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -421,6 +421,18 @@ canvas.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 .oxb{position:relative}
 .oxb .dn{position:absolute;bottom:-1.9em;left:50%;transform:translateX(-50%);font-family:'Noto Sans KR',sans-serif;font-size:clamp(14px,2.4vh,22px);color:var(--ink);margin:0;white-space:nowrap}
 .mcard.joinc{grid-column:1/-1;flex-wrap:wrap;min-height:0}
+.mcard.wide{grid-column:1/-1;min-height:0}
+.foot .lnk{color:var(--ink2);text-decoration:underline;font-size:13px;padding:6px 4px}
+.foot .lead-on{color:var(--gold);font-weight:700}
+.ib.live.idle{border-style:dashed;color:var(--ink2)}
+.ib.live.idle b{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:14px}
+.pindots{display:flex;gap:14px;justify-content:center;margin:16px 0}
+.pindots span{width:16px;height:16px;border-radius:50%;border:2px solid var(--gold)}
+.pindots span.on{background:var(--gold)}
+.pinpad{display:grid;grid-template-columns:repeat(3,minmax(0,84px));gap:10px;justify-content:center}
+.pinpad .btn{min-height:58px;font-size:22px;border-radius:29px}
+#pinMsg{text-align:center}#pinMsg.er{color:#ffb3bb}
+.dock .in .btn.ok{white-space:nowrap}
 .mcard.joinc .jt{flex:1;min-width:150px}
 .mcard.joinc input{width:130px;height:52px;border-radius:14px;border:2px solid var(--line2);background:rgba(0,0,0,.25);padding:0 12px;font-size:22px;font-weight:900;text-align:center;letter-spacing:.12em;text-transform:uppercase}
 .mcard.joinc input:focus{border-color:var(--gold);outline:none}
