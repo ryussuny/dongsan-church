@@ -212,6 +212,27 @@ const shot = async (page, name) => { if (SHOTS) { fs.mkdirSync(SHOTS, { recursiv
     return { n: r.qs.length, errs: r.errs.length, mcA: r.qs[1].a, ex: r.qs[0].ex, blankRef: r.qs[6].ref, blankO: r.qs[6].o, round: back.qs.length === r.qs.length && JSON.stringify(back.qs) === JSON.stringify(r.qs), cho: QB.choseong('존 웨슬리').join('') };
   });
   if (parsed.n !== 8 || parsed.errs !== 2 || parsed.mcA !== 1 || parsed.ex !== '창세기 6장' || parsed.blankRef !== '요한복음 3:16' || !parsed.round || parsed.cho !== 'ㅈ ㅇㅅㄹ') errors.push('줄 형식 읽기가 이상함: ' + JSON.stringify(parsed));
+  // 🔑 인도자만: PIN 없는 기기에는 문제 만들기 · 휴대폰 참여 켜기가 보이지 않는다
+  if (await pe.$('[data-act="edit"]')) errors.push('인도자가 아닌데 「문제 만들기」가 보임');
+  await pe.click('[data-act="setup"]');
+  if (await pe.$('[data-act="liveOn"]')) errors.push('인도자가 아닌데 「휴대폰 참여 켜기」가 보임');
+  await pe.click('[data-act="home"]');
+  await pe.click('[data-act="leaderIn"]');
+  if (!(await pe.$('#ov')) || await pe.$('#ov .pinpad')) errors.push('PIN 이 없는 기기에서 인도자 안내가 이상함');
+  await pe.click('#ov [data-act="closeModal"]');
+  // 관리자 앱과 같은 PIN(1234)을 이 기기에 정해 두고, 틀린 PIN → 맞는 PIN
+  await pe.evaluate(async () => { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('dongsan-admin:1234')); localStorage.setItem('dongsan_adminPin', JSON.stringify(Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join(''))); });
+  await pe.click('[data-act="leaderIn"]');
+  for (const k of '9999') await pe.click('[data-act="pinKey"][data-arg="' + k + '"]');
+  await pe.waitForTimeout(150);
+  if (!(await pe.$('#pinMsg.er'))) errors.push('틀린 PIN 에 안내가 없음');
+  for (const k of '1234') await pe.click('[data-act="pinKey"][data-arg="' + k + '"]');
+  await pe.waitForTimeout(200);
+  if (await pe.$('#ov .pinpad')) errors.push('맞는 PIN 으로 열리지 않음');
+  if (!(await pe.evaluate(() => window.QuizBattle.leader()))) errors.push('인도자 모드가 켜지지 않음');
+  await pe.click('[data-act="setup"]');
+  if (!(await pe.$('[data-act="liveOn"]'))) errors.push('인도자에게 「휴대폰 참여 켜기」가 안 보임');
+  await pe.click('[data-act="home"]');
   await pe.click('[data-act="edit"]'); await pe.click('[data-act="editNew"]');
   await pe.fill('#eName', '점검 팩'); await pe.click('[data-act="editSave"]');
   await shot(pe, '14-editor');

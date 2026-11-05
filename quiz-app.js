@@ -7,6 +7,8 @@
        파이널 올인 베팅, 시상식.
    - 혼자 도전: quiz.html?solo=1 — 오늘의 도전(날마다 같은 12문제) · 팩 도전.
    - 문제 만들기: 한 줄 형식으로 우리 모임 문제 팩 만들기, 파일로 주고받기, AI 초안.
+   - 휴대폰 참여(선택): 「📱 휴대폰 참여 켜기」를 누르면 방 코드·QR — 참가자는 quiz.html?join=코드 로
+     들어와 직접 답하고 버저를 누른다. 전송은 quiz-live.js (공개 MQTT 방송국).
 
    기록(게임·최고 점수·만든 문제)은 모두 이 기기(localStorage)에만 둔다.
    이름·연락처는 받지 않는다 (팀 이름만).
@@ -146,11 +148,12 @@ function prep(q, pack, rng) {
 const seenAll = () => store.get('quiz_seen', {});
 function markSeen(id) { const s = seenAll(); s[id] = Date.now(); const ks = Object.keys(s); if (ks.length > 3000) ks.sort((a, b) => s[a] - s[b]).slice(0, 800).forEach(k => delete s[k]); store.set('quiz_seen', s); }
 
-/* 한 팩에서 n 문제: 안 본 것 먼저, 쉬운 것부터 */
-function pickFrom(pack, n, used) {
+/* 한 팩에서 n 문제: (난이도에 맞는 것 →) 안 본 것 먼저, 쉬운 것부터 */
+function pickFrom(pack, n, used, lv) {
   const seen = seenAll();
+  const rank = x => { const l = x.q.lv || 2; return lv === 'easy' ? l : lv === 'hard' ? 4 - l : 0; };
   const list = shuffle(pack.q.map(q => ({ q, id: qid(pack, q) })).filter(x => !used[x.id]));
-  list.sort((a, b) => (seen[a.id] || 0) - (seen[b.id] || 0));
+  list.sort((a, b) => rank(a) - rank(b) || (seen[a.id] || 0) - (seen[b.id] || 0));
   const got = list.slice(0, n);
   got.forEach(x => { used[x.id] = 1; });
   return got.map(x => prep(x.q, pack)).sort((a, b) => (a.lv || 2) - (b.lv || 2));
@@ -163,14 +166,14 @@ let SO = null;                     // 혼자 도전
 let ACT = { primary: null };
 const saveGame = () => { if (S) store.set('quiz_game', S); };
 
-const DEFAULT_CFG = { n: 4, per: 5, timer: 1, items: true, events: true, dbl: true, final: true, packs: [] };
+const DEFAULT_CFG = { n: 4, per: 5, timer: 1, lv: 'mix', items: true, events: true, dbl: true, final: true, packs: [] };
 let SET = null;                    // 준비 화면 값
 
 /* ---------- 타이머 ---------- */
 const T = { total: 0, left: 0, run: false, last: 0, onEnd: null, lastSec: -1 };
-function tStart(sec, onEnd) { T.total = T.left = sec; T.run = true; T.onEnd = onEnd; T.last = performance.now(); T.lastSec = Math.ceil(sec); requestAnimationFrame(tLoop); tDraw(); }
+function tStart(sec, onEnd) { T.total = T.left = sec; T.run = true; T.onEnd = onEnd; T.last = performance.now(); T.lastSec = Math.ceil(sec); requestAnimationFrame(tLoop); tDraw(); livePush(); }
 function tStop() { T.run = false; T.onEnd = null; }
-function tToggle() { if (T.left <= 0) return; T.run = !T.run; if (T.run) { T.last = performance.now(); requestAnimationFrame(tLoop); } tDraw(); }
+function tToggle() { if (T.left <= 0) return; T.run = !T.run; if (T.run) { T.last = performance.now(); requestAnimationFrame(tLoop); } tDraw(); livePush(); }
 function tLoop(ts) {
   if (!T.run) return;
   const dt = Math.min(0.5, (ts - T.last) / 1000); T.last = ts;
@@ -247,6 +250,7 @@ function render() {
   tDraw();
   const fl = $$('.tile.toflip');
   if (fl.length) requestAnimationFrame(() => requestAnimationFrame(() => fl.forEach(t => t.classList.add('flip'))));
+  if (LIVE.on && UI.screen !== 'play' && UI.screen !== 'join') livePush();
 }
 function go(screen) { UI.screen = screen; window.scrollTo(0, 0); render(); }
 
@@ -259,22 +263,24 @@ VIEWS.lobby = function () {
   const n = allPacks().reduce((s, p) => s + p.q.length, 0);
   const dd = store.get('quiz_daily', {});
   const doneToday = dd.date === today();
-  let h = '<header class="bar"><a class="ib" href="word-youth.html" aria-label="청년·청소년 말씀으로">←</a><div class="ttl"></div>' + soundBtn() + '<button class="ib" data-act="fs" aria-label="전체 화면">⛶</button></header>';
+  let h = '<header class="bar"><a class="ib" href="word.html" aria-label="오늘의 말씀으로">←</a><div class="ttl"></div>' + soundBtn() + '<button class="ib" data-act="fs" aria-label="전체 화면">⛶</button></header>';
   h += '<main class="stage"><div class="lobby">';
-  h += '<div class="church">동산감리교회 · 중고등부 · 청년부</div>';
+  h += '<div class="church">동산감리교회 · 다 함께 · 누구나 참여</div>';
   h += '<h1 class="logo disp"><i class="a">⚡</i><span>동산 퀴즈 배틀</span><i class="b">🏆</i></h1>';
-  h += '<p class="sub">팀으로 겨루는 말씀 · 상식 · 넌센스 퀴즈 — 룰렛 · 아이템 · 올인 베팅까지</p>';
+  h += '<p class="sub">어린이부터 어른까지 누구나 참여하는 말씀 · 상식 · 넌센스 퀴즈 — 다 함께 팀으로 겨뤄요!</p>';
   if (live) {
     const r = g.rounds[g.ri];
     h += '<div class="resume"><p><b>하던 게임이 있어요</b><br>' + g.teams.length + '팀 · ' + (g.phase === 'bet' || g.phase === 'fq' ? '파이널' : 'ROUND ' + (g.ri + 1) + ' ' + esc(r ? r.name : '')) + '</p><button class="btn pri" data-act="resume">이어 하기 ▶</button><button class="btn sm" data-act="dropGame">지우기</button></div>';
   }
   h += '<div class="mgrid">';
-  h += '<button class="mcard hot" data-act="setup"><span class="ic">🏆</span><span><b>팀 대항전</b><small>빔 · TV 한 화면으로 2~6팀이 겨뤄요</small></span></button>';
+  h += '<button class="mcard hot" data-act="setup"><span class="ic">🏆</span><span><b>팀 대항전</b><small>빔 · TV 한 화면으로 2~6팀 · 온 가족 다 함께</small></span></button>';
   h += '<button class="mcard cool" data-act="soloHome">' + (doneToday ? '' : '<span class="tag">NEW</span>') + '<span class="ic">⚡</span><span><b>혼자 도전</b><small>' + (doneToday ? '오늘 ' + fmt(dd.score) + '점 · 기록 깨러 가기' : '오늘의 도전 12문제 · 친구와 점수 겨루기') + '</small></span></button>';
-  h += '<button class="mcard" data-act="edit"><span class="ic">✏️</span><span><b>문제 만들기</b><small>우리 모임 문제 · 설교 본문 문제 · AI 초안</small></span></button>';
-  h += '<button class="mcard" data-act="help"><span class="ic">📋</span><span><b>진행 방법</b><small>규칙 · 아이템 · 단축키 · 인도 꿀팁</small></span></button>';
+  const L = leader();
+  if (L) h += '<button class="mcard" data-act="edit"><span class="tag">🔑 인도자</span><span class="ic">✏️</span><span><b>문제 만들기</b><small>우리 모임 문제 · 설교 본문 문제 · AI 초안</small></span></button>';
+  h += '<button class="mcard' + (L ? '' : ' wide') + '" data-act="help"><span class="ic">📋</span><span><b>진행 방법</b><small>규칙 · 아이템 · 단축키 · 인도 꿀팁</small></span></button>';
+  h += '<form class="mcard joinc" data-form="joinCode"><span class="ic">📱</span><span class="jt"><b>방 코드로 참여</b><small>인도자 화면에 나온 코드를 넣으세요</small></span><input id="jcode" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="코드" aria-label="방 코드"><button class="btn pri" type="submit">참여</button></form>';
   h += '</div>';
-  h += '<p class="foot">문제 팩 ' + allPacks().length + '개 · 문제 ' + n + '개 · 기록은 이 기기에만 저장돼요<br><a href="index.html">동산감리교회 홈페이지</a></p>';
+  h += '<p class="foot">문제 팩 ' + allPacks().length + '개 · 문제 ' + n + '개 · 기록은 이 기기에만 저장돼요<br><a href="index.html">동산감리교회 홈페이지</a> · ' + (PREVIEW ? '<span>🔑 미리보기 (나만 보는 링크)</span>' : L ? '<span class="lead-on">🔑 인도자 모드</span> <button class="lnk" data-act="leaderOut">잠그기</button>' : '<button class="lnk" data-act="leaderIn">🔑 인도자</button>') + '</p>';
   h += '</div></main>';
   return { html: h };
 };
@@ -308,9 +314,11 @@ VIEWS.setup = function () {
   const c = SET.cfg;
   let h = '<header class="bar"><button class="ib" data-act="home" aria-label="처음 화면">←</button><div class="ttl"><b>팀 대항전</b> 준비</div>' + soundBtn() + '<button class="ib" data-act="fs" aria-label="전체 화면">⛶</button></header>';
   h += '<main class="stage"><div class="setup">';
-  h += '<h1 class="disp">🏆 팀 대항전 준비</h1><p class="lead">팀을 나누고, 문제 팩을 고르고, 규칙을 정하면 끝!</p>';
+  const L = leader();
+  let no = 1;
+  h += '<h1 class="disp">🏆 팀 대항전 준비</h1><p class="lead">팀을 나누고, 문제 팩을 고르고, 규칙을 정하면 끝! 누구나 다 함께 참여해요.</p>';
   // 팀
-  h += '<section class="sec"><h2><em>1</em> 팀 <small>이모지를 누르면 바뀌어요</small></h2><div class="pills">';
+  h += '<section class="sec"><h2><em>' + (no++) + '</em> 팀 <small>이모지를 누르면 바뀌어요</small></h2><div class="pills">';
   for (let n = 2; n <= 6; n++) h += '<button class="pill' + (c.n === n ? ' on' : '') + '" data-act="setN" data-arg="' + n + '">' + n + '팀</button>';
   h += '<button class="pill" data-act="rollNames">🎲 이름 섞기</button></div><div class="tedit">';
   for (let i = 0; i < c.n; i++) {
@@ -318,9 +326,10 @@ VIEWS.setup = function () {
     h += '<div class="te" style="--tc:' + COLORS[i] + '"><button class="te-e" data-act="cycleEmoji" data-arg="' + i + '" aria-label="' + (i + 1) + '팀 이모지 바꾸기">' + t.emoji + '</button><input data-team="' + i + '" value="' + esc(t.name) + '" maxlength="14" aria-label="' + (i + 1) + '팀 이름"><button class="ib" data-act="rollName" data-arg="' + i + '" aria-label="이름 바꾸기">🎲</button></div>';
   }
   h += '</div></section>';
+  if (L) h += '<section class="sec"><h2><em>' + (no++) + '</em> 📱 휴대폰으로 함께 <small>🔑 인도자만 보여요 · 인터넷이 필요해요</small></h2>' + livePanel() + '</section>';
   // 팩
   const ps = allPacks();
-  h += '<section class="sec"><h2><em>2</em> 문제 팩 <small>누른 순서대로 라운드가 돼요</small></h2><div class="row" style="margin-bottom:12px"><button class="btn sm" data-act="recommend">🎲 추천 조합</button><button class="btn sm" data-act="clearPacks">모두 빼기</button><span class="sp1"></span><span style="color:var(--ink3);font-size:14px">라운드마다</span><div class="pills">';
+  h += '<section class="sec"><h2><em>' + (no++) + '</em> 문제 팩 <small>누른 순서대로 라운드가 돼요</small></h2><div class="row" style="margin-bottom:12px"><button class="btn sm" data-act="recommend">🎲 추천 조합</button><button class="btn sm" data-act="clearPacks">모두 빼기</button><span class="sp1"></span><span style="color:var(--ink3);font-size:14px">라운드마다</span><div class="pills">';
   [3, 5, 7, 10].forEach(n => { h += '<button class="pill' + (c.per === n ? ' on' : '') + '" data-act="setPer" data-arg="' + n + '">' + n + '문제</button>'; });
   h += '</div></div><div class="packs">';
   ps.forEach(p => {
@@ -329,8 +338,10 @@ VIEWS.setup = function () {
   });
   h += '</div></section>';
   // 규칙
-  h += '<section class="sec"><h2><em>3</em> 규칙</h2><div class="row" style="margin-bottom:12px"><span style="color:var(--ink2);font-weight:700">⏱ 타이머</span><div class="pills">';
+  h += '<section class="sec"><h2><em>' + (no++) + '</em> 규칙</h2><div class="row" style="margin-bottom:12px"><span style="color:var(--ink2);font-weight:700">⏱ 타이머</span><div class="pills">';
   [[0, '끄기'], [1.5, '여유'], [1, '보통'], [0.7, '빠듯']].forEach(([v, l]) => { h += '<button class="pill' + (c.timer === v ? ' on' : '') + '" data-act="setTimer" data-arg="' + v + '">' + l + '</button>'; });
+  h += '</div></div><div class="row" style="margin-bottom:12px"><span style="color:var(--ink2);font-weight:700">📶 난이도</span><div class="pills">';
+  [['easy', '쉽게 · 어린이도 함께'], ['mix', '섞어서'], ['hard', '어렵게']].forEach(([v, l]) => { h += '<button class="pill' + ((c.lv || 'mix') === v ? ' on' : '') + '" data-act="setLv" data-arg="' + v + '">' + l + '</button>'; });
   h += '</div></div><div class="tgl">';
   [['items', '🎁', '아이템 카드', '팀마다 🔥더블 · 🦹스틸 · 🛡️실드 한 장씩'], ['events', '🎡', '럭키 룰렛', '두 라운드마다 룰렛 — 만나 · 희년 · 다윗과 골리앗…'], ['dbl', '🔥', '마지막 라운드 2배', '끝까지 역전 가능!'], ['final', '💰', '파이널 올인 베팅', '점수를 걸고 마지막 한 문제']].forEach(([k, i, b, s]) => {
     h += '<button class="tg' + (c[k] ? ' on' : '') + '" data-act="toggleCfg" data-arg="' + k + '" aria-pressed="' + !!c[k] + '"><span class="ti">' + i + '</span><span><b>' + b + '</b><small>' + s + '</small></span><span class="sw"></span></button>';
@@ -338,7 +349,7 @@ VIEWS.setup = function () {
   h += '</div></section>';
   h += '</div></main>';
   const ok = c.packs.length > 0;
-  h += '<div class="dock"><div class="in"><p><b>' + (ok ? '라운드 ' + c.packs.length + '개 · 문제 ' + (c.packs.length * c.per) + '개' + (c.final ? ' + 파이널' : '') : '문제 팩을 하나 이상 골라 주세요') + '</b><br>' + (ok ? '약 ' + estMin(c) + '분 · ' + c.n + '팀' : '') + '</p><button class="btn pri big" data-act="start"' + (ok ? '' : ' disabled') + '>시작! ▶</button></div></div>';
+  h += '<div class="dock"><div class="in"><p><b>' + (ok ? '라운드 ' + c.packs.length + '개 · 문제 ' + (c.packs.length * c.per) + '개' + (c.final ? ' + 파이널' : '') : '문제 팩을 하나 이상 골라 주세요') + '</b><br>' + (ok ? '약 ' + estMin(c) + '분 · ' + c.n + '팀' : '') + '</p>' + (L ? liveDockBtn() : '') + '<button class="btn pri big" data-act="start"' + (ok ? '' : ' disabled') + '>시작! ▶</button></div></div>';
   return { html: h, primary: ok ? () => doAct('start') : null };
 };
 
@@ -348,22 +359,24 @@ function startGame() {
   SET.teams.forEach((t, i) => { const inp = $('input[data-team="' + i + '"]'); if (inp) t.name = inp.value.trim() || NAMES[i]; });
   store.set('quiz_last', { cfg: c, teams: SET.teams.slice(0, c.n) });
   const used = {};
-  const rounds = c.packs.map(id => packById(id)).filter(Boolean).map(p => ({ id: p.id, name: p.name, icon: p.icon || '❓', desc: p.desc || '', qs: pickFrom(p, c.per, used), mult: 1, ev: 1 })).filter(r => r.qs.length);
+  const rounds = c.packs.map(id => packById(id)).filter(Boolean).map(p => ({ id: p.id, name: p.name, icon: p.icon || '❓', desc: p.desc || '', qs: pickFrom(p, c.per, used, c.lv), mult: 1, ev: 1 })).filter(r => r.qs.length);
   if (!rounds.length) { toast('문제를 찾지 못했어요'); return; }
   if (c.dbl && rounds.length >= 2) rounds[rounds.length - 1].mult = 2;
   S = {
     v: 1, cfg: c, rounds, ri: 0, qi: 0, phase: 'intro',
     teams: SET.teams.slice(0, c.n).map((t, i) => ({ name: t.name, emoji: t.emoji, color: COLORS[i], score: 0, items: c.items ? { double: 1, steal: 1, shield: 1 } : { double: 0, steal: 0, shield: 0 }, streak: 0, best: 0, correct: 0, steals: 0 })),
     rev: false, picked: [], armed: [], hint: 1, open: false, undo: null, prev: null, rank1: null,
-    final: c.final ? pickFinal(c.packs, used) : null, bets: null, ev: null, startedAt: Date.now()
+    final: c.final ? pickFinal(c.packs, used, c.lv) : null, bets: null, ev: null, startedAt: Date.now()
   };
+  Object.keys(LIVE.players).forEach(id => { LIVE.players[id].c = 0; LIVE.players[id].s = 0; }); liveSave();
   saveGame(); SFX.go(); go('game');
 }
-function pickFinal(packIds, used) {
+function pickFinal(packIds, used, lv) {
   const ok = q => ['mc', 'order', 'open'].indexOf(q.t) >= 0 || (q.t === 'blank' && q.o);
   const find = ids => {
     let c = [];
     ids.forEach(id => { const p = packById(id); if (p) p.q.forEach(q => { if (ok(q) && !used[qid(p, q)]) c.push({ p, q }); }); });
+    if (lv === 'easy') { const e = c.filter(x => (x.q.lv || 2) <= 2); return e.length ? e : c; }
     const hard = c.filter(x => (x.q.lv || 2) >= 3);
     return hard.length ? hard : c.filter(x => (x.q.lv || 2) >= 2).length ? c.filter(x => (x.q.lv || 2) >= 2) : c;
   };
@@ -398,17 +411,25 @@ VIEWS.game = function () {
 };
 const GV = {};
 function gbar(label) {
-  return '<header class="bar"><button class="ib" data-act="menu" aria-label="진행 메뉴">☰</button><div class="ttl">' + label + '</div>' + soundBtn() + '<button class="ib" data-act="fs" aria-label="전체 화면">⛶</button></header>';
+  const lv = LIVE.on || LIVE.busy ? '<button class="ib live ' + LIVE.status + '" id="liveBadge" data-act="liveOpen" aria-label="휴대폰 참여">📱<b>' + liveCount() + '</b></button>' : leader() ? '<button class="ib live idle" id="liveBadge" data-act="liveOpen" aria-label="휴대폰 참여 켜기">📱<b>켜기</b></button>' : '';
+  return '<header class="bar"><button class="ib" data-act="menu" aria-label="진행 메뉴">☰</button><div class="ttl">' + label + '</div>' + lv + soundBtn() + '<button class="ib" data-act="fs" aria-label="전체 화면">⛶</button></header>';
 }
 function strip(mode) {
   const n = S.teams.length;
   let h = '<footer class="strip" style="--n:' + n + '">';
   S.teams.forEach((t, i) => {
     const on = S.picked.indexOf(i) >= 0, armed = S.armed.indexOf(i) >= 0, click = mode === 'pick1' || mode === 'pickN';
-    h += '<div class="tm' + (on ? ' on' : '') + (click ? ' click pickmode' : '') + '" data-i="' + i + '" style="--tc:' + t.color + '"' + (click ? ' role="button" tabindex="0" aria-pressed="' + on + '" data-act="pick" data-arg="' + i + '"' : '') + '>';
+    const qp = LIVE.on && (S.phase === 'q' || S.phase === 'fq'), bz = qp && !S.rev && LIVE.buzz && LIVE.buzz.t === i, lk = qp && !S.rev && LIVE.lock.indexOf(i) >= 0;
+    h += '<div class="tm' + (on ? ' on' : '') + (click ? ' click pickmode' : '') + (bz ? ' buzzed' : '') + (lk ? ' locked' : '') + '" data-i="' + i + '" style="--tc:' + t.color + '"' + (click ? ' role="button" tabindex="0" aria-pressed="' + on + '" data-act="pick" data-arg="' + i + '"' : '') + '>';
     h += '<span class="tk">' + (i + 1) + '</span><span class="te-e">' + t.emoji + '</span><span class="tx"><span class="tn">' + esc(t.name) + '</span><span class="ts" data-score="' + i + '">' + fmt(t.score) + '</span></span>';
     if (t.streak >= 2) h += '<span class="tf">🔥' + t.streak + '연속</span>';
     if (mode === 'arm' && (t.items.double > 0 || armed)) h += '<button class="dbl' + (armed ? ' on' : '') + '" data-act="arm" data-arg="' + i + '" aria-pressed="' + armed + '">' + (armed ? '🔥2배 ON' : '🔥2배') + '</button>';
+    if (qp && liveAll(curQ())) {
+      const n = livePeople(S.teams.length)[i].length;
+      if (!S.rev && n) h += '<span class="la">📱 ' + Object.keys(LIVE.ans).filter(id => LIVE.ans[id].t === i).length + '/' + n + '</span>';
+      else if (S.rev && LIVE.per && LIVE.per[i] && LIVE.per[i][1]) h += '<span class="la">✓ ' + LIVE.per[i][0] + '/' + LIVE.per[i][1] + '</span>';
+    }
+    if (bz) h += '<span class="la">🔔 ' + esc(LIVE.buzz.n) + '</span>';
     if (on) h += '<span class="ok">✓</span>';
     h += '</div>';
   });
@@ -428,6 +449,7 @@ GV.intro = function () {
   const m = r.mult * (r.ev || 1);
   if (m > 1) h += '<span class="chip hot">🔥 점수 ' + m + '배!</span>';
   h += '</div><button class="btn pri big" data-act="beginRound">시작 ▶ <kbd>Space</kbd></button>';
+  if (LIVE.on) h += liveJoinCard(false);
   h += '</div></main>' + strip('view');
   return { html: h, primary: () => doAct('beginRound'), after: () => { SFX.whoosh(); } };
 };
@@ -443,7 +465,7 @@ function qContent(q, o) {
     let s = '<div class="opts">';
     q.opts.forEach((t, i) => {
       const st = rev ? (i === q.ai ? ' good' : (o.chosen === i ? ' bad' : ' dim')) : '';
-      const inner = '<b class="on">' + (i + 1) + '</b><span>' + esc(t) + '</span>';
+      const inner = '<b class="on">' + (i + 1) + '</b><span>' + esc(t) + '</span>' + (rev && o.dist ? '<em class="dn">👥 ' + (o.dist[i] || 0) + '</em>' : '');
       s += solo && !rev ? '<button class="opt c' + i + '" data-act="soloAns" data-arg="' + i + '">' + inner + '</button>' : '<div class="opt c' + i + st + '">' + inner + '</div>';
     });
     return s + '</div>';
@@ -453,7 +475,7 @@ function qContent(q, o) {
       h += '<div class="qq' + sz + '">' + esc(q.q) + '</div><div class="ox">';
       [true, false].forEach((v, i) => {
         const k = v ? 'o' : 'x', st = rev ? (q.a === v ? ' good' : (o.chosen === i ? ' bad' : ' dim')) : '';
-        h += solo && !rev ? '<button class="oxb ' + k + '" data-act="soloAns" data-arg="' + i + '" aria-label="' + (v ? '맞다 O' : '아니다 X') + '">' + (v ? 'O' : 'X') + '</button>' : '<div class="oxb ' + k + st + '">' + (v ? 'O' : 'X') + '</div>';
+        h += solo && !rev ? '<button class="oxb ' + k + '" data-act="soloAns" data-arg="' + i + '" aria-label="' + (v ? '맞다 O' : '아니다 X') + '">' + (v ? 'O' : 'X') + '</button>' : '<div class="oxb ' + k + st + '">' + (v ? 'O' : 'X') + (rev && o.dist ? '<em class="dn">👥 ' + (o.dist[i] || 0) + '</em>' : '') + '</div>';
       });
       h += '</div>'; break;
     }
@@ -529,15 +551,17 @@ GV.q = function () {
     h += '<span class="pts">' + (S.open && st === 'buzz' ? '<s>' + fmt(base * 2 * m) + '</s>' : '') + fmt(base * m) + '점</span>';
     if (m > 1) h += '<span class="mult">×' + m + '</span>';
   } else h += '<span class="pts">💰 건 만큼 얻거나 잃어요</span>';
+  if (LIVE.on && !S.rev && liveAll(q)) h += '<span class="badge live" id="liveCnt">' + liveCntText() + '</span>';
   if (S.cfg.timer && !S.rev) h += timerHTML();
   h += '</div>';
   const ck = 'g' + S.ri + '-' + S.qi + '-' + S.phase, still = UI.cardKey === ck; UI.cardKey = ck;
   h += '<section class="card' + (still ? ' still' : '') + '"><span class="qpk">' + esc((q.pkIcon || '') + ' ' + (q.pkName || '')) + (q.lv ? ' · ' + ['', '쉬움', '보통', '도전'][q.lv] : '') + '</span>';
-  h += qContent(q, { rev: S.rev, hint: S.hint, open: S.open });
+  h += qContent(q, { rev: S.rev, hint: S.hint, open: S.open, dist: LIVE.on ? LIVE.dist : null });
   if (S.rev) h += expHTML(q);
   h += '</section><div class="ctrl">';
   let primary;
   if (!S.rev) {
+    if (LIVE.on && LIVE.buzz) { const bt = S.teams[LIVE.buzz.t]; h += '<div class="buzzbox"><b>🔔 ' + bt.emoji + ' ' + esc(bt.name) + '</b><span>' + esc(LIVE.buzz.n) + ' 님이 먼저 눌렀어요 — 정답을 들어 보세요</span><div class="row c"><button class="btn ok big" data-act="buzzOK">⭕ 맞았어요 → 정답 공개</button><button class="btn big" data-act="buzzNo">❌ 틀렸어요 → 다른 팀 기회</button></div></div>'; }
     if (S.cfg.timer) h += '<button class="btn" data-act="pause">⏯ 타이머 <kbd>P</kbd></button>';
     if (q.t === 'hint' && S.hint < q.h.length) h += '<button class="btn" data-act="nextHint">💡 다음 힌트 <kbd>H</kbd></button>';
     if (st === 'buzz' && q.opts && !S.open && !fin) h += '<button class="btn" data-act="openOpts">👀 보기 열기 (점수 절반) <kbd>O</kbd></button>';
@@ -546,7 +570,7 @@ GV.q = function () {
     primary = () => doAct('reveal');
   } else {
     const multi = st === 'all' || fin;
-    h += '<p class="say">' + (multi ? '맞힌 팀을 <b>모두</b> 누르세요 (숫자키 1~' + S.teams.length + ')' : '맞힌 팀 <b>하나</b>를 누르세요 (숫자키)') + '</p>';
+    h += '<p class="say">' + (LIVE.on && multi && Object.keys(LIVE.ans).length ? '📱 휴대폰 답으로 <b>팀원 절반 이상 맞힌 팀</b>을 골라 두었어요 — 눌러서 고칠 수 있어요' : LIVE.on && !multi && LIVE.buzz ? '📱 버저를 누른 팀을 골라 두었어요 — 눌러서 고칠 수 있어요' : multi ? '맞힌 팀을 <b>모두</b> 누르세요 (숫자키 1~' + S.teams.length + ')' : '맞힌 팀 <b>하나</b>를 누르세요 (숫자키)') + '</p>';
     if (fin) { h += '<button class="btn pri big" data-act="finalCommit">결과 발표 🥁 <kbd>Space</kbd></button>'; primary = () => doAct('finalCommit'); }
     else {
       h += '<button class="btn" data-act="nobody">아무도 못 맞힘</button><button class="btn pri big" data-act="commit">' + (S.picked.length ? '✓ 점수 주고 다음' : '다음 ▶') + ' <kbd>Space</kbd></button>';
@@ -561,6 +585,7 @@ GV.fq = GV.q;
 
 function beginQ() {
   S.rev = false; S.picked = []; S.armed = []; S.hint = 1; S.open = false;
+  LIVE.seq++; LIVE.ans = {}; LIVE.buzz = null; LIVE.lock = []; LIVE.res = null; LIVE.dist = null; LIVE.per = null; LIVE.allIn = false;
   const q = curQ(); if (!q) return;
   if (q.id) markSeen(q.id);
   saveGame(); render(); SFX.pop(); qTimer();
@@ -579,7 +604,7 @@ function timeUp() { SFX.end(); toast('⏰ 시간 끝! 답을 들어 볼까요?')
 
 function reveal() {
   if (S.rev) return;
-  tStop(); S.rev = true; saveGame(); render();
+  tStop(); S.rev = true; liveJudge(); saveGame(); render();
   const q = curQ();
   SFX.good();
   if (q.t === 'cho' || q.t === 'order') setTimeout(() => SFX.coin(), 300);
@@ -604,6 +629,7 @@ function commit() {
     }
   });
   const from = JSON.parse(S.undo).teams.map(t => t.score);
+  liveCredit(base * m);
   nextQ();
   // 새 화면에서 점수 올라가는 모습
   S.teams.forEach((t, i) => countUp($('[data-score="' + i + '"]'), from[i], t.score));
@@ -814,6 +840,7 @@ GV.bet = function () {
 };
 function finalCommit() {
   if (S.finDone) return; S.finDone = 1;
+  liveCredit(100);
   const from = scores();
   SFX.roll(1.8);
   const ok = S.picked.slice();
@@ -846,6 +873,8 @@ GV.awards = function () {
   if (S.rank1) { let bi = -1, bv = 0; S.teams.forEach((t, i) => { const d = S.rank1[i] - rk[i]; if (d > bv) { bv = d; bi = i; } }); if (bi >= 0) aw.push(['🚀 대역전상', S.teams[bi].name, '첫 라운드 ' + S.rank1[bi] + '등 → ' + rk[bi] + '등']); }
   const st = Math.max.apply(null, S.teams.map(t => t.steals));
   if (st > 0) aw.push(['🦹 대도상', S.teams.filter(t => t.steals === st).map(t => t.name).join(', '), '스틸 성공']);
+  const mvp = LIVE.on ? liveTop(3) : [];
+  if (mvp.length) aw.push(['🏅 개인 MVP', mvp.map(x => (S.teams[x[1]] || {}).emoji + ' ' + x[0]).join(', '), mvp.map(x => x[2] + '문제').join(' · ')]);
   if (aw.length) h += '<div class="awl">' + aw.map(a => '<div class="awi"><b>' + a[0] + ' · ' + esc(a[1]) + '</b><small>' + esc(a[2]) + '</small></div>').join('') + '</div>';
   h += '<div class="ctrl"><button class="btn" data-act="home">처음 화면</button><button class="btn pri big" data-act="again">🔁 같은 팀으로 한 판 더</button></div></div></main>';
   return { html: h, after: () => { tStop(); SFX.fanfare(); setTimeout(() => confetti(5000), 1200); } };
@@ -854,6 +883,7 @@ GV.awards = function () {
 /* ---------- 진행 메뉴 ---------- */
 function gameMenu() {
   let h = '<h2>☰ 진행 메뉴</h2><div class="mlist">';
+  if (LIVE.on || leader()) h += '<button class="btn" data-act="liveOpen">📱 휴대폰 참여 ' + (LIVE.on ? '보기 (' + liveCount() + '명)' : '켜기') + '</button>';
   h += '<button class="btn" data-act="editScores">✏️ 점수 고치기</button>';
   if (S.undo) h += '<button class="btn" data-act="undo">↩ 방금 준 점수 되돌리기</button>';
   if (S.phase === 'q') h += '<button class="btn" data-act="skipQ">⏭ 이 문제 건너뛰기</button><button class="btn" data-act="endRoundNow">⏩ 이 라운드 바로 끝내기</button>';
@@ -1072,8 +1102,9 @@ function toLine(q) {
     default: return '주관식 | ' + q.q + ' | ' + q.a + ex;
   }
 }
-const SAMPLE = '# 한 줄에 한 문제 · 칸은 | 로 나눠요 · # 으로 시작하면 메모\n# 문제 다음 줄에 > 로 풀이를 달 수 있어요\nOX | 요나는 큰 물고기 뱃속에 사흘 밤낮 있었다 | O\n> 요나 1:17 — 밤낮 삼 일!\n4지 | 예수님이 첫 번째 표적을 행하신 곳은? | *가나의 혼인 잔치 | 베데스다 연못 | 갈릴리 바다 | 여리고 성\n초성 | 구약 인물 · 물맷돌로 골리앗을 이김 | 다윗\n이모지 | 🐋🙏🏙️ | 요나 | 노아 | 모세 | 다니엘\n순서 | 일어난 순서대로! | 노아의 방주 | 바벨탑 | 아브라함의 부르심 | 요셉이 애굽 총리가 됨\n누구 | 삭개오 | 여리고에 살았어요 | 세리장이었어요 | 키가 작았어요 | 뽕나무에 올라갔어요\n주관식 | 우리 교회 청년부 수련회 주제는? | 빛과 소금\n';
+const SAMPLE = '# 한 줄에 한 문제 · 칸은 | 로 나눠요 · # 으로 시작하면 메모\n# 문제 다음 줄에 > 로 풀이를 달 수 있어요\nOX | 요나는 큰 물고기 뱃속에 사흘 밤낮 있었다 | O\n> 요나 1:17 — 밤낮 삼 일!\n4지 | 예수님이 첫 번째 표적을 행하신 곳은? | *가나의 혼인 잔치 | 베데스다 연못 | 갈릴리 바다 | 여리고 성\n초성 | 구약 인물 · 물맷돌로 골리앗을 이김 | 다윗\n이모지 | 🐋🙏🏙️ | 요나 | 노아 | 모세 | 다니엘\n순서 | 일어난 순서대로! | 노아의 방주 | 바벨탑 | 아브라함의 부르심 | 요셉이 애굽 총리가 됨\n누구 | 삭개오 | 여리고에 살았어요 | 세리장이었어요 | 키가 작았어요 | 뽕나무에 올라갔어요\n주관식 | 올해 우리 교회 수련회 주제는? | 빛과 소금\n';
 VIEWS.edit = function () {
+  if (!leader()) return { html: '<header class="bar"><button class="ib" data-act="home" aria-label="처음 화면">←</button><div class="ttl"><b>✏️ 문제 만들기</b></div></header><main class="stage"><div class="pl"><div class="pbox"><div class="pbig">🔑</div><h2>인도자만 쓸 수 있어요</h2><p>관리자 PIN 을 넣으면 열려요.</p><div class="row c"><button class="btn pri" data-act="leaderIn">🔑 PIN 넣기</button></div></div></div></main>' };
   const cs = customs();
   const e = UI.edit;
   let h = '<header class="bar"><button class="ib" data-act="' + (e ? 'editList' : 'home') + '" aria-label="뒤로">←</button><div class="ttl"><b>✏️ 문제 만들기</b></div></header><main class="stage"><div class="ed">';
@@ -1140,16 +1171,16 @@ function editExport(id) {
 /* ---------- AI 초안 (교회 관리자 앱과 같은 키 — 이 기기에만) ---------- */
 const AI_MODEL = 'claude-opus-5-5';
 const aiKey = () => { try { return String(JSON.parse(localStorage.getItem(P + 'apiKey') || '""') || '').trim(); } catch (e) { return ''; } };
-const AI_RULES = '너는 교회 중고등부·청년부 퀴즈 작가다. 아래 줄 형식으로만 답한다. 머리말·번호·빈 설명 없이 문제 줄과 풀이 줄만 쓴다.\n' +
+const AI_RULES = '너는 교회 퀴즈 작가다. 어린이부터 어른까지 누구나 함께 푸는 문제를 쓴다. 아래 줄 형식으로만 답한다. 머리말·번호·빈 설명 없이 문제 줄과 풀이 줄만 쓴다.\n' +
   '형식 (칸은 | 로 나눔):\nOX | 문장 | O 또는 X\n4지 | 질문 | *정답 | 오답 | 오답 | 오답   (정답 앞에 * 하나)\n초성 | 분류 · 짧은 힌트 | 정답(한글만, 2~8글자)\n이모지 | 이모지 3~6개 | 정답 | 오답 | 오답 | 오답\n순서 | 무엇을 순서대로? | 첫째 | 둘째 | 셋째 | 넷째\n누구 | 정답 | 아주 어려운 힌트 | 힌트 | 쉬운 힌트 | 거의 정답인 힌트\n' +
   '각 문제 바로 다음 줄에 "> 한 문장 풀이 (근거가 성경이면 끝에 (책이름 장:절))".\n' +
-  '규칙: 성경 이름·지명·용어는 개역개정 표기. 확실한 사실만 쓴다. 성경 구절을 따옴표로 인용하지 않고, 빈칸 문제는 쓰지 않는다. 말투는 가볍고 재치 있게, 청소년이 "아!" 할 문제로. 쉬운 것부터 어려운 것 순서. 논쟁적 교리·정치·실존 연예인·브랜드는 쓰지 않는다. 사람 이름(교인)은 넣지 않는다.';
+  '규칙: 성경 이름·지명·용어는 개역개정 표기. 확실한 사실만 쓴다. 성경 구절을 따옴표로 인용하지 않고, 빈칸 문제는 쓰지 않는다. 말투는 가볍고 재치 있게, 누구나 "아!" 할 문제로. 쉬운 것부터 어려운 것 순서. 논쟁적 교리·정치·실존 연예인·브랜드는 쓰지 않는다. 사람 이름(교인)은 넣지 않는다.';
 function aiOpen() {
   const has = !!aiKey();
   let h = '<h2>🤖 AI로 문제 초안 만들기</h2><p>주제를 적으면 AI 가 문제 초안을 써서 아래 칸에 붙여 줘요. <b>진행 전에 꼭 한 번 읽고 고쳐 주세요.</b></p><div class="mlist">';
   if (!has) h += '<label style="font-size:13px;color:var(--ink3);font-weight:700">Claude API 키 (교회 관리자 앱과 같은 키 · 이 기기에만 저장)<input class="inp" id="aiKey" placeholder="sk-ant-..." style="width:100%;margin-top:4px"></label>';
   h += '<label style="font-size:13px;color:var(--ink3);font-weight:700">주제<input class="inp" id="aiTopic" placeholder="예: 요나서 1~4장 / 수련회 주제 「빛과 소금」 / 다윗의 생애" style="width:100%;margin-top:4px"></label>';
-  h += '<div class="row"><select class="inp" id="aiWho"><option>중고등부</option><option>청년부</option><option>중고등부·청년부 섞어서</option></select><select class="inp" id="aiN"><option value="10">10문제</option><option value="15" selected>15문제</option><option value="20">20문제</option></select></div>';
+  h += '<div class="row"><select class="inp" id="aiWho"><option>누구나 (온 가족 · 쉬운 것과 어려운 것 섞어서)</option><option>쉽게 (어린이도 함께)</option><option>어렵게 (말씀 고수용)</option></select><select class="inp" id="aiN"><option value="10">10문제</option><option value="15" selected>15문제</option><option value="20">20문제</option></select></div>';
   h += '<div class="row"><button class="btn pri" data-act="aiGo">만들기 ✨</button><button class="btn" data-act="closeModal">닫기</button></div><p class="emsg" id="aiMsg"></p></div>';
   modal(h);
 }
@@ -1194,30 +1225,451 @@ async function aiGo() {
 /* ---------- 진행 방법 ---------- */
 VIEWS.help = function () {
   let h = '<header class="bar"><button class="ib" data-act="' + (S && S.phase !== 'awards' && UI.back === 'game' ? 'resume' : 'home') + '" aria-label="뒤로">←</button><div class="ttl"><b>📋 진행 방법</b></div></header><main class="stage"><div class="help">';
-  h += '<h1 class="disp">📋 진행 방법</h1><p>인도자 한 사람이 노트북·태블릿을 빔이나 TV 에 연결해 진행해요. 참가자는 팀으로 앉아 말·손·종이로 답해요. 서버도 로그인도 필요 없어요.</p>';
+  h += '<h1 class="disp">📋 진행 방법</h1><p>어린이부터 어른까지 누구나 다 함께 참여해요. 인도자 한 사람이 노트북·태블릿을 빔이나 TV 에 연결해 진행하고, 참가자는 팀으로 앉아 말·손·종이로 답해요(원하면 휴대폰으로도). 로그인은 필요 없어요.</p><p>🔑 <b>문제 만들기</b>와 <b>📱 휴대폰 참여 켜기</b>는 인도자만 쓸 수 있어요 — 관리자 앱 「⚡ 퀴즈」로 들어오거나 첫 화면 아래 「🔑 인도자」에서 관리자 PIN 을 넣으세요.</p>';
   h += '<h2>🙌 두 가지 답하기</h2><ul><li><b>모든 팀 동시</b> (OX · 4지선다 · 말씀 빈칸 · 순서): 시간이 끝나면 "하나 둘 셋!" 하고 모든 팀이 동시에 답을 들어요. OX 는 팔로 ⭕·❌, 4지는 손가락 1~4, 순서는 종이에 「CADB」처럼. 맞힌 팀을 <b>모두</b> 눌러요.</li><li><b>먼저 외치기</b> (초성 · 이모지 · 누구일까요): 아는 팀이 손을 들고 외쳐요. 인도자가 ⏯ 로 타이머를 멈추고, 맞으면 정답 공개 후 그 팀을 눌러요. 틀리면 다시 ⏯ — 그 팀은 이번 문제 기회 끝! 「👀 보기 열기」를 누르면 쉬워지는 대신 점수가 절반.</li><li><b>누구일까요?</b>: 힌트가 하나씩 열려요. 첫 힌트에 맞히면 400점, 마지막 힌트면 100점.</li></ul>';
   h += '<h2>🎁 아이템 · 보너스</h2><ul><li>🔥 <b>더블</b>: 정답 공개 전에 누르면 그 문제 점수 2배. 틀려도 점수는 안 깎이지만 카드는 사라져요.</li><li>🦹 <b>스틸</b>: 라운드 결과 화면에서, 다른 팀 점수 200점을 가져와요.</li><li>🛡️ <b>실드</b>: 스틸이나 「바나바의 나눔」을 한 번 막아 줘요.</li><li>🔥 <b>연속 정답</b>: 3·5·7연속이면 보너스 +100·+200·+300 (그 뒤로도 홀수 연속마다 +300).</li><li>🎡 <b>럭키 룰렛</b>: 두 라운드마다. 꼴찌 팀 역전 기회가 숨어 있어요.</li><li>💰 <b>파이널 올인 베팅</b>: 마지막 한 문제에 점수를 걸어요. 꼴찌도 200점까지 걸 수 있어요.</li></ul>';
   h += '<h2>⌨️ 단축키 (노트북·발표용 리모컨)</h2><ul><li><kbd>Space</kbd> <kbd>Enter</kbd> <kbd>→</kbd> <kbd>PageDown</kbd>: 다음 (정답 공개 · 점수 주기)</li><li><kbd>1</kbd>~<kbd>6</kbd>: 정답 공개 후 맞힌 팀 고르기</li><li><kbd>P</kbd> 타이머 멈춤 · <kbd>H</kbd> 다음 힌트 · <kbd>O</kbd> 보기 열기 · <kbd>Z</kbd> 방금 점수 되돌리기 · <kbd>F</kbd> 전체 화면 · <kbd>M</kbd> 소리</li></ul>';
-  h += '<h2>💡 인도 꿀팁</h2><ul><li>팀은 4~6명이 좋아요. 학년을 섞으면 중1도 고3도 함께 웃어요.</li><li>순서 문제용으로 팀마다 A4 종이와 매직을 하나씩.</li><li>정답 뒤 풀이를 한 줄 읽어 주면 퀴즈가 말씀 공부가 돼요.</li><li>틀린 팀에게도 박수! 꼴찌 팀은 룰렛·베팅으로 언제든 역전할 수 있어요.</li><li>게임은 자동 저장돼요. 창을 닫아도 「이어 하기」로 계속할 수 있어요.</li><li>휴대폰 하나로 「혼자 도전」을 하면 집에서도 연습할 수 있어요. 「오늘의 도전」은 날마다 모두 같은 문제예요.</li></ul>';
+  h += '<h2>💡 인도 꿀팁</h2><ul><li>팀은 4~6명이 좋아요. 나이를 섞으면 어린이도 어른도 함께 웃어요. 어린이가 많으면 준비 화면 「📶 난이도 · 쉽게」.</li><li>📱 <b>휴대폰 참여</b>를 켜면 화면에 QR과 방 코드가 나와요. 참가자는 휴대폰으로 들어와 팀을 고르고, 모든 팀 문제는 휴대폰으로 답하고(팀원 절반 이상이 맞히면 그 팀 정답), 먼저 외치기 문제는 휴대폰 버저를 눌러요. 휴대폰이 없는 사람은 예전처럼 손으로 답하고 인도자가 눌러 주면 돼요.</li><li>순서 문제용으로 팀마다 A4 종이와 매직을 하나씩.</li><li>정답 뒤 풀이를 한 줄 읽어 주면 퀴즈가 말씀 공부가 돼요.</li><li>틀린 팀에게도 박수! 꼴찌 팀은 룰렛·베팅으로 언제든 역전할 수 있어요.</li><li>게임은 자동 저장돼요. 창을 닫아도 「이어 하기」로 계속할 수 있어요.</li><li>휴대폰 하나로 「혼자 도전」을 하면 집에서도 연습할 수 있어요. 「오늘의 도전」은 날마다 모두 같은 문제예요.</li></ul>';
   h += '</div></main>';
   return { html: h };
 };
 
 /* ===========================================================
+   🔑 인도자 모드 — 「문제 만들기」 · 「📱 휴대폰 참여 켜기」는 인도자(목사님)만
+   관리자 앱(admin.html)과 같은 PIN 을 쓴다. PIN 은 그 기기에만 해시로 있다(dongsan_adminPin).
+   - 관리자 앱을 풀고 「⚡ 퀴즈」로 오면 같은 탭이라 바로 인도자 모드.
+   - 퀴즈 첫 화면 아래 「🔑 인도자」에서 PIN 을 넣어도 된다 (그 탭을 닫으면 다시 잠긴다).
+   - PIN 이 없는 기기(참가자 휴대폰 등)에서는 두 기능이 보이지 않고 열 수도 없다.
+   =========================================================== */
+const PREVIEW = !!window.QUIZ_PREVIEW;          // 게시용 미리보기(나만 보는 링크)
+function leader() {
+  if (PREVIEW) return true;
+  try { return sessionStorage.getItem('dongsan_adminOpen') === '1' || sessionStorage.getItem('dongsan_quizLeader') === '1'; } catch (e) { return false; }
+}
+const PIN = { buf: '', fails: 0, wait: 0, next: null };
+async function pinHash(p) {
+  try { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('dongsan-admin:' + p)); return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join(''); }
+  catch (e) { return 'plain:' + p; }
+}
+function needLeader(fn) { if (leader()) { fn(); return; } PIN.next = fn; pinOpen(); }
+function pinDots() { const d = $('#pinDots'); if (d) d.innerHTML = [0, 1, 2, 3].map(i => '<span class="' + (i < PIN.buf.length ? 'on' : '') + '"></span>').join(''); }
+function pinMsg(m, bad) { const e = $('#pinMsg'); if (e) { e.textContent = m; e.classList.toggle('er', !!bad); } }
+function pinOpen() {
+  if (!store.get('adminPin', '')) {
+    modal('<h2>🔑 인도자만 쓸 수 있어요</h2><p>「문제 만들기」와 「📱 휴대폰 참여 켜기」는 인도자 기기에서만 열려요. 이 기기에는 관리자 PIN 이 없어요.</p><p style="margin-top:8px">인도자는 <b>관리자 앱</b>에서 PIN 을 정한 뒤, 관리자 앱 「⚡ 퀴즈」로 들어오거나 여기서 PIN 을 넣으면 돼요.</p><div class="row" style="margin-top:14px"><a class="btn" href="admin.html">관리자 앱으로</a><button class="btn pri" data-act="closeModal">알겠어요</button></div>');
+    return;
+  }
+  PIN.buf = '';
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'].map(k => k === '' ? '<span></span>' : '<button class="btn" data-act="pinKey" data-arg="' + k + '" aria-label="' + (k === 'del' ? '지우기' : k) + '">' + (k === 'del' ? '⌫' : k) + '</button>').join('');
+  modal('<h2>🔑 인도자 PIN</h2><p id="pinMsg">관리자 앱과 같은 PIN 4자리를 눌러 주세요</p><div class="pindots" id="pinDots"></div><div class="pinpad">' + keys + '</div><div class="row c" style="margin-top:12px"><button class="btn sm" data-act="closeModal">닫기</button></div>');
+  pinDots();
+}
+async function pinKey(k) {
+  if (Date.now() < PIN.wait) { pinMsg('잠시 뒤에 다시 눌러 주세요 (' + Math.ceil((PIN.wait - Date.now()) / 1000) + '초)', true); return; }
+  if (k === 'del') { PIN.buf = PIN.buf.slice(0, -1); pinDots(); return; }
+  if (PIN.buf.length >= 4 || !/^\d$/.test(k)) return;
+  PIN.buf += k; pinDots();
+  if (PIN.buf.length < 4) return;
+  const ok = (await pinHash(PIN.buf)) === store.get('adminPin', '');
+  PIN.buf = '';
+  if (ok) {
+    PIN.fails = 0;
+    try { sessionStorage.setItem('dongsan_quizLeader', '1'); } catch (e) {}
+    closeModal(); SFX.good(); toast('🔑 인도자 모드 — 문제 만들기 · 휴대폰 참여를 쓸 수 있어요', 2600);
+    const f = PIN.next; PIN.next = null;
+    if (f) f(); else render();
+    return;
+  }
+  PIN.fails++;
+  if (PIN.fails >= 5) { PIN.fails = 0; PIN.wait = Date.now() + 30000; pinMsg('5번 틀렸어요. 30초 뒤에 다시 눌러 주세요', true); }
+  else pinMsg('PIN 이 맞지 않아요 (' + PIN.fails + '/5)', true);
+  pinDots(); SFX.bad();
+}
+function leaderOut() {
+  try { sessionStorage.removeItem('dongsan_quizLeader'); sessionStorage.removeItem('dongsan_adminOpen'); } catch (e) {}
+  UI.edit = null; toast('🔒 인도자 모드를 잠갔어요'); go('lobby');
+}
+
+/* ===========================================================
+   📱 휴대폰 참여 — 인도자(방장) 쪽. 전송은 quiz-live.js
+   - 모든 팀 문제: 휴대폰 답을 모아, 팀원 절반 이상이 맞힌 팀을 저절로 골라 둔다(인도자가 고칠 수 있다).
+   - 먼저 외치기 문제: 휴대폰 버저 — 가장 먼저 누른 팀이 화면에 뜨고 타이머가 멈춘다.
+   - 개인 기록(맞힌 문제 수)으로 시상식에 개인 MVP.
+   =========================================================== */
+const LIVE = { on: false, busy: false, conn: null, code: '', b: 0, status: 'off', err: '', url: '', qr: '', players: {}, seq: 0, ans: {}, buzz: null, lock: [], res: null, dist: null, per: null, pushT: 0 };
+const liveOK = () => !!window.QuizLive;
+function joinURL() {
+  const base = /^https?:$/.test(location.protocol) ? location.origin + location.pathname : 'https://ryussuny.github.io/dongsan-church/quiz.html';
+  const cb = LIVE.conn && LIVE.conn.custom;
+  return base + '?join=' + LIVE.code + (cb ? '&broker=' + encodeURIComponent(cb) : '&b=' + LIVE.b);
+}
+const shortURL = () => joinURL().replace(/^https?:\/\//, '').replace(/\?.*$/, '');
+function liveTeams() {
+  if (UI.screen === 'setup' && SET) return SET.teams.slice(0, SET.cfg.n).map((t, i) => { const inp = $('input[data-team="' + i + '"]'); return { name: (inp && inp.value.trim()) || t.name, emoji: t.emoji, color: COLORS[i], score: 0 }; });
+  if (S) return S.teams;
+  if (SET) return SET.teams.slice(0, SET.cfg.n).map((t, i) => ({ name: t.name, emoji: t.emoji, color: COLORS[i], score: 0 }));
+  return [];
+}
+function livePeople(nt) {
+  const per = []; for (let i = 0; i < nt; i++) per.push([]);
+  Object.keys(LIVE.players).forEach(pid => { const p = LIVE.players[pid]; if (p.t >= 0 && p.t < nt) per[p.t].push(p); });
+  return per;
+}
+const liveCount = () => Object.keys(LIVE.players).length;
+const liveWant = () => Object.keys(LIVE.players).filter(id => S && LIVE.players[id].t < S.teams.length).length;
+function liveSave() { if (LIVE.on) store.set('quiz_live', { code: LIVE.code, b: LIVE.b, players: LIVE.players }); }
+
+async function liveStart(resume) {
+  if (LIVE.on || LIVE.busy) return;
+  if (!liveOK()) { toast('실시간 도구(quiz-live.js)를 불러오지 못했어요'); return; }
+  const saved = resume ? store.get('quiz_live', null) : null;
+  LIVE.busy = true; LIVE.status = 'wait'; LIVE.err = ''; liveRefresh(true);
+  try {
+    const c = await QuizLive.host({
+      code: saved && saved.code, prefer: saved ? saved.b : null, onMsg: liveMsg,
+      onStatus: s => { LIVE.status = s; liveBadge(); if (s === 'on') livePush(true); }
+    });
+    LIVE.conn = c; LIVE.on = true; LIVE.code = c.code; LIVE.b = c.broker; LIVE.status = 'on';
+    LIVE.players = saved && saved.code === c.code ? (saved.players || {}) : {};
+    liveSave();
+    LIVE.url = joinURL();
+    LIVE.qr = await QuizLive.qrSVG(LIVE.url).catch(() => '');
+    SFX.coin(); toast('📱 휴대폰 참여를 켰어요 · 방 코드 ' + LIVE.code, 3000);
+  } catch (e) { LIVE.status = 'off'; LIVE.err = (e && e.message) || '연결하지 못했어요'; toast('😢 ' + LIVE.err, 4500); }
+  LIVE.busy = false; liveRefresh(true); livePush(true);
+}
+async function liveStop() {
+  if (!LIVE.on) return;
+  const c = LIVE.conn;
+  LIVE.on = false; LIVE.conn = null; LIVE.status = 'off'; LIVE.players = {}; LIVE.qr = ''; LIVE.buzz = null;
+  store.del('quiz_live'); closeModal(); liveRefresh(true);
+  if (c) await c.close();
+  toast('📱 휴대폰 참여를 껐어요');
+}
+function livePush(now) {
+  if (!LIVE.on || !LIVE.conn) return;
+  clearTimeout(LIVE.pushT);
+  const send = () => { try { LIVE.conn.pub(liveState()); } catch (e) {} };
+  if (now) send(); else LIVE.pushT = setTimeout(send, 120);
+}
+/* 다시 그리기: 준비 화면에서는 입력 중인 팀 이름을 지키려고 필요한 칸만 바꾼다 */
+function liveRefresh(full) {
+  liveBadge();
+  const lp = $('#livePanel');
+  if (lp && (full || !LIVE.on)) { const d = document.createElement('div'); d.innerHTML = livePanel(); lp.replaceWith(d.firstChild); }
+  else if (full && UI.screen !== 'setup') render();
+  $$('.livePlayers').forEach(el => { el.innerHTML = livePlayersHTML(); });
+  $$('.lst').forEach(el => { el.className = 'lst ' + LIVE.status; el.textContent = liveStatusText(); });
+  const dk = $('#liveDock'); if (dk) { const d = document.createElement('div'); d.innerHTML = liveDockBtn(); dk.replaceWith(d.firstChild); }
+  if ($('#ov .ljoin, #ov .lpanel') && full) liveOpen();
+  if (UI.screen === 'game' && S && !full) {
+    const c = $('#liveCnt'); if (c) c.textContent = liveCntText();
+    if ($('.strip')) refreshStrip(stripMode());
+  }
+}
+function liveDockBtn() {
+  return '<button class="btn' + (LIVE.on ? ' ok' : '') + '" id="liveDock" data-act="' + (LIVE.on ? 'liveOpen' : 'liveOn') + '"' + (LIVE.busy ? ' disabled' : '') + '>' + (LIVE.busy ? '⏳ 연결하는 중…' : LIVE.on ? '📱 ' + esc(LIVE.code) + ' · ' + liveCount() + '명' : '📱 휴대폰 참여 켜기') + '</button>';
+}
+function liveBadge() { const b = $('#liveBadge'); if (b) { b.className = 'ib live ' + LIVE.status; b.innerHTML = '📱<b>' + liveCount() + '</b>'; } }
+const liveStatusText = () => (LIVE.status === 'on' ? '● 연결됨' : LIVE.status === 'wait' ? '● 연결하는 중…' : '● 연결 끊김') + ' · ' + liveCount() + '명';
+const liveCntText = () => '📱 답 ' + Object.keys(LIVE.ans).length + ' / ' + liveWant();
+function livePlayersHTML() {
+  const teams = liveTeams(), per = livePeople(teams.length);
+  if (!liveCount()) return '<p class="lnone">아직 들어온 사람이 없어요. QR을 찍어 보세요!</p>';
+  return teams.map((t, i) => '<div class="lg" style="--tc:' + t.color + '"><b>' + t.emoji + ' ' + esc(t.name) + ' <small>' + per[i].length + '명</small></b><span>' + (per[i].map(p => esc(p.n)).join(' · ') || '—') + '</span></div>').join('');
+}
+function liveJoinCard(big) {
+  return '<div class="ljoin' + (big ? ' big' : '') + '"><div class="lqr">' + (LIVE.qr || '<span>QR</span>') + '</div><div class="ltx"><small>방 코드</small><b class="lcode">' + esc(LIVE.code) + '</b><p>휴대폰 카메라로 QR을 찍거나<br><u>' + esc(shortURL()) + '</u> → 「📱 방 코드로 참여」</p><p class="lst ' + LIVE.status + '">' + liveStatusText() + '</p></div></div>';
+}
+function livePanel() {
+  if (PREVIEW) return '<div id="livePanel" class="lpanel"><p class="lead">이 미리보기 링크에서는 실시간 연결이 막혀 있어요. 휴대폰 참여는 교회 홈페이지 주소에서 켜 주세요.</p><div class="row"><a class="btn pri" href="https://ryussuny.github.io/dongsan-church/quiz.html" target="_blank" rel="noopener">교회 홈페이지에서 열기 ↗</a></div></div>';
+  if (!LIVE.on) return '<div id="livePanel" class="lpanel"><p class="lead">참가자가 각자 휴대폰으로 방 코드에 들어와 직접 답해요. 모든 팀 문제는 휴대폰 답으로 맞힌 팀이 저절로 골라지고, 먼저 외치기 문제는 휴대폰 버저로 겨뤄요. 이 단추를 누를 때만 인터넷으로 연결돼요.</p><div class="row"><button class="btn pri" data-act="liveOn"' + (LIVE.busy ? ' disabled' : '') + '>' + (LIVE.busy ? '⏳ 연결하는 중…' : '📱 휴대폰 참여 켜기') + '</button></div>' + (LIVE.err ? '<p class="emsg"><span class="er">😢 ' + esc(LIVE.err) + '</span></p>' : '') + '</div>';
+  return '<div id="livePanel" class="lpanel on">' + liveJoinCard(true) + '<div class="lpl livePlayers">' + livePlayersHTML() + '</div><div class="row"><button class="btn sm" data-act="liveOff">📴 휴대폰 참여 끄기</button></div></div>';
+}
+function liveOpen() {
+  if (!LIVE.on) { modal('<h2>📱 휴대폰으로 함께</h2>' + livePanel() + '<div class="row" style="margin-top:12px"><button class="btn" data-act="closeModal">닫기</button></div>'); return; }
+  modal('<h2>📱 휴대폰 참여</h2>' + liveJoinCard(true) + '<div class="lpl livePlayers">' + livePlayersHTML() + '</div><div class="row" style="margin-top:12px"><button class="btn" data-act="liveOff">📴 끄기</button><span class="sp1"></span><button class="btn pri" data-act="closeModal">닫기</button></div>');
+}
+function stripMode() {
+  if (!S) return 'view';
+  if (S.phase === 'event') { const ev = S.ev && S.ev.res >= 0 ? EVENTS.find(e => e.id === S.ev.ids[S.ev.res]) : null; return ev && !S.ev.done ? evMode(ev) : 'view'; }
+  if (S.phase === 'q' || S.phase === 'fq') return S.rev ? (styleOf(curQ()) === 'all' || S.phase === 'fq' ? 'pickN' : 'pick1') : (S.phase === 'fq' ? 'view' : 'arm');
+  return 'view';
+}
+
+/* 답 맞히기 (휴대폰에서 온 값) */
+function ansOK(q, v) {
+  switch (q.t) {
+    case 'ox': return (v === 0) === q.a;
+    case 'order': return Array.isArray(v) && v.length === q.items.length && v.every((p, k) => q.sh[p] === k);
+    case 'open': case 'cho': return typeof v === 'string' && !!norm(v) && [q.a].concat(q.alt || []).some(a => norm(a) === norm(v));
+    default: return q.opts ? v === q.ai : false;
+  }
+}
+const liveAll = q => S.phase === 'fq' || styleOf(q) === 'all';
+function liveQ(q) {
+  const o = { seq: LIVE.seq, t: q.t, st: liveAll(q) ? 'all' : 'buzz' };
+  if (q.t === 'blank') { o.text = String(q.v || '').replace('___', '＿＿＿'); o.ref = q.ref || ''; }
+  else if (q.t === 'hint') o.h = q.h.slice(0, S.hint);
+  else if (q.t === 'emoji') { o.e = q.e; o.text = q.q || '어떤 이야기일까요?'; }
+  else if (q.t === 'cho') { o.text = q.q; o.cs = q.cs.join(''); }
+  else o.text = q.q || '';
+  if (q.t === 'order') o.items = q.sh.map(k => q.items[k]);
+  if (q.opts && (o.st === 'all' || S.open)) o.opts = q.opts;
+  if (S.phase !== 'fq') o.pts = qBase(q) * qMult();
+  return o;
+}
+function liveTop(n) {
+  return Object.keys(LIVE.players).map(pid => LIVE.players[pid]).filter(p => p.c > 0).sort((a, b) => b.c - a.c || b.s - a.s).slice(0, n).map(p => [p.n, p.t, p.c, p.s]);
+}
+/* 휴대폰에 보낼 화면 상태 — 정답은 공개한 뒤에만 */
+function liveState() {
+  const teams = liveTeams();
+  const st = { v: 1, code: LIVE.code, at: Date.now(), teams: teams.map(t => ({ n: t.name, e: t.emoji, c: t.color, s: t.score || 0 })), np: livePeople(teams.length).map(a => a.length), me: {} };
+  Object.keys(LIVE.players).forEach(pid => { const p = LIVE.players[pid]; st.me[pid] = [p.t, p.c, p.s]; });
+  if (UI.screen === 'setup' || !S) { st.ph = 'lobby'; return st; }
+  st.ph = S.phase; st.ri = S.ri; st.rn = S.rounds.length;
+  const r = curR(); st.rname = r ? r.icon + ' ' + r.name : '';
+  if (S.phase === 'q' || S.phase === 'fq') {
+    const q = curQ();
+    st.q = liveQ(q);
+    st.tm = S.cfg.timer && !S.rev ? [Math.round(T.total * 10) / 10, Math.round(T.left * 10) / 10, T.run ? 1 : 0] : null;
+    st.buzz = LIVE.buzz ? { t: LIVE.buzz.t, n: LIVE.buzz.n } : null;
+    st.lock = LIVE.lock;
+    if (S.rev) { st.rev = { txt: ansText(q), ex: q.ex || '' }; st.res = LIVE.res || {}; }
+  }
+  if (S.phase === 'event' && S.ev && S.ev.res >= 0) { const e = EVENTS.find(x => x.id === S.ev.ids[S.ev.res]); if (e) st.ev = e.icon + ' ' + e.name + (S.ev.done && S.ev.msg ? ' — ' + S.ev.msg : ''); }
+  if (S.bets && (S.phase === 'bet' || S.phase === 'fq')) st.bets = S.bets;
+  if (S.phase === 'stand' || S.phase === 'awards') st.top = liveTop(5);
+  return st;
+}
+function liveMsg(m) {
+  if (!LIVE.on || typeof m.pid !== 'string' || m.pid.length > 24) return;
+  const P = LIVE.players;
+  if (m.k === 'join') {
+    const n = String(m.n || '').replace(/\s+/g, ' ').trim().slice(0, 12) || '친구', t = m.t | 0, teams = liveTeams();
+    if (t < 0 || t >= teams.length) return;
+    const old = P[m.pid];
+    if (old && old.n === n && old.t === t) { livePush(); return; }
+    P[m.pid] = { n, t, c: old ? old.c : 0, s: old ? old.s : 0 };
+    liveSave(); livePush(); liveRefresh();
+    if (!old) { SFX.pop(); toast('📱 ' + n + ' 님이 ' + teams[t].name + '에 들어왔어요', 1600); }
+    return;
+  }
+  const p = P[m.pid];
+  if (!p || UI.screen !== 'game' || !S || !(S.phase === 'q' || S.phase === 'fq') || S.rev || m.q !== LIVE.seq) return;
+  const q = curQ();
+  if (m.k === 'ans' && liveAll(q)) {
+    const v = typeof m.v === 'string' ? m.v.slice(0, 40) : Array.isArray(m.v) ? m.v.slice(0, 6).map(x => x | 0) : m.v | 0;
+    LIVE.ans[m.pid] = { v, t: p.t };
+    liveRefresh();
+    const want = liveWant();
+    if (want && Object.keys(LIVE.ans).length >= want && !LIVE.allIn) {
+      LIVE.allIn = true;
+      if (T.run) { T.run = false; T.left = 0; tDraw(); }
+      SFX.go(); toast('📱 모두 답했어요! 정답을 공개해 볼까요?'); livePush();
+    }
+  } else if (m.k === 'buzz' && !liveAll(q) && !LIVE.buzz && LIVE.lock.indexOf(p.t) < 0 && p.t < S.teams.length) {
+    LIVE.buzz = { pid: m.pid, t: p.t, n: p.n };
+    if (T.run) { T.run = false; tDraw(); }
+    SFX.beep(); SFX.coin();
+    banner('🔔 ' + S.teams[p.t].emoji + ' ' + S.teams[p.t].name + ' · ' + p.n);
+    render(); livePush(true);
+  }
+}
+/* 정답 공개 때: 휴대폰 답을 채점하고 맞힌 팀을 골라 둔다 */
+function liveJudge() {
+  if (!LIVE.on) return;
+  const q = curQ();
+  LIVE.res = {};
+  if (liveAll(q)) {
+    const per = S.teams.map(() => [0, 0]);
+    const dist = q.opts ? q.opts.map(() => 0) : q.t === 'ox' ? [0, 0] : null;
+    Object.keys(LIVE.ans).forEach(pid => {
+      const a = LIVE.ans[pid], p = LIVE.players[pid];
+      if (!p || p.t >= S.teams.length) return;
+      const ok = ansOK(q, a.v);
+      LIVE.res[pid] = ok ? 1 : 0; per[p.t][1]++; if (ok) per[p.t][0]++;
+      if (dist && typeof a.v === 'number' && dist[a.v] != null) dist[a.v]++;
+    });
+    LIVE.dist = dist; LIVE.per = per;
+    if (Object.keys(LIVE.ans).length) S.picked = per.map((x, i) => (x[1] && x[0] * 2 >= x[1] ? i : -1)).filter(i => i >= 0);
+  } else if (LIVE.buzz) S.picked = [LIVE.buzz.t];
+}
+function liveCredit(pts) {
+  if (!LIVE.on) return;
+  const q = curQ();
+  if (liveAll(q)) Object.keys(LIVE.res || {}).forEach(pid => { const p = LIVE.players[pid]; if (LIVE.res[pid] && p) { p.c++; p.s += pts; } });
+  else if (LIVE.buzz && S.picked.indexOf(LIVE.buzz.t) >= 0) { const p = LIVE.players[LIVE.buzz.pid]; if (p) { p.c++; p.s += pts; } }
+  liveSave();
+}
+
+/* ===========================================================
+   📱 휴대폰 참여 — 참가자 쪽 (quiz.html?join=코드)
+   =========================================================== */
+let J = null;
+function myPid() { let p = store.get('quiz_pid', ''); if (!/^p[a-z0-9]{6,}$/.test(p)) { p = 'p' + Math.random().toString(36).slice(2, 11); store.set('quiz_pid', p); } return p; }
+const vib = ms => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} };
+async function joinStart(code, prefer) {
+  if (PREVIEW) { modal('<h2>📱 방 코드로 참여</h2><p>이 미리보기 링크에서는 실시간 연결이 막혀 있어요. 교회 홈페이지 주소에서 참여해 주세요.</p><div class="row" style="margin-top:14px"><a class="btn pri" href="https://ryussuny.github.io/dongsan-church/quiz.html?join=' + encodeURIComponent(QuizLive.cleanCode(code)) + '" target="_blank" rel="noopener">홈페이지에서 참여 ↗</a><button class="btn" data-act="closeModal">닫기</button></div>'); return; }
+  if (!liveOK()) { toast('실시간 도구(quiz-live.js)를 불러오지 못했어요'); return; }
+  code = QuizLive.cleanCode(code);
+  if (code.length < 4) { toast('방 코드 4자리를 넣어 주세요'); return; }
+  if (J && J.conn) J.conn.close();
+  const mem = store.get('quiz_join', {});
+  J = { code, prefer, pid: myPid(), name: mem.code === code ? mem.name : store.get('quiz_nick', ''), team: mem.code === code ? mem.team : -1, st: null, status: 'wait', err: '', ans: null, ord: [], buzzSeq: -1, at: 0, lastJoin: 0, conn: null, closed: false };
+  go('play');
+  const me = J;
+  try {
+    const c = await QuizLive.join({ code, prefer, onState: s => { if (J === me) pState(s); }, onStatus: s => { if (J !== me) return; J.status = s; const d = $('#pdot'); if (d) d.className = 'pdot ' + s; if (s === 'on') pJoinSend(); } });
+    if (J !== me) { c.close(); return; }
+    J.conn = c; J.status = 'on'; pJoinSend();
+  } catch (e) { if (J !== me) return; J.status = 'err'; J.err = (e && e.message) || '연결하지 못했어요'; }
+  if (UI.screen === 'play') pRender();
+}
+function pState(s) {
+  if (s === null) { J.closed = true; J.st = null; pRender(); return; }
+  const prevSeq = J.st && J.st.q ? J.st.q.seq : null;
+  J.st = s; J.at = Date.now(); J.closed = false;
+  if (J.team >= s.teams.length) J.team = -1;
+  const me = s.me && s.me[J.pid];
+  if (J.team >= 0 && J.name && (!me || me[0] !== J.team) && Date.now() - J.lastJoin > 2500) pJoinSend();   // 방장이 나를 모르면 다시 알린다
+  if (s.q && s.q.seq !== prevSeq) { J.ans = null; J.ord = []; vib(40); }
+  if (UI.screen === 'play') pRender();
+}
+function pJoinSend() { if (!J || !J.conn || J.team < 0 || !J.name) return; J.lastJoin = Date.now(); J.conn.send({ k: 'join', pid: J.pid, n: J.name, t: J.team }); }
+function pSend(m) {
+  if (!J || !J.conn) return false;
+  m.pid = J.pid; m.q = J.st && J.st.q ? J.st.q.seq : -1;
+  const ok = J.conn.send(m);
+  if (!ok) toast('연결이 잠시 끊겼어요. 다시 눌러 주세요');
+  return ok;
+}
+function pAnswerSend(v) {
+  const q = J && J.st && J.st.q; if (!q || J.st.rev || q.st !== 'all') return;
+  if (typeof v === 'string' && !v.trim()) return;
+  if (pSend({ k: 'ans', v })) { J.ans = { seq: q.seq, v }; vib(20); SFX.pop(); pRender(); }
+}
+function pRender() {
+  const keep = {};
+  ['pname', 'pans'].forEach(id => { const el = $('#' + id); if (el) keep[id] = [el.value, document.activeElement === el]; });
+  render();
+  Object.keys(keep).forEach(id => { const el = $('#' + id); if (el) { el.value = keep[id][0]; if (keep[id][1]) el.focus(); } });
+}
+function pTick() {
+  const bar = $('#ptbar'); if (!bar || !J || !J.st || !J.st.tm) return;
+  const tm = J.st.tm, left = Math.max(0, tm[1] - (tm[2] ? (Date.now() - J.at) / 1000 : 0));
+  bar.style.transform = 'scaleX(' + (tm[0] ? left / tm[0] : 0) + ')';
+  const n = $('#ptnum'); if (n) n.textContent = Math.ceil(left);
+}
+const rankOf = (teams, i) => 1 + teams.filter(t => t.s > (teams[i] ? teams[i].s : 0)).length;
+function pRanks(s) {
+  const ord = s.teams.map((t, i) => i).sort((a, b) => s.teams[b].s - s.teams[a].s);
+  return '<div class="prk">' + ord.map(i => { const t = s.teams[i]; return '<div class="' + (i === J.team ? 'me' : '') + '" style="--tc:' + t.c + '"><b>' + rankOf(s.teams, i) + '</b><span>' + t.e + ' ' + esc(t.n) + '</span><em>' + fmt(t.s) + '</em></div>'; }).join('') + '</div>';
+}
+function pTop(s) {
+  if (!s.top || !s.top.length) return '';
+  return '<h3>🏅 개인 순위</h3><ol class="ptop">' + s.top.map(x => '<li' + (x[0] === J.name && x[1] === J.team ? ' class="me"' : '') + '>' + esc((s.teams[x[1]] || {}).e || '') + ' ' + esc(x[0]) + ' <small>' + x[2] + '문제</small></li>').join('') + '</ol>';
+}
+VIEWS.join = function () {
+  const h = '<header class="bar"><button class="ib" data-act="home" aria-label="처음 화면">←</button><div class="ttl"><b>📱 방 코드로 참여</b></div></header><main class="stage"><div class="pl"><div class="pbox"><div class="pbig">📱</div><h2>방 코드를 넣어 주세요</h2><p>인도자 화면에 나온 4자리 코드</p><form class="typein" data-form="joinCode"><input id="jcode" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="예: K7QP" aria-label="방 코드" value="' + esc(UI.joinCode || '') + '"><button class="btn pri" type="submit">참여</button></form></div></div></main>';
+  return { html: h, after: () => { const i = $('#jcode'); if (i) i.focus(); } };
+};
+VIEWS.play = function () {
+  if (!J) return VIEWS.join();
+  const s = J.st;
+  let h = '<header class="bar"><button class="ib" data-act="pLeave" aria-label="방에서 나가기">✕</button><div class="ttl"><b>📱 방 ' + esc(J.code) + '</b>' + (J.name && J.team >= 0 ? ' · ' + esc(J.name) : '') + '</div><span class="pdot ' + J.status + '" id="pdot" aria-label="연결 상태"></span></header><main class="stage"><div class="pl">';
+  if (J.status === 'err') h += '<div class="pbox"><div class="pbig">😢</div><h2>' + esc(J.err) + '</h2><div class="row c"><button class="btn pri" data-act="pRetry">다시 해 보기</button><button class="btn" data-act="joinHome">코드 다시 넣기</button></div></div>';
+  else if (J.closed) h += '<div class="pbox"><div class="pbig">👋</div><h2>방이 닫혔어요</h2><p>함께해 줘서 고마워요!</p><div class="row c"><button class="btn pri" data-act="home">처음 화면</button></div></div>';
+  else if (!s) h += '<div class="pbox"><div class="pbig spin">📡</div><h2>방을 찾는 중…</h2><p>코드 ' + esc(J.code) + '</p></div>';
+  else if (J.team < 0 || !J.name) h += pTeamPick(s);
+  else h += pMain(s);
+  h += '</div></main>';
+  return { html: h, after: pTick };
+};
+function pTeamPick(s) {
+  let h = '<div class="pbox"><h2>👋 어서 와요!</h2><label class="pf">별명<input class="inp" id="pname" maxlength="12" placeholder="예: 번개손" autocomplete="off" value="' + esc(J.name || '') + '"></label><p class="pnote">이름·전화번호 말고 별명을 써 주세요</p><h3>우리 팀을 고르세요</h3><div class="pteams">';
+  s.teams.forEach((t, i) => { h += '<button class="pteam" style="--tc:' + t.c + '" data-act="pTeam" data-arg="' + i + '"><span class="te-e" style="background:' + t.c + '">' + t.e + '</span><b>' + esc(t.n) + '</b><small>' + (s.np[i] || 0) + '명</small></button>'; });
+  return h + '</div></div>';
+}
+function pMain(s) {
+  const t = s.teams[J.team] || { n: '?', e: '❓', c: '#888', s: 0 }, me = (s.me && s.me[J.pid]) || [J.team, 0, 0];
+  const rk = rankOf(s.teams, J.team), early = s.ph === 'lobby' || s.ph === 'intro';
+  let h = '<div class="pme" style="--tc:' + t.c + '"><span class="te-e" style="background:' + t.c + '">' + t.e + '</span><span class="tx"><b>' + esc(t.n) + '</b><small>' + (s.ph === 'lobby' ? (s.np[J.team] || 1) + '명 함께' : rk + '등 · ' + fmt(t.s) + '점') + ' · 나 ' + me[1] + '문제</small></span>' + (early ? '<button class="btn sm" data-act="pChange">팀 바꾸기</button>' : '') + '</div>';
+  switch (s.ph) {
+    case 'lobby': return h + '<div class="pbox"><div class="pbig">✅</div><h2>들어왔어요!</h2><p>인도자가 시작하면 문제가 여기 나와요.<br>화면도 함께 보세요 👀</p></div>';
+    case 'intro': return h + '<div class="pbox"><small class="pkl">ROUND ' + (s.ri + 1) + ' / ' + s.rn + '</small><h2>' + esc(s.rname || '') + '</h2><p>곧 시작해요! 준비됐나요? 💪</p></div>';
+    case 'q': case 'fq': return h + pQuestion(s);
+    case 'stand': return h + '<div class="pbox"><h2>📊 ROUND ' + (s.ri + 1) + ' 결과</h2>' + pRanks(s) + pTop(s) + '</div>';
+    case 'event': return h + '<div class="pbox"><div class="pbig">🎡</div><h2>' + esc(s.ev || '럭키 룰렛!') + '</h2><p>화면을 보세요!</p></div>';
+    case 'bet': return h + '<div class="pbox"><div class="pbig">💰</div><h2>파이널 올인 베팅</h2><p>팀끼리 얼마를 걸지 상의하세요!' + (s.bets ? '<br>우리 팀: <b>' + fmt(s.bets[J.team] || 0) + '점</b>' : '') + '</p></div>';
+    case 'awards': return h + '<div class="pbox"><div class="pbig">' + (rk === 1 ? '🏆' : '🎉') + '</div><h2>' + esc(t.n) + ' ' + rk + '등!</h2><p>나는 ' + me[1] + '문제 맞혔어요. 함께해 줘서 고마워요!</p>' + pRanks(s) + pTop(s) + '</div>';
+  }
+  return h;
+}
+function pQuestion(s) {
+  const q = s.q; if (!q) return '';
+  let h = '<div class="pbox pq"><small class="pkl">' + (s.ph === 'fq' ? '💰 FINAL' : 'ROUND ' + (s.ri + 1) + ' · ' + esc(s.rname || '')) + (q.pts ? ' · ' + fmt(q.pts) + '점' : '') + '</small>';
+  if (s.tm && !s.rev) h += '<div class="timer ptimer"><div class="tbar"><i id="ptbar"></i></div><b class="tnum" id="ptnum">' + Math.ceil(s.tm[1]) + '</b></div>';
+  if (q.e) h += '<div class="pemo">' + esc(q.e) + '</div>';
+  if (q.h) h += '<ol class="phs">' + q.h.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol>';
+  if (q.text) h += '<div class="ptx">' + esc(q.text) + '</div>';
+  if (q.cs) h += '<div class="pcs">' + esc(q.cs) + '</div>';
+  if (q.ref) h += '<div class="vref">' + esc(q.ref) + '</div>';
+  if (s.rev) h += pResult(s);
+  else if (q.st === 'all') h += pAnswer(q);
+  else h += pBuzz(s);
+  return h + '</div>';
+}
+function pAnswer(q) {
+  const mine = J.ans && J.ans.seq === q.seq ? J.ans.v : null;
+  let h = '';
+  if (q.t === 'ox') h += '<div class="ox">' + ['O', 'X'].map((k, i) => '<button class="oxb ' + k.toLowerCase() + (mine === i ? ' sel' : '') + '" data-act="pAns" data-arg="' + i + '" aria-label="' + (i ? '아니다 X' : '맞다 O') + '">' + k + '</button>').join('') + '</div>';
+  else if (q.t === 'order') {
+    const seq = Array.isArray(mine) ? mine : J.ord;
+    h += '<div class="ord">' + q.items.map((it, pos) => { const k = seq.indexOf(pos); return '<button class="oc' + (k >= 0 ? ' sel' : '') + '" data-act="pSeq" data-arg="' + pos + '">' + (k >= 0 ? '<i>' + (k + 1) + '</i>' : '') + '<b>' + LET[pos] + '</b><span>' + esc(it) + '</span></button>'; }).join('') + '</div><div class="row c"><button class="btn sm" data-act="pSeqClear">다시 고르기</button><span class="pnote">맨 처음 것부터 차례로 누르세요</span></div>';
+  } else if (q.opts) h += '<div class="opts">' + q.opts.map((o, i) => '<button class="opt c' + i + (mine === i ? ' sel' : '') + '" data-act="pAns" data-arg="' + i + '"><b class="on">' + (i + 1) + '</b><span>' + esc(o) + '</span></button>').join('') + '</div>';
+  else h += '<form class="typein" data-form="pType"><input id="pans" autocomplete="off" placeholder="정답 입력" aria-label="정답 입력" enterkeyhint="send"><button class="btn pri" type="submit">보내기</button></form>';
+  if (mine != null) h += '<p class="psent">✓ 보냈어요' + (typeof mine === 'string' ? ': ' + esc(mine) : '') + (q.t === 'order' ? '' : ' · 바꾸려면 다시 누르세요') + '</p>';
+  return h;
+}
+function pBuzz(s) {
+  const b = s.buzz;
+  if (b) {
+    const tb = s.teams[b.t] || {};
+    return b.t === J.team && b.n === J.name ? '<div class="pbuzzed me">🔔 내가 먼저!<small>큰 소리로 정답을 말해요</small></div>' : '<div class="pbuzzed">🔔 ' + esc(tb.e || '') + ' ' + esc(tb.n || '') + '<small>' + esc(b.n) + ' 님이 먼저 눌렀어요</small></div>';
+  }
+  if ((s.lock || []).indexOf(J.team) >= 0) return '<div class="pbuzzed">😅 이번 문제는<small>우리 팀 기회가 끝났어요</small></div>';
+  if (J.buzzSeq === s.q.seq) return '<div class="pbuzzed">🔔 눌렀어요!<small>화면을 보세요</small></div>';
+  return '<button class="buzzer" data-act="pBuzz" aria-label="버저">🔔<b>버저!</b></button><p class="pnote">아는 사람은 먼저 누르고 큰 소리로 말해요</p>';
+}
+function pResult(s) {
+  const q = s.q, r = s.rev || {}, res = s.res || {};
+  let h = '';
+  if (q.st === 'all') {
+    if (res[J.pid] === 1) h += '<div class="gain">⭕ 정답!<small>나 +1문제</small></div>';
+    else if (res[J.pid] === 0) h += '<div class="gain miss">❌ 아쉬워요</div>';
+    else h += '<div class="gain miss">⏰ 답을 못 보냈어요</div>';
+  }
+  return h + '<div class="exp"><b>💡 ' + esc(r.txt || '') + '</b>' + (r.ex ? '<p>' + esc(r.ex) + '</p>' : '') + '</div>';
+}
+
+/* ===========================================================
    동작
    =========================================================== */
 const A = {
-  home() { closeModal(); tStop(); SO = null; UI.edit = null; go('lobby'); },
+  home() { closeModal(); tStop(); SO = null; UI.edit = null; if (J) { if (J.conn) J.conn.close(); J = null; } go('lobby'); },
   fs: fullscreen,
   sound() { SFX.on = !SFX.on; store.set('quiz_sound', SFX.on); $$('[data-act="sound"]').forEach(b => { b.textContent = SFX.on ? '🔊' : '🔇'; }); if (SFX.on) SFX.pop(); },
   help() { closeModal(); UI.back = UI.screen; tStop(); go('help'); },
   setup() { SET = newSet(); go('setup'); },
-  resume() { S = store.get('quiz_game', null); if (!S) return go('lobby'); closeModal(); go('game'); if (S.phase === 'q' || S.phase === 'fq') { if (!S.rev) qTimer(); } },
+  resume() { S = store.get('quiz_game', null); if (!S) return go('lobby'); closeModal(); go('game'); if (S.phase === 'q' || S.phase === 'fq') { if (!S.rev) qTimer(); } if (!LIVE.on && store.get('quiz_live', null) && leader()) liveStart(true); },
   dropGame() { ask('하던 게임을 지울까요?', '지우기', () => { store.del('quiz_game'); S = null; render(); }); },
   askYes() { const f = askFn; askFn = null; closeModal(); if (f) f(); },
   setN(n) { readTeams(); SET.cfg.n = +n; render(); },
   setPer(n) { readTeams(); SET.cfg.per = +n; render(); },
   setTimer(v) { readTeams(); SET.cfg.timer = +v; render(); },
+  setLv(v) { readTeams(); SET.cfg.lv = v; render(); },
   toggleCfg(k) { readTeams(); SET.cfg[k] = !SET.cfg[k]; render(); },
   togglePack(id) { readTeams(); const p = SET.cfg.packs, k = p.indexOf(id); if (k >= 0) p.splice(k, 1); else p.push(id); render(); },
   recommend() { readTeams(); SET.cfg.packs = recommend(); render(); SFX.pop(); },
@@ -1307,7 +1759,10 @@ const A = {
   soloNext,
   soloShare,
   // 문제 만들기
-  edit() { UI.edit = null; go('edit'); },
+  edit() { needLeader(() => { UI.edit = null; go('edit'); }); },
+  leaderIn() { PIN.next = null; pinOpen(); },
+  leaderOut,
+  pinKey(k) { pinKey(k); },
   editList() { UI.edit = null; render(); },
   editNew() { UI.edit = { id: null, icon: '⭐', name: '', desc: '', src: SAMPLE }; render(); },
   editOpen(id) { const p = customs().find(x => x.id === id); if (!p) return; UI.edit = { id: p.id, icon: p.icon, name: p.name, desc: p.desc || '', src: p.src || p.q.map(toLine).join('\n') }; render(); },
@@ -1317,7 +1772,45 @@ const A = {
   editExport,
   editImport() { const f = $('#impf'); if (f) f.click(); },
   aiOpen,
-  aiGo
+  aiGo,
+  // 휴대폰 참여 (인도자)
+  liveOn() { needLeader(() => { readTeams(); liveStart(UI.screen === 'game' && !!store.get('quiz_live', null)); }); },
+  liveOff() { liveStop(); },
+  liveOpen() { if (LIVE.on) liveOpen(); else needLeader(liveOpen); },
+  buzzOK() { reveal(); },
+  buzzNo() {
+    if (!LIVE.buzz) return;
+    LIVE.lock.push(LIVE.buzz.t); LIVE.buzz = null; SFX.bad();
+    if (S.cfg.timer && T.left > 0 && !T.run) { T.run = true; T.last = performance.now(); requestAnimationFrame(tLoop); }
+    render(); livePush(true);
+  },
+  // 휴대폰 참여 (참가자)
+  join() { UI.joinCode = ''; go('join'); },
+  pTeam(i) {
+    const inp = $('#pname'), n = ((inp && inp.value) || '').replace(/\s+/g, ' ').trim();
+    if (!n) { toast('별명을 먼저 써 주세요'); if (inp) inp.focus(); return; }
+    J.name = n.slice(0, 12); J.team = +i;
+    store.set('quiz_nick', J.name); store.set('quiz_join', { code: J.code, name: J.name, team: J.team });
+    pJoinSend(); SFX.pop(); pRender();
+  },
+  pChange() { J.team = -1; pRender(); },
+  pAns(i) { pAnswerSend(+i); },
+  pSeq(pos) {
+    const q = J && J.st && J.st.q; if (!q || J.st.rev) return;
+    pos = +pos;
+    if (J.ans && J.ans.seq === q.seq) { J.ans = null; J.ord = []; }
+    if (J.ord.indexOf(pos) >= 0) return;
+    J.ord.push(pos); SFX.pop();
+    if (J.ord.length === q.items.length) { const v = J.ord.slice(); J.ord = []; pAnswerSend(v); } else pRender();
+  },
+  pSeqClear() { J.ord = []; J.ans = null; pRender(); },
+  pBuzz() {
+    const q = J && J.st && J.st.q; if (!q || J.st.rev || J.buzzSeq === q.seq) return;
+    if (pSend({ k: 'buzz' })) { J.buzzSeq = q.seq; vib(80); SFX.beep(); pRender(); }
+  },
+  pLeave() { ask('방에서 나갈까요?', '나가기', () => { if (J && J.conn) J.conn.close(); J = null; go('lobby'); }); },
+  pRetry() { if (J) joinStart(J.code, J.prefer); },
+  joinHome() { if (J && J.conn) J.conn.close(); UI.joinCode = J ? J.code : ''; J = null; go('join'); },
 };
 function doAct(name, arg, el) { const f = A[name]; if (f) f(arg, el); }
 function readTeams() { if (!SET) return; $$('input[data-team]').forEach(inp => { const i = +inp.dataset.team; if (SET.teams[i]) SET.teams[i].name = inp.value; }); }
@@ -1336,11 +1829,14 @@ document.addEventListener('submit', e => {
   const f = e.target.closest('[data-form]'); if (!f) return;
   e.preventDefault();
   if (f.dataset.form === 'soloType') soloCheckTyped($('#tin').value);
+  if (f.dataset.form === 'joinCode') joinStart($('#jcode').value);
+  if (f.dataset.form === 'pType') pAnswerSend(String($('#pans').value || '').trim());
 });
 document.addEventListener('keydown', e => {
   const tag = (e.target.tagName || '').toLowerCase();
   if (e.key === 'Escape') { closeModal(); return; }
   if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.metaKey || e.ctrlKey || e.altKey) return;
+  if ($('#ov .pinpad')) { if (/^\d$/.test(e.key)) A.pinKey(e.key); else if (e.key === 'Backspace') A.pinKey('del'); return; }
   if ($('#ov')) return;
   const k = e.key;
   if (k === 'Enter' && e.target.closest && e.target.closest('[data-act]') && e.target.closest('[data-act]').tagName !== 'BUTTON') { e.preventDefault(); e.target.closest('[data-act]').click(); return; }
@@ -1369,6 +1865,8 @@ window.addEventListener('beforeunload', saveGame);
   const qs = new URLSearchParams(location.search);
   S = store.get('quiz_game', null);
   if (S && (!S.teams || !S.rounds)) S = null;
+  setInterval(() => { if (UI.screen === 'play') pTick(); }, 250);
+  if (qs.get('join')) { joinStart(qs.get('join'), qs.get('b')); return; }
   if (qs.get('solo') === '1' || location.hash === '#solo') {
     const p = qs.get('pack');
     if (p && packById(p)) { soloStart('pack', p); return; }
@@ -1378,5 +1876,5 @@ window.addEventListener('beforeunload', saveGame);
 })();
 
 /* 점검 스크립트(scripts/quiz-check.js)가 쓰는 창 */
-window.QuizBattle = { parseLines, toLine, choseong, prep, TYPE, styleOf, soloOK, state: () => ({ S, SO, UI }) };
+window.QuizBattle = { parseLines, toLine, choseong, prep, TYPE, styleOf, soloOK, ansOK, leader, state: () => ({ S, SO, UI, LIVE, J }) };
 })();
