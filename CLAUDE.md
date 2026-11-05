@@ -33,3 +33,9 @@
 - 디자인 시스템: 값은 `design-system.js`(테마·크기·AI 규칙), 설명은 `DESIGN.md`. 테마 값을 바꾸면 `DESIGN.md` 표도 같이 고친다.
 - 디자인은 색·글꼴을 CSS 변수(`--bg` `--ink` `--accent` …)로만 쓴다 — 그래야 테마만 바꿔도 전체가 바뀐다.
 - 코딩 에이전트에서는 `.claude/skills/dongsan-design` 스킬과 `node scripts/design-render.js` 를 쓴다. 결과물 `designs/` 는 커밋하지 않는다.
+
+## 동산 퀴즈 배틀 (중고등부·청년부 팀 퀴즈)
+- 화면 `quiz.html`(무대 디자인) + 엔진 `quiz-app.js` + 문제 `quiz-data.js`(QUIZ_PACKS). 혼자 도전은 `quiz.html?solo=1`. 설명서 `퀴즈배틀-안내.md`.
+- 팀 대항전은 인도자 한 화면(빔·TV) 진행: 모든 팀 동시(ox·mc·blank·order) / 먼저 외치기(cho·emoji·hint·open), 아이템·룰렛·2배 라운드·올인 베팅·시상식.
+- 문제를 고치면 `node scripts/quiz-check.js` (형식·성경 장절·말씀 빈칸과 “ ” 인용 원문 대조·브라우저로 끝까지 해 보기). 퀴즈 글에서도 “ ” 는 개역개정 원문 그대로, ‘ ’ 는 풀어 쓴 말. 곧은 따옴표 " 는 쓰지 않는다.
+- 게임·기록·만든 문제는 기기(localStorage `dongsan_quiz_*`)에만. AI 초안은 관리자 앱과 같은 키(`dongsan_apiKey`)로 주제만 보낸다.

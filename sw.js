@@ -9,11 +9,13 @@
    1)을 "인터넷 먼저"로 둔 이유: 저장해 둔 것을 먼저 보여 주면
    홈페이지를 고쳐도 성도들 화면이 옛날 그대로 머무는 일이 생긴다.
    =========================================================== */
-var VERSION = 'dongsan-v6';
+var VERSION = 'dongsan-v7';
 var SHELL = [
   'word.html', 'word-adult.html', 'word-kids.html', 'word-easy.html', 'word-youth.html', 'word-book.html',
   'word-core.js', 'word-data.js', 'word-config.js', 'word-extra.js', 'install.html', 'install-btn.js',
   'design.html', 'design-system.js', 'design-templates.js',
+  /* 동산 퀴즈 배틀 — 수련회장처럼 인터넷이 약한 곳에서도 */
+  'quiz.html', 'quiz-app.js', 'quiz-data.js',
   'icons/icon-192.png', 'icons/icon-512.png',
   /* 함께 자라요 — 발달 놀이 (인터넷 없이도 놀 수 있게) */
   'grow.html', 'grow-manifest.json', 'grow/data.js', 'grow/hero-art.js', 'grow/core.js', 'grow/kind.js', 'grow/act-speech.js', 'grow/act-motor.js',
@@ -81,7 +83,7 @@ self.addEventListener('fetch', function (e) {
       return res;
     }).catch(function () {
       return caches.match(req).then(function (hit) {
-        return hit || caches.match(/grow/.test(url.pathname) ? 'grow.html' : 'word.html');
+        return hit || caches.match(/grow/.test(url.pathname) ? 'grow.html' : /quiz/.test(url.pathname) ? 'quiz.html' : 'word.html');
       });
     })
   );
