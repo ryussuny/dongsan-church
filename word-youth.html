@@ -98,6 +98,11 @@ textarea{width:100%;min-height:96px;margin-top:6px;border:1px solid var(--line);
 .read{width:100%;margin-top:16px;border:0;border-radius:18px;min-height:58px;font:inherit;font-weight:900;font-size:16px;cursor:pointer;background:var(--ink);color:var(--bg)}
 .read.done{background:var(--soft);color:var(--acc-tx)}
 #videoSlot{margin-top:4px}
+.qb{display:flex;align-items:center;gap:14px;margin-top:14px;padding:16px 18px;border-radius:22px;text-decoration:none;color:#fff;background:linear-gradient(135deg,#ff4fa0,#ff8a3d);box-shadow:0 8px 24px rgba(255,79,160,.25)}
+.qb .i{flex:none;font-size:34px}
+.qb b{display:block;font-size:17px}
+.qb small{display:block;font-size:13px;opacity:.92;line-height:1.45}
+.qb .go{margin-left:auto;flex:none;font-size:22px;font-weight:900}
 .foot{text-align:center;font-size:13px;color:var(--ink3);margin-top:18px;line-height:2}
 .foot a{color:var(--ink2);font-weight:700}
 </style>
@@ -177,6 +182,8 @@ textarea{width:100%;min-height:96px;margin-top:6px;border:1px solid var(--line);
   </div>
 
   <button class="read" id="readBtn" onclick="markRead()">✓ 오늘 말씀 읽었어요</button>
+
+  <a class="qb" href="quiz.html?solo=1"><span class="i">⚡</span><span><b>동산 퀴즈 배틀</b><small>오늘의 도전 12문제 — 친구와 점수 겨루기 · 모임에서는 팀 대항전</small></span><span class="go">›</span></a>
 
   <div class="foot">
     <span id="bookWrap"><a id="bookLink" href="word-book.html">📖 묵상집으로 보기</a> · </span><a href="word-adult.html">어른용 화면</a> · <a href="songs.html">🎵 찬양 듣기</a><br>
