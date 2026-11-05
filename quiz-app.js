@@ -202,6 +202,8 @@ function toast(msg, ms) {
 function banner(msg) { const b = document.createElement('div'); b.className = 'banner'; b.textContent = msg; document.body.appendChild(b); setTimeout(() => b.remove(), 2300); }
 function modal(html) { closeModal(); const o = document.createElement('div'); o.className = 'ov'; o.id = 'ov'; o.innerHTML = '<div class="modal" role="dialog" aria-modal="true">' + html + '</div>'; o.addEventListener('click', e => { if (e.target === o) closeModal(); }); document.body.appendChild(o); const f = o.querySelector('input,textarea,button'); if (f) f.focus(); }
 function closeModal() { const o = $('#ov'); if (o) o.remove(); }
+let askFn = null;
+function ask(msg, yes, fn) { askFn = fn; modal('<h2>' + esc(msg) + '</h2><div class="row" style="margin-top:16px"><button class="btn pri" data-act="askYes">' + esc(yes || '네') + '</button><button class="btn" data-act="closeModal">아니요</button></div>'); }
 function popAt(i, txt, sub, neg) {
   const el = $('.tm[data-i="' + i + '"]'); if (!el) return;
   const r = el.getBoundingClientRect(), p = document.createElement('div');
@@ -992,11 +994,11 @@ function soloResult() {
 }
 function soloShare() {
   const [ic, title] = soloRank();
-  const url = location.origin + location.pathname + '?solo=1';
+  const url = /github\.io$/.test(location.hostname) ? location.origin + location.pathname + '?solo=1' : 'https://ryussuny.github.io/dongsan-church/quiz.html?solo=1';
   const text = '⚡ 동산 퀴즈 배틀 ' + SO.title + '\n' + ic + ' ' + title + ' · ' + fmt(SO.score) + '점 (' + SO.qs.length + '문제 중 ' + SO.ok + '개, 최대 ' + SO.max + '콤보)\n너도 도전해 봐! 👉 ' + url;
-  if (navigator.share) navigator.share({ title: '동산 퀴즈 배틀', text }).catch(() => {});
-  else if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => toast('복사했어요! 카톡에 붙여 넣으세요 📋'), () => toast(text, 5000));
-  else toast(text, 5000);
+  const copy = () => { if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => toast('복사했어요! 카톡에 붙여 넣으세요 📋'), () => toast(text, 6000)); else toast(text, 6000); };
+  if (navigator.share) navigator.share({ title: '동산 퀴즈 배틀', text }).catch(e => { if (!e || e.name !== 'AbortError') copy(); });
+  else copy();
 }
 function soloCheckTyped(v) {
   const q = SO.qs[SO.i], n = norm(v);
@@ -1211,7 +1213,8 @@ const A = {
   help() { closeModal(); UI.back = UI.screen; tStop(); go('help'); },
   setup() { SET = newSet(); go('setup'); },
   resume() { S = store.get('quiz_game', null); if (!S) return go('lobby'); closeModal(); go('game'); if (S.phase === 'q' || S.phase === 'fq') { if (!S.rev) qTimer(); } },
-  dropGame() { if (!confirm('하던 게임을 지울까요?')) return; store.del('quiz_game'); S = null; render(); },
+  dropGame() { ask('하던 게임을 지울까요?', '지우기', () => { store.del('quiz_game'); S = null; render(); }); },
+  askYes() { const f = askFn; askFn = null; closeModal(); if (f) f(); },
   setN(n) { readTeams(); SET.cfg.n = +n; render(); },
   setPer(n) { readTeams(); SET.cfg.per = +n; render(); },
   setTimer(v) { readTeams(); SET.cfg.timer = +v; render(); },
@@ -1280,14 +1283,17 @@ const A = {
   adj(arg) { const [i, d] = arg.split(',').map(Number); S.teams[i].score += d; const e = $('#es' + i); if (e) e.textContent = fmt(S.teams[i].score); saveGame(); },
   skipQ() { closeModal(); tStop(); nextQ(); },
   endRoundNow() { closeModal(); endRound(); },
-  toAwards() { closeModal(); if (!confirm('지금 바로 시상식으로 갈까요?')) return; tStop(); S.phase = 'awards'; saveGame(); render(); },
+  toAwards() { ask('지금 바로 시상식으로 갈까요?', '시상식으로', () => { tStop(); S.phase = 'awards'; saveGame(); render(); }); },
   // 혼자 도전
   soloHome() { SO = null; go('solo'); },
   soloHomeBtn() { SO = null; tStop(); go('solo'); },
   soloDaily() { soloStart('daily'); },
   soloPack(id) { soloStart('pack', id); },
   soloAgain() { const k = SO.kind, p = SO.pack; soloStart(k, p); },
-  soloQuit() { if (!SO.over && !confirm('그만할까요? 지금까지 점수는 저장되지 않아요')) return; clearInterval(SO.hintT); clearTimeout(SO.autoT); tStop(); SO = null; go('solo'); },
+  soloQuit() {
+    const quit = () => { if (!SO) return; clearInterval(SO.hintT); clearTimeout(SO.autoT); tStop(); SO = null; go('solo'); };
+    if (SO.over) quit(); else ask('그만할까요? 지금까지 점수는 저장되지 않아요', '그만하기', quit);
+  },
   soloAns(i) { const q = SO.qs[SO.i]; i = +i; SO.chosen = i; soloAnswer(q.t === 'ox' ? (i === 0) === q.a : i === q.ai); },
   soloSeq(pos) {
     pos = +pos; if (SO.seq.indexOf(pos) >= 0) return;
@@ -1305,7 +1311,7 @@ const A = {
   editList() { UI.edit = null; render(); },
   editNew() { UI.edit = { id: null, icon: '⭐', name: '', desc: '', src: SAMPLE }; render(); },
   editOpen(id) { const p = customs().find(x => x.id === id); if (!p) return; UI.edit = { id: p.id, icon: p.icon, name: p.name, desc: p.desc || '', src: p.src || p.q.map(toLine).join('\n') }; render(); },
-  editDel(id) { const p = customs().find(x => x.id === id); if (!p || !confirm('「' + p.name + '」 팩을 지울까요?')) return; store.set('quiz_custom', customs().filter(x => x.id !== id)); render(); },
+  editDel(id) { const p = customs().find(x => x.id === id); if (!p) return; ask('「' + p.name + '」 팩을 지울까요?', '지우기', () => { store.set('quiz_custom', customs().filter(x => x.id !== id)); render(); }); },
   editSave() { editSave(false); },
   editTry() { const p = editSave(true); if (!p) return; UI.edit = null; soloStart('pack', p.id); },
   editExport,
@@ -1363,7 +1369,7 @@ window.addEventListener('beforeunload', saveGame);
   const qs = new URLSearchParams(location.search);
   S = store.get('quiz_game', null);
   if (S && (!S.teams || !S.rounds)) S = null;
-  if (qs.get('solo') === '1') {
+  if (qs.get('solo') === '1' || location.hash === '#solo') {
     const p = qs.get('pack');
     if (p && packById(p)) { soloStart('pack', p); return; }
     UI.screen = 'solo'; render(); return;

@@ -217,6 +217,10 @@ const shot = async (page, name) => { if (SHOTS) { fs.mkdirSync(SHOTS, { recursiv
   await shot(pe, '14-editor');
   await pe.click('[data-act="home"]'); await pe.click('[data-act="setup"]');
   if (!(await pe.$('.pk .my'))) errors.push('만든 팩이 팀 대항전 목록에 없음');
+  // 지우기는 화면 안의 확인 창으로 묻는다 (confirm 을 쓰지 않음)
+  await pe.click('[data-act="home"]'); await pe.click('[data-act="edit"]');
+  await pe.click('[data-act="editDel"]'); await pe.click('[data-act="askYes"]');
+  if (await pe.$('.eitem')) errors.push('확인 창으로 팩을 지우지 못함');
 
   await browser.close(); srv.close();
   if (errors.length) { errors.forEach(e => err(e)); console.error('\n브라우저 점검 실패', errors.length, '건'); process.exit(1); }
