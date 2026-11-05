@@ -2,7 +2,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>동산 퀴즈 배틀</title>
-<meta name="description" content="중·고등부·청년부가 팀으로 겨루는 말씀·상식·넌센스 퀴즈. 빔·TV 한 화면으로 진행하고, 혼자 도전도 할 수 있어요.">
+<meta name="description" content="누구나 팀으로 겨루는 말씀·상식·넌센스 퀴즈. 빔·TV 한 화면으로 진행하고, 휴대폰으로 방 코드에 들어와 함께 답하거나 혼자 도전할 수 있어요.">
 <meta name="theme-color" content="#090d22">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -388,6 +388,91 @@ textarea.src{width:100%;min-height:340px;border-radius:16px;border:1px solid var
 .toast{position:fixed;left:50%;bottom:calc(110px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:70;background:#fff;color:#141a33;font-weight:700;padding:12px 20px;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.4);animation:slideIn .25s both;max-width:92vw;text-align:center}
 canvas.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:80}
 
+/* ---------- 📱 휴대폰 참여 (인도자 화면) ---------- */
+.ib.live{width:auto;padding:0 12px;gap:6px;font-size:16px}
+.ib.live b{font-family:'Black Han Sans',sans-serif;font-weight:400;font-size:18px}
+.ib.live.on{border-color:rgba(47,224,138,.7)}.ib.live.wait{border-color:var(--gold)}.ib.live.off{border-color:var(--no)}
+.lpanel .lead{color:var(--ink2);font-size:14.5px;margin-bottom:10px}
+.ljoin{display:flex;gap:16px;align-items:center;flex-wrap:wrap;text-align:left}
+.lqr{flex:none;width:clamp(110px,16vw,200px);aspect-ratio:1;max-width:100%;border-radius:16px;background:#fff;padding:6px;display:flex;align-items:center;justify-content:center;color:#000;font-weight:900}
+.lqr svg{width:100%;height:100%;display:block}
+.ljoin .ltx{flex:1;min-width:180px}
+.ljoin small{color:var(--ink3);font-weight:700;font-size:13px}
+.lcode{display:block;font-family:'Black Han Sans',sans-serif;font-weight:400;font-size:clamp(44px,6vw,84px);letter-spacing:.14em;color:var(--gold);line-height:1.05}
+.ljoin p{color:var(--ink2);font-size:14px;margin-top:4px}
+.ljoin u{color:var(--ink);text-decoration-color:var(--gold)}
+.lst{font-weight:700}.lst.on{color:var(--ok)}.lst.wait{color:var(--gold)}.lst.off{color:var(--no)}
+.lpl{display:grid;gap:6px;margin:12px 0}
+.lg{border-left:4px solid var(--tc);padding:4px 10px;background:rgba(255,255,255,.04);border-radius:8px}
+.lg b{font-size:14px}.lg b small{color:var(--ink3);font-weight:500}.lg span{display:block;color:var(--ink2);font-size:13.5px}
+.lnone{color:var(--ink3);font-size:14px}
+.intro .ljoin{background:var(--card);border:1px solid var(--line2);border-radius:20px;padding:10px 16px;animation:slideIn .6s .5s both;margin-top:6px}
+.intro .lqr{width:clamp(84px,12vh,130px)}
+.intro .lcode{font-size:clamp(30px,5vh,52px)}
+.badge.live{background:rgba(47,224,138,.14);border-color:rgba(47,224,138,.5);color:#bff5d9}
+.tm .la{position:absolute;left:8px;bottom:-12px;font-size:12px;font-weight:900;background:var(--bg);border:1px solid var(--line2);border-radius:99px;padding:0 8px;color:var(--ink2);white-space:nowrap;max-width:calc(100% - 16px);overflow:hidden;text-overflow:ellipsis}
+.tm.buzzed{box-shadow:0 0 0 4px var(--gold),0 0 40px rgba(255,210,63,.5);animation:pulse .8s infinite}
+.tm.locked{opacity:.4}
+.buzzbox{flex:1 1 100%;display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px;border-radius:20px;background:rgba(255,210,63,.12);border:2px solid var(--gold);animation:bzIn .35s both;text-align:center}
+@keyframes bzIn{from{opacity:0;transform:scale(.85)}}
+.buzzbox>b{font-family:'Black Han Sans',sans-serif;font-weight:400;font-size:clamp(24px,3vw,44px);color:var(--gold)}
+.buzzbox>span{color:var(--ink2);font-weight:700}
+.dn{margin-left:auto;flex:none;font-style:normal;font-size:.62em;font-weight:900;padding:2px 10px;border-radius:99px;background:rgba(0,0,0,.25)}
+.oxb{position:relative}
+.oxb .dn{position:absolute;bottom:-1.9em;left:50%;transform:translateX(-50%);font-family:'Noto Sans KR',sans-serif;font-size:clamp(14px,2.4vh,22px);color:var(--ink);margin:0;white-space:nowrap}
+.mcard.joinc{grid-column:1/-1;flex-wrap:wrap;min-height:0}
+.mcard.joinc .jt{flex:1;min-width:150px}
+.mcard.joinc input{width:130px;height:52px;border-radius:14px;border:2px solid var(--line2);background:rgba(0,0,0,.25);padding:0 12px;font-size:22px;font-weight:900;text-align:center;letter-spacing:.12em;text-transform:uppercase}
+.mcard.joinc input:focus{border-color:var(--gold);outline:none}
+
+/* ---------- 📱 참가자 휴대폰 화면 ---------- */
+.pl{max-width:560px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:12px;padding-bottom:20px}
+.pbox{background:var(--card);border:1px solid var(--line2);border-radius:24px;padding:20px 16px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.pbox h2{font-size:clamp(22px,6vw,30px);line-height:1.3;text-wrap:balance}
+.pbox h3{font-size:16px;color:var(--ink2);margin-top:6px}
+.pbox p{color:var(--ink2)}
+.pbig{font-size:64px;line-height:1.1}
+.spin{animation:pulse 1s infinite}
+.pf{display:flex;flex-direction:column;gap:6px;text-align:left;font-weight:700;color:var(--ink2);font-size:14px}
+.pf .inp{height:56px;font-size:20px;font-weight:700;text-align:center}
+.pnote{font-size:13px;color:var(--ink3)}
+.pteams{display:grid;gap:8px}
+.pteam{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:18px;border:2px solid var(--tc);background:color-mix(in srgb,var(--tc) 18%,var(--card));text-align:left;min-height:64px}
+.pteam b{flex:1;font-size:18px}.pteam small{color:var(--ink2)}
+.pteam .te-e,.pme .te-e{width:44px;height:44px;font-size:24px}
+.pme{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--tc) 40%,var(--card)),var(--card));border:2px solid var(--tc)}
+.pme .tx{flex:1;min-width:0;text-align:left}.pme b{display:block;font-size:17px}.pme small{color:var(--ink2);font-size:13px}
+.pdot{width:12px;height:12px;border-radius:50%;background:var(--ink3);flex:none;margin-right:6px}
+.pdot.on{background:var(--ok)}.pdot.wait{background:var(--gold);animation:pulse 1s infinite}.pdot.off,.pdot.err{background:var(--no)}
+.pkl{font-size:13px;font-weight:900;color:var(--pink);letter-spacing:.04em}
+.pq .ptx{font-size:clamp(19px,5.2vw,26px);font-weight:900;line-height:1.4}
+.pemo{font-size:clamp(40px,12vw,64px);line-height:1.2}
+.pcs{font-family:'Black Han Sans',sans-serif;font-size:clamp(34px,11vw,56px);letter-spacing:.2em;color:var(--gold)}
+.phs{text-align:left;padding-left:22px;display:grid;gap:6px;color:var(--ink);font-weight:700}
+.ptimer{margin:0;min-width:0;width:100%}
+.pq .opts{grid-template-columns:1fr}
+.pq .opt{min-height:58px;font-size:18px}
+.pq .oxb{width:clamp(110px,36vw,170px);font-size:clamp(56px,18vw,96px)}
+.pq .oc{font-size:16px}
+.pq .sel{outline:4px solid #fff;outline-offset:2px}
+.pq .opt.sel{background:color-mix(in srgb,var(--oc) 45%,transparent)}
+.pq .oxb.sel{transform:scale(1.05)}
+.psent{color:var(--ok);font-weight:900}
+.buzzer{align-self:center;width:min(70vw,260px);aspect-ratio:1;max-width:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8fa3,#ff2e55 55%,#b3002b);color:#fff;font-size:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 14px 0 #7a001d,0 20px 50px rgba(255,46,85,.45);transition:transform .08s,box-shadow .08s;margin:4px 0 14px}
+.buzzer b{font-family:'Black Han Sans',sans-serif;font-weight:400;font-size:34px}
+.buzzer:active{transform:translateY(10px);box-shadow:0 4px 0 #7a001d,0 10px 30px rgba(255,46,85,.45)}
+.pbuzzed{font-family:'Black Han Sans',sans-serif;font-size:clamp(26px,8vw,40px);color:var(--gold);padding:18px 8px;border-radius:20px;background:rgba(255,210,63,.1)}
+.pbuzzed.me{color:#fff;background:var(--pink);animation:pulse .8s infinite}
+.pbuzzed small{display:block;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:var(--ink2);margin-top:4px}
+.pbuzzed.me small{color:#fff}
+.prk{display:grid;gap:6px;text-align:left}
+.prk div{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;background:rgba(255,255,255,.05);border-left:5px solid var(--tc)}
+.prk div.me{background:color-mix(in srgb,var(--tc) 25%,transparent)}
+.prk b{font-family:'Black Han Sans',sans-serif;font-weight:400;font-size:22px;width:1.4em;text-align:center}
+.prk span{flex:1;font-weight:700}.prk em{font-style:normal;font-family:'Black Han Sans',sans-serif;color:var(--gold);font-size:20px}
+.ptop{text-align:left;padding-left:24px;display:grid;gap:4px;font-weight:700}
+.ptop li.me{color:var(--gold)}.ptop small{color:var(--ink3)}
+
 @media (max-width:760px){
   .mgrid{grid-template-columns:1fr}
   .strip{grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;padding:8px 10px}
@@ -407,6 +492,7 @@ canvas.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 <body>
 <div id="app"><noscript><p style="padding:30px">자바스크립트를 켜야 퀴즈를 할 수 있어요.</p></noscript></div>
 <script src="quiz-data.js"></script>
+<script src="quiz-live.js"></script>
 <script src="quiz-app.js"></script>
 <script>if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });</script>
 </body></html>
