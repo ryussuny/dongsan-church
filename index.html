@@ -381,6 +381,19 @@ a.sermon-card:focus-visible{outline:3px solid var(--brick2);outline-offset:3px}
 .route-note a{color:var(--brick2);font-weight:800;text-decoration:none}
 @media(max-width:860px){.route-grid{grid-template-columns:1fr}}
 .loc-info{display:flex;flex-direction:column;gap:1.1rem}
+/* 교회 SNS — 유튜브 · 인스타그램 · 페이스북 */
+.sns{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.7rem}
+.sns-btn{flex:1;min-width:104px;min-height:48px;display:flex;align-items:center;justify-content:center;gap:.45rem;background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:.7rem .6rem;font-size:.88rem;font-weight:700;color:var(--brick-deep);text-decoration:none;transition:border-color .15s,box-shadow .15s}
+.sns-btn:hover{border-color:var(--brick2);box-shadow:0 8px 20px rgba(15,27,51,.08)}
+.sns-btn svg{width:22px;height:22px;flex:none}
+.cta-sns{display:flex;justify-content:center;gap:.7rem;flex-wrap:wrap;margin-top:1.4rem}
+.cta-sns a{display:flex;align-items:center;gap:.45rem;min-height:44px;padding:.55rem 1rem;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);
+  color:var(--paper);font-size:.88rem;font-weight:700;text-decoration:none}
+.cta-sns a:hover{background:rgba(255,255,255,.2)}
+.cta-sns svg{width:20px;height:20px;flex:none;background:#fff;border-radius:6px;padding:1px}
+.ft-col a.ft-sns{display:flex;align-items:center;gap:.45rem}
+.ft-col a.ft-sns svg{width:16px;height:16px;flex:none}
 .info-card{
   background:var(--white);border:1px solid var(--border);border-radius:16px;padding:1.4rem 1.5rem;
   display:flex;gap:1rem;align-items:flex-start;
@@ -469,6 +482,7 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
       <li><a href="word.html">오늘의말씀</a></li>
       <li><a href="photos.html">사진첩</a></li>
       <li><a href="songs.html">찬양</a></li>
+      <li><a href="quiz.html">퀴즈배틀</a></li>
       <li><a href="#location">오시는길</a></li>
       <li><a href="tel:010-5052-1728" class="nav-cta" id="navPhoneLink">☎ 문의하기</a></li>
     </ul>
@@ -732,6 +746,14 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
           </div>
         </div>
         <div class="info-card">
+          <div class="info-icon">📺</div>
+          <div style="flex:1">
+            <div class="info-lbl">온라인으로 만나요</div>
+            <div class="info-val">예배 영상과 교회 소식</div>
+            <div class="sns"><a class="sns-btn" href="https://www.youtube.com/channel/UC7SpE9IcyLgiq2_qXiTa_UQ" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4" fill="#ff0000"/><path d="M10 9l5 3-5 3z" fill="#fff"/></svg><span>유튜브</span></a><a class="sns-btn" href="https://www.instagram.com/garden___church/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#d62976" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#d62976" stroke="none"/></svg><span>인스타그램</span></a><a class="sns-btn" href="https://www.facebook.com/profile.php?id=61564499982736" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#1877f2"/><path d="M13.2 19v-6h2l.3-2.4h-2.3V9.2c0-.7.2-1.2 1.2-1.2h1.2V5.9c-.2 0-1-.1-1.8-.1-1.8 0-3 1.1-3 3.1v1.8H9v2.4h1.9V19z" fill="#fff"/></svg><span>페이스북</span></a></div>
+          </div>
+        </div>
+        <div class="info-card">
           <div class="info-icon">🕊</div>
           <div>
             <div class="info-lbl">소속</div>
@@ -811,6 +833,7 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
         <a href="tel:010-5052-1728" class="btn btn-main" id="ctaPhoneLink">☎ 010-5052-1728</a>
         <a href="#location" class="btn btn-ghost">📍 오시는 길 보기</a>
       </div>
+      <div class="cta-sns" aria-label="교회 SNS"><a class="" href="https://www.youtube.com/channel/UC7SpE9IcyLgiq2_qXiTa_UQ" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4" fill="#ff0000"/><path d="M10 9l5 3-5 3z" fill="#fff"/></svg><span>유튜브</span></a><a class="" href="https://www.instagram.com/garden___church/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#d62976" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#d62976" stroke="none"/></svg><span>인스타그램</span></a><a class="" href="https://www.facebook.com/profile.php?id=61564499982736" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#1877f2"/><path d="M13.2 19v-6h2l.3-2.4h-2.3V9.2c0-.7.2-1.2 1.2-1.2h1.2V5.9c-.2 0-1-.1-1.8-.1-1.8 0-3 1.1-3 3.1v1.8H9v2.4h1.9V19z" fill="#fff"/></svg><span>페이스북</span></a></div>
     </div>
   </div>
 </section>
@@ -832,6 +855,7 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
           <a href="#sermons">설교말씀</a>
           <a href="photos.html">사진첩</a>
           <a href="songs.html">찬양</a>
+          <a href="quiz.html">퀴즈 배틀</a>
           <a href="#location">오시는길</a>
           <a href="#offering">온라인 헌금하기</a>
         </div>
@@ -839,6 +863,12 @@ footer{background:#0d1526;color:#c7cede;padding:3.6rem 0 2.2rem}
           <b>문의</b>
           <a href="tel:010-5052-1728" id="ftPhoneLink">☎ 010-5052-1728</a>
           <a href="https://map.kakao.com/?q=%EA%B0%95%EC%9B%90%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84%20%ED%83%9C%EB%B0%B1%EC%8B%9C%20%EA%B3%84%EC%82%B04%EA%B8%B8%2025" target="_blank" rel="noopener" id="ftMapLink">지도로 보기</a>
+        </div>
+        <div class="ft-col">
+          <b>SNS</b>
+          <a class="ft-sns" href="https://www.youtube.com/channel/UC7SpE9IcyLgiq2_qXiTa_UQ" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4" fill="#ff0000"/><path d="M10 9l5 3-5 3z" fill="#fff"/></svg><span>유튜브</span></a>
+          <a class="ft-sns" href="https://www.instagram.com/garden___church/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#d62976" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#d62976" stroke="none"/></svg><span>인스타그램</span></a>
+          <a class="ft-sns" href="https://www.facebook.com/profile.php?id=61564499982736" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#1877f2"/><path d="M13.2 19v-6h2l.3-2.4h-2.3V9.2c0-.7.2-1.2 1.2-1.2h1.2V5.9c-.2 0-1-.1-1.8-.1-1.8 0-3 1.1-3 3.1v1.8H9v2.4h1.9V19z" fill="#fff"/></svg><span>페이스북</span></a>
         </div>
       </div>
     </div>
