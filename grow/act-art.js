@@ -3,11 +3,13 @@
 
      draw      자유 그리기   색 10가지·무지개 붓·도장·지우개·되돌리기·펜 압력
      mirror    거울 그림     한쪽에 그리면 2·4·8 방향으로 (대칭·만다라)
-     color     색칠하기      칸을 콕 누르면 색이 쏙 — 단계마다 칸이 늘어난다
+     color     색칠하기      칸을 콕 누르면 색이 쏙 — 단계마다 칸이 늘어난다 (4·5단계는 작은 칸이 더)
+                             6~10단계는 규칙 칸: 무늬 띠 번갈아 칠하기(AB → ABC) · 색 번호 칠하기(3 → 5색)
      feeldraw  기분 그림     오늘 마음을 고르고, 그 마음을 색으로
      gallery   그림첩(도구)  저장한 그림 모아 보기·받기·지우기(어른 확인)
 
    ▸ 미술치료는 결과보다 과정이다. 맞고 틀림이 없으니 ctx.trial 을 쓰지 않는다.
+     (색칠하기 6단계부터의 규칙 칸만 예외 — 틀린 색은 칠해지지 않고 맞는 색이 반짝, 그 칸만 ctx.trial 로 센다)
      자비스는 "이건 뭐야?" 대신 "이야기해 줄래?" 하고, 한 일을 그대로 말해 준다.
    ▸ 그림은 이 기기(IndexedDB 'art')에만 둔다 — {id, t, img(jpeg), kind, emo}
    ▸ 종이는 어두운 화면에서도 언제나 하얗다.
@@ -128,6 +130,11 @@ ${BOARD} .ab-tb b{position:absolute;right:4px;bottom:2px;font-family:Jua,sans-se
 .act-color .cp-undo{flex:none;width:clamp(58px,16vw,74px);border-radius:20px;background:var(--surface);box-shadow:var(--shadow);font-size:26px}
 .act-color .cp-undo:disabled{opacity:.35}
 .act-color .cp-done{flex:1}
+/* 6~10단계 규칙 칸 — 색 단추 번호표·남은 칸 알림 */
+.act-color .cp-sw{position:relative}
+.act-color .cp-n{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);min-width:26px;height:26px;padding:0 4px;border-radius:999px;background:#fff;color:#24344a;
+  font-family:Jua,sans-serif;font-weight:400;font-size:17px;line-height:26px;box-shadow:0 1px 4px rgba(0,0,0,.25);pointer-events:none}
+.act-color .cp-pic [data-i].want{stroke:#ffb300;stroke-width:7}
 @media (orientation:landscape) and (min-width:700px){
   .act-color .cp{flex-direction:row}
   .act-color .cp-side{width:clamp(210px,26vw,280px);justify-content:center;padding:6px}
@@ -468,10 +475,15 @@ G.act({
 /* =================================================================
    3. 색칠하기 — 칸을 눌러 색 채우기
    그림은 viewBox 0 0 200 200. 칸마다 [모양, 나오는 단계, 마지막 단계].
-   1단계 3~4칸 · 2단계 6~7칸 · 3단계 10칸 이상
+   1단계 3~4칸 · 2단계 6~7칸 · 3단계 10칸 이상 · 4단계 14~16칸 · 5단계 18~20칸
+   (4·5단계는 작은 칸 — 덤불·꽃·연기·무늬 — 이 늘어 손끝으로 더 꼼꼼히 골라 누른다)
    sw: 앞 단계 칸을 쪼개 바꿔 끼우는 칸(나비 날개·꽃잎·교회 탑·무지개 띠) — 칸 맛보기(picRegs)에 미리 넣지 않는다
+   6~10단계는 그림은 5단계 그대로, 규칙 칸이 하나씩 는다 (cpRule):
+   6 무늬 띠 AB(빨-파-빨-파…) · 7 무늬 띠 ABC · 8 색 번호 3색 · 9 색 번호 4색 · 10 색 번호 5색(작은 칸까지)
    ================================================================= */
-function R(s, lv, max, sw) { return { s: s, lv: lv || 1, max: max || 3, sw: !!sw }; }
+var CP_TOP = 5;   /* 그림 칸이 새로 생기는 마지막 단계 — 6단계부터는 그림은 5단계 그대로, 규칙 칸(무늬 띠·색 번호)이 는다 */
+var CP_LV = 10;   /* 색칠하기 단계 수 */
+function R(s, lv, max, sw) { return { s: s, lv: lv || 1, max: max || CP_LV, sw: !!sw }; }
 function f1(n) { return Math.round(n * 10) / 10; }
 function petals(n, cx, cy, d, rx, ry) {
   var out = [];
@@ -492,6 +504,17 @@ function cloud(x, y, s) {
   return '<path d="M' + p(-26, 10) + ' Q' + p(-36, 10) + ' ' + p(-34, 0) + ' Q' + p(-32, -9) + ' ' + p(-22, -8) + ' Q' + p(-20, -22) + ' ' + p(-5, -21) +
     ' Q' + p(6, -28) + ' ' + p(14, -15) + ' Q' + p(28, -17) + ' ' + p(30, -3) + ' Q' + p(38, 2) + ' ' + p(32, 10) + ' Z"/>';
 }
+/* 별 모양 칸 (불가사리·반짝 별) */
+function starP(cx, cy, ro, ri) {
+  var pts = [];
+  for (var i = 0; i < 10; i++) {
+    var a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? ri : ro;
+    pts.push(f1(cx + Math.cos(a) * r) + ',' + f1(cy + Math.sin(a) * r));
+  }
+  return '<polygon points="' + pts.join(' ') + '"/>';
+}
+function C(cx, cy, r) { return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '"/>'; }
+function E(cx, cy, rx, ry) { return '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '"/>'; }
 function band(cx, cy, ro, ri) {
   return '<path d="M' + f1(cx - ro) + ' ' + cy + ' A' + f1(ro) + ' ' + f1(ro) + ' 0 0 1 ' + f1(cx + ro) + ' ' + cy + ' L' + f1(cx + ri) + ' ' + cy +
     ' A' + f1(ri) + ' ' + f1(ri) + ' 0 0 0 ' + f1(cx - ri) + ' ' + cy + ' Z"/>';
@@ -504,14 +527,19 @@ var BF = {
   lr: '<path d="M104 104 Q140 102 156 128 Q160 162 130 158 Q108 152 103 116 Z"/>'
 };
 function rainbowParts() {
-  var out = [];
+  var out = [R('<rect x="-4" y="172" width="208" height="32"/>', 4)];   /* 4단계 풀밭 */
   [[1, 2], [2, 4], [3, 7]].forEach(function (cfg) {
     var lv = cfg[0], n = cfg[1], ro = 92, ri = 40, w = (ro - ri) / n;
-    for (var k = 0; k < n; k++) out.push(R(band(100, 150, ro - k * w, ro - (k + 1) * w), lv, lv, 1));
+    /* 일곱 빛깔 띠(3단계)는 4·5단계에도 그대로 */
+    for (var k = 0; k < n; k++) out.push(R(band(100, 150, ro - k * w, ro - (k + 1) * w), lv, lv === 3 ? CP_LV : lv, 1));
   });
   out.push(R(sun(160, 38, 14), 3));
   out.push(R(cloud(40, 150, 1), 1));
   out.push(R(cloud(160, 150, 1), 1));
+  out.push(R(cloud(40, 40, 0.7), 4), R(C(100, 188, 7), 4), R(C(60, 190, 6), 4));
+  out.push(R(C(140, 190, 6), 5), R(cloud(100, 28, 0.5), 5),
+    R('<path d="M100 146 C88 138 86 130 92 126 C96 124 99 126 100 129 C101 126 104 124 108 126 C114 130 112 138 100 146 Z"/>', 5),
+    R(starP(184, 86, 10, 4.5), 5));
   return out;
 }
 var PICS = [
@@ -526,7 +554,10 @@ var PICS = [
     R('<rect x="55" y="110" width="22" height="22" rx="3"/>', 2),
     R('<rect x="123" y="110" width="22" height="22" rx="3"/>', 2),
     R(sun(166, 30, 14), 3),
-    R(cloud(42, 34, 0.9), 3)
+    R(cloud(42, 34, 0.9), 3),
+    /* 4단계: 덤불·굴뚝 연기·꽃·문 창 · 5단계: 연기·덤불·꽃 하나씩 더 */
+    R(E(182, 160, 16, 12), 4), R(C(132, 30, 6), 4), R(C(60, 187, 6), 4), R(C(100, 140, 6), 4),
+    R(C(121, 16, 6), 5), R(E(18, 160, 16, 12), 5), R(C(140, 188, 6), 5), R(C(164, 190, 6), 5)
   ], deco: [R('<circle cx="108" cy="153" r="2.8"/>')] },
   { id: 'fish', name: '물고기', e: '🐟', parts: [
     R('<path d="M-4 186 Q50 176 100 186 T204 184 V204 H-4 Z"/>', 3),
@@ -540,17 +571,24 @@ var PICS = [
     R('<path d="M120 62 Q110 100 120 138 L133 133 Q124 100 133 67 Z"/>', 2),
     R('<circle cx="60" cy="90" r="11"/>', 1),
     R('<circle cx="30" cy="46" r="9"/>', 3),
-    R('<circle cx="46" cy="22" r="7"/>', 3)
+    R('<circle cx="46" cy="22" r="7"/>', 3),
+    /* 4단계: 몸 점무늬 둘·물방울·불가사리 · 5단계: 조약돌·물방울·꼬리 점·조개 */
+    R(C(143, 100, 6), 4), R(C(78, 121, 6), 4), R(C(16, 72, 6), 4), R(starP(100, 189, 11, 5), 4),
+    R(E(136, 193, 9, 6), 5), R(C(64, 32, 6), 5), R(C(168, 100, 6), 5), R(E(60, 193, 8, 6), 5)
   ], deco: [R('<circle cx="57" cy="90" r="4.5"/>'), R('<path d="M36 110 Q44 115 52 110" fill="none"/>')] },
   { id: 'flower', name: '꽃', e: '🌷', parts: [
     R('<path d="M94 74 Q88 116 94 150 H106 Q100 116 106 74 Z"/>', 1),
     R('<path d="M96 132 Q70 108 56 118 Q70 142 96 136 Z"/>', 2),
     R('<path d="M104 122 Q130 98 144 108 Q130 132 104 126 Z"/>', 2),
+    R('<rect x="-4" y="190" width="208" height="14"/>', 4),   /* 4단계: 화분 밑 탁자 (화분보다 먼저 그려 뒤로) */
     R('<path d="M70 150 H130 L121 196 H79 Z"/>', 1),
     R('<rect x="63" y="142" width="74" height="15" rx="5"/>', 2),
     R('<g>' + FL_PET.join('') + '</g>', 1, 2)
-  ].concat(FL_PET.map(function (p) { return R(p, 3, 3, 1); })).concat([
-    R('<circle cx="100" cy="62" r="15"/>', 1)
+  ].concat(FL_PET.map(function (p) { return R(p, 3, CP_LV, 1); })).concat([
+    R('<circle cx="100" cy="62" r="15"/>', 1),
+    /* 4단계: 화분 무늬·해·꽃술 · 5단계: 구름·꿀벌·화분 무늬 둘 */
+    R(C(100, 174, 8), 4), R(sun(26, 26, 11), 4), R(C(100, 62, 7), 4),
+    R(cloud(170, 26, 0.6), 5), R(C(166, 92, 7), 5), R(C(84, 172, 6), 5), R(C(116, 172, 6), 5)
   ]) },
   { id: 'car', name: '자동차', e: '🚗', parts: [
     R('<rect x="-4" y="168" width="208" height="36"/>', 3),
@@ -564,12 +602,15 @@ var PICS = [
     R('<circle cx="58" cy="152" r="20"/>', 1),
     R('<circle cx="144" cy="152" r="20"/>', 1),
     R('<circle cx="58" cy="152" r="8"/>', 3),
-    R('<circle cx="144" cy="152" r="8"/>', 3)
+    R('<circle cx="144" cy="152" r="8"/>', 3),
+    /* 4단계: 뒷불·길 줄무늬 셋 · 5단계: 작은 구름·연기 둘·문 스티커 */
+    R(C(27, 124, 6), 4), R('<rect x="8" y="184" width="26" height="7" rx="3"/>', 4), R('<rect x="88" y="184" width="26" height="7" rx="3"/>', 4), R('<rect x="166" y="184" width="26" height="7" rx="3"/>', 4),
+    R(cloud(90, 28, 0.5), 5), R(C(8, 150, 6), 5), R(C(7, 135, 6), 5), R(C(72, 123, 6), 5)
   ], deco: [R('<path d="M102 114 V146 M86 124 H96" fill="none"/>')] },
   { id: 'butterfly', name: '나비', e: '🦋', parts: [
     R('<g>' + BF.ul + BF.ll + '</g>', 1, 1),
     R('<g>' + BF.ur + BF.lr + '</g>', 1, 1),
-    R(BF.ul, 2, 3, 1), R(BF.ll, 2, 3, 1), R(BF.ur, 2, 3, 1), R(BF.lr, 2, 3, 1),
+    R(BF.ul, 2, CP_LV, 1), R(BF.ll, 2, CP_LV, 1), R(BF.ur, 2, CP_LV, 1), R(BF.lr, 2, CP_LV, 1),
     R('<circle cx="55" cy="68" r="11"/>', 3),
     R('<circle cx="145" cy="68" r="11"/>', 3),
     R('<circle cx="68" cy="134" r="9"/>', 3),
@@ -577,7 +618,10 @@ var PICS = [
     R('<ellipse cx="100" cy="112" rx="9" ry="40"/>', 1),
     R('<circle cx="100" cy="66" r="12"/>', 1),
     R('<circle cx="74" cy="28" r="7"/>', 3),
-    R('<circle cx="126" cy="28" r="7"/>', 3)
+    R('<circle cx="126" cy="28" r="7"/>', 3),
+    /* 4단계: 윗날개 작은 점 둘·꽃 둘 · 5단계: 아랫날개 작은 점 둘·몸 줄무늬 둘 */
+    R(C(80, 86, 6), 4), R(C(120, 86, 6), 4), R(C(40, 182, 8), 4), R(C(160, 182, 8), 4),
+    R(C(57, 147, 6), 5), R(C(143, 147, 6), 5), R('<rect x="92" y="96" width="16" height="8" rx="2"/>', 5), R('<rect x="92" y="116" width="16" height="8" rx="2"/>', 5)
   ], deco: [R('<path d="M95 56 Q86 38 78 34 M105 56 Q114 38 122 34" fill="none"/>')] },
   { id: 'church', name: '교회', e: '⛪', parts: [
     R('<path d="M-4 178 Q100 164 204 178 V204 H-4 Z"/>', 3),
@@ -585,26 +629,29 @@ var PICS = [
     R('<rect x="38" y="112" width="124" height="70"/>', 1),
     R('<path d="M28 116 L100 80 L172 116 Z"/>', 1),
     R('<path d="M78 182 V68 L100 28 L122 68 V182 Z"/>', 1, 1),
-    R('<rect x="78" y="68" width="44" height="114"/>', 2, 3, 1),
-    R('<path d="M74 70 L100 28 L126 70 Z"/>', 2, 3, 1),
+    R('<rect x="78" y="68" width="44" height="114"/>', 2, CP_LV, 1),
+    R('<path d="M74 70 L100 28 L126 70 Z"/>', 2, CP_LV, 1),
     R('<path d="M96 2 h8 v7 h7 v8 h-7 v11 h-8 v-11 h-7 v-8 h7 Z"/>', 2),
     R('<circle cx="100" cy="94" r="10"/>', 2),
     R('<path d="M100 140 C88 132 86 124 92 120 C96 118 99 120 100 123 C101 120 104 118 108 120 C114 124 112 132 100 140 Z"/>', 3),
     R('<path d="M86 182 V156 A14 14 0 0 1 114 156 V182 Z"/>', 1),
     R('<path d="M50 152 V134 A9 9 0 0 1 68 134 V152 Z"/>', 3),
-    R('<path d="M132 152 V134 A9 9 0 0 1 150 134 V152 Z"/>', 3)
+    R('<path d="M132 152 V134 A9 9 0 0 1 150 134 V152 Z"/>', 3),
+    /* 4단계: 덤불 둘·꽃 둘 · 5단계: 해·앞길·작은 구름·문 창 */
+    R(E(16, 166, 14, 10), 4), R(E(184, 166, 14, 10), 4), R(C(56, 190, 6), 4), R(C(144, 190, 6), 4),
+    R(sun(166, 40, 12), 5), R('<path d="M90 182 H110 L118 204 H82 Z"/>', 5), R(cloud(178, 84, 0.45), 5), R(C(100, 156, 6), 5)
   ], deco: [R('<path d="M96 2 h8 v7 h7 v8 h-7 v11 h-8 v-11 h-7 v-8 h7 Z" fill="none"/>', 1, 1)] },
   { id: 'rainbow', name: '무지개', e: '🌈', parts: rainbowParts() }
 ];
 
 /* 칠할 칸 고르기 — 칸(st)이 오르면 다음 단계에서 새로 생기는 칸을 몇 개 미리 더한다.
    칸 수는 G.tune 처럼 다음 단계 쪽으로 1/3·2/3 (그림 순서대로, 바꿔 끼우는 칸 sw 은 빼고).
-   3단계는 더 생길 칸이 없어 그대로 */
+   5단계(맨 위)는 더 생길 칸이 없어 그대로 */
 function picRegs(pic, lv, st) {
   function at(l) { return pic.parts.filter(function (p) { return l >= p.lv && l <= p.max; }); }
   var regs = at(lv);
-  if (lv >= 3 || !(st > 1)) return regs;
-  var add = G.tune([at(1).length, at(2).length, at(3).length], lv, st) - regs.length;
+  if (lv >= CP_TOP || !(st > 1)) return regs;
+  var add = G.tune(G.range(CP_TOP).map(function (i) { return at(i + 1).length; }), lv, st) - regs.length;
   var more = pic.parts.filter(function (p) { return p.lv === lv + 1 && !p.sw; }).slice(0, Math.max(0, add));
   return pic.parts.filter(function (p) { return regs.indexOf(p) >= 0 || more.indexOf(p) >= 0; });
 }
@@ -635,12 +682,100 @@ function svgToJpeg(svg) {
   });
 }
 
+/* ---------- 6~10단계 규칙 칸 ----------
+   무늬 띠: 그림 아래 타일 띠. 앞 타일(본보기)이 보여 주는 차례대로 이어 칠한다.
+   색 번호: 큰 칸부터 번호를 달고(보이는 자리를 찾아서), 번호 색으로 칠한다. 나머지 칸은 예전처럼 마음대로. */
+var CP_STRIP = [0, 0, 0, 0, 0, 4, 6, 6, 6, 6];   /* 무늬 띠에서 칠할 타일 수(본보기 빼고) — 5단계 2·3칸에 1·3개 맛보기 */
+var CP_NUM = [0, 0, 0, 0, 0, 0, 0, 4, 6, 8];     /* 번호 칸 수 — 7단계 2·3칸에 1·3개 맛보기 */
+var CP_KEY = [2, 2, 2, 2, 2, 2, 2, 3, 4, 5];     /* 번호 색 수 */
+var RULE_COLS = ['red', 'yellow', 'blue', 'green', 'orange', 'purple', 'pink'];
+var TILE = { w: 30, h: 26, gap: 4, row: 6, y: 210 };
+var SVGNS = 'http://www.w3.org/2000/svg';
+function cpRule(ctx, lv, st) {
+  var nStrip = ctx.tune(CP_STRIP), nNum = ctx.tune(CP_NUM);
+  if (!nStrip && !nNum) return null;
+  var cols = D.COLORS.filter(function (c) { return RULE_COLS.indexOf(c.id) >= 0; });
+  /* 무늬 한 마디: 6단계 AB, 7단계부터 ABC (6단계 3칸은 ABC 맛보기) */
+  var unit = lv >= 7 || (lv === 6 && st >= 3) ? 3 : 2;
+  return {
+    strip: nStrip ? { unit: G.sample(cols, unit), n: nStrip } : null,
+    num: nNum ? { n: nNum, key: G.sample(cols, Math.max(1, Math.min(nNum, ctx.tune(CP_KEY)))) } : null
+  };
+}
+function svgEl(tag, at) { var e = document.createElementNS(SVGNS, tag); Object.keys(at).forEach(function (k) { e.setAttribute(k, at[k]); }); return e; }
+/* 무늬 띠 붙이기 — 그림은 0~200 안으로 자르고, 아래에 타일 줄(한 줄에 6개). 칠할 타일의 data-i 는 start 부터 */
+function addStrip(svg, start, strip) {
+  var U = strip.unit.length, total = U + strip.n, rows = Math.ceil(total / TILE.row), want = [];
+  svg.setAttribute('viewBox', '0 0 200 ' + (TILE.y + rows * (TILE.h + TILE.gap)));
+  var defs = svgEl('defs', {}), cp = svgEl('clipPath', { id: 'cpClip' });
+  cp.appendChild(svgEl('rect', { x: 0, y: 0, width: 200, height: 200 })); defs.appendChild(cp); svg.insertBefore(defs, svg.firstChild);
+  svg.querySelector('g').setAttribute('clip-path', 'url(#cpClip)');
+  var g = svgEl('g', { stroke: INK, 'stroke-width': 4, 'stroke-linejoin': 'round' });
+  for (var j = 0; j < total; j++) {
+    var r = Math.floor(j / TILE.row), c = j % TILE.row, inRow = Math.min(TILE.row, total - r * TILE.row);
+    var x0 = (200 - (inRow * TILE.w + (inRow - 1) * TILE.gap)) / 2, col = strip.unit[j % U];
+    var at = { x: x0 + c * (TILE.w + TILE.gap), y: TILE.y + r * (TILE.h + TILE.gap), width: TILE.w, height: TILE.h, rx: 7 };
+    if (j < U) { at.fill = col.hex; at['pointer-events'] = 'none'; }
+    else { at.fill = WHITE; at['data-i'] = start + j - U; want.push(col); }
+    g.appendChild(svgEl('rect', at));
+  }
+  svg.appendChild(g);
+  return want;
+}
+/* 번호 칸 고르기 — 묶음(g)이 아닌 칸 가운데, 위 칸에 가리지 않고 번호가 들어갈 자리가 있는 큰 칸부터.
+   좌표는 그림 좌표(viewBox). 회전된 칸(꽃잎)은 제 좌표로 바꿔 견준다 */
+function numberSpots(svg, regs, nPic, n) {
+  var M = svg.getScreenCTM(), R0 = svg.getCTM(); if (!M || !R0) return [];
+  var P = svg.createSVGPoint(), Mi = M.inverse();
+  var simple = regs.map(function (r) { return r.tagName.toLowerCase() !== 'g' && !!r.isPointInFill; });
+  var loc = regs.map(function (r, i) { if (!simple[i]) return null; var c = r.getCTM(); return c ? c.inverse().multiply(R0) : null; });
+  function box(r) {
+    var b = r.getBoundingClientRect();
+    P.x = b.left; P.y = b.top; var p1 = P.matrixTransform(Mi); P.x = b.right; P.y = b.bottom; var p2 = P.matrixTransform(Mi);
+    return { x: p1.x, y: p1.y, w: p2.x - p1.x, h: p2.y - p1.y };
+  }
+  var boxes = regs.map(box);
+  /* 칠하지 않는 선(눈·입·문고리)도 번호를 가리지 않게 */
+  var decos = G.$$('g[pointer-events="none"] > *', svg).map(box);
+  function inDeco(x, y) { return decos.some(function (b) { return x >= b.x - 3 && x <= b.x + b.w + 3 && y >= b.y - 3 && y <= b.y + b.h + 3; }); }
+  function pt(j, x, y) { P.x = x; P.y = y; return loc[j] ? P.matrixTransform(loc[j]) : P; }
+  function hit(j, x, y) { var q = pt(j, x, y); return regs[j].isPointInFill(q) || regs[j].isPointInStroke(q); }
+  function covered(k, x, y) {
+    for (var j = k + 1; j < regs.length; j++) {
+      var b = boxes[j]; if (x < b.x || x > b.x + b.w || y < b.y || y > b.y + b.h) continue;
+      if (!simple[j] || !loc[j]) return true;
+      try { if (hit(j, x, y)) return true; } catch (e) { return true; }
+    }
+    return false;
+  }
+  function ok(k, x, y) {
+    if (inDeco(x, y)) return false;
+    try { var q = pt(k, x, y); if (!regs[k].isPointInFill(q) || regs[k].isPointInStroke(q)) return false; } catch (e) { return false; }
+    return !covered(k, x, y);
+  }
+  var D8 = [[5, 0], [-5, 0], [0, 5], [0, -5], [4, 4], [-4, -4], [4, -4], [-4, 4]], out = [];
+  for (var k = 0; k < nPic; k++) {
+    if (!simple[k] || !loc[k]) continue;
+    var b = boxes[k]; if (b.w < 12 || b.h < 12) continue;
+    var best = null, cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+    for (var gx = 1; gx < 8; gx++) for (var gy = 1; gy < 8; gy++) {
+      var x = b.x + b.w * gx / 8, y = b.y + b.h * gy / 8;
+      if (x < 6 || x > 194 || y < 6 || y > 194 || !ok(k, x, y)) continue;
+      var cl = D8.filter(function (d) { return ok(k, x + d[0], y + d[1]); }).length;
+      var sc = cl * 1000 - Math.hypot(x - cx, y - cy);
+      if (cl >= 7 && (!best || sc > best.sc)) best = { k: k, x: x, y: y, sc: sc, area: b.w * b.h };
+    }
+    if (best) out.push(best);
+  }
+  return out.sort(function (a, b) { return b.area - a.area; }).slice(0, n);
+}
+
 G.act({
-  id: 'color', area: 'art', title: '색칠하기', icon: '🎨', order: 30, levels: 3, needs: [], mins: 4,
+  id: 'color', area: 'art', title: '색칠하기', icon: '🎨', order: 30, levels: 10, needs: [], mins: 4,
   ef: ['attend', 'plan'],
   desc: '예쁜 색으로 콕콕 칠해요',
-  goal: '눈-손 협응으로 원하는 칸 골라 누르기, 색 이름(듣고 알기·말하기), 끝까지 해내는 힘',
-  how: '"무슨 색으로 칠할까?" 하고 아이가 고르게 해 주세요. 하늘을 분홍으로 칠해도 괜찮아요 — 고른 색을 그대로 인정해 주세요. 칠할 때마다 색 이름을 같이 말해 주고, 다 하면 ✔ 를 눌러 그림첩에 넣어요.',
+  goal: '눈-손 협응으로 원하는 칸 골라 누르기, 색 이름(듣고 알기·말하기), 끝까지 해내는 힘. 4·5단계는 작은 칸(꽃·연기·무늬)이 늘어 손끝으로 더 정확히 고르고 오래 집중해요. 6~10단계는 그림 일부에 규칙이 생겨요 — 무늬 띠 이어 칠하기(AB → ABC 패턴), 색 번호 칠하기(번호표를 보고 3색 → 5색, 작은 칸까지)',
+  how: '"무슨 색으로 칠할까?" 하고 아이가 고르게 해 주세요. 하늘을 분홍으로 칠해도 괜찮아요 — 고른 색을 그대로 인정해 주세요. 칠할 때마다 색 이름을 같이 말해 주고, 다 하면 ✔ 를 눌러 그림첩에 넣어요. 6단계부터 무늬 띠·번호 칸은 규칙대로 칠해야 색이 들어가요 — "빨강 다음은?", "3번은 무슨 색이지?" 하고 스스로 확인하게 기다려 주세요. 나머지 칸은 여전히 마음대로예요.',
   basis: '소근육·시지각(전경-배경 구분), 색 개념 — 스스로 고르는 경험',
   offline: '색칠 공부 책을 굵은 크레파스로 큰 칸부터 칠하기.',
   run: function (ctx) {
@@ -649,23 +784,45 @@ G.act({
     ctx.choices(G.sample(PICS, 4), {
       cols: 2, size: 'md',
       render: function (p) { return '<span class="cp-thumb">' + picSVG(p, lv, null, st).html + '</span><span class="cl">' + p.e + ' ' + G.esc(p.name) + '</span>'; },
-      onPick: function (p) { G.voice.stop(); ctx.timeout(function () { paintPic(ctx, p, lv, st); }, 250); return true; }
+      onPick: function (p) { G.voice.stop(); ctx.timeout(function () { paintPic(ctx, p, lv, st, cpRule(ctx, lv, st)); }, 250); return true; }
     });
   }
 });
 
-function paintPic(ctx, pic, lv, st) {
+function paintPic(ctx, pic, lv, st, rule) {
   ctx.body.innerHTML = '';
-  var P = picSVG(pic, lv, null, st), fills = G.range(P.n).map(function () { return WHITE; });
+  var P = picSVG(pic, lv, null, st);
   var wrap = G.el('<div class="cp"><div class="cp-pic">' + P.html + '</div><div class="cp-side"><div class="cp-pal"></div>' +
     '<div class="cp-row"><button type="button" class="cp-undo" aria-label="되돌리기" disabled>↩️</button><button type="button" class="btn big green cp-done">✔ 다 했어요</button></div></div></div>');
   ctx.body.appendChild(wrap);
   var picBox = G.$('.cp-pic', wrap), svg = G.$('svg', wrap), pal = G.$('.cp-pal', wrap), undoBtn = G.$('.cp-undo', wrap), doneBtn = G.$('.cp-done', wrap);
+  /* 규칙 칸(6단계~): want[i] = 그 칸에 맞는 색. 무늬 띠 타일은 그림 칸 뒤에 붙는다 */
+  var stripWant = rule && rule.strip ? addStrip(svg, P.n, rule.strip) : [];
   var regs = G.$$('[data-i]', svg), cur = D.COLORS[0], hist = [], said = {}, saving = false;
+  var fills = regs.map(function () { return WHITE; }), want = regs.map(function () { return null; }), num = {}, okd = {}, tried = {}, nudged = false, swEl = {};
+  stripWant.forEach(function (c, j) { want[P.n + j] = c; });
+  if (rule && rule.num) {
+    var key = rule.num.key, lab = svgEl('g', { 'pointer-events': 'none', 'font-family': 'Jua, sans-serif', 'font-size': 14, 'text-anchor': 'middle', fill: '#24344a',
+      stroke: '#ffffff', 'stroke-width': 3.5, 'paint-order': 'stroke', 'stroke-linejoin': 'round' });
+    var spots = numberSpots(svg, regs, P.n, rule.num.n);
+    key = rule.num.key = key.slice(0, Math.max(1, Math.min(key.length, spots.length)));   /* 번호 칸이 모자라면 쓰는 색만 */
+    spots.forEach(function (sp, j) {
+      var c = key[j % key.length], t = svgEl('text', { x: Math.round(sp.x * 10) / 10, y: Math.round(sp.y * 10) / 10 + 5 });
+      t.textContent = String(j % key.length + 1); lab.appendChild(t);
+      want[sp.k] = c; num[sp.k] = j % key.length + 1;
+    });
+    svg.appendChild(lab);
+  }
+  function ruleLeft() { return G.range(regs.length).filter(function (i) { return want[i] && !okd[i]; }); }
+  function seqText() { var u = rule.strip.unit.map(function (c) { return c.name; }); return u.concat(u).join(', '); }
 
   D.COLORS.forEach(function (k) {
     var b = G.el('<button type="button" class="cp-sw' + (k.id === 'white' ? ' wh' : '') + (k === cur ? ' on' : '') + '"></button>');
+    swEl[k.id] = b;
     b.style.setProperty('--sw', k.hex); b.setAttribute('aria-label', k.name);
+    /* 번호 칸이 있으면 그 색 단추에 번호표 */
+    var kn = Object.keys(num).length ? rule.num.key.indexOf(k) : -1;
+    if (kn >= 0) { b.appendChild(G.el('<b class="cp-n">' + (kn + 1) + '</b>')); b.setAttribute('aria-label', (kn + 1) + '번 ' + k.name); }
     b.onclick = function () {
       cur = k; G.sfx.play('tap'); G.buzz(8);
       G.$$('.cp-sw', pal).forEach(function (x) { x.classList.toggle('on', x === b); });
@@ -690,22 +847,49 @@ function paintPic(ctx, pic, lv, st) {
       G.ui.hint(doneBtn);
     }
   }
+  /* 규칙 칸에 다른 색 — 칠하지 않고, 맞는 색 단추가 반짝 (무오류) */
+  function ruleMiss(i) {
+    var w = want[i]; G.ui.hint(swEl[w.id]);
+    ctx.say(num[i] ? num[i] + '번 칸은 ' + G.josa(w.name, '이에요', '예요') + '. 반짝이는 색을 골라 볼까?'
+      : '무늬 차례를 볼까? ' + seqText() + '… 이 칸은 ' + w.name + ' 차례야.', { repeat: false });
+  }
+  function flash(i) { var r = regs[i]; r.classList.add('want'); ctx.timeout(function () { r.classList.remove('want'); }, 1800); }
   svg.addEventListener('pointerdown', function (e) {
     if (saving || !ctx.alive) return;
     var r = e.target && e.target.closest ? e.target.closest('[data-i]') : null; if (!r) return;
     e.preventDefault();
-    var i = +r.getAttribute('data-i'); if (fills[i] === cur.hex) return;
+    var i = +r.getAttribute('data-i');
+    if (want[i]) {
+      if (okd[i]) return;                                   /* 이미 맞게 칠한 규칙 칸 */
+      if (cur.id === 'white') { G.sfx.play('tap'); ruleMiss(i); return; }   /* 지우개 색은 세지 않는다 */
+      if (cur.hex !== want[i].hex) {
+        if (!tried[i]) { tried[i] = 1; ctx.trial(false); }
+        G.sfx.play('tap'); ruleMiss(i); return;
+      }
+      if (!tried[i]) { tried[i] = 1; ctx.trial(true); }
+      okd[i] = 1;
+    } else if (fills[i] === cur.hex) return;
     hist.push({ i: i, f: fills[i] });
     setFill(i, cur.hex); G.sfx.play('pop'); G.buzz(8);
     after();
   });
   undoBtn.onclick = function () {
     var h = hist.pop(); if (!h) return;
+    if (want[h.i]) okd[h.i] = 0;
     setFill(h.i, h.f); G.sfx.play('whoosh'); after();
   };
   doneBtn.onclick = function () {
     if (saving) return;
     if (!colored()) { ctx.say('색을 하나 골라서 그림 속 칸을 콕 눌러 볼까?', { repeat: false }); G.ui.hint(regs[0]); return; }
+    /* 규칙 칸이 남았으면 한 번만 알려 준다. 그래도 끝내면 안 해 본 규칙 칸은 '아직'으로 센다(칸 맞추기용, 아이에겐 말하지 않음) */
+    var left = ruleLeft();
+    if (left.length && !nudged) {
+      nudged = true;
+      var hasS = left.some(function (i) { return !num[i]; }), hasN = left.some(function (i) { return num[i]; });
+      ctx.say((hasS && hasN ? '무늬 띠와 번호 칸이' : hasN ? '번호 칸이' : '무늬 띠가') + ' 조금 남았어. 마저 칠해 볼까? 그대로 끝내도 괜찮아.', { repeat: false });
+      flash(left[0]); return;
+    }
+    left.forEach(function (i) { if (!tried[i]) { tried[i] = 1; ctx.trial(false); } });
     saving = true; G.sfx.play('sparkle');
     var put = svgToJpeg(svg).then(function (img) { return G.db.put('art', { id: G.uid(), t: Date.now(), img: img, kind: 'color' }); })
       .catch(function () { G.toast('그림을 저장하지 못했어요. 기기 저장 공간을 확인해 주세요.'); });
@@ -716,7 +900,12 @@ function paintPic(ctx, pic, lv, st) {
     });
   };
   prog(ctx, 0, regs.length, 6);
-  ctx.say(G.josa(pic.name, '을', '를') + ' 칠해 보자! 아래에서 색을 고르고 칸을 콕 눌러 봐.');
+  var intro = ctx.say(G.josa(pic.name, '을', '를') + ' 칠해 보자! 아래에서 색을 고르고 칸을 콕 눌러 봐.');
+  /* 규칙 안내는 한 줄씩 (말풍선이 길어져 그림을 밀어내지 않게) */
+  var tips = [];
+  if (stripWant.length) tips.push('아래 무늬 띠는 ' + rule.strip.unit.map(function (c) { return c.name; }).join(', ') + ' 차례로 이어서 칠해요.');
+  if (Object.keys(num).length) tips.push('번호 칸은 같은 번호가 붙은 색으로 칠해요.');
+  tips.forEach(function (t) { intro = intro.then(function () { return ctx.alive && !saving ? ctx.say(t) : null; }); });
 }
 
 /* =================================================================

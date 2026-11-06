@@ -16,6 +16,8 @@
    ▸ 맞고 틀림은 ctx.trial 로 부모 화면에만 남는다.
    ▸ 화면 속 연습은 비슷한 일에만 옮겨 가기 쉽다(Diamond & Ling, 2016).
      그래서 how 마다 '화면 밖에서 하는 같은 놀이'를 하나씩 적어 두었다.
+   ▸ 단계는 10단계(1년 사다리). 6~10단계는 단계마다 어려움을 '하나씩'만 더한다 —
+     6·7단계는 초등 1~2학년, 8·9단계는 3학년 쪽, 10단계는 3학년이 애써서 하는 정도까지.
    =========================================================== */
 (function () {
 'use strict';
@@ -35,6 +37,13 @@ function floatText(box, text, x, y) {
 function centerOf(el) { return G.fx.center(el); }
 /* 진행 점은 10개까지만 (머리줄에 제목이 가려지지 않게) */
 function prog(ctx, i, n) { if (n > 10) { i = Math.round(i * 10 / n); n = 10; } ctx.progress(i, n); }
+/* 가운데 큰 알림 — 규칙이 바뀔 때 (e 그림, t 큰 글, s 작은 글) */
+function bigNote(ctx, box, e, t, s, ms) {
+  var a = G.el('<div class="b-announce"><div class="ba-e">' + e + '</div><div class="ba-t"></div><div class="ba-s"></div></div>');
+  a.querySelector('.ba-t').textContent = t; a.querySelector('.ba-s').textContent = s || '';
+  box.appendChild(a); G.sfx.play('up');
+  return ctx.say(t + ' ' + (s || '')).then(function () { return ctx.wait(ms || 400); }).then(function () { a.remove(); });
+}
 
 G.css('brain', `
 .st-body[class*="act-"] .bw{flex:1;display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;min-height:0;position:relative}
@@ -50,6 +59,7 @@ G.css('brain', `
 .b-announce .ba-e{font-size:clamp(80px,24vw,150px);line-height:1.1;animation:pop .6s}
 .b-announce .ba-t{font-family:Jua,sans-serif;font-size:clamp(24px,7vw,40px);line-height:1.3}
 .b-announce .ba-s{color:var(--soft);font-size:clamp(15px,4vw,19px)}
+.bw .b-rule.flip{animation:pop .4s}
 
 /* ── simon ── */
 .act-simon .sm-notes{display:flex;gap:8px;min-height:22px;justify-content:center;flex-wrap:wrap}
@@ -80,6 +90,12 @@ G.css('brain', `
 .act-daynight .dn-btn.moon{background:#2c3a78;color:#fff}
 .act-daynight .dn-btn:active{transform:translateY(4px);box-shadow:0 3px 0 rgba(0,0,0,.15)}
 .act-daynight .dn-btn.ok{outline:6px solid var(--good)}
+/* 6단계~: 별 카드(언제나 그대로) · 보라 테두리 = 반대로 · 9단계~ 글자 카드 */
+.act-daynight .dn-card.star{background:radial-gradient(circle at 50% 40%,#fdf6ff,#b39ddb)}
+.act-daynight .dn-card.word{background:var(--surface);font-family:Jua,sans-serif;color:var(--ink);line-height:1}
+.act-daynight .dn-card.opp{box-shadow:0 0 0 7px #9c6ade,var(--shadow)}
+.act-daynight .dn-card.opp::after{content:'🔄';position:absolute;top:10px;right:12px;font-size:30px;line-height:1}
+.act-daynight .dn-btn.star{background:#eadcff;color:#3f2a74}
 
 /* ── switch (DCCS) ── */
 .act-switch .sw-boxes{display:flex;gap:clamp(12px,4vw,30px);width:min(100%,600px);margin-top:auto}
@@ -95,6 +111,13 @@ G.css('brain', `
   justify-content:center;border:5px solid transparent;margin:auto 0;cursor:grab}
 .act-switch .sw-card.gold{border-color:#f5b700;box-shadow:0 0 0 4px #ffe58a,0 0 26px #ffd54f}
 .act-switch .sw-card svg{width:78%;height:78%}
+/* 6단계~: 개수(하나·둘) 규칙 — 보라 점선 테두리 = 개수. 10단계는 테두리가 잠깐만 보인다 */
+.act-switch .sw-box .sw-k{font-family:Jua,sans-serif;font-size:clamp(14px,3.8vw,18px);line-height:1.3;padding:0 10px;border-radius:999px;background:color-mix(in srgb,var(--area) 16%,transparent)}
+.act-switch .sw-card.purple{position:relative;border-color:#8e5bd8;border-style:dashed;box-shadow:0 0 0 4px #e3d4ff,0 0 24px #b388ff}
+.act-switch .sw-card.purple::after{content:'🔢';position:absolute;top:6px;left:8px;font-size:24px;line-height:1;transition:opacity .5s}
+.act-switch .sw-card.fadecue{transition:border-color .5s,box-shadow .5s}
+.act-switch .sw-card.nocue{border-color:transparent;box-shadow:var(--shadow)}
+.act-switch .sw-card.nocue::after{opacity:0}
 .act-switch .sw-card.fly{transition:transform .45s ease-in,opacity .45s;opacity:0}
 .act-switch .sw-card.show{animation:pop .35s}
 
@@ -116,6 +139,17 @@ G.css('brain', `
 .act-gonogo .gn-demo{display:flex;gap:16px;justify-content:center;align-items:center;margin:auto 0}
 .act-gonogo .gn-demo div{background:var(--surface);border-radius:24px;padding:12px 18px;box-shadow:var(--shadow);text-align:center;font-family:Jua,sans-serif;font-size:20px}
 .act-gonogo .gn-demo div span{display:block;font-size:clamp(60px,18vw,96px);line-height:1.2}
+.act-gonogo .gn-demo.three div span{font-size:clamp(40px,12vw,80px)}
+/* 7단계~ 자는 물고기(💤) · 8단계~ ✋ 멈춤 신호 */
+.act-gonogo .gn-zz{position:absolute;right:-4px;top:-2px;font-size:.45em;font-style:normal;line-height:1}
+.act-gonogo .gn-mob.zz{filter:saturate(.55) drop-shadow(0 6px 6px rgba(0,40,90,.3))}
+.act-gonogo .gn-mob.stop{border-radius:50%;background:rgba(255,82,82,.22);box-shadow:0 0 0 5px #ff5252,0 0 26px #ff5252}
+.act-gonogo .gn-mob.stop::after,.act-gonogo .gn-ds::after{content:'✋';position:absolute;right:-6px;top:-10px;font-size:.5em;line-height:1}
+.act-gonogo .gn-demo.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;align-content:center}
+.act-gonogo .gn-demo.grid div{padding:8px 6px;font-size:17px;line-height:1.3}
+.act-gonogo .gn-demo.grid div span{font-size:clamp(32px,9.5vw,54px)}
+.act-gonogo .gn-dz,.act-gonogo .gn-ds{position:relative;display:inline-block!important}
+.act-gonogo .gn-ds{border-radius:50%;box-shadow:0 0 0 4px #ff5252}
 
 /* ── wait ── */
 .act-wait .wt-plate{display:flex;align-items:center;gap:6px;min-height:48px;background:var(--surface);border-radius:18px;padding:6px 14px;box-shadow:var(--shadow);font-size:26px}
@@ -142,6 +176,16 @@ G.css('brain', `
 @keyframes wtBreath{0%,100%{transform:scale(.8)}45%{transform:scale(1.3)}}
 @keyframes wtBob{from{transform:translateY(0) rotate(-6deg)}to{transform:translateY(-6px) rotate(6deg)}}
 .act-wait .wt-fly{position:fixed;z-index:60;font-size:44px;pointer-events:none;transition:transform .8s cubic-bezier(.5,-0.3,.6,1),opacity .8s}
+/* 6단계~ 기다리는 방법 스스로 고르기 · 7단계~ 쿠키의 유혹 · 9단계~ "지금 먹을래?" 묻기 */
+.act-wait .wt-pick:not([hidden]),.act-wait .wt-offer:not([hidden]){display:flex;gap:10px;width:min(100%,520px);margin-bottom:6px}
+.act-wait .wt-pick button,.act-wait .wt-offer button{flex:1;min-height:72px;border-radius:20px;background:var(--surface);box-shadow:var(--shadow);color:var(--ink);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:Jua,sans-serif;font-size:clamp(15px,4.2vw,20px);line-height:1.2;
+  border:3px solid color-mix(in srgb,var(--area) 40%,transparent);padding:6px 4px}
+.act-wait .wt-pick button span,.act-wait .wt-offer button span{font-size:clamp(28px,8vw,40px);line-height:1.1}
+.act-wait .wt-offer .wo-wait{border-color:var(--good)}
+.act-wait .wt-cookie.tempt{animation:wtTempt 1.2s ease-in-out}
+.act-wait .wt-cookie.tempt::after{content:'✨';position:absolute;left:6%;top:4%;font-size:.36em}
+@keyframes wtTempt{0%,100%{transform:none}20%{transform:scale(1.12) rotate(-7deg)}45%{transform:scale(1.08) rotate(7deg)}70%{transform:scale(1.1) rotate(-4deg)}}
 
 /* ── maze ── */
 .act-maze .mz-board{display:grid;gap:0;width:min(100%,560px,62vh);aspect-ratio:1;margin:auto 0;background:#e9f6df;border-radius:22px;padding:8px;
@@ -158,12 +202,18 @@ G.css('brain', `
 @keyframes mzHop{50%{transform:translateY(-25%) scale(1.1)}}
 .act-maze .mz-look{font-family:Jua,sans-serif;font-size:clamp(18px,5vw,24px);color:var(--soft);min-height:30px}
 .act-maze .mz-board.locked{opacity:.85}
+/* 7단계~ 🔑 열쇠·🔒 문 · 8단계~ 먼저 그린 길(plan) */
+.act-maze .mz-cell.plan{background:#d4ecff}
+.act-maze .mz-cell.plan::after{content:'';position:absolute;width:26%;height:26%;border-radius:50%;background:#42a5f5;opacity:.85}
+.act-maze .mz-key{display:inline-block;animation:mzKey 1.6s ease-in-out infinite}
+.act-maze .mz-lock{position:absolute;right:2%;bottom:0;font-size:.62em;line-height:1}
+@keyframes mzKey{50%{transform:rotate(-14deg) scale(1.12)}}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .act-maze .mz-board{background:#28402a;border-color:#5f8f35}
   :root:not([data-theme="light"]) .act-maze .mz-cell.bush{background:#35552f} :root:not([data-theme="light"]) .act-maze .mz-cell.trail{background:#5b5330}
-  :root:not([data-theme="light"]) .act-maze .mz-cell{border-color:#a5d66a}}
+  :root:not([data-theme="light"]) .act-maze .mz-cell{border-color:#a5d66a} :root:not([data-theme="light"]) .act-maze .mz-cell.plan{background:#2b4a68}}
 :root[data-theme="dark"] .act-maze .mz-board{background:#28402a;border-color:#5f8f35}
 :root[data-theme="dark"] .act-maze .mz-cell.bush{background:#35552f} :root[data-theme="dark"] .act-maze .mz-cell.trail{background:#5b5330}
-:root[data-theme="dark"] .act-maze .mz-cell{border-color:#a5d66a}
+:root[data-theme="dark"] .act-maze .mz-cell{border-color:#a5d66a} :root[data-theme="dark"] .act-maze .mz-cell.plan{background:#2b4a68}
 
 /* ── findall ── */
 .act-findall .fa-head{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:20px;padding:6px 16px;box-shadow:var(--shadow)}
@@ -176,6 +226,11 @@ G.css('brain', `
 .act-findall .fa-it.found::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:5px solid var(--good);animation:pop .4s}
 .act-findall .fa-it.hint{animation:glow 1s ease-in-out 3;border-radius:50%}
 .act-findall .fa-it.wiggle{animation:wig .45s}
+/* 6단계~ 두 친구 · 8단계~ 큰 친구만 · 9단계~ 몇 마리인지 비밀(✅ 스스로 확인) */
+.act-findall .fa-head.wrap{flex-wrap:wrap;justify-content:center;max-width:100%;row-gap:4px}
+.act-findall .fa-head .fs{font-family:Jua,sans-serif;font-size:clamp(15px,4vw,19px);color:var(--soft);white-space:nowrap}
+.act-findall .fa-done{font-family:Jua,sans-serif;font-size:clamp(16px,4.4vw,20px);min-height:48px;padding:6px 14px;border-radius:16px;background:var(--area);color:#fff;
+  box-shadow:0 4px 0 rgba(0,0,0,.15);white-space:nowrap}
 
 /* ── opposite ── */
 .act-opposite .op-wrap{flex:1;display:flex;align-items:center;justify-content:center;gap:clamp(10px,4vw,40px);width:100%;flex-wrap:wrap}
@@ -199,26 +254,42 @@ var SM_PADS = [
   { e: '🦊', c: '#ff7043', f: 659 }
 ];
 G.act({
-  id: 'simon', area: 'brain', title: '자비스 따라 하기', icon: '🎶', order: 1, levels: 3, mins: 3, needs: [],
+  id: 'simon', area: 'brain', title: '자비스 따라 하기', icon: '🎶', order: 1, levels: 10, mins: 3, needs: [],
   ef: ['wm', 'attend'],
   desc: '동물 친구 노래 순서 기억하기',
   goal: '작업기억 — 본 것·들은 순서를 머릿속에 담아 두었다가 그대로 꺼내 쓰는 힘',
-  how: '처음엔 부모가 옆에서 "개구리, 병아리!" 하고 이름을 같이 말해 주면 기억하기 쉬워요. 화면 밖에서는 손뼉·발 구르기 순서 따라 하기("짝-쿵-짝"), 심부름 두 가지 기억하기("컵 갖다 놓고 신발 가져와")로 이어 가세요. 길이가 늘어도 한 번에 하나씩만 늘려요.',
-  basis: 'Simon 게임·Corsi 블록 따라 하기 폭 과제(작업기억 폭 측정)',
+  how: '처음엔 부모가 옆에서 "개구리, 병아리!" 하고 이름을 같이 말해 주면 기억하기 쉬워요. 화면 밖에서는 손뼉·발 구르기 순서 따라 하기("짝-쿵-짝"), 심부름 두 가지 기억하기("컵 갖다 놓고 신발 가져와")로 이어 가세요. 길이가 늘어도 한 번에 하나씩만 늘려요. 4·5단계(도전·마스터)는 처음부터 다섯·여섯 마리 순서예요. 6~10단계는 일곱 마리 순서 → 거꾸로 따라 하기(마지막에 노래한 친구부터) → 그대로·거꾸로가 판마다 섞이는 순서로 이어져요 — 화면 밖에서는 "사과, 컵, 신발"을 거꾸로 말해 보기.',
+  basis: 'Simon 게임·Corsi 블록 따라 하기 폭 과제(작업기억 폭 측정) — 6단계부터 거꾸로 따라 하기(역순 폭)',
   run: function (ctx) {
-    var B = ctx.body, lv = ctx.level;
+    var B = ctx.body, lv = ctx.level, st = G.clamp(ctx.step || 1, 1, 3);
     B.innerHTML = '<div class="bw"><div class="sm-notes"></div><div class="sm-pads wait"></div><div class="sm-turn"></div></div>';
-    var padsBox = G.$('.sm-pads', B), notes = G.$('.sm-notes', B), turn = G.$('.sm-turn', B);
+    var wrap = G.$('.bw', B), padsBox = G.$('.sm-pads', B), notes = G.$('.sm-notes', B), turn = G.$('.sm-turn', B);
     var pads = SM_PADS.map(function (p, i) {
       var b = G.el('<button class="sm-pad" style="--c:' + p.c + '" aria-label="' + p.e + '">' + p.e + '</button>');
       b.addEventListener('pointerdown', function (e) { e.preventDefault(); onTap(i); });
       padsBox.appendChild(b); return b;
     });
-    var ROUNDS = 6, round = 0, span = lv + 1, streak = 0, best = 0, seq = [], pos = 0, accepting = false, misses = 0, idleH = null;
+    /* 처음 길이: 1단계 2 · 2단계 3 · 3단계 4 · 4단계(도전) 5 · 5단계(마스터) 6 — 아무리 늘어도 7까지.
+       6~10단계: 그대로 7(8까지). 거꾸로(마지막 친구부터)는 7·8단계 4(5까지), 9·10단계 5(6까지) */
+    var ROUNDS = lv >= 10 ? 6 + st - 1 : 6, round = 0, span = Math.min(lv + 1, 7), streak = 0, best = 0, seq = [], pos = 0, accepting = false, misses = 0, idleH = null;
+    var CAP = lv >= 6 ? 8 : 7, bspan = lv >= 9 ? 5 : 4, BCAP = lv >= 9 ? 6 : 5, bstreak = 0, bbest = 0, bTold = false;
     var LIT = pace(560), GAP = pace(240);
-    /* 칸이 오르면 마지막 한 판(2칸)·두 판(3칸)은 하나 더 길게 — 다음 단계 길이를 살짝 맛보기 */
-    var LONG_FROM = ROUNDS - ((ctx.step || 1) - 1);
-    function lenFor(rd) { return Math.min(7, span + (rd >= LONG_FROM ? 1 : 0)); }
+    /* 칸이 오르면 마지막 한 판(2칸)·두 판(3칸)은 하나 더 길게 — 다음 단계 길이를 살짝 맛보기 (1~5단계, 8단계) */
+    var LONG_FROM = lv <= 5 || lv === 8 ? ROUNDS - (st - 1) : ROUNDS;
+    /* 판마다 방향 f 그대로 · b 거꾸로. 6단계 2·3칸은 마지막 한두 판이 거꾸로(7단계 맛보기),
+       7단계는 뒤 세 판이 거꾸로(칸마다 한 판씩 더), 8·9단계는 모두 거꾸로(9단계 2·3칸은 그대로 판이 한두 번 끼어든다),
+       10단계는 그대로·거꾸로가 섞여서 판마다 자비스가 알려 준다(같은 방향 세 판 연속은 없게) */
+    var dirs = [];
+    if (lv >= 10) { do { dirs = G.shuffle(G.range(ROUNDS).map(function (k) { return k % 2 ? 'b' : 'f'; })); } while (/fff|bbb/.test(dirs.join(''))); }
+    else if (lv === 9) dirs = G.range(ROUNDS).map(function (k) { return (st === 2 && k === 4) || (st === 3 && (k === 3 || k === 5)) ? 'f' : 'b'; });
+    else { var NB = ctx.tune([0, 0, 0, 0, 0, 0, 3, 6, 6, 6]); dirs = G.range(ROUNDS).map(function (k) { return k >= ROUNDS - NB ? 'b' : 'f'; }); }
+    function back() { return dirs[round] === 'b'; }
+    /* pos 번째로 눌러야 할 친구 (거꾸로면 끝에서부터) */
+    function want(p) { return back() ? seq[seq.length - 1 - p] : seq[p]; }
+    function lenFor(rd) {
+      if (dirs[rd] === 'b') return Math.min(BCAP, bspan + (rd >= LONG_FROM ? 1 : 0));
+      return Math.min(CAP, span + (rd >= LONG_FROM ? 1 : 0));
+    }
 
     function light(i, ms) {
       var b = pads[i]; b.classList.add('lit');
@@ -226,7 +297,8 @@ G.act({
       ctx.timeout(function () { b.classList.remove('lit'); }, ms || LIT);
     }
     function showNotes(done) {
-      notes.innerHTML = seq.map(function (_, k) { return '<i class="' + (k < done ? 'on' : '') + '"></i>'; }).join('');
+      var bk = back();   /* 거꾸로면 오른쪽 점부터 켜진다 */
+      notes.innerHTML = seq.map(function (_, k) { return '<i class="' + ((bk ? k >= seq.length - done : k < done) ? 'on' : '') + '"></i>'; }).join('');
     }
     function makeSeq(n) {
       var s = [];
@@ -236,6 +308,11 @@ G.act({
       }
       return s;
     }
+    /* 네 차례 글 — 거꾸로 판은 늘 일러 준다. 10단계는 알림 뒤엔 머릿속에 기억(헷갈린 뒤에만 다시 일러 줌) */
+    function turnText() {
+      if (lv >= 10 ? misses > 0 : back()) return back() ? '🔁 거꾸로! 마지막 친구부터' : '➡️ 그대로! 처음 친구부터';
+      return '🙌 이제 네 차례!';
+    }
     function play() {
       accepting = false; padsBox.classList.add('wait'); clearTimeout(idleH);
       turn.textContent = '👀 잘 보고 들어 봐!';
@@ -244,7 +321,7 @@ G.act({
       seq.forEach(function (i) { ctx.timeout(function () { light(i); }, t); t += LIT + GAP; });
       ctx.timeout(function () {
         accepting = true; pos = 0; padsBox.classList.remove('wait');
-        turn.textContent = '🙌 이제 네 차례!';
+        turn.textContent = turnText();
         G.sfx.play('sparkle');
         idle();
       }, t + 150);
@@ -253,15 +330,15 @@ G.act({
       clearTimeout(idleH);
       idleH = ctx.timeout(function () {
         if (!accepting) return;
-        ctx.bubble(pos === 0 ? '누가 먼저 노래했지?' : '그다음은 누구였지?');
-        G.ui.hint(pads[seq[pos]]);
+        ctx.bubble(pos === 0 ? (back() ? '마지막에 누가 노래했지?' : '누가 먼저 노래했지?') : (back() ? '그 앞은 누구였지?' : '그다음은 누구였지?'));
+        G.ui.hint(pads[want(pos)]);
       }, 9000);
     }
     var hintH = null;
     function onTap(i) {
       if (!accepting) return;
       light(i, 300); G.buzz(10);
-      if (i === seq[pos]) {
+      if (i === want(pos)) {
         pos++; showNotes(pos); idle();
         if (pos >= seq.length) { accepting = false; padsBox.classList.add('wait'); clearTimeout(idleH); success(); }
         return;
@@ -269,9 +346,12 @@ G.act({
       /* 틀림 — 끝이 아니라 '같이 다시 듣기' */
       accepting = false; padsBox.classList.add('wait'); clearTimeout(idleH);
       misses++;
-      if (misses === 1) { ctx.trial(false); streak = 0; }
+      if (misses === 1) { ctx.trial(false); if (back()) bstreak = 0; else streak = 0; }
       G.ui.wiggle(pads[i]);
-      var line = misses === 1 ? G.pick(['앗, 같이 다시 들어 보자!', '괜찮아, 한 번 더 들려줄게!', '음~ 다시 잘 들어 봐!']) : '이번엔 자비스가 빛으로 알려 줄게!';
+      var line = misses >= 2 ? '이번엔 자비스가 빛으로 알려 줄게!' :
+        lv >= 10 ? (back() ? '괜찮아, 다시 들어 보자. 이번엔 거꾸로!' : '괜찮아, 다시 들어 보자. 이번엔 그대로!') :
+        back() ? G.pick(['괜찮아, 다시 들어 보자. 마지막 친구부터 거꾸로!', '음~ 다시 잘 들어 봐! 끝에서부터 거꾸로 눌러요.']) :
+        G.pick(['앗, 같이 다시 들어 보자!', '괜찮아, 한 번 더 들려줄게!', '음~ 다시 잘 들어 봐!']);
       ctx.oops(line).then(function () {
         play();
         if (misses >= 2) {
@@ -281,7 +361,7 @@ G.act({
           hintH = ctx.interval(function () {
             if (round !== myRound || round >= ROUNDS) { clearInterval(hintH); hintH = null; return; }
             if (!accepting || pos >= seq.length) return;
-            G.ui.hint(pads[seq[pos]]);
+            G.ui.hint(pads[want(pos)]);
           }, 1600);
         }
       });
@@ -289,31 +369,48 @@ G.act({
     function success() {
       clearInterval(hintH); hintH = null;   /* 반짝 도움은 그 판에서 끝 — 다음 판은 스스로 */
       if (misses === 0) {
-        ctx.trial(true); best = Math.max(best, seq.length); streak++;
-        if (streak >= 2) { span = Math.min(7, span + 1); streak = 0; }
-      } else {
-        span = Math.max(1, span - 1);
-      }
+        ctx.trial(true);
+        if (back()) { bbest = Math.max(bbest, seq.length); bstreak++; if (bstreak >= 2) { bspan = Math.min(BCAP, bspan + 1); bstreak = 0; } }
+        else { best = Math.max(best, seq.length); streak++; if (streak >= 2) { span = Math.min(CAP, span + 1); streak = 0; } }
+      } else if (back()) bspan = Math.max(2, bspan - 1);
+      else span = Math.max(1, span - 1);
       ctx.extra.span = best;
+      if (bbest) ctx.extra.bspan = bbest;
       var c = centerOf(padsBox); G.fx.burst(c[0], c[1], ['🎵', '🎶', '⭐']);
       var praise = misses ? '끝까지 해냈다! 잘 기억했어!' :
+        back() ? G.pick(['거꾸로도 척척! 최고야!', '마지막부터 거꾸로, 딱 맞았어!', '머릿속에서 순서를 뒤집었구나! 멋져!']) :
         G.pick(['우와, 순서를 다 기억했어!', '똑같이 불렀다! 최고야!', '머릿속에 쏙 담았구나!', '딩동댕! 노래가 똑같아!']);
       ctx.cheer(praise).then(next);
+    }
+    /* 방향이 바뀌는 판 앞에서 크게 알려 준다 (10단계는 판마다) */
+    function cue() {
+      var d = dirs[round], prev = round ? dirs[round - 1] : 'f';
+      if (lv < 10 && d === prev) return null;
+      turn.textContent = '';
+      var s = d === 'f' ? '처음 노래한 친구부터 순서대로 눌러요.' : bTold ? '마지막에 노래한 친구부터 눌러요.' :
+        '마지막에 노래한 친구부터 거꾸로 눌러요. 개구리, 병아리 순서였으면 병아리, 개구리!';
+      if (d === 'b') bTold = true;
+      return bigNote(ctx, wrap, d === 'b' ? '🔁' : '➡️', d === 'b' ? '이번엔 거꾸로!' : '이번엔 그대로!', s, 300);
     }
     function next() {
       round++; ctx.progress(round, ROUNDS);
       if (round >= ROUNDS) {
-        ctx.finish({ msg: '동물 친구 노래를 ' + (best || seq.length) + '개까지 기억했어! 기억 대장이다!' });
+        ctx.finish({ msg: bbest && best ? '그대로 ' + best + '개, 거꾸로 ' + bbest + '개까지 기억했어! 기억 대장이다!' :
+          bbest ? '거꾸로 따라 하기를 ' + bbest + '개까지 해냈어! 기억 대장이다!' :
+          '동물 친구 노래를 ' + (best || seq.length) + '개까지 기억했어! 기억 대장이다!' });
         return;
       }
       misses = 0; seq = makeSeq(lenFor(round));
       turn.textContent = '';
-      ctx.wait(pace(500)).then(play);
+      ctx.wait(pace(500)).then(cue).then(play);
     }
 
     ctx.progress(0, ROUNDS);
-    ctx.say('동물 친구들이 노래를 불러요. 잘 듣고 똑같은 순서로 눌러 줘!').then(function () {
-      seq = makeSeq(span); play();
+    var intro = lv >= 10 ? '동물 친구들이 노래를 불러요. 판마다 그대로 할지 거꾸로 할지 자비스가 먼저 알려 줘요. 잘 듣고 기억해!' :
+      lv >= 8 ? '거꾸로 따라 하기 놀이! 동물 친구들이 노래하면, 마지막에 노래한 친구부터 거꾸로 눌러 줘!' :
+      '동물 친구들이 노래를 불러요. 잘 듣고 똑같은 순서로 눌러 줘!';
+    ctx.say(intro).then(cue).then(function () {
+      seq = makeSeq(lenFor(0)); play();
     });
   }
 });
@@ -321,45 +418,81 @@ G.act({
 /* ===========================================================
    2. 낮과 밤 — 억제 (Day–Night Stroop)
    =========================================================== */
+var DN_PIC = { sun: '☀️', moon: '🌙', star: '⭐' }, DN_WORD = { sun: '해', moon: '달', star: '별' };
 G.act({
-  id: 'daynight', area: 'brain', title: '낮과 밤', icon: '🌗', order: 2, levels: 3, mins: 2, needs: [],
+  id: 'daynight', area: 'brain', title: '낮과 밤', icon: '🌗', order: 2, levels: 10, mins: 2, needs: [],
   ef: ['inhibit', 'wm'],
   desc: '해가 나오면 달! 반대로 누르기',
   goal: '억제(참기) — 눈에 보이는 대로 바로 누르고 싶은 마음을 멈추고 규칙대로 하는 힘',
-  how: '반대로 하기는 어른에게도 어려워요. 틀려도 "생각하고 눌렀네!" 하고 멈춘 것을 칭찬해 주세요. 화면 밖에서는 "엄마가 \'크게\' 하면 작게 말하기", "손 올려 하면 내리기"처럼 반대로 하기 놀이를 짧게 해 보세요.',
-  basis: 'Day–Night Stroop 과제 (Gerstadt, Hong & Diamond, 1994)',
+  how: '반대로 하기는 어른에게도 어려워요. 틀려도 "생각하고 눌렀네!" 하고 멈춘 것을 칭찬해 주세요. 화면 밖에서는 "엄마가 \'크게\' 하면 작게 말하기", "손 올려 하면 내리기"처럼 반대로 하기 놀이를 짧게 해 보세요. 4·5단계(도전·마스터)는 반대로 하다가 "다시 똑같이!"로 규칙이 두세 번 바뀌어요. 6~10단계는 별 카드(반대로일 때도 언제나 별) → 조금 더 빠른 카드 → 말해 주지 않고 바뀌는 규칙(보라 테두리 카드 = 반대로) → 그림 대신 글자 카드 → 더 빠르고 긴 판으로 이어져요.',
+  basis: 'Day–Night Stroop 과제 (Gerstadt, Hong & Diamond, 1994) — 6단계부터 예외 규칙·단서로 바뀌는 규칙·글자 Stroop',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
-    B.innerHTML = '<div class="bw"><div class="b-rule"></div><div class="dn-card blank"></div>' +
-      '<div class="dn-btns"><button class="dn-btn sun" data-k="sun"><span>☀️</span><small>해</small></button><button class="dn-btn moon" data-k="moon"><span>🌙</span><small>달</small></button></div></div>';
-    var wrap = G.$('.bw', B), rule = G.$('.b-rule', B), card = G.$('.dn-card', B), btns = G.$$('.dn-btn', B);
     var st = ctx.step || 1;
+    /* 6단계~ 별 카드(언제나 그대로 별 — 5단계 2·3칸은 '반대로' 자리에 한두 장 맛보기), 9단계~ 글자 카드,
+       누를 시간 WIN: 6단계까지 4초 → 7단계 3초 → 10단계 2.5초 */
+    var STARS = ctx.tune([0, 0, 0, 0, 0, 3, 3, 4, 4, 4]), WORDS = ctx.tune([0, 0, 0, 0, 0, 0, 0, 0, 6, 8]);
+    var WIN = ctx.tune([4000, 4000, 4000, 4000, 4000, 4000, 3000, 3000, 3000, 2500]);
+    B.innerHTML = '<div class="bw"><div class="b-rule"></div><div class="dn-card blank"></div>' +
+      '<div class="dn-btns"><button class="dn-btn sun" data-k="sun"><span>☀️</span><small>해</small></button><button class="dn-btn moon" data-k="moon"><span>🌙</span><small>달</small></button>' +
+      (STARS ? '<button class="dn-btn star" data-k="star"><span>⭐</span><small>별</small></button>' : '') + '</div></div>';
+    var wrap = G.$('.bw', B), rule = G.$('.b-rule', B), card = G.$('.dn-card', B), btns = G.$$('.dn-btn', B);
     /* 칸이 오르면 — 2단계: '똑같이'를 몇 장 하다가 반대로 바뀐다(3단계 맛보기). 2칸은 1장, 3칸은 3장 뒤에 (3단계는 4장)
        3단계: 바뀐 뒤 반대로 하는 카드가 한 장씩 더 */
     var N = 10 + (lv >= 3 ? st - 1 : 0), SWITCH_AT = lv >= 3 ? 4 : lv === 2 && st > 1 ? ctx.tune([0, 0, 4]) : -1;
+    /* 4·5단계: 규칙이 여러 번 바뀐다 [카드 수, 바뀌는 자리]. 4단계는 똑같이 → 반대로 → 다시 똑같이(두 번),
+       5단계는 세 장마다(세 번). 4단계 2·3칸은 세 번째 바뀜을 맛보기, 5단계 2·3칸은 별 카드 한두 장 맛보기(6단계) */
+    var DN_MORE = { 4: [[12, [4, 8]], [13, [4, 8, 11]], [13, [4, 7, 10]]], 5: [[12, [3, 6, 9]], [12, [3, 6, 9]], [12, [3, 6, 9]]] };
+    var more = DN_MORE[lv] ? DN_MORE[lv][G.clamp(st, 1, 3) - 1] : null;
+    /* 6~10단계: 카드 12 → 16장. 6·7단계는 세 장마다 바뀌고 자비스가 알려 준다.
+       8단계부터는 2~4장마다 아무 때나 바뀌고 알려 주지 않는다(QUIET) — 보라 테두리 카드가 '반대로'.
+       7단계 2·3칸은 마지막 한두 번만 조용히 바뀐다(8단계 맛보기) */
+    var QUIET = [];
+    if (lv >= 6) {
+      more = [ctx.tune([10, 10, 10, 12, 12, 12, 12, 14, 14, 16]), lv <= 7 ? [3, 6, 9] : []];
+      if (lv >= 8) for (var at = 0; ;) { at += 2 + Math.floor(Math.random() * 3); if (at >= more[0] - 1) break; more[1].push(at); }
+      QUIET = lv >= 8 ? more[1].slice() : lv === 7 ? [9, 6].slice(0, G.clamp(st, 1, 3) - 1) : [];
+    }
+    if (more) N = more[0];
+    var SW = more ? more[1].slice() : SWITCH_AT >= 0 ? [SWITCH_AT] : [];
     var opposite = lv === 2 && SWITCH_AT < 0, i = 0, cur = null, open = false, timer = null, run3 = 0, deck = [];
     for (var k = 0; k < N; k++) { var x; do { x = Math.random() < 0.5 ? 'sun' : 'moon'; } while (k >= 2 && deck[k - 1] === x && deck[k - 2] === x); deck.push(x); }
+    /* 별 카드 자리: 앞 두 장은 빼고 서로 붙지 않게. 반 이상(5단계 맛보기는 모두)은 '반대로' 자리 — 반대로일 때도 별은 별! */
+    if (STARS) {
+      var oppAt = [], o = opposite, sws = SW.slice(), picked = [];
+      for (k = 0; k < N; k++) { if (sws.length && k === sws[0]) { sws.shift(); o = !o; } oppAt.push(o); }
+      var free = function (j) { return picked.indexOf(j) < 0 && picked.indexOf(j - 1) < 0 && picked.indexOf(j + 1) < 0; };
+      var spots = G.shuffle(G.range(N).slice(2));
+      spots.forEach(function (j) { if (picked.length < (lv <= 5 ? STARS : Math.ceil(STARS / 2)) && oppAt[j] && free(j)) picked.push(j); });
+      spots.forEach(function (j) { if (picked.length < STARS && free(j)) picked.push(j); });
+      picked.forEach(function (j) { deck[j] = 'star'; });
+    }
+    /* 글자 카드 자리 (첫 장은 그림) */
+    var wordAt = {};
+    if (WORDS) G.sample(G.range(N).slice(1), WORDS).forEach(function (j) { wordAt[j] = 1; });
 
     function setRule() {
-      rule.innerHTML = opposite ? '🔄 반대로! <b>☀️→🌙</b> <b>🌙→☀️</b>' : '👯 똑같이! <b>☀️→☀️</b> <b>🌙→🌙</b>';
+      var s = STARS ? ' <b>⭐→⭐</b>' : '';
+      rule.innerHTML = opposite ? '🔄 반대로! <b>☀️→🌙</b> <b>🌙→☀️</b>' + s : '👯 똑같이! <b>☀️→☀️</b> <b>🌙→🌙</b>' + s;
     }
-    function answer(k) { return opposite ? (k === 'sun' ? 'moon' : 'sun') : k; }
-    function btnOf(k) { return k === 'sun' ? btns[0] : btns[1]; }
-    function announce(e, t, s, ms) {
-      var a = G.el('<div class="b-announce"><div class="ba-e">' + e + '</div><div class="ba-t"></div><div class="ba-s"></div></div>');
-      a.querySelector('.ba-t').textContent = t; a.querySelector('.ba-s').textContent = s || '';
-      wrap.appendChild(a); G.sfx.play('up');
-      return ctx.say(t + ' ' + (s || '')).then(function () { return ctx.wait(ms || 400); }).then(function () { a.remove(); });
-    }
+    function answer(k) { return opposite ? (k === 'sun' ? 'moon' : k === 'moon' ? 'sun' : k) : k; }
+    function btnOf(k) { return k === 'sun' ? btns[0] : k === 'moon' ? btns[1] : btns[2]; }
+    function announce(e, t, s, ms) { return bigNote(ctx, wrap, e, t, s, ms); }
     function show() {
       if (i >= N) { end(); return; }
-      if (i === SWITCH_AT) {
-        opposite = true; setRule();
-        announce('🔄', '규칙이 바뀌었어요!', '이제 반대로! 해가 나오면 달, 달이 나오면 해!', 300).then(function () { SWITCH_AT = -1; show(); });
-        return;
+      if (SW.length && i === SW[0]) {
+        SW.shift(); opposite = !opposite; setRule();
+        if (QUIET.indexOf(i) < 0) {
+          announce(opposite ? '🔄' : '👯', '규칙이 바뀌었어요!', opposite ? '이제 반대로! 해가 나오면 달, 달이 나오면 해!' : '다시 똑같이! 해가 나오면 해, 달이 나오면 달!', 300).then(show);
+          return;
+        }
+        /* 조용히 바뀜 — 규칙 글씨만 살짝 반짝, 카드 테두리가 알려 준다 */
+        rule.classList.remove('flip'); void rule.offsetWidth; rule.classList.add('flip'); G.sfx.play('tick');
       }
-      cur = deck[i]; card.className = 'dn-card ' + cur; void card.offsetWidth; card.classList.add('show');
-      card.textContent = cur === 'sun' ? '☀️' : '🌙';
+      cur = deck[i];
+      var w = !!wordAt[i];
+      card.className = 'dn-card ' + (w ? 'word' : cur) + (lv >= 6 && opposite ? ' opp' : ''); void card.offsetWidth; card.classList.add('show');
+      card.textContent = w ? DN_WORD[cur] : DN_PIC[cur];
       G.sfx.play('whoosh');
       open = true;
       timer = ctx.timeout(function () {
@@ -367,7 +500,7 @@ G.act({
         ctx.trial(false); run3 = 0;
         ctx.bubble('괜찮아, 다음 카드!');
         gap();
-      }, pace(4000));
+      }, pace(WIN));
     }
     function gap() {
       i++; ctx.progress(i, N);
@@ -383,25 +516,31 @@ G.act({
         if (ok) {
           run3++; G.sfx.play('good'); G.buzz(15);
           b.classList.add('ok'); ctx.timeout(function () { b.classList.remove('ok'); }, 500);
-          var c = centerOf(b); G.fx.burst(c[0], c[1], cur === 'sun' ? ['🌙', '✨'] : ['☀️', '✨']);
+          var c = centerOf(b); G.fx.burst(c[0], c[1], cur === 'sun' ? ['🌙', '✨'] : cur === 'moon' ? ['☀️', '✨'] : ['⭐', '✨']);
           if (opposite && run3 % 3 === 0) floatText(wrap, '✋ 잘 참았어!', c[0], c[1] - 60);
           else ctx.bubble(G.pick(FAST));
         } else {
           run3 = 0; G.sfx.play('oops'); G.ui.wiggle(card);
-          ctx.bubble(opposite ? (cur === 'sun' ? '앗, 반대야! 해가 나오면 달!' : '앗, 반대야! 달이 나오면 해!') : '어떤 그림이었지? 똑같은 걸 눌러요!');
+          ctx.bubble(cur === 'star' ? '별은 언제나 별! 별을 눌러요.' :
+            lv >= 8 ? (opposite ? '보라 테두리는 반대로! ' + (cur === 'sun' ? '해가 나오면 달!' : '달이 나오면 해!') : '테두리가 없으면 똑같이! 같은 걸 눌러요.') :
+            opposite ? (cur === 'sun' ? '앗, 반대야! 해가 나오면 달!' : '앗, 반대야! 달이 나오면 해!') :
+            wordAt[i] ? '무슨 글자였지? 똑같은 걸 눌러요!' : '어떤 그림이었지? 똑같은 걸 눌러요!');
           G.ui.hint(btnOf(answer(cur)));
         }
         gap();
       });
     });
     function end() {
-      ctx.finish({ msg: opposite ? '해와 달을 반대로 척척! 생각하고 누르는 힘이 쑥쑥 자랐어!' : '해는 해, 달은 달! 아주 잘 봤어!' });
+      ctx.finish({ msg: lv >= 8 ? '말해 주지 않아도 바뀐 규칙을 척척 찾았어! 생각하고 누르는 힘이 정말 멋져!' :
+        more ? '규칙이 몇 번 바뀌어도 척척! 생각하고 누르는 힘이 정말 멋져!' : opposite ? '해와 달을 반대로 척척! 생각하고 누르는 힘이 쑥쑥 자랐어!' : '해는 해, 달은 달! 아주 잘 봤어!' });
     }
 
     setRule(); ctx.progress(0, N);
     var intro = opposite ?
       '해님과 달님 놀이! 이번엔 반대로 해요. 해가 나오면 달을, 달이 나오면 해를 눌러요.' :
-      '해님과 달님 놀이! 해가 나오면 해를, 달이 나오면 달을 눌러요.';
+      '해님과 달님 놀이! 해가 나오면 해를, 달이 나오면 달을 눌러요.' + (!more ? '' : lv >= 8 ? ' 이번엔 규칙이 바뀌어도 자비스가 말해 주지 않아요. 보라 테두리 카드는 반대로, 그냥 카드는 똑같이!' :
+        ' 중간에 규칙이 여러 번 바뀌어요. 바뀔 때마다 자비스가 알려 줄게!' + (lv >= 6 ? ' 반대로일 때는 카드에 보라 테두리가 생겨요.' : '') + (QUIET.length ? ' 마지막엔 몰래 바뀌기도 해요. 테두리를 잘 봐요!' : '')) +
+      (STARS ? ' 별님도 놀러 와요. 별은 언제나 별!' : '') + (WORDS ? ' 가끔은 그림 대신 글자 카드가 나와요. 글자도 같은 규칙이에요!' : '');
     ctx.say(intro).then(function () {
       if (!opposite) return null;
       /* 반대 규칙 보여 주기 */
@@ -409,6 +548,19 @@ G.act({
       return ctx.say('해가 나오면? 달!').then(function () {
         card.className = 'dn-card moon show'; card.textContent = '🌙'; G.ui.hint(btns[0]);
         return ctx.say('달이 나오면? 해!');
+      });
+    }).then(function () {
+      if (!STARS) return null;
+      /* 별 카드 보여 주기 — 반대로일 때도 별은 별 */
+      card.className = 'dn-card star show'; card.textContent = '⭐'; G.ui.hint(btns[2]);
+      return ctx.say('별이 나오면? 언제나 별!');
+    }).then(function () {
+      if (lv < 7 || !QUIET.length) return null;
+      /* 보라 테두리 보여 주기 — 테두리가 있으면 반대로 */
+      card.className = 'dn-card sun opp show'; card.textContent = '☀️'; G.ui.hint(btns[1]);
+      return ctx.say('보라 테두리 카드는 반대로! 해가 나오면? 달!').then(function () {
+        card.className = 'dn-card moon show'; card.textContent = '🌙'; G.ui.hint(btns[1]);
+        return ctx.say('그냥 카드는 똑같이! 달이 나오면? 달!');
       });
     }).then(function () {
       return ctx.say('준비, 시작!');
@@ -419,7 +571,7 @@ G.act({
 /* ===========================================================
    3. 규칙 바꾸기 — 인지적 유연성 (DCCS)
    =========================================================== */
-function dcSvg(shape, color) {
+function dcSvg(shape, color, n) {
   var inner = {
     rabbit: '<g fill="' + color + '"><ellipse cx="38" cy="24" rx="8" ry="20"/><ellipse cx="62" cy="24" rx="8" ry="20"/><circle cx="50" cy="52" r="20"/><ellipse cx="50" cy="82" rx="25" ry="15"/></g>' +
       '<circle cx="43" cy="49" r="3.2" fill="#fff"/><circle cx="57" cy="49" r="3.2" fill="#fff"/><ellipse cx="50" cy="58" rx="3" ry="2.2" fill="#fff" opacity=".85"/>',
@@ -428,79 +580,120 @@ function dcSvg(shape, color) {
     star: '<g fill="' + color + '"><polygon points="50,6 61,38 95,38 67,58 78,92 50,71 22,92 33,58 5,38 39,38"/></g>',
     heart: '<g fill="' + color + '"><path d="M50 88 C20 66 6 50 6 32 C6 18 17 8 30 8 C40 8 46 14 50 22 C54 14 60 8 70 8 C83 8 94 18 94 32 C94 50 80 66 50 88Z"/></g>'
   }[shape];
+  /* 개수 카드(6단계~): 둘이면 나란히 작게 */
+  if (n === 2) inner = '<g transform="translate(0 25) scale(.5)">' + inner + '</g><g transform="translate(50 25) scale(.5)">' + inner + '</g>';
   return '<svg viewBox="0 0 100 100" aria-hidden="true">' + inner + '</svg>';
 }
 var DC_SETS = [
-  { a: 'rabbit', b: 'boat', an: '토끼', bn: '배' },
-  { a: 'star', b: 'heart', an: '별', bn: '하트' }
+  { a: 'rabbit', b: 'boat', an: '토끼', bn: '배', au: '마리', bu: '척' },
+  { a: 'star', b: 'heart', an: '별', bn: '하트', au: '개', bu: '개' }
 ];
 var DC_COLS = [
   [{ hex: '#ef5350', adj: '빨간', n: '빨강' }, { hex: '#3f8ef0', adj: '파란', n: '파랑' }],
   [{ hex: '#f5b700', adj: '노란', n: '노랑' }, { hex: '#43a047', adj: '초록', n: '초록' }]
 ];
 G.act({
-  id: 'switch', area: 'brain', title: '규칙 바꾸기', icon: '🔄', order: 3, levels: 3, mins: 3, needs: [],
+  id: 'switch', area: 'brain', title: '규칙 바꾸기', icon: '🔄', order: 3, levels: 10, mins: 3, needs: [],
   ef: ['shift', 'inhibit', 'wm'],
   desc: '색깔 게임에서 모양 게임으로!',
   goal: '인지적 유연성 — 규칙이 바뀌면 방금까지 하던 방식을 내려놓고 새 규칙으로 바꿔 생각하는 힘',
-  how: '규칙이 바뀌는 순간이 가장 어려워요. 바뀔 때 부모가 "이제 모양 게임!" 하고 한 번 더 말해 주고, 처음 몇 장은 천천히 해도 돼요. 화면 밖에서는 빨래 개기·장난감 정리를 "이번엔 색깔끼리, 이번엔 종류끼리"로 바꿔 가며 해 보세요.',
-  basis: 'Dimensional Change Card Sort — DCCS (Zelazo, 2006), 테두리판 포함',
+  how: '규칙이 바뀌는 순간이 가장 어려워요. 바뀔 때 부모가 "이제 모양 게임!" 하고 한 번 더 말해 주고, 처음 몇 장은 천천히 해도 돼요. 화면 밖에서는 빨래 개기·장난감 정리를 "이번엔 색깔끼리, 이번엔 종류끼리"로 바꿔 가며 해 보세요. 4·5단계(도전·마스터)는 반짝 카드 몇 장 뒤에 규칙 글씨가 숨어서, 규칙을 머릿속에 기억하고 해요(헷갈리면 다시 보여 줘요). 6~10단계는 세 번째 규칙 "개수(하나·둘)"가 더해지고 → 세 규칙이 섞인 카드(보라 테두리 = 개수) → 규칙 글씨가 차츰 숨고 → 10단계는 테두리도 잠깐만 보여요 — 화면 밖에서는 "색깔끼리 → 종류끼리 → 개수끼리" 정리하기.',
+  basis: 'Dimensional Change Card Sort — DCCS (Zelazo, 2006), 테두리판 포함 — 6단계부터 세 차원(색·모양·개수) 단서 과제 전환',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level, st = ctx.step || 1;
     var S = G.pick(DC_SETS), C = G.pick(DC_COLS);
+    /* 6단계부터 개수(하나·둘)도 규칙이 된다(NUMN = 개수 게임 카드 수). 5단계 2·3칸은 개수 게임 한두 장 맛보기 */
+    var NUMN = lv >= 6 ? [4, 3, 3, 2, 2][lv - 6] : lv === 5 ? ctx.tune([0, 0, 0, 0, 0, 4]) : 0, useN = NUMN > 0;
     var T = [{ shape: S.a, col: 0 }, { shape: S.b, col: 1 }];        // 두 집 (기준 카드)
     var CARDS = [{ shape: S.a, col: 1 }, { shape: S.b, col: 0 }];     // 헷갈리게 섞인 카드
-    function nameOf(c) { return C[c.col].adj + ' ' + (c.shape === S.a ? S.an : S.bn); }
-    function svgOf(c) { return dcSvg(c.shape, C[c.col].hex); }
-    /* 놀이 차례 만들기: rule 'color' | 'shape' | 'border'(테두리 = 모양) */
+    if (useN) { T[0].n = 1; T[1].n = 2; }                            // 개수: 하나 집 · 둘 집
+    /* 개수가 섞인 카드 — 개수 게임 카드는 앞의 두 장이 '모양'과 다른 집(방금 규칙에 끌려가지 않게) */
+    var CARDS4 = [{ shape: S.a, col: 1, n: 1 }, { shape: S.b, col: 0, n: 2 }, { shape: S.a, col: 1, n: 2 }, { shape: S.b, col: 0, n: 1 }];
+    var NUMC = [CARDS4[2], CARDS4[3], CARDS4[0], CARDS4[1]], CC = lv >= 6 ? CARDS4 : CARDS;
+    function baseName(c) { return C[c.col].adj + ' ' + (c.shape === S.a ? S.an : S.bn); }
+    function nameOf(c) { return baseName(c) + (c.n ? ' ' + (c.n === 2 ? '두 ' : '한 ') + (c.shape === S.a ? S.au : S.bu) : ''); }
+    function svgOf(c) { return dcSvg(c.shape, C[c.col].hex, c.n); }
+    /* 놀이 차례 만들기: rule 'color' | 'shape' | 'number' (gold 반짝 = 모양, purple 보라 = 개수) */
     var plan = [];
-    function add(rule, n, border) { for (var k = 0; k < n; k++) plan.push({ rule: rule, card: CARDS[k % 2], gold: !!border }); }
+    function add(rule, n, border) { var cs = rule === 'number' ? NUMC : CC; for (var k = 0; k < n; k++) plan.push({ rule: rule, card: cs[k % cs.length], gold: !!border }); }
     function shufflePart(from) { var part = G.shuffle(plan.slice(from)); plan = plan.slice(0, from).concat(part); }
-    add('color', lv === 1 ? 6 : lv === 2 ? 6 : 4); shufflePart(0);
-    var switchAt = -1, mixedAt = -1;
+    function houseBy(rule, c) { return rule === 'color' ? (c.col === T[0].col ? 0 : 1) : rule === 'number' ? (c.n === T[0].n ? 0 : 1) : (c.shape === T[0].shape ? 0 : 1); }
+    /* 6단계부터 한 가지 규칙 판은 짧게(4→3→2장) — 섞인 카드 게임이 길어진다 */
+    var BLK = lv >= 6 ? NUMN : 0;
+    add('color', BLK || (lv === 1 ? 6 : lv === 2 ? 6 : 4)); shufflePart(0);
+    var switchAt = -1, numberAt = -1, mixedAt = -1, fadeAt = -1;
     /* 칸이 오르면 바뀐 규칙으로 하는 카드가 한 장씩 더 (2단계: 모양 카드 6→7→8, 3단계: 반짝 섞인 카드 8→9→10) */
-    if (lv >= 2) { switchAt = plan.length; add('shape', lv === 2 ? 6 + st - 1 : 4); shufflePart(switchAt); }
+    if (lv >= 2) { switchAt = plan.length; add('shape', BLK || (lv === 2 ? 6 + st - 1 : 4)); shufflePart(switchAt); }
+    if (NUMN) {
+      numberAt = plan.length; add('number', NUMN); shufflePart(numberAt);
+      /* 개수 게임 첫 장은 모양 규칙과 다른 집 */
+      for (var j = numberAt; j < plan.length; j++) if (houseBy('number', plan[j].card) !== houseBy('shape', plan[j].card)) { var t0 = plan[numberAt]; plan[numberAt] = plan[j]; plan[j] = t0; break; }
+    }
+    /* 섞인 카드 게임 — 3~6단계 두 규칙(반짝 = 모양, 그냥 = 색깔), 7단계부터 세 규칙(보라 = 개수, 6단계 2·3칸은 보라 한두 장 맛보기).
+       CUED: 앞의 몇 장만 규칙 글씨를 보여 준다 — 4단계 4→3→2장, 5·6단계 첫 장만, 7단계 다 보여 줌(2·3칸은 뒤 4·6장 숨김),
+       8단계 4→3→2장, 9·10단계 첫 장만. 그 뒤엔 규칙을 머릿속에 들고 한다(헷갈리면 그 카드에서 다시 보여 줌).
+       FADEN: 테두리도 잠깐만 보이는 카드 — 10단계는 모두(1.5초), 9단계 2·3칸은 뒤쪽 5·9장 맛보기 */
+    var MIXN = lv >= 7 ? [12, 12, 14, 14][lv - 7] : lv >= 4 ? 10 : 8 + st - 1;
+    var CUED = lv >= 9 ? 1 : lv === 8 ? 5 - st : lv === 7 ? [99, 8, 6][G.clamp(st, 1, 3) - 1] : lv >= 5 ? 1 : lv === 4 ? 5 - st : 99, reveal = false;
+    var NUM3 = lv >= 7 ? Math.round(MIXN / 3) : lv === 6 ? ctx.tune([0, 0, 0, 0, 0, 0, 3]) : 0, three = lv >= 7;
+    var FADEN = lv >= 10 ? MIXN : lv === 9 ? ctx.tune([0, 0, 0, 0, 0, 0, 0, 0, 0, MIXN]) : 0, FADE_MS = ctx.tune([2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 1500]);
     if (lv >= 3) {
       mixedAt = plan.length;
-      for (var k = 0; k < 8 + st - 1; k++) { var gold = k % 2 === 0; plan.push({ rule: gold ? 'shape' : 'color', card: CARDS[(k >> 1) % 2], gold: gold }); }
+      if (NUM3) {
+        for (var k = 0; k < MIXN; k++) {
+          var r = k < NUM3 ? 'number' : (k - NUM3) % 2 === 0 ? 'shape' : 'color';
+          plan.push({ rule: r, card: CARDS4[(k + (k >> 2)) % 4], gold: r === 'shape', purple: r === 'number' });
+        }
+      } else for (var k2 = 0; k2 < MIXN; k2++) { var gold = k2 % 2 === 0; plan.push({ rule: gold ? 'shape' : 'color', card: CC[(k2 >> 1) % CC.length], gold: gold }); }
       shufflePart(mixedAt);
+      if (FADEN) { fadeAt = plan.length - FADEN; for (var f = fadeAt; f < plan.length; f++) plan[f].fade = true; }
     }
 
     B.innerHTML = '<div class="bw"><div class="b-rule"></div><div class="sw-card"></div><div class="sw-boxes"></div></div>';
     var wrap = G.$('.bw', B), rule = G.$('.b-rule', B), card = G.$('.sw-card', B), boxWrap = G.$('.sw-boxes', B);
     var piles = [0, 0];
     var boxes = T.map(function (t, i) {
-      var b = G.el('<button class="sw-box"><span class="sw-house">🏠</span>' + svgOf(t) + '<span class="sw-n"></span><span class="sw-pile"></span></button>');
-      b.querySelector('.sw-n').textContent = nameOf(t) + ' 집';
+      var b = G.el('<button class="sw-box"><span class="sw-house">🏠</span>' + svgOf(t) + '<span class="sw-n"></span>' + (useN ? '<span class="sw-k">' + (t.n === 2 ? '둘' : '하나') + '</span>' : '') + '<span class="sw-pile"></span></button>');
+      b.querySelector('.sw-n').textContent = baseName(t) + ' 집';
       b.addEventListener('click', function () { choose(i); });
       boxWrap.appendChild(b); return b;
     });
     var idx = 0, cur = null, open = false, miss = 0, postN = 0, postOk = 0, mode = 'color';
 
     function ruleText(r) {
-      if (lv >= 3 && idx >= mixedAt && mixedAt >= 0) return '<span class="nw">✨ 반짝 테두리 → <b>🔷 모양</b></span> <span class="nw">· 그냥 카드 → <b>🎨 색깔</b></span>';
-      return r === 'shape' ? '🔷 모양 게임! <b>' + S.an + '는 ' + S.an + ' 집</b>' : '🎨 색깔 게임! <b>' + C[0].n + '은 ' + C[0].n + ' 집</b>';
+      if (lv >= 3 && idx >= mixedAt && mixedAt >= 0) {
+        /* 6단계 2·3칸의 보라(개수) 맛보기 카드에서는 세 규칙 글씨를 늘 보여 준다 */
+        var peek = !three && r === 'number';
+        if (idx >= mixedAt + CUED && !reveal && !peek) return '<span class="nw">✨ ' + (three ? '세 규칙' : '반짝') + ' 카드 게임!</span> <span class="nw">· 🤔 규칙을 기억해요</span>';
+        if (three || peek) return '<span class="nw">✨ 반짝 → <b>🔷 모양</b></span> <span class="nw">· 보라 → <b>🔢 개수</b></span> <span class="nw">· 그냥 → <b>🎨 색깔</b></span>';
+        return '<span class="nw">✨ 반짝 테두리 → <b>🔷 모양</b></span> <span class="nw">· 그냥 카드 → <b>🎨 색깔</b></span>';
+      }
+      return r === 'shape' ? '🔷 모양 게임! <b>' + S.an + '는 ' + S.an + ' 집</b>' : r === 'number' ? '🔢 개수 게임! <b>하나는 하나 집</b> <b>둘은 둘 집</b>' :
+        '🎨 색깔 게임! <b>' + C[0].n + '은 ' + C[0].n + ' 집</b>';
     }
-    function correctBox(p) { return p.rule === 'color' ? (p.card.col === T[0].col ? 0 : 1) : (p.card.shape === T[0].shape ? 0 : 1); }
-    function announce(e, t, s) {
-      var a = G.el('<div class="b-announce"><div class="ba-e">' + e + '</div><div class="ba-t"></div><div class="ba-s"></div></div>');
-      a.querySelector('.ba-t').textContent = t; a.querySelector('.ba-s').textContent = s || '';
-      wrap.appendChild(a); G.sfx.play('up');
-      return ctx.say(t + ' ' + (s || '')).then(function () { return ctx.wait(350); }).then(function () { a.remove(); });
-    }
+    function correctBox(p) { return houseBy(p.rule, p.card); }
+    function announce(e, t, s) { return bigNote(ctx, wrap, e, t, s, 350); }
     function show() {
       if (idx >= plan.length) { end(); return; }
       var p = plan[idx], step = Promise.resolve();
       if (idx === switchAt) step = announce('🔷', '이제 모양 게임!', S.an + '는 ' + S.an + ' 집, ' + S.bn + '는 ' + S.bn + ' 집! 색깔은 이제 안 봐요.');
-      else if (idx === mixedAt) step = announce('✨', '반짝 카드 게임!', '반짝 테두리가 있으면 모양 게임, 없으면 색깔 게임!');
+      else if (idx === numberAt) step = announce('🔢', '이제 개수 게임!', '하나는 하나 집, 둘은 둘 집! 색깔도 모양도 말고 개수만 봐요.');
+      else if (idx === mixedAt && three) step = announce('✨', '세 가지 규칙 카드 게임!', '반짝 테두리는 모양, 보라 테두리는 개수, 그냥 카드는 색깔!' +
+        (CUED < 99 ? ' 조금 뒤엔 규칙 글씨가 숨어요. 머릿속에 기억해 둬!' : '') + (fadeAt === mixedAt ? ' 테두리는 잠깐만 보여요. 얼른 보고 기억해!' : ''));
+      else if (idx === mixedAt) step = announce('✨', '반짝 카드 게임!', '반짝 테두리가 있으면 모양 게임, 없으면 색깔 게임!' + (CUED < 99 ? ' 조금 뒤엔 규칙 글씨가 숨어요. 머릿속에 기억해 둬!' : '') +
+        (NUM3 ? ' 보라 테두리가 나오면 개수 게임!' : ''));
+      else if (idx === fadeAt) step = announce('👀', '이제 테두리가 잠깐만 보여요!', '카드가 나오면 테두리를 얼른 보고 기억해 둬!');
       step.then(function () {
+        reveal = false;
         mode = p.rule; rule.innerHTML = ruleText(p.rule);
         cur = p; miss = 0;
-        card.className = 'sw-card' + (p.gold ? ' gold' : ''); card.style.transform = ''; void card.offsetWidth; card.classList.add('show');
+        card.className = 'sw-card' + (p.gold ? ' gold' : '') + (p.purple ? ' purple' : '') + (p.fade ? ' fadecue' : ''); card.style.transform = ''; void card.offsetWidth; card.classList.add('show');
         card.innerHTML = svgOf(p.card);
         open = true;
+        /* 10단계: 테두리가 잠깐 보였다가 사라진다 — 헷갈리면 다시 보여 준다 */
+        if (p.fade) ctx.timeout(function () { if (cur === p && open && !miss) card.classList.add('nocue'); }, pace(FADE_MS));
         /* 처음 카드와 규칙이 바뀐 첫 카드는 이름을 말해 준다 */
-        if (idx === 0 || idx === switchAt || idx === mixedAt) ctx.say(nameOf(p.card) + '는 어느 집일까?', { repeat: true });
+        if (idx === 0 || idx === switchAt || idx === numberAt || idx === mixedAt) ctx.say(nameOf(p.card) + '는 어느 집일까?', { repeat: true });
         else ctx.bubble(nameOf(p.card) + '는 어느 집?');
       });
     }
@@ -522,7 +715,11 @@ G.act({
         miss++;
         if (miss === 1) { ctx.trial(false); if (post) postN++; }
         G.sfx.play('oops'); G.ui.wiggle(boxes[i]);
-        var why = mode === 'color' ? '지금은 색깔 게임이야! ' + C[cur.card.col].n + '은 어느 집이지?' : '지금은 모양 게임이야! ' + (cur.card.shape === S.a ? S.an : S.bn) + '는 어느 집이지?';
+        if (!reveal && CUED < 99 && idx >= mixedAt + CUED) { reveal = true; rule.innerHTML = ruleText(mode); }   /* 숨은 규칙 글씨를 다시 보여 준다 */
+        if (cur.fade) card.classList.remove('nocue');                                                           /* 숨은 테두리도 다시 */
+        var why = mode === 'color' ? '지금은 색깔 게임이야! ' + C[cur.card.col].n + '은 어느 집이지?' :
+          mode === 'number' ? (cur.purple ? '보라 테두리는 개수 게임이야! ' : '지금은 개수 게임이야! ') + (cur.card.n === 2 ? '둘' : '하나') + '는 어느 집이지?' :
+          '지금은 모양 게임이야! ' + (cur.card.shape === S.a ? S.an : S.bn) + '는 어느 집이지?';
         if (miss >= 2) { G.ui.hint(boxes[right]); why = '반짝이는 집이야! ' + why.split('!')[0] + '!'; }
         ctx.oops(why);
       }
@@ -547,7 +744,7 @@ G.act({
     });
     function end() {
       if (postN) ctx.extra.switchAcc = Math.round(postOk / postN * 100);
-      ctx.finish({ msg: lv >= 2 ? '규칙이 바뀌어도 척척! 생각을 바꾸는 힘이 정말 멋져!' : '색깔 집을 다 찾아 줬어! 잘했어!' });
+      ctx.finish({ msg: three ? '세 가지 규칙도 척척! 생각을 바꾸는 힘이 정말 멋져!' : lv >= 2 ? '규칙이 바뀌어도 척척! 생각을 바꾸는 힘이 정말 멋져!' : '색깔 집을 다 찾아 줬어! 잘했어!' });
     }
 
     prog(ctx, 0, plan.length);
@@ -559,50 +756,74 @@ G.act({
    4. 멈춰! 잡아! — 억제·주의 (Go/No-Go)
    =========================================================== */
 G.act({
-  id: 'gonogo', area: 'brain', title: '멈춰! 잡아!', icon: '🐟', order: 4, levels: 3, mins: 2, needs: [],
+  id: 'gonogo', area: 'brain', title: '멈춰! 잡아!', icon: '🐟', order: 4, levels: 10, mins: 2, needs: [],
   ef: ['inhibit', 'attend'],
   desc: '물고기는 콕! 상어는 쉿!',
   goal: '억제·주의 — 계속 누르다가도 "멈춰야 할 때" 손을 멈추는 힘, 끝까지 눈을 떼지 않는 힘',
-  how: '상어를 참았을 때 "와, 손이 멈췄네!" 하고 참은 것을 크게 칭찬해 주세요. 화면 밖에서는 "빨간불 멈춰, 초록불 걸어" 놀이, 음악이 멈추면 얼음 놀이, "사과 하면 손뼉, 다른 과일이면 가만히" 놀이로 이어 가세요.',
-  basis: 'Go/No-Go 과제 — 반응 억제 측정(유아용 동물 버전)',
+  how: '상어를 참았을 때 "와, 손이 멈췄네!" 하고 참은 것을 크게 칭찬해 주세요. 화면 밖에서는 "빨간불 멈춰, 초록불 걸어" 놀이, 음악이 멈추면 얼음 놀이, "사과 하면 손뼉, 다른 과일이면 가만히" 놀이로 이어 가세요. 4단계(도전)는 조금 더 빠르고 길게, 5단계(마스터)는 참을 친구(게)가 하나 더 나와요. 6~10단계는 조금 더 빠르게 → 자는 물고기(💤)도 쉿 → 물고기에 ✋ 빨간 손이 뜨면 잡으려던 손 멈추기 → 빨간 손이 가끔 늦게 → 더 빠르고 길게 이어져요(화면 밖: 손뼉 치다가 "멈춰!" 소리에 바로 멈추기).',
+  basis: 'Go/No-Go 과제 — 반응 억제 측정(유아용 동물 버전), 8단계부터 Stop-Signal(멈춤 신호) 과제',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
-    /* 칸이 오르면 보이는 시간·사이 시간·마릿수가 다음 단계 쪽으로 1/3씩 (ctx.tune) */
-    var EXPO = pace(ctx.tune([2200, 1600, 1150])), ISI = pace(ctx.tune([850, 700, 600])), COUNT = ctx.tune([14, 18, 22]);
-    var NOGO = lv >= 3 ? ['🦈', '🐡'] : ['🦈'];
+    /* 칸이 오르면 보이는 시간·사이 시간·마릿수가 다음 단계 쪽으로 1/3씩 (ctx.tune).
+       4·5단계 값은 3단계 3칸이 다가가던 값 그대로 이어진다 (보이는 시간 0.93초·0.88초, 24·26마리).
+       6단계 0.83초·28마리, 10단계 0.78초·32마리 — 손가락이 물고기에 닿는 시간까지 생각해 0.75초 밑으로는 내려가지 않는다 */
+    var EXPO = pace(ctx.tune([2200, 1600, 1150, 925, 875, 825, 825, 825, 825, 775])), ISI = pace(ctx.tune([850, 700, 600, 550, 525, 500, 500, 500, 500, 450])), COUNT = ctx.tune([14, 18, 22, 24, 26, 28, 28, 28, 30, 32]);
+    /* 7단계: 자는 물고기(💤)도 쉿 — 두 번째 쉿 규칙(6단계 2·3칸 맛보기).
+       8단계: ✋ 멈춤 신호 — 물고기가 나오고 0.25초 뒤 빨간 손이 뜨면 손을 멈춘다. 9단계: 멈춤 신호가 가끔 늦게(0.45초) */
+    var ZZN = ctx.tune([0, 0, 0, 0, 0, 0, 4, 4, 5, 5]), STOPN = ctx.tune([0, 0, 0, 0, 0, 0, 0, 4, 5, 5]), LATEN = ctx.tune([0, 0, 0, 0, 0, 0, 0, 0, 2, 3]);
+    var SSD = pace(250), SSD_LATE = pace(450);
+    var NOGO = lv >= 5 ? ['🦈', '🐡', '🦀'] : lv >= 3 ? ['🦈', '🐡'] : ['🦈'];
+    var NG_NAME = { '🦈': '상어', '🐡': '복어', '🦀': '게' };
     B.innerHTML = '<div class="bw"><div class="gn-top"><div class="gn-net"><b>🪣</b><span>0</span><em></em></div></div><div class="gn-time"><b></b></div><div class="gn-sea"></div></div>';
     var wrap = G.$('.bw', B), sea = G.$('.gn-sea', B), netN = G.$('.gn-net span', B), netE = G.$('.gn-net em', B), tbar = G.$('.gn-time b', B);
     var HOLES = [[20, 38], [50, 30], [80, 38], [20, 76], [50, 68], [80, 76]];
     HOLES.forEach(function (h) { var d = G.el('<div class="gn-hole"></div>'); d.style.left = h[0] + '%'; d.style.top = h[1] + '%'; sea.appendChild(d); });
-    var st = { hit: 0, miss: 0, fa: 0, cr: 0 }, shown = 0, lastHole = -1, crRun = 0;
+    var st = { hit: 0, miss: 0, fa: 0, cr: 0, sok: 0, stap: 0 }, shown = 0, lastHole = -1, crRun = 0;
     /* 순서: 25% 쉿 (처음 3개는 꼭 물고기 — 성공으로 시작) */
     var deck = [];
     for (var k = 0; k < COUNT; k++) deck.push(k >= 3 && Math.random() < 0.27 ? 'no' : 'go');
     if (deck.indexOf('no') < 0) deck[COUNT - 3] = 'no';
+    /* 자는 물고기 'zz': 쉿 자리 몇 개를 바꾼다(쉿 비율은 그대로, 상어 무리는 하나 이상 남김). 모자라면 물고기 자리에서 */
+    if (ZZN) {
+      var nos = G.shuffle(G.range(COUNT).filter(function (j) { return deck[j] === 'no'; })), gos = G.shuffle(G.range(COUNT).filter(function (j) { return j >= 3 && deck[j] === 'go'; }));
+      for (var z = 0; z < ZZN; z++) { var zj = nos.length > 1 ? nos.pop() : gos.pop(); if (zj != null) deck[zj] = 'zz'; }
+    }
+    /* 멈춤 신호 'stop'(0.25초) · 'late'(0.45초): 물고기 자리 몇 개 */
+    if (STOPN) G.shuffle(G.range(COUNT).filter(function (j) { return j >= 3 && deck[j] === 'go'; })).slice(0, STOPN).forEach(function (j, n) { deck[j] = n < LATEN ? 'late' : 'stop'; });
 
     function net() { netN.textContent = st.hit; netE.textContent = '🐟'.repeat(Math.min(st.hit, 14)); }
     function spawn() {
       if (shown >= deck.length) { ctx.timeout(end, 500); return; }
-      var kind = deck[shown++];
+      var kind = deck[shown++], goish = kind === 'go' || kind === 'stop' || kind === 'late';
       tbar.style.width = Math.round((1 - shown / deck.length) * 100) + '%';
       var h; do { h = Math.floor(Math.random() * HOLES.length); } while (h === lastHole); lastHole = h;
-      var e = kind === 'go' ? G.pick(['🐟', '🐠']) : G.pick(NOGO);
-      var m = G.el('<div class="gn-mob" role="button"></div>'); m.textContent = e;
+      var e = goish || kind === 'zz' ? G.pick(['🐟', '🐠']) : G.pick(NOGO);
+      var m = G.el('<div class="gn-mob' + (kind === 'zz' ? ' zz' : '') + '" role="button"></div>'); m.textContent = e;
+      if (kind === 'zz') m.insertAdjacentHTML('beforeend', '<i class="gn-zz">💤</i>');
       m.style.left = HOLES[h][0] + '%'; m.style.top = HOLES[h][1] + '%';
-      sea.appendChild(m); G.sfx.play(kind === 'go' ? 'pop' : 'whoosh');
-      var done = false;
+      sea.appendChild(m); G.sfx.play(goish || kind === 'zz' ? 'pop' : 'whoosh');
+      var done = false, stopped = false;
+      /* 멈춤 신호 — 아직 안 잡았으면 빨간 손 ✋ + 삐삐 */
+      if (kind === 'stop' || kind === 'late') ctx.timeout(function () {
+        if (done) return; stopped = true; m.classList.add('stop');
+        G.sfx.tone(988, 0.1, 'square', 0.1); G.sfx.tone(988, 0.1, 'square', 0.1, 0.15);
+      }, kind === 'late' ? SSD_LATE : SSD);
       m.addEventListener('pointerdown', function (ev) {
         ev.preventDefault(); if (done) return; done = true;
         var c = centerOf(m);
-        if (kind === 'go') {
+        if (goish && !stopped) {
           st.hit++; ctx.trial(true); net();
           G.sfx.play('good'); G.buzz(12); G.fx.burst(c[0], c[1], ['💦', '✨', '🫧']);
           m.classList.add('got');
           if (st.hit % 4 === 0) ctx.bubble(G.pick(['물고기를 또 구했어!', '그물이 가득해!', '척척 잘 잡는다!']));
+        } else if (stopped) {
+          st.stap++; ctx.trial(false); crRun = 0;
+          G.sfx.play('oops'); m.classList.add('bye');
+          floatText(wrap, '앗, 빨간 손은 멈춰! 괜찮아', c[0], c[1] - 50);
         } else {
           st.fa++; ctx.trial(false); crRun = 0;
           G.sfx.play('oops'); m.classList.add('bye');
-          floatText(wrap, e === '🦈' ? '앗, 상어는 쉿! 🤫' : '앗, 복어는 쉿! 🤫', c[0], c[1] - 50);
+          floatText(wrap, '앗, ' + (kind === 'zz' ? '자는 물고기' : NG_NAME[e]) + '는 쉿! 🤫', c[0], c[1] - 50);
         }
         ctx.timeout(function () { m.remove(); }, 500);
         ctx.timeout(spawn, ISI);
@@ -610,11 +831,12 @@ G.act({
       ctx.timeout(function () {
         if (done) return; done = true;
         var c = centerOf(m);
-        if (kind === 'go') { st.miss++; ctx.trial(false); }
+        if (goish && !stopped) { st.miss++; ctx.trial(false); }
         else {
-          st.cr++; crRun++; ctx.trial(true);
+          if (stopped) st.sok++; else st.cr++;
+          crRun++; ctx.trial(true);
           G.sfx.play('sparkle');
-          floatText(wrap, crRun >= 2 ? '✋ 또 참았다! 최고!' : '✋ 잘 참았어!', c[0], c[1] - 50);
+          floatText(wrap, stopped ? '✋ 멈췄다! 최고!' : crRun >= 2 ? '✋ 또 참았다! 최고!' : '✋ 잘 참았어!', c[0], c[1] - 50);
         }
         m.classList.add('bye');
         ctx.timeout(function () { m.remove(); }, 400);
@@ -623,12 +845,19 @@ G.act({
     }
     function end() {
       ctx.extra.hit = st.hit; ctx.extra.miss = st.miss; ctx.extra.fa = st.fa; ctx.extra.cr = st.cr;
-      ctx.finish({ msg: '물고기 ' + st.hit + '마리를 구했어! 상어는 꾹 참았지? 정말 멋져!' });
+      if (STOPN) { ctx.extra.stopOk = st.sok; ctx.extra.stopTap = st.stap; }
+      ctx.extra.score = st.hit;
+      ctx.finish({ msg: '물고기 ' + st.hit + '마리를 구했어! ' + (STOPN ? '빨간 손이 뜨면 손을 딱 멈췄지?' : ZZN ? '상어도, 자는 물고기도 꾹 참았지?' : '상어는 꾹 참았지?') + ' 정말 멋져!' });
     }
     /* 보여 주며 알려 주기 */
-    var demo = G.el('<div class="gn-demo"><div><span>🐟</span>콕!</div><div><span>' + NOGO.join('') + '</span>쉿! 🤫</div></div>');
+    var demo = ZZN || STOPN ?
+      G.el('<div class="gn-demo grid"><div><span>🐟🐠</span>콕!</div><div><span>' + NOGO.join('') + '</span>쉿! 🤫</div>' +
+        (ZZN ? '<div><span class="gn-dz">🐟<i class="gn-zz">💤</i></span>자는 물고기 쉿!</div>' : '') +
+        (STOPN ? '<div><span class="gn-ds">🐟</span>빨간 손 멈춰!</div>' : '') + '</div>') :
+      G.el('<div class="gn-demo' + (NOGO.length > 2 ? ' three' : '') + '"><div><span>🐟</span>콕!</div><div><span>' + NOGO.join('') + '</span>쉿! 🤫</div></div>');
     sea.appendChild(demo); demo.style.position = 'absolute'; demo.style.inset = '0';
-    ctx.say('물고기 친구들을 그물로 구해 줘요! 물고기는 콕! 그런데 ' + (NOGO.length > 1 ? '상어랑 복어는' : '상어는') + ' 쉿! 손을 멈춰요.').then(function () {
+    ctx.say('물고기 친구들을 그물로 구해 줘요! 물고기는 콕! 그런데 ' + (NOGO.length > 2 ? '상어, 복어, 게는' : NOGO.length > 1 ? '상어랑 복어는' : '상어는') + ' 쉿! 손을 멈춰요.' +
+      (ZZN ? ' 자고 있는 물고기도 깨우지 말고 쉿!' : '') + (STOPN ? ' 그리고 물고기에 빨간 손이 뜨면, 잡으려던 손을 얼른 멈춰요!' : '')).then(function () {
       return ctx.say('준비, 시작!');
     }).then(function () { demo.remove(); net(); ctx.timeout(spawn, 400); });
   }
@@ -647,50 +876,76 @@ var FA_SETS = [
 ];
 var FA_FAR = ['🍎', '🚗', '⭐', '🌸', '⚽', '🎈', '🧸', '📖', '🍦', '🌳', '☂️', '🎁', '🥕', '👟', '🎨', '🪁'];
 G.act({
-  id: 'findall', area: 'brain', title: '숨은 친구 찾기', icon: '🔍', order: 5, levels: 3, mins: 3, needs: [],
+  id: 'findall', area: 'brain', title: '숨은 친구 찾기', icon: '🔍', order: 5, levels: 10, mins: 3, needs: [],
   ef: ['attend', 'inhibit'],
   desc: '숨어 있는 친구를 모두 찾기',
   goal: '선택적 주의 — 여러 가지가 섞여 있어도 찾는 것에만 눈을 모으고, 비슷한 것에 속지 않는 힘',
-  how: '빨리 찾기보다 꼼꼼히 찾기를 칭찬해 주세요("하나도 안 빠뜨렸네!"). 화면 밖에서는 그림책에서 숨은 그림 찾기, 마트에서 "빨간 상자 찾기", 장난감 통에서 "자동차만 꺼내기"로 이어 가세요.',
-  basis: '시각 탐색·지우기(cancellation) 과제 — 선택적 주의 측정',
+  how: '빨리 찾기보다 꼼꼼히 찾기를 칭찬해 주세요("하나도 안 빠뜨렸네!"). 화면 밖에서는 그림책에서 숨은 그림 찾기, 마트에서 "빨간 상자 찾기", 장난감 통에서 "자동차만 꺼내기"로 이어 가세요. 4단계(도전)는 그림이 더 많고, 5단계(마스터)는 아주 닮은 친구들 사이에서 찾아요. 6~10단계는 두 친구를 함께 찾기 → 그림이 더 빽빽하게 → 큰 친구만 찾기(작은 아기 친구는 그냥 두기) → 몇 마리인지 비밀, 다 찾았는지 스스로 확인하고 ✅ 누르기 → 더 많이·더 기울어진 그림으로 이어져요(화면 밖: "빨간 블록과 파란 블록만 꺼내기").',
+  basis: '시각 탐색·지우기(cancellation) 과제 — 선택적 주의 측정, 6단계부터 두 표적·결합 탐색·스스로 끝내기 판단',
   run: function (ctx) {
-    var B = ctx.body, lv = ctx.level;
-    /* 칸이 오르면 찾을 친구·전체 그림 수가 다음 단계 쪽으로 조금씩 (ctx.tune) */
-    var BOARDS = 3, TARGETS = ctx.tune([3, 5, 8]), TOTAL = ctx.tune([12, 20, 30]);
-    B.innerHTML = '<div class="bw"><div class="fa-head"><span class="ft"></span><span class="fc"></span></div><div class="fa-field"></div></div>';
-    var field = G.$('.fa-field', B), ft = G.$('.ft', B), fc = G.$('.fc', B);
-    var sets = G.sample(FA_SETS, BOARDS), bi = 0, found = 0, cur = null, items = [], idleH = null, falseTaps = 0;
+    var B = ctx.body, lv = ctx.level, st = G.clamp(ctx.step || 1, 1, 3);
+    /* 칸이 오르면 찾을 친구·전체 그림 수가 다음 단계 쪽으로 조금씩 (ctx.tune).
+       4단계 찾을 친구 10·그림 35, 5단계 12·40, 7단계 14·44, 10단계 16·48 (휴대폰에서도 그림이 손가락 크기 밑으로 작아지지 않는다) */
+    var BOARDS = 3, TARGETS = ctx.tune([3, 5, 8, 10, 12, 12, 14, 14, 14, 16]), TOTAL = ctx.tune([12, 20, 30, 35, 40, 40, 44, 44, 44, 48]);
+    /* 6단계~ 두 친구를 함께 찾기(K2 = 두 번째 친구 수, 5단계 2·3칸 맛보기) · 8단계~ 큰 친구만(SMALL = 작은 아기 친구 수) ·
+       9단계~ 몇 마리인지 비밀 — 다 찾았다고 생각하면 ✅ (HIDE_FROM 판부터, 8단계 2·3칸은 마지막 한두 판) */
+    var K2 = ctx.tune([0, 0, 0, 0, 0, 6, 7, 7, 7, 8]), SMALL = ctx.tune([0, 0, 0, 0, 0, 0, 0, 10, 10, 10]);
+    var HIDE_FROM = lv >= 9 ? 0 : lv === 8 ? BOARDS - (st - 1) : BOARDS, hideAny = HIDE_FROM < BOARDS, two = K2 > 0;
+    var ROT = lv >= 6 ? ctx.tune([20, 20, 40, 40, 40, 40, 40, 40, 40, 60]) : lv >= 3 ? 40 : 20;
+    B.innerHTML = '<div class="bw"><div class="fa-head' + (two || SMALL || hideAny ? ' wrap' : '') + '"><span class="ft"></span><span class="fc"></span>' +
+      (SMALL ? '<span class="fs">큰 친구만!</span>' : '') + (hideAny ? '<button class="fa-done" hidden>✅ 다 찾았어요</button>' : '') + '</div><div class="fa-field"></div></div>';
+    var field = G.$('.fa-field', B), ft = G.$('.ft', B), fc = G.$('.fc', B), doneBtn = G.$('.fa-done', B);
+    var sets = G.sample(FA_SETS, two ? BOARDS * 2 : BOARDS), bi = 0, found = 0, cur = null, cur2 = null, items = [], idleH = null, falseTaps = 0;
+    var hidden = false, early = 0, earlyN = 0;
+    function unitOf(s) { return /🍓|🚗|⭐/.test(s.t) ? '개' : '마리'; }
 
     function fontFit() {
       var r = field.getBoundingClientRect(), cols = Math.ceil(Math.sqrt(TOTAL * r.width / Math.max(r.height, 1))), rows = Math.ceil(TOTAL / cols);
       var cell = Math.min(r.width / cols, r.height / rows);
-      items.forEach(function (it) { it.el.style.fontSize = Math.max(26, Math.min(76, cell * 0.6)) + 'px'; });
+      items.forEach(function (it) {
+        var fs = Math.max(26, Math.min(76, cell * 0.6)) * (it.k || 1);
+        it.el.style.fontSize = fs + 'px';
+        if (it.small) it.el.style.padding = Math.max(4, Math.round((44 - fs) / 2)) + 'px';   /* 작은 아기 친구도 누르는 칸은 손가락 크기 */
+      });
       return { cols: cols, rows: rows };
     }
     function board() {
-      cur = sets[bi]; found = 0; items = []; field.innerHTML = '';
-      ft.textContent = cur.t;
-      var pool = lv === 1 ? FA_FAR.filter(function (x) { return x !== cur.t; }) : lv === 2 ? cur.mid.concat(G.sample(FA_FAR, 4)) : cur.near.concat(cur.mid.slice(0, 2));
-      var list = [];
-      for (var k = 0; k < TOTAL; k++) list.push(k < TARGETS ? cur.t : G.pick(pool));
+      cur = sets[bi]; cur2 = two ? sets[bi + BOARDS] : null; found = 0; items = []; field.innerHTML = '';
+      hidden = bi >= HIDE_FROM; early = 0;
+      ft.textContent = cur.t + (cur2 ? cur2.t : '');
+      if (doneBtn) doneBtn.hidden = !hidden;
+      /* 헷갈리게 하는 그림: 1단계 전혀 다른 것 · 2단계 조금 닮은 것 · 3·4단계 닮은 것 · 5단계~ 아주 닮은 것만(두 친구면 둘 다의 닮은 것) */
+      var pool = lv === 1 ? FA_FAR.filter(function (x) { return x !== cur.t; }) : lv === 2 ? cur.mid.concat(G.sample(FA_FAR, 4)) :
+        lv >= 5 ? cur.near.concat(cur2 ? cur2.near : []) : cur.near.concat(cur.mid.slice(0, 2));
+      var list = [], n1 = TARGETS - K2;
+      for (var k = 0; k < TOTAL; k++) {
+        if (k < n1) list.push({ e: cur.t });
+        else if (k < TARGETS) list.push({ e: cur2.t });
+        else if (k < TARGETS + SMALL) list.push({ e: (k - TARGETS) % 2 && cur2 ? cur2.t : cur.t, s: true });   /* 작은 아기 친구 */
+        else list.push({ e: G.pick(pool) });
+      }
       list = G.shuffle(list);
       var r = field.getBoundingClientRect(), cols = Math.ceil(Math.sqrt(TOTAL * r.width / Math.max(r.height, 1))), rows = Math.ceil(TOTAL / cols);
       var cells = G.shuffle(G.range(cols * rows)).slice(0, TOTAL);
-      list.forEach(function (e, k) {
-        var c = cells[k] % cols, rr = Math.floor(cells[k] / cols);
+      list.forEach(function (o, k) {
+        var e = o.e, c = cells[k] % cols, rr = Math.floor(cells[k] / cols);
         var el = G.el('<span class="fa-it"></span>'); el.textContent = e;
         el.style.left = ((c + 0.5 + (Math.random() - 0.5) * 0.35) / cols * 100) + '%';
         el.style.top = ((rr + 0.5 + (Math.random() - 0.5) * 0.35) / rows * 100) + '%';
-        el.style.setProperty('--r', Math.round((Math.random() - 0.5) * (lv === 3 ? 40 : 20)) + 'deg');
-        var it = { el: el, target: e === cur.t, done: false };
+        el.style.setProperty('--r', Math.round((Math.random() - 0.5) * ROT) + 'deg');
+        var it = { el: el, target: !o.s && (e === cur.t || (!!cur2 && e === cur2.t)), small: !!o.s, k: o.s ? 0.6 : 0, done: false };
         el.addEventListener('pointerdown', function (ev) { ev.preventDefault(); tap(it); });
         field.appendChild(el); items.push(it);
       });
       fontFit(); count(); idle();
-      var unit = /🍓|🚗|⭐/.test(cur.t) ? '개' : '마리';
-      ctx.say(G.josa(cur.n, '을', '를') + ' ' + TARGETS + unit + ' 모두 찾아 줘!');
+      var unit = unitOf(cur);
+      if (!cur2 && !SMALL && !hidden) { ctx.say(G.josa(cur.n, '을', '를') + ' ' + TARGETS + unit + ' 모두 찾아 줘!'); return; }
+      var what = !cur2 ? G.josa(cur.n, '을', '를') : hidden ? G.josa(cur.n, '과', '와') + ' ' + G.josa(cur2.n, '을', '를') :
+        cur.n + ' ' + n1 + unit + '와 ' + cur2.n + ' ' + K2 + unitOf(cur2) + '를';
+      ctx.say(what + ' 모두 찾아 줘!' + (SMALL ? ' 큰 친구만 찾아요. 작은 아기 친구는 그냥 두어요.' : '') +
+        (hidden ? ' 숨은 친구가 몇인지는 비밀이야! 다 찾았다고 생각하면 다 찾았어요 단추를 눌러 줘.' : ''));
     }
-    function count() { fc.innerHTML = '<b>' + found + '</b> / ' + TARGETS; }
+    function count() { fc.innerHTML = '<b>' + found + '</b> / ' + (hidden ? '?' : TARGETS); }
     function idle() {
       clearTimeout(idleH);
       idleH = ctx.timeout(function () {
@@ -699,24 +954,47 @@ G.act({
         idle();
       }, 18000);
     }
+    /* 비밀 판: 다 찾았는데 ✅ 를 안 누르면 살짝 알려 준다 */
+    function nudge() {
+      clearTimeout(idleH);
+      idleH = ctx.timeout(function () {
+        if (!hidden) return;
+        G.ui.hint(doneBtn); ctx.bubble('다 찾은 것 같으면 ✅ 다 찾았어요를 눌러 줘!');
+        nudge();
+      }, 7000);
+    }
     function tap(it) {
       if (it.done) return;
       if (it.target) {
         it.done = true; found++; ctx.trial(true);
         it.el.classList.add('found');
-        G.sfx.tone(523 * Math.pow(1.12, found), 0.18, 'triangle', 0.26); G.buzz(10);
+        G.sfx.tone(523 * Math.pow(1.12, Math.min(found, 16)), 0.18, 'triangle', 0.26); G.buzz(10);
         var c = centerOf(it.el); G.fx.burst(c[0], c[1]);
         count(); idle();
-        if (found >= TARGETS) { clearTimeout(idleH); done(); }
-        else if (found === Math.ceil(TARGETS / 2)) ctx.bubble('벌써 반이나 찾았어!');
+        if (found >= TARGETS) { if (hidden) nudge(); else { clearTimeout(idleH); done(); } }
+        else if (!hidden && found === Math.ceil(TARGETS / 2)) ctx.bubble('벌써 반이나 찾았어!');
       } else {
         falseTaps++; ctx.trial(false);
         G.sfx.play('oops'); G.ui.wiggle(it.el);
-        ctx.bubble('음~ 그건 ' + G.josa(cur.n, '이', '가') + ' 아니야. 다시 잘 봐!');
+        ctx.bubble(it.small ? '그건 작은 아기 친구야. 큰 친구만 찾아요!' :
+          cur2 ? '음~ 그건 ' + cur.n + '도 ' + cur2.n + '도 아니야. 다시 잘 봐!' : '음~ 그건 ' + G.josa(cur.n, '이', '가') + ' 아니야. 다시 잘 봐!');
       }
     }
+    if (doneBtn) doneBtn.addEventListener('click', function () {
+      if (!hidden) return;
+      if (found >= TARGETS) { clearTimeout(idleH); done(); return; }
+      /* 아직 남았을 때 — 첫 번째는 말로만, 두 번째부터는 하나를 반짝 */
+      early++;
+      if (early === 1) { earlyN++; ctx.trial(false); }
+      G.sfx.play('oops');
+      var left = items.filter(function (x) { return x.target && !x.done; });
+      if (early >= 2 && left.length) G.ui.hint(left[0].el);
+      ctx.bubble(early >= 2 ? '반짝이는 곳에 하나 더 숨어 있어!' : '아직 숨어 있는 친구가 있어! 한 번 더 찾아볼까?');
+    });
     function done() {
       ctx.extra.falseTaps = falseTaps;
+      if (hideAny) ctx.extra.early = earlyN;
+      hidden = false; if (doneBtn) doneBtn.hidden = true;
       bi++; ctx.progress(bi, BOARDS);
       ctx.cheer(G.pick(['다 찾았다! 눈이 정말 밝구나!', '하나도 안 빠뜨렸어! 최고야!', '꼼꼼하게 다 찾았네!'])).then(function () {
         if (bi >= BOARDS) ctx.finish({ msg: '숨은 친구를 모두 찾았어! 집중 대장이야!' });
@@ -758,6 +1036,12 @@ function mazeDFS(N) {
   var corners = [[0, 0], [0, N - 1], [N - 1, 0], [N - 1, N - 1]], s = G.pick(corners);
   return { N: N, start: s, goal: [N - 1 - s[0], N - 1 - s[1]], walls: W, walk: null };
 }
+/* 같은 크기에서 길이 더 긴 미로 — 몇 개 만들어 보고 출발에서 당근까지 가장 먼 것 */
+function mazeLong(N) {
+  var best = null, bl = -1;
+  for (var t = 0; t < 6; t++) { var m = mazeDFS(N), l = mzPath(m, m.start).length; if (l > bl) { best = m; bl = l; } }
+  return best;
+}
 function mzCan(m, a, b) {
   var dr = b[0] - a[0], dc = b[1] - a[1];
   if (Math.abs(dr) + Math.abs(dc) !== 1) return false;
@@ -766,40 +1050,95 @@ function mzCan(m, a, b) {
   var w = m.walls[a[0]][a[1]];
   return !(dr === -1 ? w.n : dr === 1 ? w.s : dc === 1 ? w.e : w.w);
 }
-function mzPath(m, from) {
+function mzPath(m, from) { return mzPathTo(m, from, m.goal); }
+/* from 에서 to 까지 가장 짧은 길 (from 은 빼고 to 는 넣어서) */
+function mzPathTo(m, from, to) {
   var key = function (p) { return p[0] + ',' + p[1]; }, q = [from], prev = {}; prev[key(from)] = null;
   while (q.length) {
     var p = q.shift();
-    if (p[0] === m.goal[0] && p[1] === m.goal[1]) break;
+    if (p[0] === to[0] && p[1] === to[1]) break;
     [[-1, 0], [1, 0], [0, 1], [0, -1]].forEach(function (d) {
       var n = [p[0] + d[0], p[1] + d[1]];
       if (prev[key(n)] === undefined && mzCan(m, p, n)) { prev[key(n)] = p; q.push(n); }
     });
   }
-  var out = [], cur = m.goal;
+  var out = [], cur = to;
   while (cur && key(cur) !== key(from)) { out.unshift(cur); cur = prev[key(cur)]; }
   return out;
 }
+/* 7단계~ 열쇠 자리: 출발→당근 길에서 2~6칸 벗어난 곁길(갔다가 돌아 나와야 하는 곳). 당근 너머는 빼고, 열쇠끼리는 떨어지게 */
+function mzKeys(m, n) {
+  var key = function (p) { return p[0] + ',' + p[1]; }, dist = {}, q = [];
+  [m.start].concat(mzPath(m, m.start)).forEach(function (p) { dist[key(p)] = 0; q.push(p); });
+  while (q.length) {
+    var p = q.shift();
+    if (p[0] === m.goal[0] && p[1] === m.goal[1]) continue;
+    [[-1, 0], [1, 0], [0, 1], [0, -1]].forEach(function (d) {
+      var x = [p[0] + d[0], p[1] + d[1]];
+      if (dist[key(x)] === undefined && mzCan(m, p, x)) { dist[key(x)] = dist[key(p)] + 1; q.push(x); }
+    });
+  }
+  var all = [], r, c;
+  for (r = 0; r < m.N; r++) for (c = 0; c < m.N; c++) if (dist[r + ',' + c] > 0) all.push([r, c]);
+  var good = G.shuffle(all.filter(function (p) { var d = dist[key(p)]; return d >= 2 && d <= 6; })), out = [];
+  good.concat(G.shuffle(all)).forEach(function (p) {
+    if (out.length < n && out.every(function (o) { return mzPathTo(m, o, p).length > 3; })) out.push(p);
+  });
+  return out;
+}
+/* 열쇠를 모두 줍고 당근까지 가는 가장 짧은 길 — 길이(len)와 어쩔 수 없이 되돌아오는 칸 수(back) */
+function mzRoute(m, ks) {
+  var best = null;
+  (function perm(rest, order) {
+    if (!rest.length) {
+      var pts = [m.start].concat(order, [m.goal]), cells = [m.start], len = 0, seen = {}, bk = 0;
+      for (var j = 0; j + 1 < pts.length; j++) { var seg = mzPathTo(m, pts[j], pts[j + 1]); len += seg.length; cells = cells.concat(seg); }
+      if (best && len >= best.len) return;
+      cells.forEach(function (p) { var kk = p[0] + ',' + p[1]; if (seen[kk]) bk++; seen[kk] = 1; });
+      best = { len: len, back: bk };
+      return;
+    }
+    rest.forEach(function (p, i) { perm(rest.slice(0, i).concat(rest.slice(i + 1)), order.concat([p])); });
+  })(ks, []);
+  return best;
+}
 G.act({
-  id: 'maze', area: 'brain', title: '길 찾기', icon: '🐰', order: 6, levels: 3, mins: 3, needs: [],
+  id: 'maze', area: 'brain', title: '길 찾기', icon: '🐰', order: 6, levels: 10, mins: 3, needs: [],
   ef: ['plan', 'attend', 'inhibit'],
   desc: '토끼가 당근까지 가는 길 찾기',
   goal: '계획 — 움직이기 전에 머릿속으로 길을 먼저 그려 보고, 막히면 돌아가 다른 길을 찾는 힘',
-  how: '출발 전에 "손가락으로 먼저 길을 따라가 볼까?" 하고 눈으로 먼저 가 보게 해 주세요. 막다른 길에 가도 "돌아가면 돼!" 하고 다시 찾는 것을 칭찬해요. 화면 밖에서는 방석·의자로 거실 미로 만들기, 그림책 미로를 손가락으로 따라가기로 이어 가세요.',
-  basis: '미로 계획 과제(Porteus 미로 형식) — 3단계는 먼저 보고 길을 계획한 뒤 출발',
+  how: '출발 전에 "손가락으로 먼저 길을 따라가 볼까?" 하고 눈으로 먼저 가 보게 해 주세요. 막다른 길에 가도 "돌아가면 돼!" 하고 다시 찾는 것을 칭찬해요. 화면 밖에서는 방석·의자로 거실 미로 만들기, 그림책 미로를 손가락으로 따라가기로 이어 가세요. 4·5단계(도전·마스터)는 6칸·7칸 미로를 먼저 조금 더 오래 보고 출발해요. 6~10단계는 8칸 미로 → 🔑 열쇠를 먼저 가져와야 당근 문이 열림 → 길을 손가락으로 먼저 다 그린 뒤 토끼가 출발 → 열쇠 둘 → 더 긴 미로로 이어져요(화면 밖: "가방 챙기고, 신발 신고, 현관으로" 순서 미리 말하고 움직이기).',
+  basis: '미로 계획 과제(Porteus 미로 형식) — 3단계는 먼저 보고 길을 계획한 뒤 출발, 7단계부터 하위 목표(열쇠)·먼저 그리고 움직이기',
   run: function (ctx) {
-    var B = ctx.body, lv = ctx.level;
-    var COUNT = 4, mi = 0, m = null, pos = null, moves = 0, back = 0, bad = 0, visited = {}, locked = true, log = [];
-    /* 판마다 미로 크기 (0 = ㄱ자 길). 칸이 오르면 쉬운 판 하나가 한 크기 큰 미로로 바뀐다 — 뒤쪽 판부터 */
-    var SIZES = lv === 1 ? [[0, 0, 3, 3], [0, 3, 3, 3], [0, 3, 3, 4]] : lv === 2 ? [[4, 4, 4, 4], [4, 4, 4, 5], [4, 4, 5, 5]] : [[5, 5, 5, 5], [5, 5, 5, 6], [5, 5, 6, 6]];
-    var plan = SIZES[G.clamp(ctx.step || 1, 1, 3) - 1];
+    var B = ctx.body, lv = ctx.level, st = G.clamp(ctx.step || 1, 1, 3);
+    var COUNT = lv >= 8 ? 3 : 4, mi = 0, m = null, pos = null, moves = 0, back = 0, bad = 0, visited = {}, locked = true, log = [];
+    /* 판마다 미로 크기 (0 = ㄱ자 길). 칸이 오르면 쉬운 판 하나가 한 크기 큰 미로로 바뀐다 — 뒤쪽 판부터.
+       4단계 6칸(2·3칸은 7칸 맛보기), 5단계 7칸(2·3칸은 8칸 맛보기), 6단계부터 8칸 — 휴대폰 화면에서 칸이 손가락 크기(44px) 밑으로 작아지지 않게 8칸까지만 */
+    var SIZES = lv === 1 ? [[0, 0, 3, 3], [0, 3, 3, 3], [0, 3, 3, 4]] : lv === 2 ? [[4, 4, 4, 4], [4, 4, 4, 5], [4, 4, 5, 5]] : lv === 3 ? [[5, 5, 5, 5], [5, 5, 5, 6], [5, 5, 6, 6]] :
+      lv === 4 ? [[6, 6, 6, 6], [6, 6, 6, 7], [6, 6, 7, 7]] : lv === 5 ? [[7, 7, 7, 7], [7, 7, 7, 8], [7, 7, 8, 8]] : [[8, 8, 8, 8], [8, 8, 8, 8], [8, 8, 8, 8]];
+    var plan = SIZES[st - 1];
+    /* 6~10단계 판마다 — keys 🔑 열쇠 수 · draw 길을 먼저 그리고 출발 · long 길이 더 긴 미로.
+       6단계 8칸 · 7단계 열쇠 하나 · 8단계 먼저 그리기 · 9단계 열쇠 둘 · 10단계 긴 미로. 칸이 오르면 뒤쪽 한두 판이 다음 단계 것 */
+    function cfg(i) {
+      var tail = i >= COUNT - (st - 1);
+      if (lv < 6) return { keys: 0, draw: false, long: false };
+      return {
+        keys: lv >= 9 ? 2 + (lv >= 10 && tail ? 1 : 0) : lv === 8 ? (tail ? 2 : 1) : lv === 7 ? 1 : tail ? 1 : 0,
+        draw: lv >= 8 || (lv === 7 && tail),
+        long: lv >= 10 || (lv === 9 && tail)
+      };
+    }
+    var keys = [], nKeys = 0, route = null, drawMode = false, trailPts = [], running = false, stops = 0, idleH = null, toldKey = false, toldDraw = false;
     B.innerHTML = '<div class="bw"><div class="mz-look"></div><div class="mz-board locked"></div></div>';
     var board = G.$('.mz-board', B), look = G.$('.mz-look', B), cells = [];
     function k(p) { return p[0] + ',' + p[1]; }
+    function same(a, b) { return a[0] === b[0] && a[1] === b[1]; }
     function cellAt(p) { return cells[p[0] * m.N + p[1]]; }
     function render() {
       board.innerHTML = ''; cells = [];
       board.style.gridTemplateColumns = 'repeat(' + m.N + ',1fr)';
+      /* 4단계부터 큰 미로는 줄 높이도 똑같이 — 그림 있는 줄만 커져 빈 줄이 손가락보다 작아지지 않게 */
+      if (lv >= 4) board.style.gridTemplateRows = 'repeat(' + m.N + ',minmax(0,1fr))';
       board.style.setProperty('--fs', 'calc(min(100vw,560px,62vh) / ' + m.N + ' * .52)');
       for (var r = 0; r < m.N; r++) for (var c = 0; c < m.N; c++) {
         var el = G.el('<div class="mz-cell"></div>'); el.dataset.r = r; el.dataset.c = c;
@@ -807,7 +1146,8 @@ G.act({
         else if (!m.walk[r + ',' + c]) { el.classList.add('bush'); el.textContent = G.pick(['🌳', '🌲', '🌿']); }
         board.appendChild(el); cells.push(el);
       }
-      cellAt(m.goal).innerHTML = '<span>🥕</span>';
+      cellAt(m.goal).innerHTML = '<span>🥕</span>' + (keys.length ? '<span class="mz-lock">🔒</span>' : '');
+      keys.forEach(function (p) { cellAt(p).innerHTML = '<span class="mz-key">🔑</span>'; });
       place();
     }
     function place() {
@@ -817,6 +1157,35 @@ G.act({
       if (pos[0] === m.goal[0] && pos[1] === m.goal[1]) c.innerHTML = '';
       c.appendChild(r);
     }
+    /* 지금 가야 할 곳: 남은 열쇠 중 가장 가까운 것, 없으면 당근 */
+    function nextGoal(from) {
+      var best = m.goal, bl = 1e9;
+      keys.forEach(function (p) { var l = mzPathTo(m, from, p).length; if (l < bl) { bl = l; best = p; } });
+      return best;
+    }
+    function gateNote() {
+      G.sfx.play('oops'); G.ui.wiggle(G.$('.mz-lock', board));
+      ctx.bubble('🔒 문이 잠겼어! 🔑 열쇠를 먼저 가져와요.');
+      G.ui.hint(cellAt(nextGoal(pos)));
+    }
+    /* 한 칸 깡충 — 누르기·끌기·그린 길 모두 여기로. 당근에 닿으면 true */
+    function stepTo(t) {
+      moves++;
+      if (visited[k(t)]) back++;
+      visited[k(t)] = 1;
+      pos = t; place(); G.sfx.tone(600 + Math.random() * 200, 0.08, 'sine', 0.2); G.buzz(8);
+      for (var j = 0; j < keys.length; j++) if (same(keys[j], t)) { gotKey(j); break; }
+      if (pos[0] === m.goal[0] && pos[1] === m.goal[1]) { win(); return true; }
+      return false;
+    }
+    function gotKey(j) {
+      var kc = cellAt(keys[j]), ks = G.$('.mz-key', kc); if (ks) ks.remove();
+      keys.splice(j, 1);
+      G.sfx.play('sparkle'); var c = centerOf(kc); G.fx.burst(c[0], c[1], ['🔑', '✨']);
+      if (keys.length) { ctx.bubble('🔑 열쇠를 찾았다! 하나 더!'); return; }
+      var lk = G.$('.mz-lock', board); if (lk) lk.remove();
+      G.sfx.play('up'); ctx.bubble('🔓 문이 열렸어! 이제 당근으로 가자!');
+    }
     function tryMove(t) {
       if (locked) return;
       if (t[0] === pos[0] && t[1] === pos[1]) return;
@@ -824,39 +1193,105 @@ G.act({
         var adj = Math.abs(t[0] - pos[0]) + Math.abs(t[1] - pos[1]) === 1;
         bad++; G.ui.wiggle(G.$('.mz-rab', board)); G.sfx.play('oops');
         ctx.bubble(adj ? (m.walls ? '앗, 벽이야! 다른 길로!' : '앗, 덤불이야! 다른 길로!') : '토끼는 한 칸씩 깡충!');
-        if (bad >= 3) { var p = mzPath(m, pos); if (p.length) G.ui.hint(cellAt(p[0])); bad = 0; }
+        if (bad >= 3) { var p = mzPathTo(m, pos, nextGoal(pos)); if (p.length) G.ui.hint(cellAt(p[0])); bad = 0; }
         return;
       }
-      bad = 0; moves++;
-      if (visited[k(t)]) back++;
-      visited[k(t)] = 1;
-      pos = t; place(); G.sfx.tone(600 + Math.random() * 200, 0.08, 'sine', 0.2); G.buzz(8);
-      if (pos[0] === m.goal[0] && pos[1] === m.goal[1]) win();
+      if (keys.length && same(t, m.goal)) { gateNote(); return; }   /* 열쇠 없이 당근 문 앞 */
+      bad = 0; stepTo(t);
     }
+
+    /* ── 8단계~ 먼저 그리기: 손가락으로 길을 그리면(벽은 막지 않는다) 열쇠나 당근에 닿을 때 토끼가 그 길로 간다 ── */
+    function trailEnd() { return trailPts.length ? trailPts[trailPts.length - 1] : pos; }
+    function isKey(p) { return keys.some(function (q) { return same(p, q); }); }
+    function clearPlan() { trailPts.forEach(function (p) { cellAt(p).classList.remove('plan'); }); trailPts = []; }
+    function drawAt(c) {
+      if (locked || running || !c) return true;
+      var end = trailEnd();
+      if (same(c, end)) return true;
+      var prev = trailPts.length > 1 ? trailPts[trailPts.length - 2] : pos;
+      if (trailPts.length && same(c, prev)) { cellAt(trailPts.pop()).classList.remove('plan'); idleDraw(); return true; }   /* 한 칸 되돌리면 지운다 */
+      if (Math.abs(c[0] - end[0]) + Math.abs(c[1] - end[1]) !== 1) return false;
+      trailPts.push(c); cellAt(c).classList.add('plan'); G.sfx.tone(700 + Math.min(trailPts.length, 40) * 8, 0.05, 'sine', 0.12);
+      idleDraw();
+      if (same(c, m.goal) || isKey(c)) runTrail();
+      return true;
+    }
+    function runTrail() {
+      running = true; clearTimeout(idleH);
+      var pts = trailPts.slice(), j = 0;
+      look.textContent = '🐰 깡충깡충!';
+      function stop(gate) {
+        stops++; clearPlan(); running = false;
+        G.ui.wiggle(G.$('.mz-rab', board));
+        if (gate) gateNote();
+        else {
+          G.sfx.play('oops'); ctx.bubble(G.pick(['앗, 벽이야! 여기서부터 다시 그려 볼까?', '여기서 막혔네! 다른 길로 그려 보자.']));
+          if (stops >= 2) { var p = mzPathTo(m, pos, nextGoal(pos)); if (p.length) G.ui.hint(cellAt(p[0])); }
+        }
+        look.textContent = '✏️ 여기서부터 다시 그려요';
+        idleDraw();
+      }
+      function hop() {
+        if (j >= pts.length) { clearPlan(); running = false; look.textContent = '✏️ 이어서 길을 그려요'; idleDraw(); return; }
+        var t = pts[j];
+        if (keys.length && same(t, m.goal)) { stop(true); return; }
+        if (!mzCan(m, pos, t)) { stop(false); return; }
+        j++; cellAt(t).classList.remove('plan');
+        if (stepTo(t)) { clearPlan(); return; }
+        ctx.timeout(hop, pace(170));
+      }
+      ctx.timeout(hop, pace(220));
+    }
+    function idleDraw() {
+      clearTimeout(idleH);
+      if (!drawMode) return;
+      idleH = ctx.timeout(function () {
+        if (locked || running) return;
+        ctx.bubble(trailPts.length ? (keys.length ? '열쇠나 당근까지 이어서 그려 봐!' : '당근까지 이어서 그려 봐!') : '토끼에서 시작해서 손가락으로 길을 그려 봐!');
+        if (!trailPts.length) { var p = mzPathTo(m, pos, nextGoal(pos)); if (p.length) G.ui.hint(cellAt(p[0])); }
+        idleDraw();
+      }, 15000);
+    }
+
     function win() {
-      locked = true; board.classList.add('locked');
-      var opt = mzPath(m, m.start).length;
-      log.push({ n: m.N, mv: moves, opt: opt, back: back });
-      /* 되돌아온 칸은 미로가 클수록 조금 더 너그럽게 (4칸 미로 2, 5칸 4, 6칸 5) */
-      var ok = m.N === 3 ? true : back <= (m.N >= 6 ? 5 : m.N >= 5 ? 4 : 2);
+      locked = true; board.classList.add('locked'); clearTimeout(idleH);
+      var opt = route ? route.len : mzPath(m, m.start).length, need = route ? route.back : 0;
+      var entry = { n: m.N, mv: moves, opt: opt, back: back };
+      if (lv >= 6) { entry.keys = nKeys; entry.draw = drawMode ? 1 : 0; entry.stops = stops; }
+      log.push(entry);
+      /* 되돌아온 칸은 미로가 클수록 조금 더 너그럽게 (4칸 미로 2, 5칸 4, 6칸 5, 7칸 6, 8칸 7) — 열쇠 곁길에서 나오는 칸은 빼고 센다.
+         먼저 그리기 판은 벽에 막힌 것이 한 번까지 */
+      var ok = m.N === 3 ? true : back - need <= (m.N >= 8 ? 7 : m.N >= 7 ? 6 : m.N >= 6 ? 5 : m.N >= 5 ? 4 : 2) && (!drawMode || stops <= 1);
       ctx.trial(ok);
       ctx.extra.mazes = log;
       G.sfx.play('great'); var c = centerOf(cellAt(m.goal)); G.fx.burst(c[0], c[1], ['🥕', '⭐', '✨']);
       ctx.cheer(G.pick(['냠냠! 당근을 찾았다!', '길을 찾았어! 토끼가 신났어!', '깡충깡충 도착! 최고야!'])).then(function () {
         mi++; ctx.progress(mi, COUNT);
-        if (mi >= COUNT) ctx.finish({ msg: '토끼 길을 다 찾아 줬어! 생각하고 움직이는 힘이 멋져!' });
+        if (mi >= COUNT) ctx.finish({ msg: lv >= 7 ? '열쇠도 찾고 당근도 찾았어! 생각하고 움직이는 힘이 정말 멋져!' : '토끼 길을 다 찾아 줬어! 생각하고 움직이는 힘이 멋져!' });
         else start();
       });
     }
     function start() {
-      m = plan[mi] ? mazeDFS(plan[mi]) : mazeL1();
+      var cf = cfg(mi);
+      m = !plan[mi] ? mazeL1() : cf.long ? mazeLong(plan[mi]) : mazeDFS(plan[mi]);
       pos = m.start.slice(); moves = 0; back = 0; bad = 0; visited = {}; visited[k(pos)] = 1;
+      keys = cf.keys ? mzKeys(m, cf.keys) : []; nKeys = keys.length; route = keys.length ? mzRoute(m, keys) : null;
+      drawMode = cf.draw; trailPts = []; running = false; stops = 0; clearTimeout(idleH);
       render();
       if (lv >= 3) {
         locked = true; board.classList.add('locked');
         look.textContent = '👀 먼저 눈으로 길을 찾아봐!';
-        ctx.say(mi === 0 ? '먼저 생각하고 출발! 눈으로 당근까지 가는 길을 따라가 봐.' : '눈으로 먼저 길을 찾아봐!').then(function () { return ctx.wait(pace(2500)); }).then(function () {
-          look.textContent = '🏁 출발!'; G.sfx.play('up'); locked = false; board.classList.remove('locked');
+        /* 먼저 보는 시간: 3단계 2.5초 그대로, 4단계부터는 미로가 큰 만큼 조금 더 (6칸 3초, 7칸 3.5초, 8칸 4초) */
+        var lookMs = lv >= 4 ? 2500 + (m.N - 5) * 500 : 2500;
+        /* 처음 나오는 규칙은 한 번 알려 준다 */
+        var news = [];
+        if (keys.length && !toldKey) { toldKey = true; news.push('당근 밭 문이 잠겼어요! 열쇠를 ' + (keys.length > 1 ? '모두 ' : '') + '먼저 가져와야 문이 열려요.'); }
+        if (drawMode && !toldDraw) { toldDraw = true; news.push('이번엔 토끼 길을 손가락으로 먼저 그려요. ' + (keys.length ? '열쇠나 당근까지' : '당근까지') + ' 그리면 토끼가 그 길로 깡충깡충 가요!'); }
+        ctx.say(mi === 0 ? '먼저 생각하고 출발! 눈으로 당근까지 가는 길을 따라가 봐.' : '눈으로 먼저 길을 찾아봐!').then(function () {
+          return news.length ? ctx.say(news.join(' ')) : null;
+        }).then(function () { return ctx.wait(pace(lookMs)); }).then(function () {
+          look.textContent = drawMode ? '✏️ 손가락으로 길을 그려요!' : '🏁 출발!'; G.sfx.play('up'); locked = false; board.classList.remove('locked');
+          idleDraw();
         });
       } else {
         locked = false; board.classList.remove('locked');
@@ -864,15 +1299,21 @@ G.act({
         if (mi === 0) ctx.say('토끼가 배고파요. 당근까지 가는 길을 찾아 줘! 옆 칸을 누르면 깡충 가요.');
       }
     }
-    /* 누르기 + 끌기 */
+    /* 누르기 + 끌기 (먼저 그리기 판은 그리기) */
     var dragging = false;
     function cellFrom(e) {
       var t = document.elementFromPoint(e.clientX, e.clientY); t = t && t.closest ? t.closest('.mz-cell') : null;
       return t && board.contains(t) ? [+t.dataset.r, +t.dataset.c] : null;
     }
-    ctx.on(board, 'pointerdown', function (e) { e.preventDefault(); dragging = true; var c = cellFrom(e); if (c) tryMove(c); });
+    ctx.on(board, 'pointerdown', function (e) {
+      e.preventDefault(); dragging = true; var c = cellFrom(e);
+      if (!c) return;
+      if (!drawMode) { tryMove(c); return; }
+      if (drawAt(c) === false) { ctx.bubble('🐰 토끼나 그린 길 끝에서 이어서 그려요!'); G.ui.hint(cellAt(trailEnd())); }
+    });
     ctx.on(board, 'pointermove', function (e) {
       if (!dragging || locked) return; var c = cellFrom(e);
+      if (drawMode) { if (c) drawAt(c); return; }
       if (c && (c[0] !== pos[0] || c[1] !== pos[1]) && Math.abs(c[0] - pos[0]) + Math.abs(c[1] - pos[1]) === 1 && mzCan(m, pos, c)) tryMove(c);
     });
     ctx.on(window, 'pointerup', function () { dragging = false; });
@@ -885,28 +1326,36 @@ G.act({
    7. 기다려! 쿠키 — 만족 지연·자기조절
    =========================================================== */
 var WT_HELP = [
-  { cls: 'hands', e: '🙌', t: '손을 무릎에 올려요', say: '기다리는 동안 손을 무릎에 살짝 올려 볼까?' },
-  { cls: 'breathe', e: '🌬️', t: '흡~ 후~ 숨쉬기', say: '기다리는 동안 꽃 냄새 맡듯 흡~ 촛불 끄듯 후~ 해 볼까?' },
-  { cls: 'song', e: '🎵', t: '노래 불러요', say: '기다리는 동안 자비스랑 노래 부르자! 랄라라~' }
+  { cls: 'hands', e: '🙌', t: '손을 무릎에 올려요', say: '기다리는 동안 손을 무릎에 살짝 올려 볼까?', pick: '손 무릎에', mine: '손을 무릎에 올리기로 했구나! 좋은 방법이야.' },
+  { cls: 'breathe', e: '🌬️', t: '흡~ 후~ 숨쉬기', say: '기다리는 동안 꽃 냄새 맡듯 흡~ 촛불 끄듯 후~ 해 볼까?', pick: '숨쉬기', mine: '숨쉬기를 골랐구나! 꽃 냄새 맡듯 흡~ 촛불 끄듯 후~' },
+  { cls: 'song', e: '🎵', t: '노래 불러요', say: '기다리는 동안 자비스랑 노래 부르자! 랄라라~', pick: '노래', mine: '노래를 골랐구나! 자비스랑 같이 랄라라~' }
 ];
 G.act({
-  id: 'wait', area: 'brain', title: '기다려! 쿠키', icon: '🍪', order: 7, levels: 3, mins: 2, needs: [],
+  id: 'wait', area: 'brain', title: '기다려! 쿠키', icon: '🍪', order: 7, levels: 10, mins: 2, needs: [],
   ef: ['inhibit', 'regulate'],
   desc: '종이 울리면 쿠키가 두 개!',
   goal: '만족 지연·자기조절 — 지금 당장 갖고 싶은 마음을 참고 기다리며, 기다리는 방법(손 두기·숨쉬기·노래)을 스스로 쓰는 힘',
-  how: '기다리는 동안 자비스가 보여 주는 방법(손 무릎에, 숨쉬기, 노래)을 부모도 같이 해 주세요. 못 기다려도 괜찮아요 — "다음엔 노래하면서 기다려 볼까?"로 끝내요. 화면 밖에서는 간식 앞에서 "모래시계 다 내려가면 먹자", 엘리베이터 기다리며 숫자 세기로 이어 가세요.',
-  basis: '만족 지연(마시멜로) 과제 변형 (Mischel) — 기다리기 전략 모델링 포함',
+  how: '기다리는 동안 자비스가 보여 주는 방법(손 무릎에, 숨쉬기, 노래)을 부모도 같이 해 주세요. 못 기다려도 괜찮아요 — "다음엔 노래하면서 기다려 볼까?"로 끝내요. 화면 밖에서는 간식 앞에서 "모래시계 다 내려가면 먹자", 엘리베이터 기다리며 숫자 세기로 이어 가세요. 4·5단계(도전·마스터)는 한 번에 20~36초쯤 기다려요. 6~10단계는 기다리는 방법을 아이가 스스로 고르고 → 쿠키가 "나 먹어 줘~" 하고 반짝여도 참고 → 더 길게(30~46초) → 중간에 "지금 먹을래?" 물으면 스스로 기다리기로 정하고 → 가장 길게(36~54초) 기다려요.',
+  basis: '만족 지연(마시멜로) 과제 변형 (Mischel) — 기다리기 전략 모델링 포함, 6단계부터 전략 스스로 고르기·유혹 견디기·지금/나중 선택',
   run: function (ctx) {
-    var B = ctx.body, lv = ctx.level;
-    /* 칸이 오르면 기다리는 시간이 다음 단계 쪽으로 조금씩 (초, ctx.tune) */
-    var BASE = ctx.tune([5, 10, 20]), ROUNDS = 3, r = 0, total = 0, waitedN = 0, stopMel = null;
+    var B = ctx.body, lv = ctx.level, st = G.clamp(ctx.step || 1, 1, 3);
+    /* 칸이 오르면 기다리는 시간이 다음 단계 쪽으로 조금씩 (초, ctx.tune). 4단계 25초 · 5·6·7단계 30초 · 8·9단계 38초 · 10단계 45초 (세 판은 0.8·1·1.2배) */
+    var BASE = ctx.tune([5, 10, 20, 25, 30, 30, 30, 38, 38, 45]), ROUNDS = 3, r = 0, total = 0, waitedN = 0, stopMel = null;
+    /* 6단계~ 기다리는 방법 스스로 고르기 · 7단계~ 쿠키의 유혹(반짝 두 번) · 9단계~ 중간에 "지금 먹을래?" 묻기.
+       칸이 오르면 뒤쪽 한두 판이 다음 단계 것을 맛본다 */
+    function tail(i) { return i >= ROUNDS - (st - 1); }
+    function choose(i) { return lv >= 6 || (lv === 5 && tail(i)); }
+    function tempt(i) { return lv >= 7 || (lv === 6 && tail(i)); }
+    function offer(i) { return lv >= 9 || (lv === 8 && tail(i)); }
     B.innerHTML = '<div class="bw"><div class="wt-plate"><small>내 접시</small><span class="wt-got"></span></div>' +
       '<div class="wt-main"><div class="wt-cookie" role="button" aria-label="쿠키">🍪<span class="two">×2</span></div>' +
       '<div class="wt-jarbox"><span class="wt-bell">🔔</span><div class="wt-jar"><div class="wt-fill"></div><div class="wt-stars"></div></div></div></div>' +
-      '<div class="wt-help"><span class="he"></span><span class="ht"></span></div></div>';
-    var cookie = G.$('.wt-cookie', B), two = G.$('.two', B), fill = G.$('.wt-fill', B), stars = G.$('.wt-stars', B), bell = G.$('.wt-bell', B),
-      help = G.$('.wt-help', B), plate = G.$('.wt-got', B);
-    var waiting = false, early = false, t0 = 0, dur = 0;
+      '<div class="wt-help"><span class="he"></span><span class="ht"></span></div>' +
+      (choose(ROUNDS - 1) ? '<div class="wt-pick" hidden></div>' : '') +
+      (offer(ROUNDS - 1) ? '<div class="wt-offer" hidden><button class="wo-wait"><span>✋</span>기다릴래요 (두 개)</button><button class="wo-eat"><span>🍪</span>지금 먹을래요 (하나)</button></div>' : '') + '</div>';
+    var wrap = G.$('.bw', B), cookie = G.$('.wt-cookie', B), two = G.$('.two', B), fill = G.$('.wt-fill', B), stars = G.$('.wt-stars', B), bell = G.$('.wt-bell', B),
+      help = G.$('.wt-help', B), plate = G.$('.wt-got', B), pick = G.$('.wt-pick', B), offerBox = G.$('.wt-offer', B);
+    var waiting = false, early = false, t0 = 0, dur = 0, chose = [], resisted = 0, offerWait = 0, offerH = null, toldT = false, toldO = false;
     ctx.cleanup(function () { if (stopMel) stopMel(); });
 
     cookie.addEventListener('pointerdown', function (e) {
@@ -914,22 +1363,80 @@ G.act({
       if (!waiting) { G.sfx.play('tap'); return; }
       if (early) { G.sfx.play('tap'); return; }
       early = true;
+      if (offerBox && !offerBox.hidden) closeOffer();
       cookie.classList.add('bit'); two.textContent = '×1';
       G.sfx.play('oops');
       ctx.say(G.pick(['괜찮아, 다시 기다려 보자. 땡 할 때까지!', '앗, 쿠키가 기다려 달래. 다시 기다려 볼까?']), { repeat: false });
     });
+    function setHelp(h) {
+      help.style.display = '';
+      help.className = 'wt-help ' + h.cls; help.querySelector('.he').textContent = h.e; help.querySelector('.ht').textContent = h.t;
+    }
+    /* 6단계~: 기다리는 방법을 아이가 고른다 (틀린 답 없음) */
+    function pickHelp() {
+      help.style.display = 'none'; pick.hidden = false;
+      pick.innerHTML = WT_HELP.map(function (x, j) { return '<button data-j="' + j + '"><span>' + x.e + '</span>' + x.pick + '</button>'; }).join('');
+      ctx.say('어떻게 기다릴까? 네가 골라 봐!');
+      return new Promise(function (res) {
+        var got = false, hh = ctx.interval(function () { ctx.bubble('손 무릎에, 숨쉬기, 노래 — 하나를 골라요!'); G.ui.hint(pick); }, 12000);
+        G.$$('button', pick).forEach(function (b) {
+          b.addEventListener('click', function () {
+            if (got) return; got = true;
+            clearInterval(hh); G.sfx.play('tap'); pick.hidden = true; pick.innerHTML = '';
+            var j = +b.dataset.j; chose.push(WT_HELP[j].cls); res(j);
+          });
+        });
+      });
+    }
+    /* 7단계~: 쿠키가 "나 먹어 줘~" 하고 반짝 — 참으면 칭찬 */
+    function doTempt() {
+      if (early) return;
+      cookie.classList.remove('tempt'); void cookie.offsetWidth; cookie.classList.add('tempt');
+      if (!calm()) G.sfx.play('sparkle');
+      var c = centerOf(cookie); floatText(wrap, G.pick(['냠냠~ 나 먹어 줘~', '바삭바삭 맛있겠지?', '한 입만 먹을래?']), c[0], c[1] - 40);
+      ctx.timeout(function () {
+        cookie.classList.remove('tempt');
+        if (waiting && !early) { resisted++; ctx.bubble(G.pick(['잘 참고 있어! 👍', '꾹 참았다! 멋져!', '쿠키가 불러도 참았어!'])); }
+      }, 1500);
+    }
+    /* 9단계~: 중간에 "지금 먹을래?" — 스스로 기다리기로 정한다(지금 먹어도 괜찮다) */
+    function doOffer() {
+      if (early || !waiting) return;
+      help.style.display = 'none'; offerBox.hidden = false;
+      ctx.say('지금 쿠키 하나 먹을래? 아니면 땡 할 때까지 기다려서 두 개 먹을래?', { repeat: false });
+      offerH = ctx.timeout(closeOffer, pace(8000));
+    }
+    function closeOffer() { clearTimeout(offerH); if (offerBox) offerBox.hidden = true; help.style.display = ''; }
+    if (offerBox) {
+      G.$('.wo-wait', offerBox).addEventListener('click', function () {
+        if (offerBox.hidden || !waiting) return;
+        closeOffer(); offerWait++; G.sfx.play('good');
+        ctx.say(G.pick(['좋아, 기다리기로 정했구나! 멋진 선택이야.', '스스로 기다리기로 했어! 정말 멋져.']), { repeat: false });
+      });
+      G.$('.wo-eat', offerBox).addEventListener('click', function () {
+        if (offerBox.hidden || !waiting || early) return;
+        closeOffer(); early = true;
+        cookie.classList.add('bit'); two.textContent = '×1'; G.sfx.play('tap');
+        ctx.say('알았어, 쿠키 하나! 땡 할 때까지 같이 기다려 보자.', { repeat: false });
+      });
+    }
     function round() {
-      var h = WT_HELP[r % WT_HELP.length];
+      var h = WT_HELP[r % WT_HELP.length], self = choose(r), tm = tempt(r), of = offer(r);
       dur = Math.round(BASE * [0.8, 1, 1.2][r] * 1000);
       early = false; cookie.classList.remove('bit'); two.textContent = '×2';
       fill.style.height = '0'; stars.innerHTML = '';
-      help.className = 'wt-help ' + h.cls; help.querySelector('.he').textContent = h.e; help.querySelector('.ht').textContent = h.t;
+      if (self) help.style.display = 'none'; else setHelp(h);
       var intro = r === 0 ? '쿠키 가게예요! 땡 할 때까지 기다려요. 그럼 쿠키 두 개!' :
         G.pick(['또 기다려 볼까? 땡 하면 두 개!', '이번엔 조금 더 길어요. 할 수 있어!']);
-      ctx.say(intro).then(function () { return ctx.say(h.say); }).then(function () {
+      if (tm && !toldT) { toldT = true; intro += ' 쿠키가 반짝반짝 "나 먹어 줘~" 해도 꾹 참아요!'; }
+      if (of && !toldO) { toldO = true; intro += ' 중간에 자비스가 지금 먹을지 물어볼 거예요. 기다릴지 네가 정해요!'; }
+      ctx.say(intro).then(function () {
+        if (!self) return ctx.say(h.say);
+        return pickHelp().then(function (j) { h = WT_HELP[j]; setHelp(h); return ctx.say(h.mine); });
+      }).then(function () {
         waiting = true; t0 = performance.now();
         if (h.cls === 'song' && !calm()) stopMel = G.sfx.melody([['C5', .5], ['E5', .5], ['G5', 1], ['E5', .5], ['C5', .5], ['D5', 1], [null, .5]], 96, true);
-        var lastSec = 0, starN = 0;
+        var lastSec = 0, starN = 0, TT = tm ? [0.25, 0.75] : [], ti = 0, offered = !of;
         ctx.loop(function () {
           var el = performance.now() - t0, p = Math.min(1, el / dur);
           fill.style.height = (p * 100) + '%';
@@ -937,12 +1444,15 @@ G.act({
           while (starN < want) { stars.appendChild(G.el('<span>⭐</span>')); starN++; }
           var sec = Math.floor(el / 1000);
           if (sec > lastSec) { lastSec = sec; if (!calm() && h.cls !== 'song') G.sfx.play('tick'); }
+          if (ti < TT.length && p >= TT[ti]) { ti++; doTempt(); }
+          if (!offered && p >= 0.5) { offered = true; doOffer(); }
           if (p >= 1) { ring(); return false; }
         });
       });
     }
     function ring() {
       waiting = false; if (stopMel) { stopMel(); stopMel = null; }
+      if (offerBox) closeOffer();
       bell.classList.remove('ring'); void bell.offsetWidth; bell.classList.add('ring');
       G.sfx.play('ding'); G.buzz([20, 40, 20]);
       var n = early ? 1 : 2, ok = !early;
@@ -961,7 +1471,13 @@ G.act({
         '쿠키 하나! 다시 기다린 것도 정말 잘했어. 다음엔 땡 할 때까지 해 보자!';
       (ok ? ctx.cheer(msg, cookie) : ctx.say(msg, { repeat: false })).then(function () {
         r++; ctx.progress(r, ROUNDS);
-        if (r >= ROUNDS) { ctx.extra.waited = waitedN; ctx.extra.sec = BASE; ctx.finish({ msg: '쿠키를 ' + total + '개나 모았어! 기다리는 힘이 정말 멋져!' }); }
+        if (r >= ROUNDS) {
+          ctx.extra.waited = waitedN; ctx.extra.sec = BASE;
+          if (chose.length) ctx.extra.chose = chose;
+          if (tempt(ROUNDS - 1)) ctx.extra.resisted = resisted;
+          if (offerBox) ctx.extra.offerWait = offerWait;
+          ctx.finish({ msg: '쿠키를 ' + total + '개나 모았어! 기다리는 힘이 정말 멋져!' });
+        }
         else round();
       });
     }
@@ -973,11 +1489,16 @@ G.act({
 /* ===========================================================
    8. 반대로 해요 — 억제 + 운동 (HTKS)
    =========================================================== */
-var OP_NAME = { head: '머리', shoulder: '어깨', knee: '무릎', foot: '발' };
-var OP_OPP = { head: 'foot', foot: 'head', shoulder: 'knee', knee: 'shoulder' };
-function opFigure() {
+var OP_NAME = { head: '머리', shoulder: '어깨', knee: '무릎', foot: '발', ear: '귀', belly: '배' };
+/* 6단계~ 세 번째 짝꿍 귀 ↔ 배 (어느 짝꿍 규칙에서도 그대로) */
+var OP_OPP = { head: 'foot', foot: 'head', shoulder: 'knee', knee: 'shoulder', ear: 'belly', belly: 'ear' };
+/* 4·5단계 새 짝꿍 (HTKS 3부): 머리 ↔ 무릎, 어깨 ↔ 발 — 익숙한 짝꿍을 참고 새 짝꿍으로 */
+var OP_NEW = { head: 'knee', knee: 'head', shoulder: 'foot', foot: 'shoulder', ear: 'belly', belly: 'ear' };
+function opFigure(three) {
   return '<svg class="op-fig" viewBox="0 0 200 300" aria-hidden="true">' +
+    (three ? '<circle class="op-part" data-p="ear" cx="63" cy="48" r="11" fill="#ffc9a3"/><circle class="op-part" data-p="ear" cx="137" cy="48" r="11" fill="#ffc9a3"/>' : '') +
     '<rect x="62" y="84" width="76" height="92" rx="26" fill="#8fb4ff"/>' +
+    (three ? '<ellipse class="op-part" data-p="belly" cx="100" cy="138" rx="20" ry="16" fill="#c3d6ff"/>' : '') +
     '<rect x="34" y="90" width="20" height="74" rx="10" fill="#8fb4ff" transform="rotate(14 44 90)"/>' +
     '<rect x="146" y="90" width="20" height="74" rx="10" fill="#8fb4ff" transform="rotate(-14 156 90)"/>' +
     '<rect x="72" y="168" width="22" height="104" rx="11" fill="#5b7fd6"/><rect x="106" y="168" width="22" height="104" rx="11" fill="#5b7fd6"/>' +
@@ -989,30 +1510,86 @@ function opFigure() {
     '</svg>';
 }
 G.act({
-  id: 'opposite', area: 'brain', title: '반대로 해요', icon: '🙃', order: 8, levels: 3, mins: 3, needs: [],
+  id: 'opposite', area: 'brain', title: '반대로 해요', icon: '🙃', order: 8, levels: 10, mins: 3, needs: [],
   ef: ['inhibit', 'wm', 'attend'],
   desc: '"머리!" 하면 발을 짚어요',
   goal: '억제·작업기억·주의 — 들은 말을 바로 따라 하지 않고, 규칙을 기억해 반대 행동으로 바꾸는 힘(몸으로 하는 실행기능)',
-  how: '부모가 옆에서 같이 일어나 함께 해 주세요. 아이가 헷갈리면 천천히 말하고, 맞으면 크게 손뼉! 화면 밖에서는 차 안·목욕 시간에 "머리-발" 반대 놀이, "가라 하면 서기, 서라 하면 가기" 놀이로 짧게 이어 가세요.',
-  basis: '머리-발가락-무릎-어깨 과제 HTKS (Ponitz 외, 2008)',
+  how: '부모가 옆에서 같이 일어나 함께 해 주세요. 아이가 헷갈리면 천천히 말하고, 맞으면 크게 손뼉! 화면 밖에서는 차 안·목욕 시간에 "머리-발" 반대 놀이, "가라 하면 서기, 서라 하면 가기" 놀이로 짧게 이어 가세요. 4단계(도전)는 익숙한 짝꿍으로 시작했다가 새 짝꿍(머리 ↔ 무릎, 어깨 ↔ 발)으로 바뀌고, 5단계(마스터)는 처음부터 새 짝꿍이에요. 6~10단계는 세 번째 짝꿍(귀 ↔ 배)이 더해지고 → 중간에 새 짝꿍으로 바뀌고 → 처음 짝꿍으로 다시 돌아오고 → "짝꿍 바꿔!" 한마디만 듣고 머릿속 짝꿍으로 바꾸고 → 세 번 바뀌어요.',
+  basis: '머리-발가락-무릎-어깨 과제 HTKS (Ponitz 외, 2008) — 6단계부터 세 짝꿍·규칙 오가기',
   run: function (ctx) {
-    var B = ctx.body, lv = ctx.level, st = ctx.step || 1;
+    var B = ctx.body, lv = ctx.level, st = ctx.step || 1, s3 = G.clamp(st, 1, 3);
     /* 칸이 오르면 — 2단계: 어깨·무릎 명령이 한 번(2칸)·두 번(3칸) 섞인다(3단계 맛보기). 3단계: 명령이 하나씩 더 */
-    var N = 6 + (lv >= 3 ? st - 1 : 0), parts = lv === 1 ? ['head', 'shoulder', 'knee', 'foot'] : lv === 2 ? ['head', 'foot'] : ['head', 'foot', 'shoulder', 'knee'];
+    var N = 6 + (lv >= 3 ? st - 1 : 0), parts = lv === 1 ? ['head', 'shoulder', 'knee', 'foot'] : lv === 2 ? ['head', 'foot'] : lv >= 6 ? ['head', 'foot', 'shoulder', 'knee', 'ear', 'belly'] : ['head', 'foot', 'shoulder', 'knee'];
     var opposite = lv >= 2, extra = lv === 2 ? st - 1 : 0;
-    B.innerHTML = '<div class="bw"><div class="b-rule"></div><div class="op-wrap">' + opFigure() + '<div class="op-say"></div></div></div>';
+    /* 4·5단계 — 새 짝꿍(OP_NEW). 4단계는 익숙한 짝꿍 명령(PRE개: 1칸 3 → 2칸 2 → 3칸 1) 뒤에 새 짝꿍으로 바뀐다(모두 7개).
+       5단계는 처음부터 새 짝꿍, 명령 7개(2·3칸은 귀·배 명령이 한두 번 — 6단계 맛보기) */
+    var newRule = lv >= 4 && lv <= 5, PRE = lv === 4 ? 4 - s3 : 0, told = PRE === 0;
+    if (lv === 4) N = 7; else if (lv >= 5) N = ctx.tune([6, 6, 6, 7, 7, 8, 9, 10, 10, 12]);
+    var three = lv >= 6 || (lv === 5 && s3 > 1);
+    /* 6~10단계 — 세 짝꿍(귀 ↔ 배)으로 처음 짝꿍에서 시작해, SW 자리에서 새 짝꿍 ↔ 처음 짝꿍으로 오간다.
+       7단계 한 번 · 8단계 두 번(다시 처음 짝꿍) · 9단계 "짝꿍 바꿔!"만 말하고(QUIET) 짝꿍은 머릿속으로 · 10단계 세 번.
+       칸이 오르면 다음 단계의 바뀜을 뒤쪽에서 맛본다 */
+    var SW = [], QUIET = [], swDone = 0;
+    if (lv >= 6) {
+      SW = lv === 6 ? (s3 > 1 ? [6] : []) : lv === 7 ? (s3 > 1 ? [4, 8] : [4]) : lv === 8 ? [3, 7] : lv === 9 ? [[3, 7], [3, 7, 10], [3, 6, 9]][s3 - 1] : [3, 6, 9];
+      QUIET = lv === 8 ? [7, 3].slice(0, s3 - 1) : lv >= 9 ? SW.slice() : [];
+    }
+    function mapOf(k) {
+      if (lv >= 6) return SW.filter(function (s) { return s <= k; }).length % 2 ? OP_NEW : OP_OPP;
+      return newRule && k >= PRE ? OP_NEW : OP_OPP;
+    }
+    var EB = three ? ' · <b>귀 ↔ 배</b>' : '';
+    var RULE_OLD = '🔄 반대로! <b>머리 ↔ 발</b> · <b>어깨 ↔ 무릎</b>' + EB, RULE_NEW = '🔀 새 짝꿍! <b>머리 ↔ 무릎</b> · <b>어깨 ↔ 발</b>' + EB,
+      RULE_HID = '🔁 짝꿍 바꿔! <b>🤔 머릿속 짝꿍으로</b> · <b>귀 ↔ 배</b>';
+    B.innerHTML = '<div class="bw"><div class="b-rule"></div><div class="op-wrap">' + opFigure(three) + '<div class="op-say"></div></div></div>';
     var rule = G.$('.b-rule', B), say = G.$('.op-say', B), svg = G.$('.op-fig', B);
-    rule.innerHTML = !opposite ? '👯 똑같이 짚어요!' : lv === 2 && !extra ? '🔄 반대로! <b>머리 ↔ 발</b>' : '🔄 반대로! <b>머리 ↔ 발</b> · <b>어깨 ↔ 무릎</b>';
+    rule.innerHTML = !opposite ? '👯 똑같이 짚어요!' : lv === 2 && !extra ? '🔄 반대로! <b>머리 ↔ 발</b>' : newRule && PRE === 0 ? RULE_NEW : RULE_OLD;
     var deck = [];
-    for (var k = 0; k < N; k++) { var p; do { p = G.pick(parts); } while (k > 0 && deck[k - 1] === p); deck.push(p); }
+    for (var k = 0; k < N; k++) {
+      /* 짝꿍이 바뀌는 자리의 첫 명령은 바뀐 짝꿍(머리·발·어깨·무릎) 중에서 — 바뀐 것을 바로 써 보게 */
+      var pool = SW.indexOf(k) >= 0 ? ['head', 'foot', 'shoulder', 'knee'] : parts, p;
+      do { p = G.pick(pool); } while (k > 0 && deck[k - 1] === p);
+      deck.push(p);
+    }
     /* 첫 명령은 늘 머리·발 — 어깨·무릎은 그 뒤 아무 자리에 (둘이면 어깨 하나, 무릎 하나) */
     if (extra) { var sk = G.shuffle(['shoulder', 'knee']); G.sample(G.range(N).slice(1), extra).forEach(function (j, n) { deck[j] = sk[n]; }); }
+    /* 5단계 2·3칸: 귀·배 명령 한두 개 맛보기. 6단계~: 귀·배 명령이 적어도 두 번 */
+    if (lv === 5 && three) { var eb5 = G.shuffle(['ear', 'belly']); G.sample(G.range(N).slice(1), s3 - 1).forEach(function (j, n) { deck[j] = eb5[n]; }); }
+    if (lv >= 6) {
+      var ebN = deck.filter(function (q) { return q === 'ear' || q === 'belly'; }).length;
+      G.shuffle(G.range(N).slice(1)).forEach(function (j) {
+        if (ebN >= 2 || SW.indexOf(j) >= 0 || deck[j] === 'ear' || deck[j] === 'belly') return;
+        var q = G.pick(['ear', 'belly']);
+        if (deck[j - 1] !== q && deck[j + 1] !== q) { deck[j] = q; ebN++; }
+      });
+    }
     var i = 0;
     function mark(p, cls) { G.$$('.op-part', svg).forEach(function (el) { el.classList.toggle(cls, el.dataset.p === p); }); }
     function clear() { G.$$('.op-part', svg).forEach(function (el) { el.classList.remove('on', 'ans'); }); }
     function step(tries) {
-      if (i >= N) { ctx.finish({ msg: opposite ? '반대로 척척! 몸으로 생각하는 힘이 정말 멋져!' : '머리, 어깨, 무릎, 발! 다 짚었어!' }); return; }
-      var cmd = deck[i], target = opposite ? OP_OPP[cmd] : cmd;
+      if (i >= N) {
+        ctx.finish({ msg: lv >= 7 ? '짝꿍이 바뀌어도 척척! 머리와 몸이 함께 생각하는 힘이 정말 멋져!' : lv >= 6 ? '세 짝꿍 반대 놀이도 척척! 몸으로 생각하는 힘이 정말 멋져!' :
+          newRule ? '새 짝꿍도 척척! 헷갈리지 않고 바꾸는 힘이 정말 멋져!' : opposite ? '반대로 척척! 몸으로 생각하는 힘이 정말 멋져!' : '머리, 어깨, 무릎, 발! 다 짚었어!' });
+        return;
+      }
+      /* 4단계: 새 짝꿍으로 바뀌는 자리에서 한 번 알려 준다 */
+      if (!told && i === PRE) {
+        told = true; clear(); rule.innerHTML = RULE_NEW; G.sfx.play('up');
+        say.innerHTML = '🔀<small>새 짝꿍!</small>';
+        ctx.say('규칙이 바뀌었어요! 새 짝꿍! 머리 하면 무릎, 무릎 하면 머리. 어깨 하면 발, 발 하면 어깨!').then(function () { return ctx.wait(pace(500)); }).then(function () { step(0); });
+        return;
+      }
+      /* 6~10단계: 짝꿍이 바뀌는 자리 — 조용한 자리는 "짝꿍 바꿔!" 한마디만 */
+      if (swDone < SW.length && i === SW[swDone]) {
+        var toNew = swDone % 2 === 0, quiet = QUIET.indexOf(i) >= 0; swDone++;
+        clear(); G.sfx.play('up');
+        rule.innerHTML = quiet ? RULE_HID : toNew ? RULE_NEW : RULE_OLD;
+        say.innerHTML = quiet ? '🔁<small>짝꿍 바꿔!</small>' : toNew ? '🔀<small>새 짝꿍!</small>' : '🔄<small>처음 짝꿍!</small>';
+        ctx.say(quiet ? '짝꿍 바꿔!' : toNew ? '규칙이 바뀌었어요! 새 짝꿍! 머리 하면 무릎, 무릎 하면 머리. 어깨 하면 발, 발 하면 어깨! 귀와 배는 그대로!' :
+          '다시 처음 짝꿍! 머리 하면 발, 발 하면 머리. 어깨 하면 무릎, 무릎 하면 어깨! 귀와 배는 그대로!').then(function () { return ctx.wait(pace(quiet ? 900 : 500)); }).then(function () { step(0); });
+        return;
+      }
+      var cmd = deck[i], target = opposite ? mapOf(i)[cmd] : cmd;
       clear(); mark(cmd, 'on');
       say.innerHTML = OP_NAME[cmd] + '!<small>' + (opposite ? '반대는 어디?' : '여기를 짚어요') + '</small>';
       if (tries >= 1) { mark(target, 'ans'); say.innerHTML = OP_NAME[cmd] + '!<span class="op-arrow">→ ' + OP_NAME[target] + '</span>'; }
@@ -1036,9 +1613,14 @@ G.act({
       });
     }
     ctx.progress(0, N);
+    /* 새 짝꿍이 처음부터 조용히 바뀌면(8단계 3칸·9·10단계) 두 짝꿍을 처음에 다 알려 준다 */
+    var quietFirst = SW.length && QUIET.indexOf(SW[0]) >= 0;
     var intro = !opposite ? '자비스가 말하는 곳을 짚어 볼까? 일어나서 같이 해요!' :
       lv === 2 ? '반대로 놀이! 자비스가 "머리!" 하면 발을, "발!" 하면 머리를 짚어요. 헷갈리지 않게!' + (extra ? ' 가끔은 어깨 하면 무릎, 무릎 하면 어깨!' : '') :
-        '반대로 놀이! 머리 하면 발, 발 하면 머리. 어깨 하면 무릎, 무릎 하면 어깨! 할 수 있어!';
+        lv >= 6 ? '세 짝꿍 반대 놀이! 머리 하면 발, 발 하면 머리. 어깨 하면 무릎, 무릎 하면 어깨. 그리고 귀 하면 배, 배 하면 귀!' +
+          (quietFirst ? ' 새 짝꿍도 기억해요. 머리 하면 무릎, 어깨 하면 발! 자비스가 "짝꿍 바꿔!" 하면 다른 짝꿍으로 바꿔요.' : SW.length ? ' 중간에 짝꿍이 바뀌어요. 잘 들어 봐!' : ' 천천히 생각하고 짚어요.') :
+        newRule && PRE === 0 ? '새 짝꿍 반대 놀이! 머리 하면 무릎, 무릎 하면 머리. 어깨 하면 발, 발 하면 어깨! ' + (three ? '그리고 귀 하면 배, 배 하면 귀도 있어요!' : '천천히 생각하고 짚어요.') :
+          '반대로 놀이! 머리 하면 발, 발 하면 머리. 어깨 하면 무릎, 무릎 하면 어깨! ' + (newRule ? '조금 뒤에 새 짝꿍 규칙으로 바뀌어요. 잘 들어 봐!' : '할 수 있어!');
     ctx.say(intro).then(function () { step(0); });
   }
 });

@@ -160,6 +160,7 @@ h1,h2,h3,.jua{font-family:'Jua','Gowun Dodum',sans-serif;font-weight:400}
 .st-lv:empty{display:none}
 .st-lv .lv{display:inline-flex;align-items:center;gap:4px;font-family:'Jua',sans-serif;color:#f5b700;font-size:clamp(14px,3.8vw,17px);letter-spacing:-1px;padding:4px 10px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow)}
 .st-lv .lv-st{font-style:normal;font-size:.8em;letter-spacing:1px;color:var(--area,#8a94a6)}
+.st-lv .lv-n{font-weight:400;font-size:.85em;letter-spacing:0;color:#ff7a1a}
 .rw-up{margin:10px auto 0;padding:8px 14px;border-radius:14px;background:linear-gradient(90deg,#fff6d6,#ffe9a8);color:#7a4b00;font-weight:800;font-size:clamp(15px,4vw,19px);max-width:420px;animation:rwUp .6s ease-out both}
 .rw-up small{display:block;font-weight:600;font-size:.78em;color:#9a6a10;margin-top:2px}
 .reward.hero .rw-up{background:linear-gradient(90deg,rgba(255,213,79,.18),rgba(79,195,247,.18));color:#ffe082;border:1px solid rgba(255,213,79,.45)}
@@ -329,9 +330,9 @@ textarea.inp{min-height:90px;resize:vertical}
 #home.hero-scr .hm-streak i.on{background:linear-gradient(135deg,#ffd54f,#ff9f1c);color:#3b2600}
 #home.hero-scr .hm-foot{color:#8ea4cb}
 /* 로봇 격납고 */
-#book.hero-scr .topbar{background:transparent}
-#book.hero-scr .topbar h2{color:#fff;font-family:'Black Han Sans','Jua',sans-serif}
-#book.hero-scr .topbar .back{background:rgba(255,255,255,.1);color:#fff;box-shadow:none}
+#book.hero-scr .topbar,#journey.hero-scr .topbar{background:transparent}
+#book.hero-scr .topbar h2,#journey.hero-scr .topbar h2{color:#fff;font-family:'Black Han Sans','Jua',sans-serif}
+#book.hero-scr .topbar .back,#journey.hero-scr .topbar .back{background:rgba(255,255,255,.1);color:#fff;box-shadow:none}
 .hangar{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:6px 14px calc(24px + var(--safe-b));max-width:980px;margin:0 auto}
 .hg-card{position:relative;border-radius:22px;padding:10px 8px 12px;text-align:center;background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03));
   border:1px solid rgba(255,255,255,.14);color:#eaf2ff;overflow:hidden}
@@ -349,6 +350,21 @@ textarea.inp{min-height:90px;resize:vertical}
 /* 상 화면 — 히어로 */
 .reward.hero .rw-card{background:linear-gradient(165deg,#13244f,#0c1733);color:#eaf2ff;border:1px solid rgba(120,180,255,.35);box-shadow:0 0 40px rgba(80,160,255,.35),0 20px 60px rgba(0,0,0,.4)}
 .reward.hero .rw-msg{font-family:'Black Han Sans','Jua',sans-serif;font-weight:400;text-shadow:0 0 14px rgba(120,190,255,.5)}
+.rw-note{max-width:440px;margin:0 auto 8px;padding:6px 12px;border-radius:12px;font-weight:800;font-size:14px;text-align:center}
+.rw-note small{font-weight:600;opacity:.8}
+.rw-note.rec{background:rgba(255,213,79,.16);color:#ffe082;border:1px solid rgba(255,213,79,.45)}
+.rw-note.day{background:rgba(125,249,255,.12);color:#b3f3ff;border:1px solid rgba(125,249,255,.4)}
+.rw-note.badge{background:rgba(200,40,60,.25);color:#ffd0d6;border:1px solid rgba(255,140,160,.45)}
+.rw-en{max-width:440px;margin:0 auto 14px;text-align:center}
+.rw-en>b{font-family:'Black Han Sans','Jua',sans-serif;font-weight:400;font-size:clamp(24px,7vw,32px);color:#ffd54f;text-shadow:0 0 14px rgba(255,213,79,.55)}
+.rw-en>small{display:block;color:#cfe0ff;font-size:13px;margin:2px 0 4px}
+.en-box{text-align:left;background:rgba(255,213,79,.10);border:1px solid rgba(255,213,79,.42);border-radius:14px;padding:8px 12px;margin-top:6px}
+.en-box b{font-family:'Jua',sans-serif;font-weight:400;color:#ffd54f;font-size:17px}
+.en-box small{display:block;color:#cfe0ff;font-size:12.5px;line-height:1.4}
+.en-bar{height:9px;border-radius:9px;background:rgba(255,255,255,.15);margin-top:6px;overflow:hidden}
+.en-bar i{display:block;height:100%;background:linear-gradient(90deg,#ffd54f,#ff9f1c);transition:width .8s}
+.en-box.locked{background:rgba(148,163,184,.14);border-color:rgba(148,163,184,.45)}
+.en-box.locked b{color:#e2e8f0}.en-box.locked .en-bar i{background:linear-gradient(90deg,#94a3b8,#cbd5e1)}
 .reward.hero .rw-part{display:flex;align-items:center;gap:12px;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:8px 12px;margin-bottom:14px}
 .reward.hero .rw-part .rp-art{width:110px;height:130px}
 .reward.hero .rw-part .rp-art svg{width:100%;height:100%}
@@ -408,6 +424,7 @@ textarea.inp{min-height:90px;resize:vertical}
     <button data-go="timer"><span class="qe">⏳</span><span class="ql">기다리기</span></button>
     <button data-go="book"><span class="qe">🤖</span><span class="ql">격납고</span></button>
   </div>
+  <button class="hm-journey" id="hmJourney" aria-label="1년 여정"></button>
   <div class="hm-areas" id="hmAreas"></div>
   <div class="hm-grow">
     <button class="hm-tree" id="hmTree" aria-label="내 나무"><span class="tr-e" id="trE">🌱</span><span class="tr-t"><b id="trName">새싹</b><small id="trSub"></small></span></button>
@@ -438,6 +455,12 @@ textarea.inp{min-height:90px;resize:vertical}
   <main class="st-body" id="stBody"></main>
 </section>
 
+<!-- ============ 1년 여정 (journey.js 가 그린다) ============ -->
+<section id="journey" class="screen hero-scr">
+  <div class="topbar"><button class="back" data-home aria-label="처음으로">←</button><h2>🗺️ 1년 여정</h2></div>
+  <div class="jr" id="jrBody"></div>
+</section>
+
 <!-- ============ 스티커북 ============ -->
 <section id="book" class="screen hero-scr">
   <div class="topbar"><button class="back" data-home aria-label="처음으로">←</button><h2 id="bookTitle">🤖 로봇 격납고</h2></div>
@@ -465,10 +488,12 @@ textarea.inp{min-height:90px;resize:vertical}
 <script src="grow/act-mind.js"></script>
 <script src="grow/act-brain.js"></script>
 <script src="grow/act-kind.js"></script>
+<script src="grow/act-rx.js"></script>
 <script src="grow/speech-lab.js"></script>
 <script src="grow/jarvis.js"></script>
 <script src="grow/ef.js"></script>
 <script src="grow/parent.js"></script>
+<script src="grow/journey.js"></script>
 <script src="grow/robots.js"></script>
 <script src="grow/app.js"></script>
 </body>

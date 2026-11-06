@@ -22,8 +22,11 @@
 - 화면: `grow.html` (설치용 `grow-manifest.json`, 아이콘 `icons/grow-*.png`). 발달지연 아이의 집 놀이 — 말하기·손놀이·그리기·생각놀이·생각 힘(실행기능)·마음·몸놀이·쉬어가기.
 - 엔진 `grow/core.js`(소리·자비스 목소리(남자 목소리 자동·ElevenLabs 고급 목소리)·음성 인식·마이크·카메라·기록·단계 맞추기·오늘의 놀이), 그림 `grow/hero-art.js`(자비스·영역 문장·창작 로봇 6대 — 실존 캐릭터를 베끼지 않는다), 자료 `grow/data.js`, 놀이 `grow/act-*.js`(각 파일이 `G.act({...})` 로 등록), 근거·실행기능 표시 `grow/ef.js`, AI `grow/jarvis.js`, 부모 화면 `grow/parent.js`, 아이 홈 `grow/app.js`.
 - 놀이를 더하면 `goal`(치료 목표)·`how`(함께 하는 법)·`ef`(실행기능)·`basis`(근거)·`offline`(화면 밖 놀이)를 꼭 단다. 아이 화면에는 "틀렸어"를 보이지 않는다(무오류 학습).
-- 난이도: 단계 `ctx.level`(1~3)마다 칸 `ctx.step`(1~3)이 있다. 숫자 어려움은 `ctx.tune([1단계, 2단계, 3단계])` 로 쓰면 칸마다 1/3씩 다음 단계 쪽으로 간다. 1칸은 그 단계 그대로여야 한다. 단계 판단은 `G.stageFor` (core.js).
-- 로봇 실사 그림: `assets/grow/robots/<id>.jpg` 480×640 (13대 모두), `grow/robots.js` 의 `HAS_IMG`.
+- 난이도: 단계 `ctx.level`(1~10: 4 도전·5 마스터·6 전문가·7 챔피언·8 영웅·9 전설·10 그랜드 마스터)마다 칸 `ctx.step`(1~3)이 있다(30칸 ≈ 1년). 숫자 어려움은 `ctx.tune([1단계, …, 10단계])` 로 쓰면 칸마다 1/3씩 다음 단계 쪽으로 간다. 1칸은 그 단계 그대로여야 한다. 단계 판단은 `G.stageFor` (core.js, 4단계부터 85%/90%). 점수가 있는 놀이는 `ctx.extra.score`(내 기록).
+- 1년 여정: `grow/journey.js` (10장 360 미션 날, 장 그림 `assets/grow/journey/ch1~10.jpg`, 다음 장 = 미션 날 + 단계 열쇠), 🏅 상장 `G.badges`, 🏆 내 기록 `G.records`, 🧩 5대 인지 영역 `G.domainOf`/`G.domainStats`(새 놀이는 `domain` 을 단다).
+- 두뇌 트레이닝 새 놀이 5가지: `grow/act-rx.js` (다른 곳 찾기·방금 본 그림?·번개 찾기·숫자 탑 쌓기·주차장 탈출).
+- 그림·영상은 Higgsfield 로 만든다(부모님 요청). 로봇 변신 영상 `assets/grow/videos/<id>.mp4` (480×640, 소리 없음).
+- 로봇: 부품은 ⚡ 에너지로 만든다(`G.earnEnergy`·`GR.spend`, 놀이 하나에 부품 하나가 아니다). 시즌 4~최종 10대는 로봇의 `chapter`(1년 여정 장)로 열린다. 남는 에너지는 완성 로봇 강화 ★1~★5(`GR.upgrade`). 실사 그림 `assets/grow/robots/<id>.jpg` 480×640 (23대 모두), `HAS_IMG`·`HAS_VID`. 실존 작품(아이언맨·트랜스포머·건담 등) 색 배합·모양을 닮지 않게 만든다.
 - 고운 말·표준말: `grow/kind.js`(G.kind — 고운 말·유행어→표준말·거친 말→대신 쓸 말, 자비스 말 다듬기 polish, 기록은 기기에만), 놀이 `grow/act-kind.js`(🌷 고운 말 놀이). 자비스는 표준말·고운 말로만 말하고, 아이 말은 꾸짖지 않고 고쳐 들려준다(recast). 욕설은 저장·전송·따라 말하기 하지 않는다.
 - 고친 뒤 `node scripts/grow-check.js` 로 검증한다(치료 설계 규칙 + 모든 놀이·단계 실행). 설명서는 `함께-자라요-안내.md`.
 - 아이 정보·기록·사진·그림·**말소리 녹음**은 기기(localStorage·IndexedDB)에만. AI 로는 이름을 '아이'로 바꿔 보낸다. 말소리 녹음(`grow/speech-lab.js`)은 저절로 업로드하지 않고, 학습 데이터 ZIP 은 부모가 직접 내보낼 때만 만든다. 녹음 파일·내보낸 ZIP 은 절대 커밋하지 않는다.

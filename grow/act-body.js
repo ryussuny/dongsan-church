@@ -16,6 +16,11 @@
    ▸ 몸놀이는 아이가 화면에서 떨어져 움직이므로 그림을 크게 그리고, 말은 자비스가 읽는다.
    ▸ 아이에게는 틀림이 보이지 않는다. 맞고 틀림은 부모 판정이나 기기 판정(리듬 수·바람)이
      있는 곳에서만 ctx.trial 로 남긴다. 숨쉬기·물방울은 기록 없이 시간만 남는다.
+   ▸ 4단계(도전)·5단계(마스터)는 3단계를 다 익힌 아이를 위해 한 가지씩만 더 어렵게 한다.
+     숨쉬기는 마음을 가라앉히는 놀이라 3단계에서 멈추고, 촛불 끄기는 촛불 하나·바람 조금만 더한다.
+   ▸ 6~10단계(1년 사다리)도 단계마다 한 가지만 더한다 — 6·7은 초등 1~2학년, 8·9는 3학년 쪽,
+     10은 보통 3학년이 애써서 하는 만큼. 5단계 2·3칸은 6단계를 미리 맛본다.
+     촛불 끄기는 세게 부는 횟수를 늘리지 않고 살살·길게 같은 '조절'을 더하며, 판 사이마다 쉬는 숨을 둔다.
    ▸ 감각 예민 모드(G.settings.calm): 소리를 줄이고, 반짝임·음표를 끄고, 박자를 늦춘다.
      숨쉬기 공·타이머 원판·남은 시간 고리처럼 '움직임이 곧 정보'인 것은 CSS 전환이 아니라
      JS 로 그려서 예민 모드(전환을 끈다)에서도 부드럽게 보인다.
@@ -168,6 +173,9 @@ G.css('body', `
 .act-freeze .fz-light i{width:clamp(38px,10vw,58px);aspect-ratio:1;border-radius:50%;background:#4a5262;transition:background .2s,box-shadow .2s}
 .act-freeze .fz-light i.r.on{background:#ff4d4d;box-shadow:0 0 24px #ff4d4d}
 .act-freeze .fz-light i.g.on{background:#2fd16a;box-shadow:0 0 24px #2fd16a}
+.act-freeze .fz-light i.y.on{background:#ffc928;box-shadow:0 0 24px #ffc928}
+.act-freeze .fz-stage.slowmo{background:linear-gradient(160deg,color-mix(in srgb,#ffe082 34%,var(--surface)),color-mix(in srgb,#fff3c4 30%,var(--surface)))}
+.act-freeze .fz-stage.tease.stop .fz-dancer{animation:fzDance var(--spd,.7s) ease-in-out infinite alternate;filter:none}
 .act-freeze .fz-foot{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%}
 .act-freeze .fz-ok{min-width:min(84vw,360px);min-height:74px;font-size:clamp(22px,6vw,28px)}
 .act-freeze .fz-ok:disabled{opacity:.35}
@@ -182,6 +190,13 @@ G.css('body', `
 .act-shake .sk-dots i.jv{background:#ffd54f;border:4px solid #f5b700;transform:scale(1.1)}
 .act-shake .sk-dots i.on{background:var(--area);border:4px solid var(--area);transform:scale(1.12)}
 .act-shake .sk-dots.hide i:not(.on){opacity:0}
+.act-shake .sk-dots.grp{gap:clamp(14px,5vw,26px);align-items:center}
+.act-shake .sk-g{display:flex;align-items:center;gap:clamp(5px,1.6vw,8px)}
+.act-shake .sk-g.f{gap:3px}
+.act-shake .sk-g.s{gap:clamp(8px,2.6vw,14px)}
+.act-shake .sk-g em{font-style:normal;font-size:clamp(19px,5.2vw,26px);line-height:1}
+.act-shake .sk-rep{font-weight:400;font-size:clamp(18px,5vw,24px);line-height:1}
+.act-shake .sk-dots.sm i{width:clamp(22px,6vw,32px);border-width:3px}
 .act-shake .sk-turn{font-family:Jua,sans-serif;font-size:clamp(18px,5vw,24px);color:var(--soft);min-height:34px;text-align:center}
 .act-shake .sk-stage{position:relative;flex:1;min-height:250px;width:min(100%,640px);display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:30px;
   background:radial-gradient(circle at 50% 50%,color-mix(in srgb,#ffd54f 26%,transparent) 0 26%,color-mix(in srgb,#ff7f61 10%,transparent) 44%,transparent 66%)}
@@ -213,6 +228,14 @@ G.css('body', `
 .act-blow .bl-meter div{flex:1;height:18px;border-radius:999px;background:var(--line);overflow:hidden}
 .act-blow .bl-meter b{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#9be7ff,#4fc3f7,#7c6cff)}
 .act-blow .bl-meter.off{opacity:.35}
+.act-blow .bl-meter.zoned div{position:relative}
+.act-blow .bl-zone{position:absolute;top:0;bottom:0;border-radius:999px;background:color-mix(in srgb,#43a047 28%,transparent);box-shadow:inset 0 0 0 2px #43a047;opacity:0;transition:opacity .3s}
+.act-blow .bl-meter.soft .bl-zone{opacity:1}
+.act-blow .bl-goal{display:flex;align-items:center;gap:10px;width:min(100%,460px);min-height:30px}
+.act-blow .bl-goal[hidden]{display:none}
+.act-blow .bl-goal span{font-family:Jua,sans-serif;font-size:clamp(16px,4.4vw,20px);white-space:nowrap}
+.act-blow .bl-goal div{flex:1;height:14px;border-radius:999px;background:var(--line);overflow:hidden}
+.act-blow .bl-goal b{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#a5d6a7,#43a047)}
 .act-blow .bl-scene{position:relative;flex:1;min-height:270px;width:min(100%,640px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:30px}
 .act-blow .bl-candles{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:center;gap:var(--gap,28px)}
 .act-blow .bl-cnd{position:relative;width:var(--cw,40px);height:var(--ch,150px);border-radius:10px 10px 6px 6px;padding:0;touch-action:manipulation;
@@ -350,34 +373,99 @@ G.css('body', `
    1. 따라 움직이기 — 동작 모방·운동 계획
    ================================================================= */
 var MV_ANIM = { '👏': 'clap', '🥁': 'clap', '🙌': 'up', '🙆': 'up', '🦘': 'jump', '🐸': 'jump', '✈️': 'sway', '🤸': 'sway',
-  '🌳': 'still', '🦩': 'still', '🧘': 'still', '🐻': 'walk', '🦆': 'walk', '🐢': 'slow', '🦀': 'side', '🐍': 'side' };
+  '🌳': 'still', '🦩': 'still', '🧘': 'still', '🐻': 'walk', '🦆': 'walk', '🐢': 'slow', '🦀': 'side', '🐍': 'side',
+  '⭐': 'jump', '🕺': 'sway', '🦭': 'walk', '🐇': 'jump', '🩰': 'slow', '🎯': 'clap', '🌟': 'jump',
+  '🎶': 'clap', '🏃': 'jump', '🤖': 'up', '🐧': 'walk', '🎈': 'up', '🌊': 'sway',
+  '🚶': 'walk', '🦋': 'clap', '🦵': 'walk', '🏊': 'sway', '🌀': 'sway', '🦶': 'walk',
+  '🌙': 'still', '📏': 'slow', '🦢': 'still', '🐦': 'jump', '🏹': 'still', '⚖️': 'still',
+  '🦁': 'walk', '🐊': 'side', '🐘': 'walk', '🦒': 'slow', '🐒': 'jump', '🦔': 'sway',
+  '🧠': 'still', '🏅': 'jump', '🎪': 'sway', '🚀': 'up', '🎡': 'sway', '🏔️': 'still' };
+/* 4~10단계 동작 (data.js 의 MOVES 는 1~3단계, 6~10단계 설명은 아래 묶음마다) — 4단계(도전): 균형·몸 가운데 넘기·팔 힘이 더 드는 한 동작,
+   5단계(마스터): 두 동작을 순서대로 잇는 동작(운동 계획 + 순서 기억). 넘어질 수 있는 동작은 어른이 곁에서 */
+var MV_MORE = [
+  { e: '⭐', say: '별 모양 점프! 팔다리를 쫙 벌렸다 모아요. 다섯 번!', sec: 10, lv: 4 },
+  { e: '🕺', say: '오른손으로 왼쪽 무릎 콕, 왼손으로 오른쪽 무릎 콕! 번갈아 해요.', sec: 10, lv: 4 },
+  { e: '🦭', say: '물개처럼 엎드려서 두 팔로만 몸을 끌고 앞으로 가요!', sec: 10, lv: 4 },
+  { e: '🐇', say: '토끼처럼 두 발을 모아 앞으로 콩, 콩, 콩! 세 번 뛰어요.', sec: 8, lv: 4 },
+  { e: '🩰', say: '발끝으로 서서 살금살금 걸어요. 뒤꿈치는 들고!', sec: 10, lv: 4 },
+  { e: '🦩', say: '홍학처럼 한 발로 서서 열까지 세어요. 그다음 다른 발로도!', sec: 14, lv: 4 },
+  { e: '🎯', say: '박수 두 번, 그다음 제자리 점프 한 번! 짝짝, 콩! 세 번 해요.', sec: 12, lv: 5 },
+  { e: '🦩', say: '한 발로 서서 박수 다섯 번! 짝, 짝, 짝, 짝, 짝!', sec: 12, lv: 5 },
+  { e: '🌟', say: '별 모양 점프 세 번, 그다음 한 발로 서서 셋까지 세어요!', sec: 14, lv: 5 },
+  { e: '🦀', say: '꽃게처럼 옆으로 세 걸음, 그다음 반대쪽으로 세 걸음!', sec: 12, lv: 5 },
+  { e: '🙆', say: '머리, 어깨, 무릎, 발! 그다음 거꾸로 발, 무릎, 어깨, 머리!', sec: 14, lv: 5 },
+  { e: '✈️', say: '비행기 자세! 한 발을 뒤로 들고 두 팔 벌려 몸을 앞으로 숙여요. 다섯까지!', sec: 12, lv: 5 },
+  /* 6단계(전문가): 세 동작을 "먼저 ~, 그다음 ~, 마지막에 ~" 차례로 잇기 */
+  { e: '🎶', say: '박수 두 번, 무릎 두 번, 그다음 만세! 짝짝, 둥둥, 만세! 세 번 해요.', sec: 14, lv: 6 },
+  { e: '🏃', say: '제자리 뛰기 다섯 번, 쪼그려 앉기 한 번, 그다음 높이 점프!', sec: 14, lv: 6 },
+  { e: '🤖', say: '로봇처럼 딱딱! 두 팔 들고, 고개를 옆으로, 그다음 한 발 들기!', sec: 12, lv: 6 },
+  { e: '🐧', say: '펭귄처럼 뒤뚱뒤뚱 네 걸음, 박수 한 번, 그다음 뒤로 네 걸음!', sec: 16, lv: 6 },
+  { e: '🎈', say: '풍선처럼 두 팔을 크게 벌리고, 작게 웅크렸다가, 펑! 하고 점프!', sec: 12, lv: 6 },
+  { e: '🌊', say: '파도처럼 두 팔을 위로, 옆으로, 아래로 크게! 세 번 해요.', sec: 12, lv: 6 },
+  /* 7단계(챔피언): 양쪽 협응 — 반대 팔다리·몸 가운데 넘기를 번갈아 */
+  { e: '🚶', say: '제자리 걷기! 오른발 들 때 왼팔 앞으로, 왼발 들 때 오른팔 앞으로. 열 걸음!', sec: 14, lv: 7 },
+  { e: '🦋', say: '나비 포옹! 두 팔을 엇갈려 어깨를 잡고, 손으로 번갈아 톡톡 열 번!', sec: 12, lv: 7 },
+  { e: '🦵', say: '무릎을 높이 들고 반대쪽 팔꿈치로 콕! 오른쪽, 왼쪽 번갈아 여덟 번!', sec: 14, lv: 7 },
+  { e: '🏊', say: '수영하듯 오른팔 한 바퀴, 왼팔 한 바퀴! 번갈아 크게 여덟 번 돌려요.', sec: 14, lv: 7 },
+  { e: '🌀', say: '두 손을 모아 앞에 누운 8자를 크게 그려요. 눈은 손끝을 따라가요. 세 번!', sec: 14, lv: 7 },
+  { e: '🦶', say: '오른손으로 등 뒤의 왼발 뒤꿈치 콕, 왼손으로 오른발 뒤꿈치 콕! 번갈아 여섯 번.', sec: 14, lv: 7 },
+  /* 8단계(영웅): 균형 — 눈은 한곳(화면 그림·손끝)을 보며 오래 버티기 */
+  { e: '🌙', say: '한 발로 서서 눈은 화면의 달을 봐요. 열까지 세고, 다른 발로도 열!', sec: 22, lv: 8 },
+  { e: '📏', say: '줄 위를 걷듯 일자 걷기! 뒤꿈치를 앞발 끝에 붙이며 여섯 걸음. 두 팔은 옆으로!', sec: 16, lv: 8 },
+  { e: '🦢', say: '백조처럼 한 발로 서서 두 팔을 천천히 위로, 옆으로, 아래로! 넘어지지 않게!', sec: 14, lv: 8 },
+  { e: '🐦', say: '한 발로 콩콩콩 다섯 번 뛰고, 다른 발로도 콩콩콩 다섯 번!', sec: 14, lv: 8 },
+  { e: '🏹', say: '활 쏘기 자세! 한 발 앞으로, 한 팔은 앞으로 쭉, 눈은 손끝! 다섯까지 세고 반대쪽도!', sec: 18, lv: 8 },
+  { e: '⚖️', say: '저울처럼 두 팔 벌리고, 한 발 앞에 다른 발을 붙여 서요. 눈은 화면을 보며 열까지!', sec: 14, lv: 8 },
+  /* 9단계(전설): 동물 걸음 세 가지를 차례로 (운동 계획 + 순서) */
+  { e: '🦁', say: '동물 행진! 곰처럼 엉금엉금 세 걸음, 꽃게처럼 옆으로 세 걸음, 그다음 개구리처럼 폴짝!', sec: 18, lv: 9 },
+  { e: '🐊', say: '악어처럼 엎드려 기다가, 일어나서 홍학처럼 한 발로 다섯, 그다음 토끼처럼 콩콩콩!', sec: 18, lv: 9 },
+  { e: '🐘', say: '코끼리처럼 한 팔을 코처럼 흔들며 쿵쿵 네 걸음, 펭귄처럼 뒤뚱 네 걸음, 그다음 앉았다 일어나기!', sec: 18, lv: 9 },
+  { e: '🦒', say: '기린처럼 발끝으로 네 걸음, 거북이처럼 아주 천천히 네 걸음, 그다음 별 점프!', sec: 18, lv: 9 },
+  { e: '🐒', say: '원숭이처럼 쪼그려 깡충 세 번, 오리처럼 뒤뚱 세 걸음, 그다음 나무처럼 가만히 다섯!', sec: 18, lv: 9 },
+  { e: '🦔', say: '고슴도치처럼 몸을 동그랗게 말았다가, 별처럼 쫙 펴고, 그다음 꽃게처럼 옆으로 세 걸음!', sec: 16, lv: 9 },
+  /* 10단계(그랜드 마스터): 네 동작을 한 번 듣고 기억해서 (mem — 하는 동안 글을 가린다. 다시 할 때는 보인다) */
+  { e: '🧠', say: '박수 세 번, 한 발로 서서 다섯, 꽃게처럼 옆으로 두 걸음, 마지막에 만세!', sec: 18, lv: 10, mem: 1 },
+  { e: '🏅', say: '별 점프 두 번, 오른손으로 왼쪽 무릎 콕, 왼손으로 오른쪽 무릎 콕, 마지막에 나무 자세로 다섯!', sec: 20, lv: 10, mem: 1 },
+  { e: '🎪', say: '개구리처럼 폴짝 두 번, 비행기 자세로 셋, 뒤로 두 걸음, 마지막에 박수 짝!', sec: 18, lv: 10, mem: 1 },
+  { e: '🚀', say: '쪼그려 앉아 셋을 세고, 로켓처럼 높이 점프, 한 발로 서서 셋, 마지막에 두 팔 쭉!', sec: 18, lv: 10, mem: 1 },
+  { e: '🎡', say: '제자리에서 천천히 한 바퀴, 무릎 둥둥 두 번, 펭귄처럼 세 걸음, 마지막에 박수 짝!', sec: 18, lv: 10, mem: 1 },
+  { e: '🏔️', say: '발끝으로 서서 셋, 쪼그려 앉아 셋, 한 발로 서서 셋, 마지막에 별 점프!', sec: 18, lv: 10, mem: 1 }
+];
+function mvAll() {
+  var seen = {};
+  return D.MOVES.concat(MV_MORE).filter(function (m) { var k = m.e + m.say; if (seen[k]) return false; seen[k] = 1; return true; });
+}
 var MV_GO = ['잘한다! 계속!', '좋아, 조금만 더!', '그렇지! 멋져!', '우와, 몸이 척척!', '힘내! 거의 다 왔어!'];
 var MV_PRAISE = ['우와, 정말 멋지게 했어!', '짝짝짝! 몸이 척척!', '튼튼 대장이다!', '자비스도 따라 하고 싶어!', '최고야! 힘이 세구나!', '와, 똑같이 했네!'];
 var MV_NEXT = ['다음은 이거야! ', '이번엔? ', '자, 다음! ', '이것도 할 수 있지? '];
 
 G.act({
-  id: 'move', area: 'body', title: '따라 움직이기', icon: '🤸', order: 10, levels: 3, mins: 3, needs: [],
+  id: 'move', area: 'body', title: '따라 움직이기', icon: '🤸', order: 10, levels: 10, mins: 3, needs: [],
   ef: ['plan', 'wm', 'attend'],
   desc: '자비스 따라 몸을 움직여요',
   goal: '운동 계획(실행)·동작 모방 — 듣고 본 동작을 순서대로 몸으로 옮기는 힘, 균형과 대근육 조절',
-  how: '부모가 먼저 같이 해 보이면 아이가 훨씬 잘 따라 해요. 화면에서 두세 걸음 떨어진 넓은 자리에서 하고, 동작이 서툴러도 해 보려 했다면 👍 를 눌러 주세요. 한 발 서기·게걸음이 어려우면 손을 잡아 주어도 괜찮아요.',
-  basis: '운동 계획(praxis)·동작 모방 — 감각통합 치료의 대근육 활동',
+  how: '부모가 먼저 같이 해 보이면 아이가 훨씬 잘 따라 해요. 화면에서 두세 걸음 떨어진 넓은 자리에서 하고, 동작이 서툴러도 해 보려 했다면 👍 를 눌러 주세요. 한 발 서기·게걸음이 어려우면 손을 잡아 주어도 괜찮아요. 4단계(도전)는 균형·몸 가운데 넘기 동작, 5단계(마스터)는 "먼저 ~, 그다음 ~" 두 동작을 이어 해요 — 곁에서 넘어지지 않게 지켜봐 주세요. 6~10단계는 세 동작 잇기(6) → 반대 팔다리·몸 가운데 넘기(7) → 눈은 한곳을 보며 한 발 균형(8) → 동물 걸음 세 가지 잇기(9) → 네 동작을 한 번 듣고 기억해서(10, 하는 동안 글이 가려져요)로 이어져요.',
+  basis: '운동 계획(praxis)·동작 모방 — 감각통합 치료의 대근육 활동. 4·5단계는 양측 협응·정중선 넘기·순서 있는 동작(sequencing). 6~10단계는 3~4단계 동작 순서 기억·교차 협응(cross-crawl)·시선 고정 정적 균형·일자 걷기 — 초등 저학년 대근육 발달 과제(BOT-2 균형·양측 협응 항목 수준)',
   offline: '"곰처럼 엉금엉금 소파까지, 개구리처럼 폴짝 문까지!" 동물 흉내로 집 안을 이동해 보세요.',
   run: async function (ctx) {
-    var B = ctx.body, lv = ctx.level, N = 5, C = 2 * Math.PI * 46;
-    var pool = D.MOVES.filter(function (m) { return (m.lv || 1) <= lv; });
+    var B = ctx.body, lv = ctx.level, N = 5, C = 2 * Math.PI * 46, TOP = ctx.def.levels || 5, ALL = mvAll();
+    var pool = ALL.filter(function (m) { return (m.lv || 1) <= lv; });
     var list;
     if (lv === 1) list = G.sample(pool, N);
     else {
-      /* 쉬운 동작으로 몸을 풀고, 이 단계의 새 동작을 사이사이에 */
-      var top = G.sample(pool.filter(function (m) { return (m.lv || 1) === lv; }), 3), low = G.sample(pool.filter(function (m) { return (m.lv || 1) < lv; }), N - 3);
+      /* 쉬운 동작으로 몸을 풀고, 이 단계의 새 동작을 사이사이에 (같은 그림이 두 번 나오지 않게).
+         6단계부터 몸풀기는 바로 아래 네 단계 안에서 — 너무 쉬운 1단계 동작은 빼고 */
+      var floor = lv >= 6 ? lv - 4 : 1;
+      var top = G.sample(pool.filter(function (m) { return (m.lv || 1) === lv; }), 3), te = top.map(function (m) { return m.e; });
+      var low = G.sample(pool.filter(function (m) { return (m.lv || 1) < lv && (m.lv || 1) >= floor && te.indexOf(m.e) < 0; }), N - 3);
       list = [low[0], top[0], low[1], top[1], top[2]].filter(Boolean);
     }
     /* 칸이 오르면 다음 단계 동작을 1~2개 미리 섞는다 (쉬운 동작 사이사이에).
-       3단계는 새 동작이 없어서 3단계 동작을 1~2초만 더 오래 한다 */
-    var NX = lv < 3 ? ctx.step - 1 : 0, LONGER = lv === 3 ? ctx.step - 1 : 0;
+       끝 단계(10)는 다음 동작이 없어서 10단계 동작을 1~2초만 더 오래 한다 */
+    var NX = lv < TOP ? ctx.step - 1 : 0, LONGER = lv >= TOP ? ctx.step - 1 : 0;
     if (NX) {
-      var nxt = G.sample(D.MOVES.filter(function (m) { return (m.lv || 1) === lv + 1; }), NX);
+      var le = list.map(function (m) { return m.e; });
+      var nxt = G.sample(ALL.filter(function (m) { return (m.lv || 1) === lv + 1 && le.indexOf(m.e) < 0; }), NX);
       (lv === 1 ? [4, 2] : [4, 1]).slice(0, NX).forEach(function (at, j) { if (nxt[j] && list[at]) list[at] = nxt[j]; });
     }
     B.innerHTML = '<div class="bd"><div class="mv-ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="mv-trk" cx="50" cy="50" r="46"/><circle class="mv-arc" cx="50" cy="50" r="46"/></svg>' +
@@ -412,13 +500,16 @@ G.act({
       ctx.progress(i, list.length);
       var m = list[i], tries = 0, done = false;
       while (!done) {
-        var s = m.sec + (tries ? 2 : 0) + ((m.lv || 1) === 3 ? LONGER : 0);
+        var s = m.sec + (tries ? 2 : 0) + ((m.lv || 1) === lv ? LONGER : 0);
         emo.className = 'mv-e a-' + (MV_ANIM[m.e] || 'jump'); emo.textContent = m.e;
         cap.textContent = m.say; sec.textContent = s; arc.style.strokeDashoffset = '0';
         G.sfx.play('whoosh');
-        await ctx.say((tries ? '한 번 더! ' : i === 0 ? '' : G.pick(MV_NEXT)) + m.say);
+        var hide = m.mem && !tries;   /* 10단계: 한 번 듣고 기억해서 — 하는 동안 글을 가린다 (다시 할 때는 보여 준다) */
+        await ctx.say((tries ? '한 번 더! ' : i === 0 ? '' : G.pick(MV_NEXT)) + (hide ? '잘 듣고 기억해요! ' : '') + m.say);
+        if (hide) { cap.textContent = '🧠 기억한 대로 차례차례!'; ctx.bubble('🧠 기억해서 해 봐요!'); }
         G.sfx.play('up');
         await countdown(s);
+        cap.textContent = m.say;   /* 어른이 판정할 수 있게 다시 보여 준다 */
         sec.textContent = '⭐'; G.sfx.play('sparkle');
         ctx.bubble('잘 따라 했으면 👍 를 눌러 주세요');
         var ok = await ctx.parentJudge(foot, ['👍 했어요', '🔁 다시']);
@@ -452,45 +543,83 @@ var FZ_SONGS = [
   [['G4', .5], ['C5', .5], ['E5', .5], ['C5', .5], ['G4', .5], ['C5', .5], ['E5', 1], ['F5', .5], ['E5', .5], ['D5', .5], ['C5', .5], ['D5', .5], ['E5', .5], ['C5', 1]]
 ];
 var FZ_DANCERS = ['💃', '🕺', '🐧', '🐻', '🐰', '🐥', '🐸', '🦄', '🐼'];
+/* 4·5단계 얼음 자세 — 빨간불에 자비스가 말한 자세로 멈춘다 (억제 + 운동 계획·균형) */
+var FZ_POSES = [
+  { e: '🙌', w: '만세 자세', say: '만세 자세로' },
+  { e: '🦩', w: '한 발 자세', say: '홍학처럼 한 발로' },
+  { e: '⭐', w: '별 자세', say: '별처럼 팔다리 쫙 벌리고' },
+  { e: '🌳', w: '나무 자세', say: '나무처럼 두 팔 벌리고' },
+  { e: '🐸', w: '개구리 자세', say: '개구리처럼 쪼그려 앉아서' },
+  { e: '🤖', w: '로봇 자세', say: '로봇처럼 팔을 네모로 하고' }
+];
+/* 6단계부터 더하는 자세 — 그림 없이 말로만 듣고 잡는다 */
+var FZ_POSES2 = [
+  { w: '비행기 자세', say: '비행기처럼 두 팔 벌리고 한 발 뒤로 들고' },
+  { w: '의자 자세', say: '의자에 앉은 것처럼 무릎을 굽히고' },
+  { w: '고양이 자세', say: '고양이처럼 두 손 두 발을 바닥에 대고' },
+  { w: '발끝 자세', say: '발끝으로 서서 두 팔을 위로 하고' },
+  { w: '차렷 자세', say: '차렷! 두 팔을 몸에 딱 붙이고' },
+  { w: '동그라미 자세', say: '두 팔로 머리 위에 큰 동그라미를 만들고' }
+];
+/* 9단계 속임수 말 — 신호 색으로 시작하지만 신호가 아니다 (초록불이면 계속 춤) */
+var FZ_TRICKS = [
+  { w: '🍎 빨간 사과!', say: '빨간 사과!' }, { w: '🍓 빨간 딸기!', say: '빨간 딸기!' },
+  { w: '🍌 노란 바나나!', say: '노란 바나나!' }, { w: '🐥 노란 병아리!', say: '노란 병아리!' }
+];
+var FZ_SLOW = [['C5', 1], ['E5', 1], ['G5', 2], ['E5', 1], ['D5', 1], ['C5', 2]];   /* 노란불 — 느릿느릿 노래 */
 
 G.act({
-  id: 'freeze', area: 'body', title: '멈춰 놀이', icon: '🧊', order: 20, levels: 3, mins: 2, needs: [],
+  id: 'freeze', area: 'body', title: '멈춰 놀이', icon: '🧊', order: 20, levels: 10, mins: 2, needs: [],
   ef: ['inhibit', 'attend', 'regulate'],
   desc: '음악이 멈추면 꽁꽁 얼음!',
   goal: '억제 조절 — 신나게 움직이다가도 신호에 맞춰 몸을 멈추고, 노래 빠르기에 맞춰 움직임을 조절하는 힘',
-  how: '아이와 같이 일어나 춤추다가 "멈춰!" 하면 같이 꽁꽁 얼어 주세요. 아이가 멈췄으면 큰 👍 단추를 눌러 주세요 — 별이 하나씩 모여요. 2단계는 빠른 노래엔 빨리, 느린 노래엔 천천히 춤추고, 3단계는 신호등(초록불 춤·빨간불 멈춤)을 보고 움직여요.',
-  basis: '억제 조절 — 얼음 놀이(Tools of the Mind의 Freeze Game)·빨간불 초록불 놀이',
+  how: '아이와 같이 일어나 춤추다가 "멈춰!" 하면 같이 꽁꽁 얼어 주세요. 아이가 멈췄으면 큰 👍 단추를 눌러 주세요 — 별이 하나씩 모여요. 2단계는 빠른 노래엔 빨리, 느린 노래엔 천천히 춤추고, 3단계는 신호등(초록불 춤·빨간불 멈춤)을 보고 움직여요. 4단계(도전)는 빨간불에 자비스가 말한 자세(만세·한 발·별…)로 멈추고, 5단계(마스터)는 빨간불에도 노래가 계속 나와요 — 귀보다 눈으로 신호등을 봐야 해요. 6~10단계는 자세를 그림 없이 말로만(6) → 🟡 노란불은 아주 천천히(7) → 노래가 뚝 멈춰도 초록불이면 계속 춤(8) → "빨간 사과!" 같은 속임수 말(9) → 화면 친구가 계속 춤춰도 더 오래 꽁꽁(10)이 하나씩 더해져요. 노란불·속임수 때도 아이가 잘 해내면 같은 👍 단추를 눌러 주세요.',
+  basis: '억제 조절 — 얼음 놀이(Tools of the Mind의 Freeze Game)·빨간불 초록불 놀이. 4단계는 자세 잡고 멈추기(억제+운동 계획), 5단계는 노래가 이어져도 멈추기(더 센 억제). 6~10단계는 말로 들은 자세 잡기(언어-운동 연결)·두 신호 구별(멈춤/느리게)·속임수 신호 참기(Simon says·HTKS 류)·시각 방해 자극 무시',
   offline: '노래를 틀고 춤추다가 엄마가 노래를 끄면 "얼음!" 빠른 노래엔 빠르게, 느린 노래엔 천천히 춤춰 보세요.',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
-    /* 칸이 오르면 멈춤이 조금 더 많아지고, 춤추는 시간이 조금 짧고 들쭉날쭉해진다 — 언제 멈출지 더 잘 들어야 한다 */
-    var ROUNDS = ctx.tune([5, 6, 8]), DMIN = ctx.tune([7000, 4000, 2500]), DMAX = ctx.tune([7000, 7000, 5500]);
-    B.innerHTML = '<div class="bd"><div class="fz-stars"></div><div class="fz-stage">' +
-      (lv >= 3 ? '<div class="fz-light" aria-hidden="true"><i class="r"></i><i class="g"></i></div>' : '<div class="fz-hand" aria-hidden="true">✋</div>') +
+    /* 칸이 오르면 멈춤이 조금 더 많아지고, 춤추는 시간이 조금 짧고 들쭉날쭉해진다 — 언제 멈출지 더 잘 들어야 한다.
+       4단계: 빨간불에 자세 잡고 멈추기, 5단계: 빨간불에도 노래가 계속 나온다.
+       6단계: 자세를 그림 없이 말로만, 7단계: 🟡 노란불은 아주 천천히(멈춤과 느리게 구별),
+       8단계: 속임수 — 노래가 뚝 멈춰도 초록불이면 계속 춤, 9단계: 속임수 말("빨간 사과!"),
+       10단계: 화면 친구가 계속 춤춰도 꽁꽁 + 조금 더 오래 */
+    var ROUNDS = ctx.tune([5, 6, 8, 9, 10, 11, 11, 12, 12, 12]), DMIN = ctx.tune([7000, 4000, 2500, 1750, 1500, 1400, 1400, 1300, 1300, 1300]),
+      DMAX = ctx.tune([7000, 7000, 5500, 4750, 4500, 4300, 4300, 4200, 4200, 4200]);
+    var POSE = lv >= 4, KEEP = lv >= 5, WORD = lv >= 6, SLOW = lv >= 7, TRAP = lv >= 8, TRICK = lv >= 9, TEASE = lv >= 10, lastPose = null;
+    var HOLD = ctx.tune([4000, 3500, 3000, 3500, 3500, 3500, 3500, 3600, 3800, 4500]);   /* 빨간불 꽁꽁 시간 (6단계부터 쓴다, ±0.5초) */
+    B.innerHTML = '<div class="bd"><div class="fz-stars"></div><div class="fz-stage' + (TEASE ? ' tease' : '') + '">' +
+      (lv >= 3 ? '<div class="fz-light" aria-hidden="true"><i class="r"></i>' + (SLOW ? '<i class="y"></i>' : '') + '<i class="g"></i></div>' : '<div class="fz-hand" aria-hidden="true">✋</div>') +
       '<div class="fz-dancer"></div><div class="fz-word">준비!</div><div class="fz-sub"></div></div>' +
       '<div class="fz-foot"><button class="btn big fz-ok" disabled>👍 멈췄어요!</button><div class="bd-help">아이가 꽁꽁 멈추면 어른이 눌러 주세요</div></div></div>';
     var stage = q('.fz-stage', B), dancer = q('.fz-dancer', B), word = q('.fz-word', B), sub = q('.fz-sub', B),
       stars = q('.fz-stars', B), okBtn = q('.fz-ok', B), lamps = lv >= 3 ? G.$$('.fz-light i', B) : null;
-    var round = 0, phase = 'intro', stopTune = null, tapped = false, got = 0, marks = [], noteH = null, lastSpeed = '', run2 = 0;
+    var round = 0, phase = 'intro', stopTune = null, tapped = false, got = 0, marks = [], noteH = null, lastSpeed = '', run2 = 0, kind = 'red', lastKind = '';
     var T = {
       fast: { bpm: 150, spd: '.36s', w: '빨리빨리 춤춰요!', e: '🐇', say: ['빨리빨리!', '빠르게 춤춰요!'] },
       slow: { bpm: 76, spd: '1.3s', w: '천천히 춤춰요~', e: '🐢', say: ['천천히~', '느릿느릿 춤춰요~'] },
       mid: { bpm: 116, spd: '.7s', w: '춤춰요!', e: '🎵', say: ['춤춰요!', '신나게 춤춰요!', '흔들흔들!'] }
     };
     dancer.textContent = G.pick(FZ_DANCERS);
-    sub.textContent = lv >= 3 ? '🟢 초록불 춤춰 · 🔴 빨간불 멈춰' : lv === 2 ? '🐇 빠른 노래 · 🐢 느린 노래 · ✋ 멈춰' : '🎵 음악이 나오면 춤 · ✋ 멈추면 꽁꽁';
+    sub.textContent = SLOW ? '🟢 춤 · 🟡 아주 천천히 · 🔴 자세 잡고 꽁꽁' : POSE ? '🟢 초록불 춤춰 · 🔴 빨간불 자세 잡고 멈춰' : lv >= 3 ? '🟢 초록불 춤춰 · 🔴 빨간불 멈춰' : lv === 2 ? '🐇 빠른 노래 · 🐢 느린 노래 · ✋ 멈춰' : '🎵 음악이 나오면 춤 · ✋ 멈추면 꽁꽁';
 
-    function setLight(c) { if (!lamps) return; lamps[0].classList.toggle('on', c === 'r'); lamps[1].classList.toggle('on', c === 'g'); }
+    function setLight(c) { if (!lamps) return; lamps.forEach(function (l) { l.classList.toggle('on', l.classList.contains(c)); }); }
     function pickSpeed() {
       if (lv === 1 || round === 0) return 'mid';
       var s; do { s = G.pick(['fast', 'slow', 'mid']); } while (s === lastSpeed && run2 >= 1);
       run2 = s === lastSpeed ? run2 + 1 : 0; lastSpeed = s;
       return s;
     }
+    /* 7단계부터 신호 고르기 — 빨간불이 절반 넘게, 노란불·속임수는 두 번 잇따라 나오지 않게. 첫 신호는 늘 빨간불 */
+    function pickKind() {
+      if (!SLOW || round === 0) return 'red';
+      var k, opts = ['red', 'red', 'slow'].concat(TRAP ? ['trap'] : []);
+      do { k = G.pick(opts); } while (k !== 'red' && k === lastKind);
+      return k;
+    }
     function notes() {
       clearInterval(noteH); if (calm()) return;
       noteH = ctx.interval(function () {
-        if (phase !== 'dance') return;
+        if (phase !== 'dance' && !(phase === 'trap' && stopTune)) return;
         var n = G.el('<span class="fz-note">' + G.pick(['🎵', '🎶', '✨']) + '</span>');
         n.style.left = rnd(6, 88) + '%'; n.style.setProperty('--dx', Math.round(rnd(-40, 40)) + 'px');
         stage.appendChild(n); setTimeout(function () { n.remove(); }, 2300);
@@ -500,11 +629,12 @@ G.act({
       if (!ctx.alive) return;
       phase = 'dance'; tapped = false;
       okBtn.disabled = true; okBtn.classList.remove('got'); okBtn.textContent = '🎵 춤추는 중…';
-      stage.classList.remove('stop');
+      stage.classList.remove('stop'); stage.classList.remove('slowmo');
       var d; do { d = G.pick(FZ_DANCERS); } while (d === dancer.textContent);
       dancer.textContent = d;
       var sp = pickSpeed(), t = T[sp];
       dancer.style.setProperty('--spd', t.spd);
+      if (stopTune) { stopTune(); stopTune = null; }   /* 5단계는 멈춤 동안 이어지던 노래를 여기서 바꾼다 */
       if (lv >= 3) { setLight('g'); word.textContent = '초록불!'; sub.textContent = t.e + ' ' + t.w; ctx.say('초록불! ' + (sp === 'mid' ? '' : t.say[0]), { repeat: false }); }
       else { word.textContent = t.w; sub.textContent = sp === 'mid' ? '🎵 신나게 흔들흔들' : t.e + ' ' + (sp === 'fast' ? '빠른 노래' : '느린 노래'); ctx.say(G.pick(t.say), { repeat: false }); }
       stopTune = tune(ctx, G.pick(FZ_SONGS), t.bpm * (calm() ? 0.85 : 1), { bass: true, vol: 0.15 });
@@ -514,13 +644,55 @@ G.act({
     }
     function freeze() {
       if (!ctx.alive) return;
-      phase = 'stop'; if (stopTune) { stopTune(); stopTune = null; }
+      kind = pickKind(); lastKind = kind;
+      if (kind === 'slow') { slowDown(); return; }
+      if (kind === 'trap') { trap(); return; }
+      phase = 'stop'; if (stopTune && !KEEP) { stopTune(); stopTune = null; }
       stage.classList.add('stop');
       G.sfx.tone(G.sfx.N.E5, 0.3, 'sine', 0.22); G.buzz(40);
-      if (lv >= 3) { setLight('r'); word.textContent = '빨간불!'; sub.textContent = '🧊 꽁꽁 멈춰요'; ctx.say('빨간불!', { repeat: false }); }
+      if (WORD) {
+        /* 6단계부터: 자세 그림 없이 말로만 (10단계는 화면 친구가 계속 춤춘다 — 따라 하지 않고 꽁꽁) */
+        var all = FZ_POSES.concat(FZ_POSES2), ps; do { ps = G.pick(all); } while (ps === lastPose); lastPose = ps;
+        setLight('r'); word.textContent = '빨간불!';
+        if (!TEASE) dancer.textContent = '🧊';
+        sub.textContent = '🧊 ' + ps.w + (TEASE ? ' — 친구가 춤춰도 꽁꽁' : '');
+        ctx.say('빨간불! ' + ps.say + ' 꽁꽁!', { repeat: false });
+      }
+      else if (POSE) {
+        var ps4; do { ps4 = G.pick(FZ_POSES); } while (ps4 === lastPose); lastPose = ps4;
+        setLight('r'); word.textContent = '빨간불!'; dancer.textContent = ps4.e;
+        sub.textContent = '🧊 ' + ps4.w + (KEEP ? ' — 노래가 나와도 꽁꽁' : '로 꽁꽁');
+        ctx.say('빨간불! ' + ps4.say + ' 꽁꽁!', { repeat: false });
+      }
+      else if (lv >= 3) { setLight('r'); word.textContent = '빨간불!'; sub.textContent = '🧊 꽁꽁 멈춰요'; ctx.say('빨간불!', { repeat: false }); }
       else { word.textContent = '멈춰!'; sub.textContent = '🧊 꽁꽁 얼음~'; ctx.say(G.pick(['멈춰!', '얼음!', '멈춰! 꽁꽁!']), { repeat: false }); }
       okBtn.disabled = false; okBtn.textContent = '👍 멈췄어요!';
-      var dur = lv === 1 ? 4000 : lv === 2 ? rnd(3000, 4000) : rnd(2500, 3500);
+      var dur = WORD ? rnd(HOLD - 500, HOLD + 500) : lv === 1 ? 4000 : lv === 2 || POSE ? rnd(3000, 4000) : rnd(2500, 3500);   /* 자세 잡는 4·5단계는 조금 더 길게 */
+      hold(dur);
+    }
+    /* 7단계: 🟡 노란불 — 멈추지 않고 아주 천천히 (느린 노래로 바뀐다) */
+    function slowDown() {
+      phase = 'stop';
+      if (stopTune) { stopTune(); stopTune = null; }
+      stopTune = tune(ctx, FZ_SLOW, 60 * (calm() ? 0.85 : 1), { vol: 0.13 });
+      stage.classList.add('slowmo'); dancer.style.setProperty('--spd', '2.4s');
+      G.sfx.tone(G.sfx.N.C5, 0.3, 'sine', 0.18); G.buzz(25);
+      setLight('y'); word.textContent = '노란불!'; sub.textContent = '🐢 아주 천천히, 슬로 모션~';
+      ctx.say('노란불! 아주 천천히~', { repeat: false, rate: 0.85 });
+      okBtn.disabled = false; okBtn.textContent = '👍 천천히 했어요!';
+      hold(rnd(3000, 4000));
+    }
+    /* 8단계: 속임수 — 신호등은 초록불 그대로인데 노래만 뚝 멈춘다. 9단계부터는 속임수 말("빨간 사과!")도 섞인다.
+       조금 기다렸다가 '초록불이면 계속 춤춰요' 를 살짝 보여 준다 (무오류) */
+    function trap() {
+      phase = 'trap';
+      if (TRICK && Math.random() < 0.5) { var tk = G.pick(FZ_TRICKS); word.textContent = tk.w; ctx.say(tk.say, { repeat: false }); }
+      else if (stopTune) { stopTune(); stopTune = null; }
+      okBtn.disabled = false; okBtn.textContent = '👍 계속 춤췄어요!';
+      ctx.timeout(function () { if (phase === 'trap') sub.textContent = '🟢 초록불이면 계속 춤춰요!'; }, pace(1200));
+      hold(rnd(2600, 3400));
+    }
+    function hold(dur) {
       ctx.timeout(function () {
         marks.push(tapped);
         round++; ctx.progress(round, ROUNDS);
@@ -528,28 +700,37 @@ G.act({
       }, pace(dur));
     }
     okBtn.addEventListener('click', function () {
-      if (phase !== 'stop' || tapped) return;
+      if ((phase !== 'stop' && phase !== 'trap') || tapped) return;
       tapped = true; got++;
-      okBtn.classList.add('got'); okBtn.textContent = '⭐ 꽁꽁! 잘 멈췄어!';
+      okBtn.classList.add('got');
+      okBtn.textContent = kind === 'slow' ? '⭐ 천천히 잘했어!' : kind === 'trap' ? '⭐ 속임수에 안 속았어!' : '⭐ 꽁꽁! 잘 멈췄어!';
       G.sfx.play('sparkle'); G.buzz(15);
       stars.textContent = '⭐'.repeat(got);
       var c = G.fx.center(dancer);
-      floatText(stage, G.pick(['❄️ 꽁꽁!', '🧊 얼음 성공!', '✋ 딱 멈췄다!']), c[0], c[1] - 50);
+      floatText(stage, G.pick(kind === 'slow' ? ['🐢 느릿느릿!', '🐌 천천히 잘했어!'] : kind === 'trap' ? ['😎 안 속았다!', '🟢 계속 춤!'] : ['❄️ 꽁꽁!', '🧊 얼음 성공!', '✋ 딱 멈췄다!']), c[0], c[1] - 50);
       sparks(stage, c[0], c[1], 6, 18);
-      ctx.say(G.pick(['꽁꽁! 잘 멈췄어!', '와, 딱 멈췄다!', '얼음 대장이야!', '움직이고 싶은데 꾹 참았네!']), { repeat: false });
+      ctx.say(G.pick(kind === 'slow' ? ['천천히 잘 조절했어!', '느릿느릿, 멋진 슬로 모션!'] : kind === 'trap' ? ['와, 속임수에 안 속았어!', '초록불을 잘 봤구나!', '눈이 정말 밝다!'] :
+        ['꽁꽁! 잘 멈췄어!', '와, 딱 멈췄다!', '얼음 대장이야!', '움직이고 싶은데 꾹 참았네!']), { repeat: false });
     });
     function end() {
       phase = 'end'; if (stopTune) stopTune();
       /* 부모가 한 번도 안 눌렀으면(같이 춤추느라 못 봤을 수 있다) 기록하지 않는다 */
       if (got > 0) marks.forEach(function (m) { ctx.trial(m); });
-      ctx.extra.froze = got; ctx.extra.stops = ROUNDS;
+      ctx.extra.froze = got; ctx.extra.stops = ROUNDS; ctx.extra.score = got;
       ctx.finish({ msg: got ? '별을 ' + got + '개나 모았어! 멈춰! 할 때 꽁꽁, 참는 힘이 쑥쑥!' : '신나게 춤추고 꽁꽁 멈췄어! 정말 멋져!' });
     }
 
     ctx.progress(0, ROUNDS);
     var intro = lv === 1 ? '음악이 나오면 신나게 춤추고, 멈춰! 하면 꽁꽁 얼음처럼 멈춰요.' :
       lv === 2 ? '빠른 노래엔 빨리빨리, 느린 노래엔 천천히 춤춰요. 멈춰! 하면 꽁꽁 얼음!' :
-        '신호등 놀이! 초록불이면 춤추고, 빨간불이면 꽁꽁 멈춰요. 잘 보고 해요!';
+        TEASE ? '그랜드 마스터 신호등! 빨간불이면 화면 친구가 계속 춤춰도 너는 말한 자세로 꽁꽁, 조금 더 오래 참아요. 노란불과 속임수도 잘 봐요!' :
+          TRICK ? '전설의 신호등! 자비스가 빨간 사과! 같은 속임수 말을 해도 초록불이면 계속 춤춰요. 귀보다 눈으로 신호등을 잘 봐요!' :
+            TRAP ? '영웅 신호등! 노란불은 천천히, 빨간불은 꽁꽁. 그런데 속임수가 있어. 노래가 뚝 멈춰도 초록불이면 계속 춤춰요!' :
+              SLOW ? '챔피언 신호등! 초록불은 춤, 노란불은 아주 천천히 슬로 모션, 빨간불은 자비스가 말한 자세로 꽁꽁!' :
+                WORD ? '전문가 신호등! 빨간불이면 노래가 나와도 꽁꽁. 이번엔 자세 그림이 없어요. 자비스 말을 잘 듣고 그 자세로 멈춰요!' :
+                  KEEP ? '신호등 마스터! 빨간불이면 노래가 계속 나와도 자비스가 말한 자세로 꽁꽁 멈춰요. 귀보다 눈으로 신호등을 잘 봐요!' :
+                    POSE ? '신호등 도전! 초록불이면 춤추고, 빨간불이면 자비스가 말한 자세로 꽁꽁 멈춰요.' :
+                      '신호등 놀이! 초록불이면 춤추고, 빨간불이면 꽁꽁 멈춰요. 잘 보고 해요!';
     ctx.say(intro).then(function () { return ctx.say('준비, 시작!', { repeat: false }); }).then(dance);
   }
 });
@@ -566,14 +747,63 @@ var MARACA = '<svg viewBox="0 0 120 220" aria-hidden="true">' +
   '<circle cx="44" cy="102" r="5" fill="#b388ff"/><circle cx="76" cy="102" r="5" fill="#64b5f6"/>' +
   '<ellipse cx="38" cy="42" rx="10" ry="16" fill="#fff" opacity=".28"/></svg>';
 var SK_SONG = [['C5', 1], ['E5', 1], ['G5', 1], ['E5', 1], ['F5', 1], ['A5', 1], ['G5', 2], ['E5', 1], ['G5', 1], ['C6', 1], ['G5', 1], ['F5', 1], ['D5', 1], ['C5', 2]];
+/* 6~10단계 리듬은 숫자 대신 글자로 적는다 (2~5단계는 흔들 수 숫자).
+   '2.1'   찰찰 · 쉬고 · 찰 (쉼표 리듬)                              — 6·7단계
+   '2.1*2' 자비스가 한 번 → 아이는 똑같이 한 번 + 이어서 한 번 더     — 8단계
+   'F3S2'  빠르게 셋 · 천천히 둘 (빠르기 바꾸기)                      — 9·10단계 */
+function skParse(x) {
+  if (typeof x === 'number') return { k: 'n', n: x };
+  if (/^[FS]/.test(x)) {
+    var seg = x.match(/[FS]\d/g).map(function (s) { return { f: s.charAt(0) === 'F', n: +s.charAt(1) }; });
+    return { k: 't', seg: seg, n: seg.reduce(function (a, s) { return a + s.n; }, 0) };
+  }
+  var p = x.split('*'), g = p[0].split('.').map(Number), rep = +(p[1] || 1), all = [];
+  for (var r = 0; r < rep; r++) all = all.concat(g);
+  return { k: 'r', g: g, rep: rep, all: all, n: all.reduce(function (a, b) { return a + b; }, 0) };
+}
+/* 리듬을 말로 — "찰찰, 쉬고, 찰" · "빠르게 찰찰찰, 그다음 천천히 찰, 찰" */
+function skWords(it) {
+  function cha(n, sep) { return G.range(n).map(function () { return '찰'; }).join(sep); }
+  if (it.k === 't') return it.seg.map(function (s) { return (s.f ? '빠르게 ' : '천천히 ') + cha(s.n, s.f ? '' : ', '); }).join(', 그다음 ');
+  return it.g.map(function (n) { return cha(n, ''); }).join(', 쉬고, ');
+}
+/* 아이가 흔든 때(ms)로 리듬 맞추기 — 너그럽게.
+   쉼: 가장 짧은 간격의 1.6배(그리고 0.6초)보다 길게 쉬면 묶음이 나뉜다.
+   빠르기: 천천히 마디의 안쪽 간격이 빠르게 마디보다 1.3배 넘게 길면 된다 */
+function skMatch(it, times) {
+  if (times.length !== it.n) return false;
+  if (it.k === 'n') return true;
+  var d = [], i;
+  for (i = 1; i < times.length; i++) d.push(times[i] - times[i - 1]);
+  if (it.k === 'r') {
+    var th = Math.max(600, Math.min.apply(null, d) * 1.6), gs = [], c = 1;
+    d.forEach(function (x) { if (x > th) { gs.push(c); c = 1; } else c++; });
+    gs.push(c);
+    return gs.join('.') === it.all.join('.');
+  }
+  var a = 0, mean = it.seg.map(function (s) {
+    var sum = 0; for (var j = a + 1; j < a + s.n; j++) sum += d[j - 1];
+    a += s.n; return sum / Math.max(1, s.n - 1);
+  });
+  for (i = 1; i < it.seg.length; i++) {
+    var fast = it.seg[i].f ? mean[i] : mean[i - 1], slow = it.seg[i].f ? mean[i - 1] : mean[i];
+    if (slow < fast * 1.3) return false;
+  }
+  return true;
+}
+var SK_NEW = {
+  r: '이번엔 쉬는 곳이 있는 리듬이야. 쉬는 곳에서는 잠깐 멈췄다가 흔들어. 잘 들어 봐!',
+  rep: '이번엔 이어 하기! 자비스 리듬을 듣고, 똑같이 한 번 하고 이어서 한 번 더 흔들어. 잘 들어 봐!',
+  t: '이번엔 빠르게, 천천히가 있어. 토끼는 빠르게, 거북이는 천천히! 빠르기도 똑같이 흔들어 봐.'
+};
 
 G.act({
-  id: 'shake', area: 'body', title: '흔들흔들 마라카스', icon: '🎵', order: 30, levels: 3, mins: 2, needs: ['motion'],
+  id: 'shake', area: 'body', title: '흔들흔들 마라카스', icon: '🎵', order: 30, levels: 10, mins: 2, needs: ['motion'],
   ef: ['attend', 'wm', 'inhibit'],
   desc: '흔들면 찰찰 소리가 나요',
   goal: '리듬 따라 하기 — 소리 수를 듣고 기억해 똑같이 흔드는 청각 작업기억·타이밍, 팔 흔들기로 전정·고유수용 감각 깨우기',
-  how: '기기를 아이 손에 쥐여 주고 떨어뜨리지 않게 부모 손을 살짝 받쳐 주세요. 흔들어도 소리가 안 나는 기기는 화면의 마라카스를 톡톡 누르면 돼요. 2·3단계는 자비스가 흔든 만큼 똑같이 — 부모가 "하나, 둘" 같이 세어 주면 좋아요. 자비스 차례에는 "쉿, 들어 보자" 하고 기다리게 해 주세요.',
-  basis: '리듬 모방 — 청각 작업기억·타이밍, 전정·고유수용 감각 자극(감각통합)',
+  how: '기기를 아이 손에 쥐여 주고 떨어뜨리지 않게 부모 손을 살짝 받쳐 주세요. 흔들어도 소리가 안 나는 기기는 화면의 마라카스를 톡톡 누르면 돼요. 2·3단계는 자비스가 흔든 만큼 똑같이 — 부모가 "하나, 둘" 같이 세어 주면 좋아요. 자비스 차례에는 "쉿, 들어 보자" 하고 기다리게 해 주세요. 4단계(도전)는 네다섯 번, 5단계(마스터)는 자비스가 조금 더 빠르게 흔들고 여섯 번까지 나와요. 6~10단계는 쉬는 곳이 있는 리듬 "찰찰 · 쉬고 · 찰"(6·7) → 듣고 똑같이 한 번 + 이어서 한 번 더(8) → 🐇 빠르게 · 🐢 천천히 빠르기 바꾸기(9·10)로 이어져요 — 부모가 "찰찰, 쉬고, 찰" 하고 말로 같이 짚어 주면 좋아요.',
+  basis: '리듬 모방 — 청각 작업기억·타이밍, 전정·고유수용 감각 자극(감각통합). 4·5단계는 기억할 수(폭)를 하나씩 늘리고 5단계는 빠르기를 조금 더함. 6~10단계는 쉼표 리듬·패턴 이어 가기·빠르기 대비(초등 저학년 음악의 리듬 따라 치기, 청각 시간 처리)',
   offline: '쌀을 넣은 페트병 마라카스로 엄마가 "찰찰찰" 세 번 흔들면 아이가 똑같이 따라 흔들기.',
   run: function (ctx) {
     var B = ctx.body, lv = ctx.level;
@@ -658,35 +888,72 @@ G.act({
 
     /* ---- 2·3단계: 자비스 리듬 따라 하기 ---- */
     function rhythm() {
-      /* 칸이 오르면 흔들 수가 하나씩 늘어난다 (2단계: 3번 → 다음 단계의 4번, 3단계: 2번 → 3·4번). 첫 판은 늘 두 번 */
-      var SK_PLAN = { 2: [[2, 3, 3, 3], [2, 3, 3, 4], [2, 3, 4, 4]], 3: [[3, 3, 4, 4, 2], [3, 3, 4, 4, 3], [3, 4, 4, 4, 3]] };
-      var plan = [2].concat(G.shuffle(SK_PLAN[lv][ctx.step - 1]));
-      var R = plan.length;
+      /* 칸이 오르면 흔들 수가 하나씩 늘어난다 (2단계: 3번 → 다음 단계의 4번, 3단계: 2번 → 3·4번). 첫 판은 늘 두 번
+         (4단계부터는 몸풀기 첫 판도 세 번). 4단계: 4·5번, 5단계: 5번에 자비스가 조금 더 빠르게 흔든다.
+         6~10단계는 skParse 글자 리듬 — 칸이 오르면 다음 단계 리듬을 하나둘 미리 섞는다 (5단계 2·3칸은 쉼표 리듬) */
+      var SK_PLAN = { 2: [[2, 3, 3, 3], [2, 3, 3, 4], [2, 3, 4, 4]], 3: [[3, 3, 4, 4, 2], [3, 3, 4, 4, 3], [3, 4, 4, 4, 3]],
+        4: [[4, 4, 4, 5, 3], [4, 4, 5, 5, 3], [4, 5, 5, 5, 4]], 5: [[4, 5, 5, 5, 4], [5, 5, 5, '2.1', 4], [5, 5, '2.1', '1.2', 4]],
+        6: [['2.1', '1.2', '2.2', '1.2', 4], ['2.1', '1.2', '2.2', '3.1', '1.3'], ['2.1', '2.2', '3.1', '1.2.1', '3.2']],
+        7: [['1.2.1', '2.1.2', '3.2', '2.3', '2.1'], ['1.2.1', '2.1.2', '2.2.1', '3.2', '1.1.2'], ['1.2.1', '2.1.2', '2.2.1', '2.1*2', '1.2*2']],
+        8: [['2.1*2', '1.2*2', '2.1.2', '2.2*2', '1.2.1'], ['2.1*2', '1.2*2', '2.2*2', '1.3*2', '2.1.2'], ['2.1*2', '1.2*2', '1.3*2', 'F3S2', 'S2F3']],
+        9: [['F3S2', 'S2F3', 'F4S2', '2.1*2', 'S2F4'], ['F3S2', 'S2F3', 'F4S2', 'S3F3', 'F3S3'], ['F3S2', 'S2F4', 'F3S3', 'F2S2F2', 'S2F3S2']],
+        10: [['F2S2F2', 'S2F3S2', 'F3S2F2', 'F3S2', 'S2F2S2'], ['F2S2F2', 'S2F3S2', 'F3S2F3', 'S3F3', 'F3S3F2'], ['F3S2F3', 'S2F3S2', 'F3S3F2', 'S2F4S2', 'F2S2F3']] };
+      var plan = [lv >= 4 ? 3 : 2].concat(G.shuffle(SK_PLAN[lv][ctx.step - 1])).map(skParse);
+      var R = plan.length, said = {}, good = 0;
       top.innerHTML = '<div class="sk-dots"></div>';
-      var dots = q('.sk-dots', top);
-      function drawDots(n) { dots.innerHTML = G.range(n).map(function () { return '<i></i>'; }).join(''); }
-      function model(N, counting) {
+      var dots = q('.sk-dots', top), dl = [];
+      /* 점 — 쉼표 리듬은 묶음마다 띄우고, 빠르기 리듬은 🐇/🐢 표시. child: 아이 차례 (이어 하기는 두 번 그린다) */
+      function drawDots(it, child) {
+        function dot(n) { return G.range(n).map(function () { return '<i></i>'; }).join(''); }
+        if (it.k === 'n') dots.innerHTML = dot(it.n);
+        else if (it.k === 't') dots.innerHTML = it.seg.map(function (s) { return '<span class="sk-g ' + (s.f ? 'f' : 's') + '"><em>' + (s.f ? '🐇' : '🐢') + '</em>' + dot(s.n) + '</span>'; }).join('');
+        else {
+          var unit = it.g.map(function (n) { return '<span class="sk-g">' + dot(n) + '</span>'; }).join('');
+          dots.innerHTML = child && it.rep > 1 ? G.range(it.rep).map(function () { return unit; }).join('<b class="sk-rep">🔁</b>') : unit;
+        }
+        dots.classList.toggle('grp', it.k !== 'n');
+        dots.classList.toggle('sm', it.k !== 'n' && (child || it.k === 't' ? it.n : it.n / it.rep) > 5);
+        dl = G.$$('i', dots);
+      }
+      /* 자비스가 흔드는 박 [{gap: 다음 박까지 ms, say: 셀 말}] — 다시 들려줄 때(counting)는 천천히 센다 */
+      function beats(it, counting) {
+        var out = [], j;
+        if (it.k === 'n') { var gp = counting ? pace(950) : pace(lv >= 5 ? 540 : 640); for (j = 1; j <= it.n; j++) out.push({ gap: gp, say: NUM[j] }); return out; }
+        if (it.k === 'r') {
+          var bt = pace(counting ? 800 : 600);   /* 쉼은 박의 2.4배 */
+          it.g.forEach(function (n, gi) { for (j = 1; j <= n; j++) out.push({ gap: j === n && gi < it.g.length - 1 ? Math.round(bt * 2.4) : bt, say: NUM[j] }); });
+          return out;
+        }
+        var sc = counting ? 1.15 : 1;   /* 빠르기 리듬은 셀 말 없이 조금만 천천히 (빠르기가 핵심이라) */
+        it.seg.forEach(function (s, si) {
+          for (j = 1; j <= s.n; j++) out.push({ gap: pace((j === s.n && si < it.seg.length - 1) || !s.f ? 1050 * sc : 400 * sc) });
+        });
+        return out;
+      }
+      function model(it, counting) {
         return new Promise(function (res) {
-          listen = false; dots.classList.remove('hide'); drawDots(N);
+          listen = false; dots.classList.remove('hide'); drawDots(it, false);
           turn.textContent = '👂 쉿, 자비스 차례 — 잘 들어 봐!';
-          var k = 0, gap = counting ? pace(950) : pace(640);
+          var bt = beats(it, counting), k = 0;
           function beat() {
-            if (k >= N) { ctx.timeout(res, 450); return; }
-            k++;
+            if (k >= bt.length) { ctx.timeout(res, 450); return; }
+            var b = bt[k++];
             G.sfx.noise(0.13, calm() ? 0.18 : 0.3, 3800);
             restartAnim(mar, 'hit');
-            dots.children[k - 1].classList.add('jv');
-            if (counting) ctx.say(NUM[k], { repeat: false, rate: 1 });
-            ctx.timeout(beat, gap);
+            if (dl[k - 1]) dl[k - 1].classList.add('jv');
+            if (counting && b.say) ctx.say(b.say, { repeat: false, rate: 1 });
+            ctx.timeout(beat, b.gap);
           }
           ctx.timeout(beat, 350);
         });
       }
-      function childTurn(N) {
+      /* 아이 차례 — 흔든 때(ms) 목록을 돌려준다 (안 흔들면 null) */
+      function childTurn(it) {
+        var N = it.n;
         return new Promise(function (res) {
-          var c = 0, quietH = null, startH = null, ended = false, prompted = false;
-          drawDots(N); dots.classList.toggle('hide', lv >= 3);   /* 3단계는 몇 번이었는지 머리로 기억 */
-          turn.textContent = '🙌 이제 네 차례!';
+          var c = 0, quietH = null, startH = null, ended = false, prompted = false, times = [];
+          drawDots(it, true); dots.classList.toggle('hide', lv >= 3);   /* 3단계는 몇 번이었는지 머리로 기억 */
+          turn.textContent = it.rep > 1 ? '🙌 똑같이 한 번, 이어서 한 번 더!' : '🙌 이제 네 차례!';
           listen = true;
           function end(v) { if (ended) return; ended = true; listen = false; onHit = null; clearTimeout(quietH); clearTimeout(startH); res(v); }
           function waitStart() {
@@ -697,10 +964,11 @@ G.act({
           }
           waitStart();
           onHit = function () {
-            c++; clearTimeout(startH);
-            var d = dots.children[c - 1]; if (d) d.classList.add('on');
+            c++; times.push(now()); clearTimeout(startH);
+            var d = dl[c - 1]; if (d) d.classList.add('on');
             clearTimeout(quietH);
-            quietH = ctx.timeout(function () { end(c); }, c >= N ? 900 : 1700);
+            /* 쉼·천천히가 있는 리듬은 조금 더 기다린다 */
+            quietH = ctx.timeout(function () { end(times); }, c >= N ? (it.k === 'n' ? 900 : 1000) : (it.k === 'n' ? 1700 : 2600));
           };
         });
       }
@@ -717,33 +985,40 @@ G.act({
         listen = false;
         for (var r = 0; r < R; r++) {
           ctx.progress(r, R);
-          var N = plan[r], tries = 0, fin = false;
+          var it = plan[r], N = it.n, tries = 0, fin = false, kd = it.k === 'r' && it.rep > 1 ? 'rep' : it.k;
           while (!fin) {
+            var first = !tries && kd !== 'n' && !said[kd];   /* 새 리듬 종류는 처음 한 번 알려 준다 */
+            if (first) said[kd] = 1;
             await ctx.say(r === 0 && !tries ? '이제 자비스 차례! 자비스가 흔드는 만큼 똑같이 흔들어 줘. 잘 들어 봐!' :
-              tries ? '같이 다시 들어 보자. 하나씩 세어 볼게!' : G.pick(['잘 들어 봐!', '이번엔 몇 번일까?', '귀를 쫑긋!', '쉿, 들어 봐!']));
-            await model(N, tries > 0);
-            ctx.say('이제 네 차례!', { repeat: false });
-            var c = await childTurn(N);
-            if (c === null) {   /* 흔들지 않았다 — 기록 없이 넘어간다 */
+              tries ? (it.k === 't' ? '같이 다시 들어 보자. 빠르기를 잘 들어 봐!' : '같이 다시 들어 보자. 하나씩 세어 볼게!') :
+                first ? SK_NEW[kd] : G.pick(it.k === 'n' ? ['잘 들어 봐!', '이번엔 몇 번일까?', '귀를 쫑긋!', '쉿, 들어 봐!'] : ['잘 들어 봐!', '이번엔 어떤 리듬일까?', '귀를 쫑긋!', '쉿, 들어 봐!']));
+            await model(it, tries > 0);
+            ctx.say(it.rep > 1 ? '이제 네 차례! 똑같이 하고, 한 번 더!' : '이제 네 차례!', { repeat: false });
+            var ts = await childTurn(it);
+            if (ts === null) {   /* 흔들지 않았다 — 기록 없이 넘어간다 */
               await ctx.say('괜찮아, 다음 리듬도 들어 볼까?', { repeat: false });
               fin = true;
-            } else if (c === N) {
+            } else if (skMatch(it, ts)) {
               if (!tries) ctx.trial(true);
-              G.$$('i', dots).forEach(function (d) { d.classList.add('on'); });
-              await ctx.cheer(G.pick(['똑같이 ' + CNT[N] + ' 번! 딩동댕!', '와, 리듬이 똑같아!', '귀가 정말 밝구나! ' + CNT[N] + ' 번!', '척척! 똑같이 흔들었어!']));
+              good++;
+              dl.forEach(function (d) { d.classList.add('on'); });
+              await ctx.cheer(G.pick(it.k === 'n' ? ['똑같이 ' + CNT[N] + ' 번! 딩동댕!', '와, 리듬이 똑같아!', '귀가 정말 밝구나! ' + CNT[N] + ' 번!', '척척! 똑같이 흔들었어!'] :
+                it.k === 't' ? ['빠르게, 천천히까지 똑같아!', '와, 빠르기까지 똑같이 했어!', '척척! 리듬 박사!'] :
+                  it.rep > 1 ? ['똑같이 하고 한 번 더! 척척!', '이어서도 똑같아! 리듬 박사!'] : ['쉬는 곳까지 똑같아!', '와, 리듬이 똑같아!', '척척! 리듬 박사!']));
               fin = true;
             } else if (!tries) {
               ctx.trial(false); tries = 1;
               dots.classList.remove('hide');
-              await ctx.say('음~ 자비스는 ' + CNT[N] + ' 번 흔들었어.', { repeat: false });
+              await ctx.say(it.k === 'n' ? '음~ 자비스는 ' + CNT[N] + ' 번 흔들었어.' : '음~ 자비스 리듬은 ' + skWords(it) + '이었어.' + (it.rep > 1 ? ' 그걸 두 번!' : ''), { repeat: false });
             } else {
-              await ctx.say('좋아! ' + CNT[N] + ' 번이었어. 다음 리듬!', { repeat: false });
+              await ctx.say(it.k === 'n' ? '좋아! ' + CNT[N] + ' 번이었어. 다음 리듬!' : '좋아! 잘 들었어. 다음 리듬!', { repeat: false });
               fin = true;
             }
           }
         }
         ctx.progress(R, R);
-        ctx.finish({ msg: '자비스 리듬을 척척 따라 했어! 귀가 정말 밝구나!' });
+        ctx.extra.score = good;
+        ctx.finish({ msg: lv >= 6 ? '쉬는 곳도, 빠르기도 척척! 리듬 박사야!' : '자비스 리듬을 척척 따라 했어! 귀가 정말 밝구나!' });
       }
       play();
     }
@@ -836,40 +1111,64 @@ G.act({
 var HAPPY_BIRTHDAY = [['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['C5', 1], ['B4', 2], ['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['D5', 1], ['C5', 2]];
 
 G.act({
-  id: 'blow', area: 'calm', title: '촛불 끄기', icon: '🕯️', order: 20, levels: 3, mins: 2, needs: ['mic'],
+  id: 'blow', area: 'calm', title: '촛불 끄기', icon: '🕯️', order: 20, levels: 10, mins: 2, needs: ['mic'],
   ef: ['regulate', 'inhibit'],
   desc: '후~ 불어서 촛불을 꺼요',
   goal: '호흡 조절·입술 근육 — 입을 동그랗게 모아 길고 세게 내쉬는 힘(말소리의 바탕), 숨으로 몸 가라앉히기',
-  how: '부모가 먼저 "후~" 하고 입 모양을 크게 보여 주세요. 기기 마이크(보통 아래쪽)에서 한 뼘쯤 떨어져 불면 잘 돼요 — 목소리("아~")보다 바람 소리에 반응해요. 마이크를 쓸 수 없으면 아이가 후~ 불면서 촛불을 누르고, 다 끈 뒤 부모가 👍 로 알려 주면 돼요.',
-  basis: '호흡 조절·입술 오므리기 — 언어치료 불기 활동(구강 운동), 바람을 눈으로 보여 주는 바이오피드백',
+  how: '부모가 먼저 "후~" 하고 입 모양을 크게 보여 주세요. 기기 마이크(보통 아래쪽)에서 한 뼘쯤 떨어져 불면 잘 돼요 — 목소리("아~")보다 바람 소리에 반응해요. 마이크를 쓸 수 없으면 아이가 후~ 불면서 촛불을 누르고, 다 끈 뒤 부모가 👍 로 알려 주면 돼요. 4단계(도전)는 촛불이 하나 더(여섯 개), 5단계(마스터)는 조금 더 길고 고른 바람이 들어요 — 어지러워하면 숨을 쉬고 쉬었다 해요. 6~10단계는 세게 부는 횟수를 늘리지 않고 바람 "조절"을 더해요: 🍃 살살 불어 촛불이 꺼지지 않게 춤추게(6, 바람 막대의 초록 칸) → 살살·세게가 뒤섞여 말을 듣고 고르기(7) → 큰 초를 후~ 끊지 않고 길게 2~3초(8·9) → 살살 하다가 "후!" 신호에 끄기(10). 판 사이마다 쉬는 숨이 있어요 — 숨을 빠르게 몰아쉬지 않게 곁에서 천천히 같이 쉬어 주세요.',
+  basis: '호흡 조절·입술 오므리기 — 언어치료 불기 활동(구강 운동), 바람을 눈으로 보여 주는 바이오피드백. 6~10단계는 날숨 세기 조절(약하게/세게)과 고른 긴 날숨 — 말소리에 필요한 호흡 조절 훈련, 판 사이 쉬는 숨으로 과호흡을 막는다',
   offline: '빨대로 탁구공이나 휴지 조각 불어 굴리기, 비눗방울 천천히 불기, 생일 초 불기 연습.',
   run: async function (ctx) {
     var B = ctx.body, lv = ctx.level;
-    /* 칸이 오르면: 바람 세기·양이 아주 조금씩 더(TH·NEED), 1·2단계 3칸은 촛불이 하나 더(다음 단계 미리).
-       판 수(ROUNDS)는 단계마다 놀이 길이를 맞춘 값이라 칸으로 바꾸지 않는다 — 촛불이 늘어도 판이 줄지 않게 */
-    var PER = [1, 3, 5][lv - 1] + (lv < 3 && ctx.step === 3 ? 1 : 0), ROUNDS = [3, 2, 2][lv - 1], TOTAL = PER * ROUNDS;
-    function prog(outN) { if (TOTAL > 6) ctx.progress(outN, PER); else ctx.progress(round * PER + outN, TOTAL); }   /* 점이 너무 많으면 제목이 가려져 이번 판 촛불만 */
-    var TH = ctx.tune([0.08, 0.11, 0.14]);     /* 이보다 센 바람부터 불꽃이 줄어든다 */
-    var NEED = ctx.tune([0.55, 0.7, 0.8]);     /* 촛불 하나 끄는 데 드는 바람 양 */
+    /* 칸이 오르면: 바람 세기·양이 아주 조금씩 더(TH·NEED), 다음 단계 촛불이 더 많으면 3칸은 촛불이 하나 더(다음 단계 미리).
+       판 수(ROUNDS)는 단계마다 놀이 길이를 맞춘 값이라 칸으로 바꾸지 않는다 — 촛불이 늘어도 판이 줄지 않게.
+       쉬어가기 놀이라 4·5단계도 아주 조금만: 4단계 촛불 여섯, 5단계는 촛불 그대로 바람만 조금 더 길게.
+       6~10단계(바람 조절): 판마다 바람 종류(PLAN) — blow(후! 촛불 끄기) · soft(살살 — 꺼지지 않게 춤추게)
+       · long(큰 초 — 끊지 않는 긴 바람) · mix(살살 춤추게 하다가 "후!" 신호에 끄기).
+       세게 부는 횟수는 늘리지 않고(촛불 넷 → 셋), 판 사이마다 쉬는 숨을 둔다 — 어지럽지 않게(과호흡 막기).
+       6: 살살 바람 첫걸음, 7: 살살·세게가 뒤섞여 신호 듣기, 8: 긴 바람, 9: 긴 바람·살살이 3초, 10: 한 판 안에서 살살 → 후! */
+    var PT = [1, 3, 5, 6, 6, 4, 3, 3, 3, 3], PER = PT[lv - 1] + (ctx.step === 3 && PT[lv] > PT[lv - 1] ? 1 : 0);
+    var KINDS = { 6: ['blow', 'soft', 'blow'], 7: ['blow', 'soft', 'blow', 'soft'], 8: ['blow', 'soft', 'long', 'soft'],
+      9: ['soft', 'long', 'blow', 'soft', 'long'], 10: ['soft', 'mix', 'long', 'mix'] };
+    var PLAN = lv >= 6 ? (lv >= 7 ? G.shuffle(KINDS[lv].slice()) : KINDS[lv]) : null;   /* 7단계부터 순서가 섞인다 — 신호를 듣고 바람을 고른다 */
+    var ROUNDS = PLAN ? PLAN.length : [3, 2, 2, 2, 2][lv - 1], TOTAL = PER * ROUNDS;
+    function prog(outN) {
+      if (PLAN) { ctx.progress(round, ROUNDS); return; }   /* 6단계부터는 판 단위 */
+      if (TOTAL > 6) ctx.progress(outN, PER); else ctx.progress(round * PER + outN, TOTAL);   /* 점이 너무 많으면 제목이 가려져 이번 판 촛불만 */
+    }
+    var TH = ctx.tune([0.08, 0.11, 0.14, 0.155, 0.165, 0.17, 0.175, 0.18, 0.18, 0.18]);   /* 이보다 센 바람부터 불꽃이 줄어든다 */
+    var NEED = ctx.tune([0.55, 0.7, 0.8, 0.85, 0.9, 0.95, 1, 1, 1, 1]);                    /* 촛불 하나 끄는 데 드는 바람 양 */
+    /* 6단계부터: 살살 바람으로 촛불을 춤추게 할 시간(초) · 큰 초를 끄는 긴 바람(초, 8단계부터) — 앞 값들은 쓰지 않는다 */
+    var SOFT = ctx.tune([2, 2, 2, 2, 2, 2, 2.5, 2.5, 3, 3.5]), LONG = ctx.tune([2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 3, 3.5]);
+    var SOFT_LO = 0.04, SOFT_HI = 0.4;   /* 살살 바람 구간 (바람다움만 센 값) — 이보다 세면 "더 살살" */
     var CFG = [
       { cw: 'clamp(52px,14vw,78px)', ch: 'clamp(140px,26vh,230px)', gap: '0px' },
       { cw: 'clamp(38px,10vw,56px)', ch: 'clamp(110px,20vh,180px)', gap: 'clamp(24px,7vw,46px)', kw: 'clamp(260px,74vw,420px)', kh: 'clamp(90px,14vh,130px)' },
       { cw: 'clamp(30px,8vw,46px)', ch: 'clamp(90px,16vh,150px)', gap: 'clamp(16px,4.6vw,30px)', kw: 'clamp(300px,86vw,480px)', kh: 'clamp(100px,16vh,150px)' }
-    ][lv - 1];
+    ][Math.min(lv, 3) - 1];   /* 4단계부터는 3단계 케이크 그대로 (촛불 여섯도 휴대폰 폭에 들어간다) */
     if (PER > 1 && CFG.gap === '0px') CFG.gap = 'clamp(14px,4vw,24px)';   /* 1단계 3칸: 촛불 두 개가 붙지 않게 */
-    B.innerHTML = '<div class="bd"><div class="bl-meter"><span>🌬️</span><div><b></b></div></div><div class="bl-scene"></div><div class="bl-foot"></div></div>';
+    B.innerHTML = '<div class="bd"><div class="bl-meter' + (PLAN ? ' zoned' : '') + '"><span>🌬️</span><div>' + (PLAN ? '<i class="bl-zone"></i>' : '') + '<b></b></div></div><div class="bl-scene"></div>' +
+      (PLAN ? '<div class="bl-goal" hidden><span></span><div><b></b></div></div>' : '') + '<div class="bl-foot"></div></div>';
     var scene = q('.bl-scene', B), meter = q('.bl-meter', B), meterB = q('.bl-meter b', B), foot = q('.bl-foot', B);
+    var goal = q('.bl-goal', B), goalL = goal && q('span', goal), goalB = goal && q('b', goal);
+    if (PLAN) { var zn = q('.bl-zone', B); zn.style.left = (SOFT_LO / 0.55 * 100).toFixed(1) + '%'; zn.style.width = ((SOFT_HI - SOFT_LO) / 0.55 * 100).toFixed(1) + '%'; }
     ['cw', 'ch', 'gap', 'kw', 'kh'].forEach(function (k) { if (CFG[k]) scene.style.setProperty('--' + k, CFG[k]); });
     var mic = null, mode = 'mic', cands = [], round = 0, wind = 0, active = false, helped = false, helpShown = false, hinted = false,
       lastProgress = now(), tapSaid = false, tries = 0;
+    /* 6단계부터: 이번 판 종류(kind)와 지금 바람(phase: blow·soft·long — mix 는 soft 다음 blow), 모은 시간(acc) */
+    var kind = PLAN ? PLAN[0] : 'blow', phase = kind === 'mix' ? 'soft' : kind, acc = 0, best = 0, strong = 0, softSaid = false, breeze = 0, tapBlowSaid = false, roundT0 = 0;
 
     function build() {
       scene.innerHTML = '';
-      var row = G.el('<div class="bl-candles"></div>');
-      cands = G.range(PER).map(function (k) {
+      var row = G.el('<div class="bl-candles"></div>'), n = kind === 'blow' ? PER : 1;
+      cands = G.range(n).map(function (k) {
         var el = G.el('<button class="bl-cnd" type="button" aria-label="촛불"><span class="bl-flame"><i></i></span></button>');
         el.style.setProperty('--c1', SPARK[(k + round * 2) % SPARK.length]);
-        if (PER > 1 && k % 2) el.style.height = 'calc(var(--ch) * .86)';
+        if (n > 1 && k % 2) el.style.height = 'calc(var(--ch) * .86)';
+        if (n === 1 && PLAN) {   /* 살살·긴 바람 판은 큰 초 하나 */
+          el.style.setProperty('--cw', kind === 'long' ? 'clamp(48px,12vw,66px)' : 'clamp(44px,11vw,60px)');
+          el.style.setProperty('--ch', kind === 'long' ? 'clamp(130px,24vh,210px)' : 'clamp(105px,19vh,170px)');
+        } else if (PLAN) el.style.setProperty('--cw', 'clamp(44px,11vw,58px)');   /* 6단계부터 촛불이 넷·셋 — 누르기 쉽게 조금 굵게 */
         row.appendChild(el);
         var c = { el: el, fl: q('.bl-flame', el), hp: 1, out: false };
         el.addEventListener('click', function () { tapCandle(c); });
@@ -879,47 +1178,60 @@ G.act({
       scene.appendChild(G.el(lv === 1 ? '<div class="bl-holder"></div>' : '<div class="bl-cake"></div>'));
     }
     function lit() { return cands.filter(function (c) { return !c.out; }); }
-    function blowOut(c) {
-      if (c.out) return;
+    function snuff(c) {
       c.out = true; c.el.classList.add('out');
       var smoke = G.el('<span class="bl-smoke">💨</span>'); c.el.appendChild(smoke); setTimeout(function () { smoke.remove(); }, 1700);
-      var outN = PER - lit().length;
+      var outN = cands.length - lit().length;
       /* 마이크 놀이 중에는 바람 같은 소리(잡음)를 내지 않는다 — 다음 촛불을 스스로 꺼 버리지 않게 */
       if (mode === 'tap') G.sfx.play('whoosh');
       G.sfx.tone(G.sfx.N.E5 * Math.pow(1.12, outN), 0.28, 'triangle', 0.2);
       G.buzz(15);
       var r = c.el.getBoundingClientRect(); sparks(scene, r.left + r.width / 2, r.top, 6, 16);
+      return outN;
+    }
+    function blowOut(c) {
+      if (c.out) return;
+      var outN = snuff(c);
       prog(outN);
       lastProgress = now();
       if (!lit().length) roundDone();
     }
     function tapCandle(c) {
       if (c.out) return;
-      if (mode === 'tap') { if (active) blowOut(c); else G.ui.wiggle(c.el); return; }
+      if (mode === 'tap') { if (active && kind === 'blow') blowOut(c); else G.ui.wiggle(c.el); return; }
       G.ui.wiggle(c.el);
-      if (!tapSaid) { tapSaid = true; ctx.say('이번엔 후~ 바람으로 꺼 보자!', { repeat: false }); }
+      if (!tapSaid) { tapSaid = true; ctx.say(phase === 'soft' ? '이번엔 살살 바람으로 해 보자!' : '이번엔 후~ 바람으로 꺼 보자!', { repeat: false }); }
     }
     function hint() {
       var t = lit()[0]; if (t) G.ui.hint(t.el);
-      ctx.say(G.pick(['입을 동그랗게 모으고, 후~ 불어 봐!', '촛불한테 후~ 바람을 보내 볼까?', '숨을 크게 쉬고, 후~!']), { repeat: false });
+      ctx.say(G.pick(phase === 'soft' ? ['아주 살살~ 촛불이 흔들흔들 춤추게 불어 봐!', '입을 동그랗게 하고, 살살~ 조금만!'] :
+        phase === 'long' ? ['숨을 크게 쉬고, 후~ 길게 불어 봐!', '후~ 끊지 말고 길~게!'] :
+          ['입을 동그랗게 모으고, 후~ 불어 봐!', '촛불한테 후~ 바람을 보내 볼까?', '숨을 크게 쉬고, 후~!']), { repeat: false });
     }
     function showHelp() {
       helpShown = true;
       var b = G.el('<button class="btn soft bl-help">👆 어른이 도와주기</button>');
-      b.onclick = function () { var t = lit()[0]; if (!t || !active) return; helped = true; G.sfx.play('tap'); blowOut(t); };
+      b.onclick = function () {
+        if (!active) return;
+        if (phase === 'soft') { helped = true; G.sfx.play('tap'); acc = SOFT; softDone(); return; }
+        var t = lit()[0]; if (!t) return; helped = true; G.sfx.play('tap'); blowOut(t);
+      };
       foot.innerHTML = ''; foot.appendChild(b);
       foot.appendChild(G.el('<div class="bd-help">아이가 후~ 불 때 같이 눌러 주세요</div>'));
     }
+    function setGoal(p) { if (goalB) goalB.style.width = Math.round(G.clamp(p, 0, 1) * 100) + '%'; }
 
     /* 바람 듣기: 소리 크기 × 바람다움(스펙트럼 평탄도). 목소리는 평탄도가 낮아 거의 안 센다.
-       (흉내 신호로 재 보니 목소리 0.2~0.4, 후~ 바람 0.6~1.0) */
+       (흉내 신호로 재 보니 목소리 0.2~0.4, 후~ 바람 0.6~1.0).
+       살살 바람(breeze)은 바람다움만 센다 — 목소리("아~")로는 채워지지 않게 */
     function micLoop() {
       ctx.loop(function (dt) {
         var lvl = mic.level(), fl = mic.flat();
-        var raw = lvl * G.clamp((fl - 0.45) / 0.3, 0, 1);
-        raw = Math.max(raw, lvl * 0.1);               /* 목소리만으로는 불꽃이 살짝 흔들릴 정도 */
-        if (G.voice.speaking) raw = 0;                /* 자비스 말소리는 세지 않는다 */
+        var air = lvl * G.clamp((fl - 0.45) / 0.3, 0, 1);
+        var raw = Math.max(air, lvl * 0.1);           /* 목소리만으로는 불꽃이 살짝 흔들릴 정도 */
+        if (G.voice.speaking) raw = air = 0;          /* 자비스 말소리는 세지 않는다 */
         wind = wind * 0.75 + raw * 0.25;
+        breeze = breeze * 0.75 + air * 0.25;
         meterB.style.width = Math.round(G.clamp(wind / 0.55, 0, 1) * 100) + '%';
         var tgt = lit()[0];
         cands.forEach(function (c) {
@@ -929,51 +1241,124 @@ G.act({
           c.fl.style.setProperty('--sz', (0.4 + 0.6 * c.hp).toFixed(2));
         });
         if (!active || !tgt) return;
-        if (wind > TH) { tgt.hp -= dt * (wind - TH) * 4 / NEED; if (tgt.hp <= 0) blowOut(tgt); }
+        if (phase === 'soft') softTick(dt);
+        else if (phase === 'long') longTick(dt, tgt);
+        else if (wind > TH) { tgt.hp -= dt * (wind - TH) * 4 / NEED; if (tgt.hp <= 0) blowOut(tgt); }
         else tgt.hp = Math.min(1, tgt.hp + dt * 0.25);
         var idle = now() - lastProgress;
         if (idle > 6000 && !hinted) { hinted = true; hint(); }
-        if (idle > 12000 && !helpShown) showHelp();
+        if ((idle > 12000 || (PLAN && now() - roundT0 > 20000)) && !helpShown) showHelp();   /* 6단계부터는 20초가 지나도 도와주기 */
       });
     }
+    /* 살살: 구간 안 바람이 모인 시간. 세게 불어도 촛불은 꺼지지 않는다(무오류) — "더 살살" 한 번만 */
+    function softTick(dt) {
+      if (breeze >= SOFT_LO && breeze <= SOFT_HI) { acc += dt; lastProgress = now(); }
+      else if (breeze > SOFT_HI) { strong += dt; if (strong > 0.8 && !softSaid) { softSaid = true; ctx.say('살살~ 더 살살 불어 봐!', { repeat: false }); } }
+      setGoal(acc / SOFT);
+      if (acc >= SOFT) softDone();
+    }
+    /* 길게: 문턱을 넘는 바람이 이어진 시간. 잠깐 끊겨도 조금만 줄어든다 */
+    function longTick(dt, tgt) {
+      if (wind > TH) acc += dt; else acc = Math.max(0, acc - dt * 0.3);
+      if (acc > best + 0.05) { best = acc; lastProgress = now(); }   /* 더 길게 불었을 때만 나아진 것 — 짧게 끊어 불면 힌트·도와주기가 나온다 */
+      tgt.hp = 1 - G.clamp(acc / LONG, 0, 1);
+      setGoal(acc / LONG);
+      if (acc >= LONG) blowOut(tgt);
+    }
+    function softDone() {
+      if (phase !== 'soft' || !active) return;
+      setGoal(1);
+      if (kind === 'mix') {   /* 10단계: 살살 다음엔 신호에 후! (같은 촛불) */
+        active = false; phase = 'blow'; acc = 0; hinted = false; helpShown = false; foot.innerHTML = '';
+        G.sfx.play('sparkle'); meter.classList.remove('soft'); goal.hidden = true;
+        ctx.say('좋아, 촛불이 춤췄어! 이제 후! 세게 불어서 꺼요!').then(function () { active = true; lastProgress = roundT0 = now(); });
+        return;
+      }
+      roundDone();
+    }
+    /* 6단계부터: 판 사이 쉬는 숨 — 세게 부는 숨이 이어지지 않게 (어지럼·과호흡 막기) */
+    async function restBreath() {
+      active = false; if (goal) goal.hidden = true; meter.classList.remove('soft');
+      foot.innerHTML = '<div class="bd-chip">😌 쉬는 숨 — 편하게 숨 쉬어요</div>';
+      await ctx.say(G.pick(['잠깐 쉬자. 코로 편하게 숨 쉬어요.', '쉬는 시간! 편하게 숨 쉬고, 어깨를 내려요.']), { repeat: false, rate: 0.85 });
+      await ctx.wait(pace(2500));
+      foot.innerHTML = '';
+    }
+    /* 마이크가 없을 때 살살·길게·살살→후! 판 — 자비스가 시간을 재 주고 어른이 보고 판정 */
+    async function tapSpecial() {
+      var ms = pace((kind === 'long' ? LONG : SOFT) * 1000), t0 = now();
+      ctx.loop(function () { var p = (now() - t0) / ms; setGoal(p); return p < 1; });
+      if (kind === 'mix') { ctx.say('살살~', { repeat: false, rate: 0.85 }); await ctx.wait(ms); await ctx.say('이제 후!', { repeat: false }); await ctx.wait(1000); }
+      else await ctx.wait(ms + 800);
+      roundDone();
+    }
+
+    var BL_LINE = {
+      blow: function () { return G.pick(['촛불 ' + CNT[PER] + ' 개! 후~ 세게 불어서 꺼 볼까?', '이번엔 후~ 세게! 촛불 ' + CNT[PER] + ' 개를 꺼 봐.']); },
+      soft: function () { return G.pick(['이번엔 살살! 촛불이 꺼지지 않게 아주 살살 불어서 춤추게 해 봐.', '살살 바람! 촛불이 흔들흔들 춤추게, 아주 조금만 불어 봐.']); },
+      long: function () { return '큰 초야! 숨을 크게 쉬고, 후~ 끊지 말고 길~게 불어 봐.'; },
+      mix: function () { return '먼저 살살 불어서 촛불을 춤추게 하고, 자비스가 후! 하면 세게 불어서 꺼요.'; }
+    };
+    var BL_JUDGE = {
+      blow: ['아이가 입으로 후~ 불었나요?', '👍 후~ 불었어요'], soft: ['아이가 꺼지지 않게 살살 불었나요?', '👍 살살 불었어요'],
+      long: ['아이가 후~ 길게(2~3초) 불었나요?', '👍 길게 불었어요'], mix: ['살살 불다가 "후!" 신호에 세게 불었나요?', '👍 살살, 그다음 후!']
+    };
+    var BL_CHEER = {
+      blow: ['후~ 촛불을 다 껐다!', '와, 바람이 정말 세다!'], soft: ['촛불이 살랑살랑 춤췄어! 살살 바람 대장!', '꺼지지 않게 살살~ 조절 대장이야!'],
+      long: ['길~게 후~ 큰 초가 꺼졌어!', '끊지 않고 길게 불었어! 바람이 정말 고르다!'], mix: ['살살 하다가 후! 바람 조절 대장이야!', '살살, 그다음 후! 척척 해냈어!']
+    };
 
     async function startRound(again) {
       active = false; helped = false; hinted = false; helpShown = false; foot.innerHTML = '';
+      if (PLAN) {
+        kind = PLAN[round]; phase = kind === 'mix' ? 'soft' : kind; acc = 0; best = 0; strong = 0; softSaid = false; tapSaid = false;
+        meter.classList.toggle('soft', phase === 'soft');
+        goal.hidden = kind === 'blow'; goalL.textContent = kind === 'long' ? '🌬️ 길게' : '🍃 살살'; setGoal(0);
+      }
       build(); G.sfx.play('sparkle'); prog(0);
-      var line = again ? '괜찮아, 입을 동그랗게 하고 후~ 다시 해 보자!' :
-        round === 0 ? (lv === 3 ? '생일 케이크다! 촛불 ' + CNT[PER] + ' 개를 후~ 불어서 꺼 볼까?' : PER > 1 ? '촛불이 ' + CNT[PER] + ' 개! 후~ 불어서 꺼 볼까?' : '촛불에 후~ 바람을 불어 봐!') :
-          G.pick(['짠! 다시 불을 켰어. 후~ 불어 봐!', '촛불이 또 켜졌어! 후~', '한 번 더! 후~ 바람을 보내 줘.']);
-      if (mode === 'tap' && round === 0 && !again) line += ' 후~ 불면서 촛불을 톡 눌러 봐!';
+      var line = again ? (PLAN && kind !== 'blow' ? '괜찮아, 같이 다시 해 보자!' : '괜찮아, 입을 동그랗게 하고 후~ 다시 해 보자!') :
+        PLAN ? BL_LINE[kind]() :
+          round === 0 ? (lv >= 5 ? '생일 케이크다! 이번 촛불은 조금 단단해. 후~ 길게 불어서 ' + CNT[PER] + ' 개를 꺼 볼까?' : lv >= 3 ? '생일 케이크다! 촛불 ' + CNT[PER] + ' 개를 후~ 불어서 꺼 볼까?' : PER > 1 ? '촛불이 ' + CNT[PER] + ' 개! 후~ 불어서 꺼 볼까?' : '촛불에 후~ 바람을 불어 봐!') :
+            G.pick(['짠! 다시 불을 켰어. 후~ 불어 봐!', '촛불이 또 켜졌어! 후~', '한 번 더! 후~ 바람을 보내 줘.']);
+      if (mode === 'tap' && !again && (PLAN ? kind === 'blow' && !tapBlowSaid : round === 0)) { line += ' 후~ 불면서 촛불을 톡 눌러 봐!'; tapBlowSaid = true; }
       await ctx.say(line);
-      active = true; lastProgress = now();
+      active = true; lastProgress = roundT0 = now();
+      if (PLAN && mode === 'tap' && kind !== 'blow') tapSpecial();
     }
     async function roundDone() {
       active = false; foot.innerHTML = '';
       if (mode === 'mic') ctx.trial(!helped);
       else {
-        ctx.bubble('아이가 입으로 후~ 불었나요?');
-        var ok = await ctx.parentJudge(foot, ['👍 후~ 불었어요', '🔁 한 번 더']);
+        var J = BL_JUDGE[PLAN ? kind : 'blow'];
+        ctx.bubble(J[0]);
+        var ok = await ctx.parentJudge(foot, [J[1], '🔁 한 번 더']);
         if (!ok && !tries) { ctx.trial(false); tries = 1; startRound(true); return; }
         if (!tries) ctx.trial(true);
         if (!ok) { await ctx.say('괜찮아! 다음 촛불도 같이 해 보자.', { repeat: false }); tries = 0; next(); return; }
         tries = 0;
+        if (PLAN && kind !== 'soft') lit().forEach(snuff);   /* 긴 바람·살살 다음 후! — 어른이 👍 하면 촛불이 꺼진다 */
       }
-      var stopSong = lv === 3 ? tune(ctx, HAPPY_BIRTHDAY, 120, { once: true, vol: calm() ? 0.08 : 0.12 }) : null;
-      await ctx.cheer(lv === 3 ? '후~ 촛불을 다 껐다! 생일 축하해!' : PER > 1 ? '촛불을 다 껐어! 바람이 정말 세다!' : G.pick(['후~ 꺼졌다! 최고야!', '와, 촛불이 꺼졌어! 바람 대장!', '후~ 정말 잘 불었어!']));
+      if (goal) goal.hidden = true;
+      var stopSong = lv >= 3 && (!PLAN || round >= ROUNDS - 1) ? tune(ctx, HAPPY_BIRTHDAY, 120, { once: true, vol: calm() ? 0.08 : 0.12 }) : null;   /* 6단계부터는 마지막 판에만 */
+      await ctx.cheer(PLAN ? G.pick(BL_CHEER[kind]) : lv >= 3 ? '후~ 촛불을 다 껐다! 생일 축하해!' : PER > 1 ? '촛불을 다 껐어! 바람이 정말 세다!' : G.pick(['후~ 꺼졌다! 최고야!', '와, 촛불이 꺼졌어! 바람 대장!', '후~ 정말 잘 불었어!']));
       if (stopSong) await ctx.wait(2500);
       next();
     }
-    function next() {
+    async function next() {
       round++;
       if (round >= ROUNDS) {
         ctx.extra.mic = mode === 'mic' ? 1 : 0;
-        ctx.finish({ msg: lv === 3 ? '생일 케이크 촛불을 모두 껐어! 바람 대장, 생일 축하해!' : '촛불을 ' + TOTAL + '개나 껐어! 후~ 바람이 정말 멋져!' });
-      } else startRound();
+        if (PLAN) ctx.progress(ROUNDS, ROUNDS);
+        ctx.finish({ msg: PLAN ? '살살 바람도, 긴 바람도 척척! 숨 조절 대장, 생일 축하해!' : lv >= 3 ? '생일 케이크 촛불을 모두 껐어! 바람 대장, 생일 축하해!' : '촛불을 ' + TOTAL + '개나 껐어! 후~ 바람이 정말 멋져!' });
+      } else {
+        if (PLAN) await restBreath();
+        startRound();
+      }
     }
 
     prog(0);
     build();
-    await ctx.say(lv === 3 ? '오늘은 생일 파티! 자비스가 케이크를 준비했어.' : '촛불 끄기 놀이 하자!');
+    await ctx.say(PLAN ? '오늘은 생일 파티! 오늘은 바람을 골라서 불어 봐요. 살살, 세게, 길게!' : lv >= 3 ? '오늘은 생일 파티! 자비스가 케이크를 준비했어.' : '촛불 끄기 놀이 하자!');
     try { mic = await ctx.mic(); } catch (e) { mic = null; }
     if (mic) {
       mode = 'mic';
