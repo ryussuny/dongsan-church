@@ -691,10 +691,13 @@ G.levelFor = function (id, max) { return G.stageFor(id, max).lv; };
 /* '2-3' 처럼 — 부모 화면·기록용 */
 G.stageLabel = function (lv, st) { return (lv || 1) + '-' + (st || 1); };
 /* 단계 이름 — 4·5단계는 3단계를 다 익힌 아이를 위한 도전·마스터 단계 */
-G.LEVEL_NAME = { 1: '1단계', 2: '2단계', 3: '3단계', 4: '4단계 · 도전', 5: '5단계 · 마스터' };
+/* 1~3 기초 · 4 도전 · 5 마스터 · 6~10 1년 성장 사다리 (초등 1~3학년 수준까지 이어 가기) */
+G.LEVEL_NAME = { 1: '1단계', 2: '2단계', 3: '3단계', 4: '4단계 · 도전', 5: '5단계 · 마스터',
+  6: '6단계 · 전문가', 7: '7단계 · 챔피언', 8: '8단계 · 영웅', 9: '9단계 · 전설', 10: '10단계 · 그랜드 마스터' };
+G.LEVEL_ICON = { 4: ['🔥', '도전'], 5: ['👑', '마스터'], 6: ['💎', '전문가'], 7: ['🏆', '챔피언'], 8: ['🦸', '영웅'], 9: ['🌟', '전설'], 10: ['🌈', '그랜드'] };
 G.levelName = function (lv) { return G.LEVEL_NAME[lv] || lv + '단계'; };
 /* 단계 표시: 1~3 은 ★, 4 는 🔥도전, 5 는 👑마스터 */
-G.levelBadge = function (lv) { return lv >= 5 ? '👑<b class="lv-n">마스터</b>' : lv >= 4 ? '🔥<b class="lv-n">도전</b>' : '★'.repeat(lv); };
+G.levelBadge = function (lv) { var ic = G.LEVEL_ICON[Math.min(lv, 10)]; return ic ? ic[0] + '<b class="lv-n">' + ic[1] + '</b>' : '★'.repeat(lv); };
 
 /* 단계별 숫자를 칸에 맞게 고르기. arr = [1단계, 2단계, 3단계] 값.
    1칸은 그 단계 값 그대로, 2칸·3칸은 다음 단계 값 쪽으로 1/3, 2/3 다가간다.
@@ -960,6 +963,15 @@ function finish(ctx, x) {
   if (up) msg += ' ' + up;
   var enHTML = earn ? '<div class="rw-en"><b>⚡ +' + earn.gain + '</b><small>' + earn.items.map(function (it) { return it.t + ' +' + it.v; }).join(' · ') +
     (earn.capped ? (earn.items.length ? ' · ' : '') + '오늘 에너지는 가득! 내일 또 모으자' : '') + (earn.same ? ' · 같은 놀이는 하루 두 번까지 — 다른 놀이도 해 보자!' : '') + '</small>' + (G.energyBar ? G.energyBar(earn.next) : '') + '</div>' : '';
+  /* 🗺️ 1년 여정 · 🏅 상장 · 🏆 내 기록 (journey.js) */
+  var jr = G.journey && !def.tool ? G.journey.onFinish(ctx, { up: upKind, nextLv: nx ? nx.lv : 0 }) : null, jrHTML = '';
+  if (jr) {
+    if (jr.record) jrHTML += '<div class="rw-note rec">🏆 새 기록! ' + jr.record.score + '점 <small>(지난 최고 ' + jr.record.prev + '점)</small></div>';
+    if (jr.day) jrHTML += '<div class="rw-note day">🗺️ 오늘 미션 도장! ' + jr.day.n + ' / ' + jr.day.need + '일 ' + '⭐'.repeat(jr.day.s) + '</div>';
+    if (jr.advanced && jr.advanced.chapter && !jr.advanced.waiting && !jr.advanced.done) jrHTML += '<div class="rw-note day">🎉 새 장이 열렸어! ' + jr.advanced.chapter.n + '장 「' + G.esc(jr.advanced.chapter.name) + '」</div>';
+    jr.badges.forEach(function (b) { jrHTML += '<div class="rw-note badge">🏅 새 상장: ' + b.e + ' ' + G.esc(b.name) + '</div>'; });
+    if (jr.record && !x.msg && !hard) msg += ' 새 기록이야!';
+  }
   var ov = G.el('<div class="reward' + (part || earn ? ' hero' : '') + '" role="dialog">' +
     '<div class="rw-card">' + (hard ? '<div class="rw-stars"><span>💗</span></div>' : '<div class="rw-stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>') +
     (part ? '' : '<div class="rw-jv">' + G.jarvisSVG('big') + '</div>') +
@@ -968,7 +980,7 @@ function finish(ctx, x) {
     (part ? '<div class="rw-part"><div class="rp-art' + (part.complete ? ' transform' : '') + '">' + part.svg + '</div><div><small>' + (part.complete ? '로봇 완성! 변신!' : '새 부품 획득') + '</small><b>' + G.esc(part.robot.name) + '</b><b class="rp-name">' + G.esc(part.partName) + '</b>' +
       '<span class="rp-dots">' + [0, 1, 2, 3, 4, 5].map(function (k) { return '<i class="' + (k < part.owned ? 'on' : '') + (k === part.owned - 1 ? ' new' : '') + '"></i>'; }).join('') + '</span>' +
       (part.rankUp ? '<small class="rp-rank">' + part.rankUp.e + ' 계급 업! 「' + G.esc(part.rankUp.name) + '」</small>' : '') + '</div></div>' + enHTML
-      : earn ? enHTML : '<div class="rw-stk"><small>새 스티커</small><b>' + stk + '</b></div>') +
+      : earn ? enHTML : '<div class="rw-stk"><small>새 스티커</small><b>' + stk + '</b></div>') + jrHTML +
     '<div class="rw-btns">' + (inSess ? '<button class="btn big go">다음 놀이 ▶</button>' : '<button class="btn big again">🔁 한 번 더</button>') +
     '<button class="btn big soft home">' + (inSess ? '🏠 쉬었다 할래요' : '🏠 처음으로') + '</button></div></div></div>');
   document.body.appendChild(ov);
@@ -1088,11 +1100,13 @@ G.nextInSession = function () {
     var bonus = G.store.get('bonusDay', '') !== G.today() && s.done.length >= 2, bres = null;
     if (bonus) { G.store.set('bonusDay', G.today()); if (G.energyBonus) bres = G.energyBonus(3); else G.giveSticker(); }
     G.store.set('lastSession', { d: G.today(), n: s.done.length });
+    var jd = G.journey ? G.journey.onSession() : null;   /* 🗺️ 오늘 미션 도장 */
     var sd = G.store.get('sessionDays', []); if (sd.indexOf(G.today()) < 0) { sd.push(G.today()); G.store.set('sessionDays', sd.slice(-400)); }
     G.home();
     if (!G.settings.calm) { G.fx.confetti(50); G.sfx.play('win'); } else G.sfx.play('ding');
     G.say(G.older() ? '오늘의 미션 모두 완료! ' + G.callName() + ', 진짜 멋졌어. 이제 화면은 쉬고 몸으로 놀자!' : '오늘의 놀이 끝! ' + G.callName() + ', 정말 멋졌어. 이제 화면은 쉬고, 엄마 아빠랑 몸으로 놀자!');
-    G.toast(bonus ? '🎁 오늘의 미션 완료 보너스 ⚡3' + (bres && bres.made.length ? ' — 새 부품 완성!' : '') + ' 이제 화면을 쉬어요' : '🎉 오늘의 놀이를 모두 마쳤어요! 이제 화면을 쉬어요', 4500);
+    if (jd && jd.day) G.toast('🗺️ 오늘 미션 도장! ' + jd.day.n + ' / ' + jd.day.need + '일 ' + '⭐'.repeat(jd.day.s) + (jd.advanced && jd.advanced.chapter && !jd.advanced.waiting ? ' · 🎉 새 장 「' + jd.advanced.chapter.name + '」' : ''), 4500);
+    else G.toast(bonus ? '🎁 오늘의 미션 완료 보너스 ⚡3' + (bres && bres.made.length ? ' — 새 부품 완성!' : '') + ' 이제 화면을 쉬어요' : '🎉 오늘의 놀이를 모두 마쳤어요! 이제 화면을 쉬어요', 4500);
     return;
   }
   G.runSlot(s.list[s.i]);

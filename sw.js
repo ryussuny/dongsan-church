@@ -18,7 +18,7 @@ var SHELL = [
   /* 함께 자라요 — 발달 놀이 (인터넷 없이도 놀 수 있게) */
   'grow.html', 'grow-manifest.json', 'grow/data.js', 'grow/hero-art.js', 'grow/core.js', 'grow/kind.js', 'grow/act-speech.js', 'grow/act-motor.js',
   'grow/act-body.js', 'grow/act-art.js', 'grow/act-feel.js', 'grow/act-mind.js', 'grow/act-brain.js', 'grow/act-kind.js', 'grow/act-rx.js',
-  'grow/ef.js', 'grow/speech-lab.js', 'grow/jarvis.js', 'grow/parent.js', 'grow/robots.js', 'grow/app.js', 'assets/grow/jarvis.jpg', 'assets/grow/jarvis-head.jpg', 'icons/grow-192.png', 'icons/grow-512.png'
+  'grow/ef.js', 'grow/speech-lab.js', 'grow/jarvis.js', 'grow/parent.js', 'grow/journey.js', 'grow/robots.js', 'grow/app.js', 'assets/grow/jarvis.jpg', 'assets/grow/jarvis-head.jpg', 'icons/grow-192.png', 'icons/grow-512.png'
 ];
 /* 한 번 받아 두고 계속 쓰는 것 (4.8MB 성경 파일 등) */
 var KEEP = /dongsan_bible\.js$|\/icons\/|\.png$|\.jpg$|\.webp$/;

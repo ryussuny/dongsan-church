@@ -5,7 +5,9 @@
    에너지: 완주 +1 · 정확(80%↑) +1 · 도전 단계(4~5) +1 · 칸 오름 +2 · 단계 오름 +4 · 오늘의 미션 완주 +3.
      같은 놀이는 하루 두 번까지만 완주 에너지가 나온다(여러 놀이 고루) · 하루 최대 16.
    부품 값: 시즌 1 ⚡3 · 2 ⚡4 · 3 ⚡5 · 4 ⚡6 · 5 ⚡8 · 최종 ⚡10 (부모 화면에서 빠르게·보통·천천히).
-   시즌 4~최종은 단계 열쇠가 있어야 열린다 — 놀이 실력이 늘어야(단계) 새 로봇을 만난다.
+   시즌 4~최종(10대)은 🗺️ 1년 여정(journey.js)의 장마다 하나씩 열린다 — 1장 피닉스 … 10장 아크 라이트.
+     장을 넘기려면 미션 날 + 단계 열쇠가 있어야 하니, 로봇도 1년에 걸쳐 만난다.
+   남는 에너지는 완성한 로봇 강화(★1~★5)에 쓴다 — ⚡8·16·24·32·40. ★5 는 전설 등급(상장).
    로봇 하나 = 부품 여섯. 순서: 다리 구동부 → 몸통 코어 → 왼팔 → 오른팔 → 머리 센서 → 특수 장비(완성·변신!)
    그림은 파란 설계도에서 시작해 부품을 얻을 때마다 그 자리가 실제 색으로 살아난다.
    로봇을 몇 대 완성했는지에 따라 계급이 오른다 (훈련생 → … → 전신갑주 용사).
@@ -19,7 +21,9 @@ var G = window.G;
 
 /* 실사 그림이 준비된 로봇 (assets/grow/robots/<id>.jpg) — 그림을 더하면 여기에 id 를 적는다 */
 var HAS_IMG = { striker: 1, sentinel: 1, breaker: 1, airblade: 1, rotor: 1, lancer: 1, trident: 1, fortress: 1, express: 1, fang: 1, rex: 1, nova: 1, omega: 1,
-  phoenix: 1, thunder: 1, aurora: 1, leo: 1, gigas: 1, seraph: 1, cosmos: 1, arclight: 1 };
+  phoenix: 1, thunder: 1, aurora: 1, leo: 1, gigas: 1, seraph: 1, cosmos: 1, leviathan: 1, chrono: 1, arclight: 1 };
+/* 완성하면 볼 수 있는 변신 영상 (assets/grow/videos/<id>.mp4, Higgsfield) */
+var HAS_VID = { phoenix: 1, thunder: 1, aurora: 1, leo: 1, gigas: 1, seraph: 1, cosmos: 1, leviathan: 1, chrono: 1, arclight: 1 };
 
 var R = window.GR = {};
 R.SLOTS = ['다리 구동부', '몸통 코어', '왼팔', '오른팔', '머리 센서', '특수 장비'];
@@ -28,9 +32,9 @@ R.SEASONS = [
   { id: 1, name: '시즌 1 · 출격 군단', desc: '땅과 하늘을 지키는 첫 번째 군단', cost: 3 },
   { id: 2, name: '시즌 2 · 특수 군단', desc: '바다·궤도·번개·야수·공룡·우주의 특수 대원', cost: 4 },
   { id: 3, name: '전설', desc: '모든 군단을 완성한 사령관에게만', cost: 5 },
-  { id: 4, name: '시즌 4 · 폭풍 전설 군단', desc: '불꽃·번개·얼음·사자·대지의 전설', cost: 6, gate: { lv: 2, games: 6 } },
-  { id: 5, name: '시즌 5 · 빛의 군단', desc: '빛과 별을 지키는 최강 군단', cost: 8, gate: { lv: 4, games: 4 } },
-  { id: 6, name: '최종 전설', desc: '하나님의 전신 갑주를 입은 마지막 수호자', cost: 10, gate: { lv: 5, games: 3 } }
+  { id: 4, name: '시즌 4 · 폭풍 전설 군단', desc: '1년 여정 1~5장의 전설', cost: 6 },
+  { id: 5, name: '시즌 5 · 빛의 군단', desc: '1년 여정 6~9장 — 빛·별·바다·시간의 수호자', cost: 8 },
+  { id: 6, name: '최종 전설', desc: '1년 여정 10장 — 하나님의 전신 갑주를 입은 마지막 수호자', cost: 10 }
 ];
 /* svg: 실사 그림이 없을 때 쓰는 벡터 그림 번호(hero-art.js), hue: 색을 돌려 구별 */
 R.ROBOTS = [
@@ -74,30 +78,36 @@ R.ROBOTS = [
     parts: ['황금 레그', '오메가 코어', '수호 암', '지휘 암', '왕관 센서', '오메가 윙'],
     line: '모든 군단을 지휘하는 전설의 사령관 로봇! 특기는 오메가 수호!' },
   /* 시즌 4 · 폭풍 전설 군단 */
-  { id: 'phoenix', name: '블레이즈 피닉스', type: '불사조형', alt: '불꽃 전투기', skill: '불꽃 부활', color: '#ff5a1f', season: 4, svg: 3, hue: -20,
+  { id: 'phoenix', chapter: 1, name: '블레이즈 피닉스', type: '불사조형', alt: '불꽃 전투기', skill: '불꽃 부활', color: '#ff5a1f', season: 4, svg: 3, hue: -20,
     parts: ['불꽃 발톱 레그', '용암 크리스털 코어', '화염 깃 암', '피닉스 블래스터', '불새 투구 센서', '불사조 날개'],
     line: '불꽃 전투기로 변신하는 불사조형 로봇! 넘어져도 다시 일어나는 불꽃 부활이 특기야!' },
-  { id: 'thunder', name: '썬더 드래곤', type: '용기사형', alt: '번개 용', skill: '천둥 랜스', color: '#3d8bff', season: 4, svg: 5, hue: 190,
+  { id: 'thunder', chapter: 2, name: '썬더 드래곤', type: '용기사형', alt: '번개 용', skill: '천둥 랜스', color: '#3d8bff', season: 4, svg: 5, hue: 190,
     parts: ['용 발톱 레그', '뇌전 코어', '용비늘 방패 암', '썬더 랜스 암', '용 뿔 센서', '천둥 날개'],
     line: '번개 용으로 변신하는 용기사형 로봇! 특기는 천둥 랜스!' },
-  { id: 'aurora', name: '오로라 나이트', type: '빙결 기사형', alt: '설원 스노 제트', skill: '오로라 검', color: '#7fe3ff', season: 4, svg: 1, hue: 150,
+  { id: 'aurora', chapter: 3, name: '오로라 나이트', type: '빙결 기사형', alt: '설원 스노 제트', skill: '오로라 검', color: '#7fe3ff', season: 4, svg: 1, hue: 150,
     parts: ['빙판 스키 레그', '빙정 코어', '서리 방패 암', '오로라 검 암', '눈꽃 왕관 센서', '빙하 망토'],
     line: '설원 스노 제트로 변신하는 빙결 기사형 로봇! 특기는 오로라 검!' },
-  { id: 'leo', name: '킹 레오', type: '사자왕형', alt: '황금 사자 전차', skill: '사자왕의 포효', color: '#e6a700', season: 4, svg: 2, hue: 20,
+  { id: 'leo', chapter: 4, name: '킹 레오', type: '사자왕형', alt: '황금 사자 전차', skill: '사자왕의 포효', color: '#e6a700', season: 4, svg: 2, hue: 20,
     parts: ['사자 궤도 레그', '사자 얼굴 코어', '왕의 방패 암', '왕의 대검 암', '갈기 투구 센서', '황금 갈기'],
     line: '황금 사자 전차로 변신하는 사자왕형 로봇! 특기는 사자왕의 포효!' },
-  { id: 'gigas', name: '기가 타이탄', type: '초거대 합체형', alt: '중장비 합체 기지', skill: '대지 합체', color: '#ff9f1c', season: 4, svg: 2, hue: 35,
+  { id: 'gigas', chapter: 5, name: '기가 타이탄', type: '초거대 합체형', alt: '중장비 합체 기지', skill: '대지 합체', color: '#ff9f1c', season: 4, svg: 2, hue: 35,
     parts: ['덤프트럭 레그', '불도저 코어', '굴착기 암', '메가 해머 암', '관제 센서', '크레인 합체 엔진'],
     line: '중장비 여러 대가 하나로 합체하는 초거대 로봇! 특기는 대지 합체!' },
   /* 시즌 5 · 빛의 군단 */
-  { id: 'seraph', name: '세라프 윙', type: '빛의 수호천사형', alt: '빛의 우주선', skill: '여섯 날개 방벽', color: '#bfe9ff', season: 5, svg: 4, hue: 0,
+  { id: 'seraph', chapter: 6, name: '세라프 윙', type: '빛의 수호천사형', alt: '빛의 우주선', skill: '여섯 날개 방벽', color: '#bfe9ff', season: 5, svg: 4, hue: 0,
     parts: ['빛 추진 레그', '광휘 코어', '빛의 방패 암', '빛의 검 암', '빛 고리 센서', '여섯 날개'],
     line: '빛의 우주선으로 변신하는 수호천사형 로봇! 특기는 여섯 날개 방벽!' },
-  { id: 'cosmos', name: '코스모 엠퍼러', type: '은하 황제형', alt: '은하 기함', skill: '별빛 왕관', color: '#a78bfa', season: 5, svg: 5, hue: 0,
+  { id: 'cosmos', chapter: 7, name: '코스모 엠퍼러', type: '은하 황제형', alt: '은하 기함', skill: '별빛 왕관', color: '#a78bfa', season: 5, svg: 5, hue: 0,
     parts: ['성운 추진 레그', '은하 코어', '행성 고리 암', '별 지팡이 암', '별 왕관 센서', '은하 망토'],
     line: '은하 기함으로 변신하는 은하 황제형 로봇! 특기는 별빛 왕관!' },
+  { id: 'leviathan', chapter: 8, name: '오션 리바이어던', type: '심해 거신형', alt: '고래 전함', skill: '해일 방벽', color: '#22d3ee', season: 5, svg: 1, hue: 180,
+    parts: ['고래 지느러미 레그', '심해 빛 코어', '물대포 암 (왼쪽)', '물대포 암 (오른쪽)', '수중 음파 센서', '고래 꼬리 망토'],
+    line: '고래 전함으로 변신하는 심해 거신형 로봇! 특기는 해일 방벽!' },
+  { id: 'chrono', chapter: 9, name: '크로노 가디언', type: '시간 수호자형', alt: '태엽 비행선', skill: '시간의 톱니', color: '#e8c15a', season: 5, svg: 4, hue: 30,
+    parts: ['태엽 레그', '모래시계 코어', '톱니 방패 암', '진자 지팡이 암', '별시계 센서', '황금 톱니 고리'],
+    line: '태엽 비행선으로 변신하는 시간 수호자형 로봇! 특기는 시간의 톱니!' },
   /* 최종 전설 — 에베소서 6:14~17 의 전신 갑주 (부품 이름은 풀어 쓴 말) */
-  { id: 'arclight', name: '아크 라이트', type: '전신 갑주 수호자', alt: '빛의 성채', skill: '하나님의 전신 갑주', color: '#ffe27a', season: 6, svg: 0, gold: true,
+  { id: 'arclight', chapter: 10, name: '아크 라이트', type: '전신 갑주 수호자', alt: '빛의 성채', skill: '하나님의 전신 갑주', color: '#ffe27a', season: 6, svg: 0, gold: true,
     parts: ['평안의 복음의 신', '의의 호심경', '믿음의 방패', '성령의 검', '구원의 투구', '진리의 허리띠'],
     line: '하나님의 전신 갑주를 입은 마지막 수호자! 믿음의 방패와 성령의 검으로 친구들을 지켜!',
     verse: '“마귀의 간계를 능히 대적하기 위하여 하나님의 전신 갑주를 입으라” (에베소서 6:11)' }
@@ -105,9 +115,9 @@ R.ROBOTS = [
 R.RANKS = [
   { n: 0, name: '훈련생', e: '🔰' }, { n: 1, name: '대원', e: '🎖️' }, { n: 3, name: '정예 대원', e: '🏅' }, { n: 5, name: '팀장', e: '⭐' },
   { n: 7, name: '부대장', e: '🌟' }, { n: 9, name: '대장', e: '🛡️' }, { n: 12, name: '사령관', e: '👑' }, { n: 13, name: '전설의 사령관', e: '🏆' },
-  { n: 15, name: '폭풍 영웅', e: '🌪️' }, { n: 18, name: '전설 영웅', e: '🦸' }, { n: 20, name: '빛의 사령관', e: '🌠' }, { n: 21, name: '전신 갑주 용사', e: '⚜️' }
+  { n: 15, name: '폭풍 영웅', e: '🌪️' }, { n: 18, name: '전설 영웅', e: '🦸' }, { n: 20, name: '빛의 사령관', e: '🌠' }, { n: 22, name: '시간의 수호자', e: '⏳' }, { n: 23, name: '전신 갑주 용사', e: '⚜️' }
 ];
-R.ROBOTS.forEach(function (r) { if (HAS_IMG[r.id]) r.img = 'assets/grow/robots/' + r.id + '.jpg'; });
+R.ROBOTS.forEach(function (r) { if (HAS_IMG[r.id]) r.img = 'assets/grow/robots/' + r.id + '.jpg'; if (HAS_VID[r.id]) r.video = 'assets/grow/videos/' + r.id + '.mp4'; });
 
 /* ---------- 진행 상황 ---------- */
 /* 모은 부품 수 — 예전에는 스티커 수와 같았다. 처음 한 번 옮겨 오고(그때 있던 13대까지), 이제는 에너지로만 는다 */
@@ -120,6 +130,20 @@ R.count = function () {
 
 /* ---------- ⚡ 에너지 ---------- */
 R.PACE = { fast: 0.7, normal: 1, slow: 1.5 };
+R.EN_CAP = 200;   /* 새 로봇이 잠겨 있을 때 모아 둘 수 있는 에너지 */
+/* ---------- ⭐ 로봇 강화 (완성한 로봇, ★1~★5) ---------- */
+R.upOf = function (id) { return (G.store.get('robotUp', {}) || {})[id] || 0; };
+R.upCost = function (id) { return Math.max(4, Math.round(8 * (R.upOf(id) + 1) * (R.PACE[(G.settings || {}).partPace] || 1))); };
+R.upgrade = function (i) {
+  var r = R.ROBOTS[i]; if (!r || R.ownedOf(i) < 6) return null;
+  var lvl = R.upOf(r.id); if (lvl >= 5) return null;
+  var en = R.energy(), cost = R.upCost(r.id); if (en.e < cost) return null;
+  en.e -= cost; G.store.set('energy', en);
+  var U = G.store.get('robotUp', {}); U[r.id] = lvl + 1; G.store.set('robotUp', U);
+  var badge = lvl + 1 === 5 && G.badges ? G.badges.award('up5:' + r.id, '「' + r.name + '」 전설 강화 ★5', '🌟') : null;
+  return { stars: lvl + 1, badge: badge };
+};
+R.stars = function (n) { return '★'.repeat(n) + '☆'.repeat(5 - n); };
 R.DAY_MAX = 16;
 R.seasonOf = function (r) { return R.SEASONS.filter(function (x) { return x.id === r.season; })[0] || R.SEASONS[0]; };
 /* idx 번째 로봇 부품 값 (round: 황금 로봇 다시 모으기) */
@@ -140,7 +164,14 @@ R.bestLevels = function () {
 };
 /* idx 번째 로봇의 열쇠 — {ok, have, need, lv, text} 또는 null(열쇠 없음) */
 R.gateFor = function (idx) {
-  var se = R.seasonOf(R.ROBOTS[idx]); if (!se.gate) return null;
+  var r = R.ROBOTS[idx], se = R.seasonOf(r);
+  /* 1년 여정의 장 — 그 장에 가야 열린다 */
+  if (r.chapter && G.journey) {
+    var js = G.journey.state(), c = G.journey.CHAPTERS[r.chapter - 1];
+    return { ok: js.ch >= r.chapter, have: Math.min(js.ch, r.chapter), need: r.chapter, chapter: r.chapter, season: { name: '🗺️ 1년 여정 ' + r.chapter + '장 「' + c.name + '」' },
+      text: '1년 여정 ' + r.chapter + '장 「' + c.name + '」에 가면' };
+  }
+  if (!se.gate) return null;
   var b = R.bestLevels(), have = Object.keys(b).filter(function (k) { return b[k] >= se.gate.lv; }).length;
   return { ok: have >= se.gate.games, have: Math.min(have, se.gate.games), need: se.gate.games, lv: se.gate.lv, season: se,
     text: '놀이 ' + se.gate.games + '가지를 ' + (G.levelName ? G.levelName(se.gate.lv) : se.gate.lv + '단계') + ' 이상까지' };
@@ -157,7 +188,7 @@ R.spend = function (en) {
   for (var g = 0; g < 12; g++) {
     var cu = R.cursor(), cost = R.costOf(cu.idx, cu.round);
     var gate = cu.round || cu.owned ? null : R.gateFor(cu.idx);   /* 열쇠는 새 로봇을 시작할 때만 본다 */
-    if (gate && !gate.ok) { locked = gate; en.e = Math.min(en.e, cost * 2); break; }
+    if (gate && !gate.ok) { locked = gate; en.e = Math.min(en.e, R.EN_CAP); break; }   /* 남는 에너지는 로봇 강화에 */
     if (en.e < cost) break;
     en.e -= cost; var c = R.count() + 1; G.store.set('parts', c); made.push(c);
   }
@@ -195,6 +226,8 @@ G.energyBonus = function (v) {
 /* 에너지 막대 (상 화면·격납고) */
 G.energyBar = function (nx) {
   nx = nx || R.nextInfo();
+  if (nx.locked && nx.locked.chapter) return '<div class="en-box locked"><b>🔒 ' + G.esc(nx.locked.season.name) + '</b><small>' + G.esc(nx.locked.text) + ' 만날 수 있어요 · 모은 에너지 ⚡' + R.energy().e + ' 는 격납고에서 로봇 강화에 쓸 수 있어요</small>' +
+    '<div class="en-bar"><i style="width:' + Math.round(nx.locked.have / nx.locked.need * 100) + '%"></i></div></div>';
   if (nx.locked) return '<div class="en-box locked"><b>🔒 ' + G.esc(nx.locked.season.name) + '</b><small>' + G.esc(nx.locked.text) + ' 해 보면 열려요 · 지금 ' + nx.locked.have + ' / ' + nx.locked.need + '</small>' +
     '<div class="en-bar"><i style="width:' + Math.round(nx.locked.have / nx.locked.need * 100) + '%"></i></div></div>';
   return '<div class="en-box"><b>⚡ ' + nx.have + ' / ' + nx.cost + '</b><small>다음 부품 「' + G.esc(nx.part || '') + '」까지 ⚡' + nx.left + '</small>' +
@@ -304,6 +337,12 @@ G.css('hangar2', [
   '.rb-modal .md-card p{color:#a9bde3}',
   '.rb-modal .rart,.rb-modal .rsvg{width:min(260px,70vw);margin:6px auto 10px}',
   '.rb-modal .rsvg{height:300px}',
+  '.rb-video{display:block;width:min(260px,70vw);aspect-ratio:3/4;margin:6px auto 10px;border-radius:14px;background:#000;object-fit:cover}',
+  '.rb-up{color:#ffd54f;font-size:18px;letter-spacing:2px;margin:4px 0}',
+  '.hg-st{color:#ffd54f;letter-spacing:1px}',
+  '.hg-card.up3 .rart{box-shadow:0 0 18px color-mix(in srgb,var(--c) 70%,transparent)}',
+  '.hg-card.up4 .rart{box-shadow:0 0 26px color-mix(in srgb,var(--c) 85%,transparent),0 0 6px #fff8}',
+  '.hg-card.up5 .rart{box-shadow:0 0 34px #ffd54f,0 0 10px #fff;outline:2px solid #ffd54f}',
   '@media (max-width:420px){.hg-now{grid-template-columns:1fr}.hg-now .rart{max-width:240px;margin:0 auto}}'
 ].join('\n'));
 
@@ -319,8 +358,21 @@ function detail(i) {
     '<h3 class="hero-t" style="font-size:24px">' + G.esc(r.name) + '</h3><p>' + r.type + ' · 변신: ' + r.alt + ' · 특기: ' + r.skill + '</p>' +
     (owned >= 6 ? '<p style="color:#7df9ff">✨ 완성! 변신 가능</p>' : owned ? '<p>부품 ' + owned + ' / 6 · 부품 하나에 ⚡' + R.costOf(i, 0) + '</p>' : '<p>🔒 앞 로봇을 완성하면 조립을 시작해요 · 부품 하나에 ⚡' + R.costOf(i, 0) + '</p>') +
     (r.verse ? '<p style="color:#ffe27a;font-size:13.5px">' + G.esc(r.verse) + '</p>' : '') +
+    (owned >= 6 ? '<p class="rb-up">' + R.stars(R.upOf(r.id)) + ' 강화 ' + R.upOf(r.id) + ' / 5</p>' +
+      (R.upOf(r.id) < 5 ? '<button class="btn md-up">⚡' + R.upCost(r.id) + ' 으로 강화하기 (지금 ⚡' + R.energy().e + ')</button>' : '<p style="color:#ffe082">🌟 전설 등급!</p>') : '') +
+    (owned >= 6 && r.video ? '<button class="btn soft md-vid" style="margin-top:8px">▶ 변신 영상</button>' : '') +
     partsList(i, owned) + '<button class="btn soft md-x" style="margin-top:12px">닫기</button></div></div>');
   document.body.appendChild(ov);
+  var ub = ov.querySelector('.md-up');
+  if (ub) { if (R.energy().e < R.upCost(r.id)) ub.disabled = true;
+    ub.onclick = function () { var u = R.upgrade(i); if (!u) return; ov.remove(); G.sfx.play('great'); G.fx.confetti(30); G.toast('⭐ ' + r.name + ' 강화 ★' + u.stars + '!' + (u.badge ? ' 🏅 새 상장!' : '')); G.openHangar(); setTimeout(function () { detail(i); }, 300); }; }
+  var vb = ov.querySelector('.md-vid');
+  if (vb) vb.onclick = function () {
+    var art = ov.querySelector('.rart, .rsvg'); if (!art) return;
+    var v = G.el('<video class="rb-video" src="' + r.video + '" autoplay muted playsinline></video>');
+    art.replaceWith(v); vb.remove(); G.sfx.play('great');
+    v.onended = function () { v.pause(); };
+  };
   ov.querySelector('.md-x').onclick = function () { ov.remove(); G.voice.stop(); };
   ov.onclick = function (e) { if (e.target === ov) { ov.remove(); G.voice.stop(); } };
   G.sfx.play(owned >= 6 ? 'great' : 'tap');
@@ -348,8 +400,9 @@ G.openHangar = function () {
     R.ROBOTS.forEach(function (r, i) {
       if (r.season !== se.id) return;
       var owned = R.ownedOf(i), st = owned >= 6 ? 'done' : owned ? 'now' : 'lock';
-      h += '<button class="hg-card ' + st + '" data-ri="' + i + '" style="--c:' + r.color + '">' + G.robotArt(i, owned, {}) + '<b>' + G.esc(r.name) + '</b><span class="tag">' + r.type + '</span><small>' +
-        (owned >= 6 ? '✨ 완성 · ' + r.skill : owned ? '부품 ' + owned + ' / 6 조립 중' : '🔒 ' + r.alt) + '</small>' + (owned && owned < 6 ? '<div class="hg-bar"><i style="width:' + (owned / 6 * 100) + '%"></i></div>' : '') + '</button>';
+      var up = owned >= 6 ? R.upOf(r.id) : 0;
+      h += '<button class="hg-card ' + st + (up ? ' up' + up : '') + '" data-ri="' + i + '" style="--c:' + r.color + '">' + G.robotArt(i, owned, {}) + '<b>' + G.esc(r.name) + '</b><span class="tag">' + r.type + '</span><small>' +
+        (owned >= 6 ? '✨ 완성 · ' + r.skill + '<br><span class="hg-st">' + R.stars(up) + '</span>' + (r.video ? ' ▶' : '') : owned ? '부품 ' + owned + ' / 6 조립 중' : '🔒 ' + (r.chapter ? r.chapter + '장에서 만나요' : r.alt)) + '</small>' + (owned && owned < 6 ? '<div class="hg-bar"><i style="width:' + (owned / 6 * 100) + '%"></i></div>' : '') + '</button>';
     });
     h += '</div>';
   });

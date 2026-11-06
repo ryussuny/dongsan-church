@@ -330,9 +330,9 @@ textarea.inp{min-height:90px;resize:vertical}
 #home.hero-scr .hm-streak i.on{background:linear-gradient(135deg,#ffd54f,#ff9f1c);color:#3b2600}
 #home.hero-scr .hm-foot{color:#8ea4cb}
 /* 로봇 격납고 */
-#book.hero-scr .topbar{background:transparent}
-#book.hero-scr .topbar h2{color:#fff;font-family:'Black Han Sans','Jua',sans-serif}
-#book.hero-scr .topbar .back{background:rgba(255,255,255,.1);color:#fff;box-shadow:none}
+#book.hero-scr .topbar,#journey.hero-scr .topbar{background:transparent}
+#book.hero-scr .topbar h2,#journey.hero-scr .topbar h2{color:#fff;font-family:'Black Han Sans','Jua',sans-serif}
+#book.hero-scr .topbar .back,#journey.hero-scr .topbar .back{background:rgba(255,255,255,.1);color:#fff;box-shadow:none}
 .hangar{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:6px 14px calc(24px + var(--safe-b));max-width:980px;margin:0 auto}
 .hg-card{position:relative;border-radius:22px;padding:10px 8px 12px;text-align:center;background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03));
   border:1px solid rgba(255,255,255,.14);color:#eaf2ff;overflow:hidden}
@@ -350,6 +350,11 @@ textarea.inp{min-height:90px;resize:vertical}
 /* 상 화면 — 히어로 */
 .reward.hero .rw-card{background:linear-gradient(165deg,#13244f,#0c1733);color:#eaf2ff;border:1px solid rgba(120,180,255,.35);box-shadow:0 0 40px rgba(80,160,255,.35),0 20px 60px rgba(0,0,0,.4)}
 .reward.hero .rw-msg{font-family:'Black Han Sans','Jua',sans-serif;font-weight:400;text-shadow:0 0 14px rgba(120,190,255,.5)}
+.rw-note{max-width:440px;margin:0 auto 8px;padding:6px 12px;border-radius:12px;font-weight:800;font-size:14px;text-align:center}
+.rw-note small{font-weight:600;opacity:.8}
+.rw-note.rec{background:rgba(255,213,79,.16);color:#ffe082;border:1px solid rgba(255,213,79,.45)}
+.rw-note.day{background:rgba(125,249,255,.12);color:#b3f3ff;border:1px solid rgba(125,249,255,.4)}
+.rw-note.badge{background:rgba(200,40,60,.25);color:#ffd0d6;border:1px solid rgba(255,140,160,.45)}
 .rw-en{max-width:440px;margin:0 auto 14px;text-align:center}
 .rw-en>b{font-family:'Black Han Sans','Jua',sans-serif;font-weight:400;font-size:clamp(24px,7vw,32px);color:#ffd54f;text-shadow:0 0 14px rgba(255,213,79,.55)}
 .rw-en>small{display:block;color:#cfe0ff;font-size:13px;margin:2px 0 4px}
@@ -419,6 +424,7 @@ textarea.inp{min-height:90px;resize:vertical}
     <button data-go="timer"><span class="qe">⏳</span><span class="ql">기다리기</span></button>
     <button data-go="book"><span class="qe">🤖</span><span class="ql">격납고</span></button>
   </div>
+  <button class="hm-journey" id="hmJourney" aria-label="1년 여정"></button>
   <div class="hm-areas" id="hmAreas"></div>
   <div class="hm-grow">
     <button class="hm-tree" id="hmTree" aria-label="내 나무"><span class="tr-e" id="trE">🌱</span><span class="tr-t"><b id="trName">새싹</b><small id="trSub"></small></span></button>
@@ -447,6 +453,12 @@ textarea.inp{min-height:90px;resize:vertical}
   <div class="st-sess" id="stSess" hidden></div>
   <div class="st-jv"><div class="jvm" id="stJv"></div><div class="st-bubble" id="stBubble" aria-live="polite"></div><div class="st-lv" id="stLv"></div></div>
   <main class="st-body" id="stBody"></main>
+</section>
+
+<!-- ============ 1년 여정 (journey.js 가 그린다) ============ -->
+<section id="journey" class="screen hero-scr">
+  <div class="topbar"><button class="back" data-home aria-label="처음으로">←</button><h2>🗺️ 1년 여정</h2></div>
+  <div class="jr" id="jrBody"></div>
 </section>
 
 <!-- ============ 스티커북 ============ -->
@@ -481,6 +493,7 @@ textarea.inp{min-height:90px;resize:vertical}
 <script src="grow/jarvis.js"></script>
 <script src="grow/ef.js"></script>
 <script src="grow/parent.js"></script>
+<script src="grow/journey.js"></script>
 <script src="grow/robots.js"></script>
 <script src="grow/app.js"></script>
 </body>

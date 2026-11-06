@@ -62,6 +62,8 @@ G.renderHome = function () {
       '부품 ' + rp.owned + ' / 6 · ⚡' + (ni ? ni.have + '/' + ni.cost : '') + ' · 다음: ' + (rp.robot.parts ? rp.robot.parts[rp.owned] : '부품');
   }
   else { var tr = G.tree(); G.$('#trE').innerHTML = tr.e + tr.fruit; G.$('#trName').textContent = '내 나무: ' + tr.name; G.$('#trSub').textContent = tr.sub; }
+  /* 🗺️ 1년 여정 카드 */
+  if (G.journey) G.journey.renderHome();
   /* 이번 주 도장 */
   var sd = G.store.get('sessionDays', []), logs = G.logs(), st = G.$('#hmStreak'); st.innerHTML = '';
   for (var i = 6; i >= 0; i--) {

@@ -347,11 +347,39 @@ server.listen(0, async function () {
     log('listen', 2); var c = G.earnEnergy({ id: 'listen', n: 10, ok: 9, level: 2, up: '' }); out.c = { gain: c.gain, same: c.same };
     var en = R.energy(); en.today = 15; localStorage.setItem('grow_energy', JSON.stringify(en));
     log('words', 2); var d = G.earnEnergy({ id: 'words', n: 10, ok: 10, level: 2, up: 'level' }); out.d = { gain: d.gain, capped: d.capped };
-    /* 시즌 4 열쇠: 놀이 6가지를 2단계 이상 */
+    /* 1년 여정 1장의 로봇(피닉스)은 바로 열리고, 2장의 로봇(썬더)은 2장에 가야 열린다 */
+    var keepJ = localStorage.getItem('grow_journey'), keepB = localStorage.getItem('grow_badges'), keepU = localStorage.getItem('grow_robotUp');
+    localStorage.removeItem('grow_journey');
     reset(78); log('listen', 1);
-    var e = G.earnEnergy({ id: 'listen', n: 10, ok: 9, level: 1, up: 'level' }); out.e = { made: e.made.length, locked: !!e.locked, need: e.locked && e.locked.need, robot: R.nextInfo().robot.id };
-    ['listen', 'words', 'sounds', 'follow', 'pop', 'trace'].forEach(function (id) { log(id, 2); });
-    var f = G.earnEnergy({ id: 'sounds', n: 10, ok: 9, level: 2, up: '' }); out.f = { locked: !!f.locked, cost: f.next.cost, e: R.energy().e };
+    var e = G.earnEnergy({ id: 'listen', n: 10, ok: 9, level: 1, up: 'level' }); out.e = { made: e.made.length, locked: !!e.locked, robot: R.ROBOTS[Math.floor(R.count() / 6)].id, cost: e.next.cost };
+    reset(84); var en2 = R.energy(); en2.e = 50; localStorage.setItem('grow_energy', JSON.stringify(en2));
+    log('words', 2); var f = G.earnEnergy({ id: 'words', n: 10, ok: 9, level: 2, up: '' });
+    out.f = { locked: !!f.locked, chapter: f.locked && f.locked.chapter, robot: R.nextInfo().robot.id, e: R.energy().e };
+    /* 남는 에너지로 강화 ★ (완성한 로봇만) */
+    localStorage.setItem('grow_robotUp', '{}');
+    var u1 = R.upgrade(0), u2 = R.upgrade(0); out.up = { s1: u1 && u1.stars, s2: u2 && u2.stars, e: R.energy().e, notDone: R.upgrade(14) };
+    /* 1년 여정: 미션 날 → 장 넘기기 (날 + 단계 열쇠) */
+    localStorage.removeItem('grow_journey'); localStorage.setItem('grow_badges', '[]');
+    var JJ = G.journey, j0 = JJ.state();
+    out.jr = { ch: j0.ch, need: j0.need, total: JJ.TOTAL_DAYS, chapters: JJ.CHAPTERS.length, imgs: JJ.CHAPTERS.every(function (c) { return /journey\/ch\d+\.jpg$/.test(c.img); }) };
+    localStorage.setItem('grow_logs', '[]'); ['listen', 'words', 'sounds'].forEach(function (id) { log(id, 1); });
+    var cd = JJ.checkDay(); out.jr.day = cd && cd.day && cd.day.n; out.jr.again = JJ.checkDay();
+    var jd = JSON.parse(localStorage.getItem('grow_journey')); jd.days = []; for (var k = 0; k < 30; k++) jd.days.push({ d: '2026-01-' + (k < 9 ? '0' : '') + (k + 1), s: 1 }); localStorage.setItem('grow_journey', JSON.stringify(jd));
+    out.jr.noKey = !JJ.tryAdvance() || JJ.state().ch === 1;
+    ['listen', 'words', 'sounds', 'follow', 'pop', 'trace', 'dots', 'simon'].forEach(function (id) { log(id, 2); });
+    var adv = JJ.tryAdvance(); out.jr.adv = adv && adv.chapter && adv.chapter.n; out.jr.chNow = JJ.state().ch; out.jr.badge = G.badges.has('ch:1');
+    out.jr.thunderOpen = R.gateFor(R.ROBOTS.map(function (r) { return r.id; }).indexOf('thunder')).ok;
+    /* 내 기록 */
+    localStorage.setItem('grow_records', '{}');
+    var fake = { id: 'quick', def: G.acts.quick || { title: 'x' }, level: 2, step: 1, extra: { score: 5 } };
+    out.rec = { first: G.records.update(fake) };
+    fake.extra.score = 9; out.rec.better = G.records.update(fake); fake.extra.score = 3; out.rec.worse = G.records.update(fake);
+    /* 5대 인지 영역 */
+    var dst = G.domainStats(30); out.dom = Object.keys(dst).length === 5 && Object.keys(G.DOMAINS).every(function (k) { return dst[k].games > 0; });
+    out.vids = R.ROBOTS.filter(function (r) { return r.video; }).length;
+    if (keepJ == null) localStorage.removeItem('grow_journey'); else localStorage.setItem('grow_journey', keepJ);
+    if (keepB == null) localStorage.removeItem('grow_badges'); else localStorage.setItem('grow_badges', keepB);
+    if (keepU == null) localStorage.removeItem('grow_robotUp'); else localStorage.setItem('grow_robotUp', keepU);
     G.settings.partPace = 'slow'; out.slow = R.costOf(13, 0); G.settings.partPace = 'normal';
     out.robots = R.ROBOTS.length; out.imgs = R.ROBOTS.filter(function (r) { return r.img; }).length;
     out.final = R.ROBOTS[R.ROBOTS.length - 1]; out.final = { id: out.final.id, season: out.final.season, verse: !!out.final.verse, parts: out.final.parts.length };
@@ -368,10 +396,17 @@ server.listen(0, async function () {
   ok(econ.b.gain === 4 && econ.b.made === 2 && econ.b.parts === 2, '칸 오름 에너지로 부품이 만들어지지 않음: ' + JSON.stringify(econ.b));
   ok(econ.c.gain === 0 && econ.c.same, '같은 놀이 세 번째에도 에너지가 나옴: ' + JSON.stringify(econ.c));
   ok(econ.d.gain === 1 && econ.d.capped, '하루 최대 에너지(16)를 넘음: ' + JSON.stringify(econ.d));
-  ok(econ.e.made === 0 && econ.e.locked && econ.e.need === 6 && econ.e.robot === 'phoenix', '시즌 4 열쇠 없이 새 로봇 부품이 나옴: ' + JSON.stringify(econ.e));
-  ok(!econ.f.locked && econ.f.cost === 6, '열쇠를 모아도 시즌 4가 열리지 않음(부품 값 6): ' + JSON.stringify(econ.f));
+  ok(!econ.e.locked && econ.e.robot === 'phoenix' && econ.e.cost === 6, '1년 여정 1장 로봇(피닉스)이 열리지 않음(부품 값 6): ' + JSON.stringify(econ.e));
+  ok(econ.f.locked && econ.f.chapter === 2 && econ.f.robot === 'thunder' && econ.f.e > 6, '2장 로봇(썬더)이 1장에서 열리거나 남는 에너지가 사라짐: ' + JSON.stringify(econ.f));
+  ok(econ.up.s1 === 1 && econ.up.s2 === 2 && econ.up.notDone === null, '로봇 강화(★)가 바르게 안 됨: ' + JSON.stringify(econ.up));
+  ok(econ.jr.ch === 1 && econ.jr.chapters === 10 && econ.jr.total >= 360 && econ.jr.imgs, '1년 여정(10장·360일·장 그림)이 맞지 않음: ' + JSON.stringify(econ.jr));
+  ok(econ.jr.day === 1 && econ.jr.again === null, '놀이 세 가지를 마친 날이 미션 도장 하루로 안 찍히거나 두 번 찍힘: ' + JSON.stringify(econ.jr));
+  ok(econ.jr.noKey && econ.jr.adv === 2 && econ.jr.chNow === 2 && econ.jr.badge && econ.jr.thunderOpen, '날 + 단계 열쇠로 다음 장이 열리지 않음(또는 열쇠 없이 열림): ' + JSON.stringify(econ.jr));
+  ok(econ.rec.first === null && econ.rec.better && econ.rec.better.score === 9 && econ.rec.worse === null, '내 기록(최고 점수)이 맞지 않음: ' + JSON.stringify(econ.rec));
+  ok(econ.dom, '5대 인지 영역에 놀이가 없는 영역이 있음');
+  ok(econ.vids === 10, '변신 영상이 10대 로봇에 다 붙지 않음: ' + econ.vids);
   ok(econ.slow === 9, '부품 속도 「천천히」가 반영되지 않음: ' + econ.slow);
-  ok(econ.robots === 21 && econ.imgs === 21 && econ.final.id === 'arclight' && econ.final.verse && econ.final.parts === 6 && econ.ranks === 21, '새 로봇 군단(21대·실사 그림·최종 전설)이 맞지 않음: ' + JSON.stringify(econ));
+  ok(econ.robots === 23 && econ.imgs === 23 && econ.final.id === 'arclight' && econ.final.verse && econ.final.parts === 6 && econ.ranks === 23, '로봇 군단(23대·실사 그림·최종 전설)이 맞지 않음: ' + JSON.stringify(econ));
   ok(econ.rw.en && !econ.rw.part && /⚡/.test(econ.rw.txt), '상 화면에 에너지가 보이지 않거나 부품이 바로 나옴: ' + JSON.stringify(econ.rw));
 
 
