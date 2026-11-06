@@ -396,8 +396,12 @@ var TR_POOL = {};
   var CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
   function into(st, b, dx) { return st.map(function (q) { return [dx + b[0] + q[0] * (b[2] - b[0]), b[1] + q[1] * (b[3] - b[1])]; }); }
   function sylStrokes(c, v, dx) {
-    var C = CON[c], V = VOW[v];
-    return ((V.side && C.side) || C.s).map(function (st) { return into(st, V.box, dx); })
+    var C = CON[c], V = VOW[v], b = V.box.slice();
+    if (c === 'o' || c === 'h') {   /* 동그라미가 든 자음은 찌그러지지 않게 자리를 네모에 가깝게 */
+      var w = b[2] - b[0], h = b[3] - b[1], cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2;
+      if (w > h * 1.1) { w = h * 1.1; b[0] = cx - w / 2; b[2] = cx + w / 2; } else if (h > w * 1.1) { h = w * 1.1; b[1] = cy - h / 2; b[3] = cy + h / 2; }
+    }
+    return ((V.side && C.side) || C.s).map(function (st) { return into(st, b, dx); })
       .concat(V.s.map(function (st) { return st.map(function (q) { return [dx + q[0], q[1]]; }); }));
   }
   function sylChar(c, v) { return String.fromCharCode(0xAC00 + (CHO.indexOf(CON[c].k) * 21 + VOW[v].ji) * 28); }
