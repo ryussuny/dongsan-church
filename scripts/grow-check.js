@@ -304,7 +304,8 @@ server.listen(0, async function () {
   var hero = await page.evaluate(function () {
     var G = window.G, D = window.GD, keep = JSON.stringify(G.profile);
     G.profile.birth = '2016-03'; G.profile.style = 'auto';
-    var r = { older: G.older(), praiseHero: D.PRAISE === D.PRAISE_HERO, startLv: G.acts.match ? G.levelFor('match', 3) : 2, speechLv: G.acts.words ? G.levelFor('words', 3) : 1 };
+    var r = { older: G.older(), praiseHero: D.PRAISE_HERO.every(function (t) { return D.PRAISE.indexOf(t) >= 0; }) && D.PRAISE_SOLDIER.every(function (t) { return D.PRAISE.indexOf(t) >= 0; }) && D.PRAISE.indexOf(D.PRAISE_LITTLE[0]) < 0,
+      brother: (function () { var v = G.settings.vstyle; G.settings.vstyle = 'brother'; var ok = D.PRAISE === D.PRAISE_HERO; G.settings.vstyle = v; return ok; })(), vstyle: G.settings.vstyle, pitch: G.settings.pitch, startLv: G.acts.match ? G.levelFor('match', 3) : 2, speechLv: G.acts.words ? G.levelFor('words', 3) : 1 };
     G.profile.birth = '2022-03'; r.youngLittle = !G.older() && D.PRAISE === D.PRAISE_LITTLE;
     G.profile = Object.assign(G.profile, JSON.parse(keep));
     /* 남자 목소리 고르기 */
@@ -322,7 +323,8 @@ server.listen(0, async function () {
     r.part6 = p6 && p6.complete && p6.owned === 6; r.part7 = p7 && !p7.complete && p7.owned === 1 && p7.robot.name !== (p6 && p6.robot.name);
     return r;
   });
-  ok(hero.older && hero.praiseHero, '10살 아이에게 형 말투·히어로 칭찬이 나오지 않음: ' + JSON.stringify(hero));
+  ok(hero.older && hero.praiseHero && hero.brother, '10살 아이에게 군인 대원 말투·히어로 칭찬(형 목소리면 형 말투)이 나오지 않음: ' + JSON.stringify(hero));
+  ok(hero.vstyle === 'soldier' && hero.pitch === 0.8, '자비스 기본 목소리가 군인 목소리(낮은 높이 0.8)가 아님: ' + JSON.stringify(hero));
   ok(hero.youngLittle, '어린아이에게는 다정한 말투로 돌아가야 함');
   ok(hero.startLv === 2 && hero.speechLv === 1, '8살 넘은 아이의 처음 단계(말하기 1·나머지 2)가 맞지 않음: ' + JSON.stringify(hero));
   ok(hero.maleFirst === 'ko-kr-x-kod-local' && hero.samsungMale, '남자 목소리를 먼저 고르지 않음: ' + JSON.stringify(hero));
@@ -352,12 +354,12 @@ server.listen(0, async function () {
     localStorage.removeItem('grow_journey');
     reset(78); log('listen', 1);
     var e = G.earnEnergy({ id: 'listen', n: 10, ok: 9, level: 1, up: 'level' }); out.e = { made: e.made.length, locked: !!e.locked, robot: R.ROBOTS[Math.floor(R.count() / 6)].id, cost: e.next.cost };
-    reset(84); var en2 = R.energy(); en2.e = 50; localStorage.setItem('grow_energy', JSON.stringify(en2));
+    reset(90); var en2 = R.energy(); en2.e = 50; localStorage.setItem('grow_energy', JSON.stringify(en2));   /* 피닉스·팰컨(1장) 완성 → 다음은 썬더(2장) */
     log('words', 2); var f = G.earnEnergy({ id: 'words', n: 10, ok: 9, level: 2, up: '' });
     out.f = { locked: !!f.locked, chapter: f.locked && f.locked.chapter, robot: R.nextInfo().robot.id, e: R.energy().e };
     /* 남는 에너지로 강화 ★ (완성한 로봇만) */
     localStorage.setItem('grow_robotUp', '{}');
-    var u1 = R.upgrade(0), u2 = R.upgrade(0); out.up = { s1: u1 && u1.stars, s2: u2 && u2.stars, e: R.energy().e, notDone: R.upgrade(14) };
+    var u1 = R.upgrade(0), u2 = R.upgrade(0); out.up = { s1: u1 && u1.stars, s2: u2 && u2.stars, e: R.energy().e, notDone: R.upgrade(15) };
     /* 1년 여정: 미션 날 → 장 넘기기 (날 + 단계 열쇠) */
     localStorage.removeItem('grow_journey'); localStorage.setItem('grow_badges', '[]');
     var JJ = G.journey, j0 = JJ.state();
@@ -377,6 +379,22 @@ server.listen(0, async function () {
     /* 5대 인지 영역 */
     var dst = G.domainStats(30); out.dom = Object.keys(dst).length === 5 && Object.keys(G.DOMAINS).every(function (k) { return dst[k].games > 0; });
     out.vids = R.ROBOTS.filter(function (r) { return r.video; }).length;
+    /* 🔗 합체: 시즌마다 하나, 시즌 로봇을 다 모으면 열리고, 오메가 카이저는 1·2군단 합체 뒤에 */
+    var keepC = localStorage.getItem('grow_combos'); localStorage.setItem('grow_combos', '{}'); localStorage.setItem('grow_badges', '[]');
+    out.cb = { n: R.COMBINERS.length, seasons: R.COMBINERS.map(function (c) { return c.season; }).join(','), files: R.COMBINERS.every(function (c) { return c.img && c.team && c.video && c.members.length >= (c.needs ? 1 : 3); }),
+      allSeasons: R.SEASONS.every(function (se) { return !!R.comboOf(se.id); }) };
+    reset(78);
+    out.cb.ready78 = R.readyCombos().map(function (c) { return c.id; }).join(',');
+    out.cb.omegaFirst = R.combine('omegakaiser');
+    out.cb.g = !!R.combine('grandmax'); out.cb.a = !!R.combine('atlas'); out.cb.again = R.combine('grandmax');
+    out.cb.omegaReady = R.comboState(R.comboById('omegakaiser')).ready; var ok3 = R.combine('omegakaiser'); out.cb.o = !!ok3 && ok3.count;
+    out.cb.badge = G.badges.has('combo:grandmax') && G.badges.has('combo:omegakaiser');
+    out.cb.tempestLocked = !R.comboState(R.comboById('tempest')).ready && R.comboState(R.comboById('tempest')).have === 0;
+    reset(96); var rp = G.rewardPart(96); out.cb.reward = rp && rp.complete && rp.combo && rp.combo.id;
+    out.cb.ready96 = R.readyCombos().map(function (c) { return c.id; }).join(',');
+    if (keepC == null) localStorage.removeItem('grow_combos'); else localStorage.setItem('grow_combos', keepC);
+    out.cbFiles = R.COMBINERS.map(function (c) { return [c.img, c.team, c.video]; }).reduce(function (a, b) { return a.concat(b); }, [])
+      .concat(R.ROBOTS.map(function (r) { return r.img; }).filter(Boolean)).concat(R.ROBOTS.map(function (r) { return r.video; }).filter(Boolean));
     if (keepJ == null) localStorage.removeItem('grow_journey'); else localStorage.setItem('grow_journey', keepJ);
     if (keepB == null) localStorage.removeItem('grow_badges'); else localStorage.setItem('grow_badges', keepB);
     if (keepU == null) localStorage.removeItem('grow_robotUp'); else localStorage.setItem('grow_robotUp', keepU);
@@ -404,10 +422,33 @@ server.listen(0, async function () {
   ok(econ.jr.noKey && econ.jr.adv === 2 && econ.jr.chNow === 2 && econ.jr.badge && econ.jr.thunderOpen, '날 + 단계 열쇠로 다음 장이 열리지 않음(또는 열쇠 없이 열림): ' + JSON.stringify(econ.jr));
   ok(econ.rec.first === null && econ.rec.better && econ.rec.better.score === 9 && econ.rec.worse === null, '내 기록(최고 점수)이 맞지 않음: ' + JSON.stringify(econ.rec));
   ok(econ.dom, '5대 인지 영역에 놀이가 없는 영역이 있음');
-  ok(econ.vids === 10, '변신 영상이 10대 로봇에 다 붙지 않음: ' + econ.vids);
+  ok(econ.vids === 21, '변신 영상이 시즌 4~10 로봇 21대에 다 붙지 않음: ' + econ.vids);
+  ok(econ.cb.n === 10 && econ.cb.seasons === '1,2,3,4,5,6,7,8,9,10' && econ.cb.files && econ.cb.allSeasons, '합체 로봇(시즌마다 하나·그림·팀 사진·영상)이 맞지 않음: ' + JSON.stringify(econ.cb));
+  ok(econ.cb.ready78 === 'grandmax,atlas' && econ.cb.omegaFirst === null && econ.cb.g && econ.cb.a && econ.cb.again === null, '시즌 1·2 합체가 열리지 않거나 오메가 카이저가 먼저 열림: ' + JSON.stringify(econ.cb));
+  ok(econ.cb.omegaReady && econ.cb.o === 3 && econ.cb.badge && econ.cb.tempestLocked, '오메가 카이저(3단 합체)·합체 상장이 맞지 않음: ' + JSON.stringify(econ.cb));
+  ok(econ.cb.reward === 'tempest' && /tempest/.test(econ.cb.ready96), '시즌 4 로봇을 다 모아도 합체 알림이 안 나옴: ' + JSON.stringify(econ.cb));
+  var missing = econ.cbFiles.filter(function (f) { return !fs.existsSync(path.join(ROOT, f)); });
+  ok(!missing.length, '로봇·합체 그림/영상 파일이 없음: ' + missing.join(', '));
   ok(econ.slow === 9, '부품 속도 「천천히」가 반영되지 않음: ' + econ.slow);
-  ok(econ.robots === 23 && econ.imgs === 23 && econ.final.id === 'arclight' && econ.final.verse && econ.final.parts === 6 && econ.ranks === 23, '로봇 군단(23대·실사 그림·최종 전설)이 맞지 않음: ' + JSON.stringify(econ));
+  ok(econ.robots === 34 && econ.imgs === 34 && econ.final.id === 'arclight' && econ.final.season === 10 && econ.final.verse && econ.final.parts === 6 && econ.ranks === 34, '로봇 군단(시즌 10·34대·실사 그림·최종 전설)이 맞지 않음: ' + JSON.stringify(econ));
   ok(econ.rw.en && !econ.rw.part && /⚡/.test(econ.rw.txt), '상 화면에 에너지가 보이지 않거나 부품이 바로 나옴: ' + JSON.stringify(econ.rw));
+  /* 🔗 격납고 합체 카드 · 합체 의식(눌러서 합체 → 3·2·1 → 영상 → 합체 로봇) */
+  var cer = await page.evaluate(async function () {
+    var G = window.G, R = window.GR, keepP = localStorage.getItem('grow_parts'), keepC = localStorage.getItem('grow_combos'), keepB = localStorage.getItem('grow_badges');
+    localStorage.setItem('grow_parts', '78'); localStorage.setItem('grow_combos', '{}');
+    G.openHangar();
+    var out = { cards: document.querySelectorAll('#hangar .hg-combo').length, ready: document.querySelectorAll('#hangar .hg-combo.ready').length, lock: document.querySelectorAll('#hangar .hg-combo.lock').length, ban: !!document.querySelector('#hangar .hg-cbban') };
+    G.comboCeremony('grandmax'); out.team = !!document.querySelector('.cb-cer .cb-team'); out.shout = (document.querySelector('.cb-cer .cb-shout') || {}).textContent || '';
+    document.querySelector('.cb-cer .cb-tap').click();
+    for (var k = 0; k < 60 && !R.combined('grandmax'); k++) await new Promise(function (r) { setTimeout(r, 500); });
+    out.done = R.combined('grandmax'); out.img = !!document.querySelector('.cb-cer .cb-stage img.cb-flash');
+    var x = document.querySelector('.cb-cer .cb-x'); out.btn = x && x.textContent; if (x) x.click();
+    out.after = document.querySelectorAll('#hangar .hg-combo.done').length;
+    [['grow_parts', keepP], ['grow_combos', keepC], ['grow_badges', keepB]].forEach(function (kv) { if (kv[1] == null) localStorage.removeItem(kv[0]); else localStorage.setItem(kv[0], kv[1]); });
+    G.home(); return out;
+  });
+  ok(cer.cards === 10 && cer.ready === 2 && cer.lock === 8 && cer.ban, '격납고 합체 카드(10개 · 준비 2 · 잠김 8 · 합체 준비 띠)가 맞지 않음: ' + JSON.stringify(cer));
+  ok(cer.team && /그랜드 맥스, 합체!/.test(cer.shout) && cer.done && cer.img && cer.btn === '격납고로' && cer.after === 1, '합체 의식(팀 사진 → 합체 → 합체 로봇)이 끝까지 안 됨: ' + JSON.stringify(cer));
 
 
   /* 말판: 자주 쓰는 6낱말 고정 줄 */

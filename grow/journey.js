@@ -21,12 +21,12 @@ J.CHAPTERS = [
   { n: 1, name: '출발 기지', e: '🚀', days: 30, gate: null, robot: 'phoenix', line: '로봇 기지에서 첫 출발!' },
   { n: 2, name: '초록 숲', e: '🌳', days: 33, gate: { lv: 2, games: 8 }, robot: 'thunder', line: '반딧불이 숲길을 지나요' },
   { n: 3, name: '파도 바다', e: '🌊', days: 33, gate: { lv: 3, games: 8 }, robot: 'aurora', line: '등대가 있는 바닷가' },
-  { n: 4, name: '모래 사막', e: '🏜️', days: 36, gate: { lv: 4, games: 7 }, robot: 'leo', line: '옛 성터와 오아시스' },
+  { n: 4, name: '모래 사막', e: '🏜️', days: 36, gate: { lv: 4, games: 7 }, robot: 'drill', line: '옛 성터와 오아시스' },
   { n: 5, name: '눈꽃 설원', e: '❄️', days: 36, gate: { lv: 5, games: 7 }, robot: 'gigas', line: '오로라가 춤추는 설산' },
   { n: 6, name: '불꽃 화산', e: '🌋', days: 36, gate: { lv: 6, games: 6 }, robot: 'seraph', line: '용암 강이 흐르는 섬' },
-  { n: 7, name: '하늘 도시', e: '☁️', days: 38, gate: { lv: 7, games: 6 }, robot: 'cosmos', line: '구름 위에 뜬 도시' },
+  { n: 7, name: '하늘 도시', e: '☁️', days: 38, gate: { lv: 7, games: 6 }, robot: 'shark', line: '구름 위에 뜬 도시' },
   { n: 8, name: '깊은 바다', e: '🐋', days: 38, gate: { lv: 8, games: 5 }, robot: 'leviathan', line: '빛나는 산호의 바닷속' },
-  { n: 9, name: '은하 우주', e: '🌌', days: 40, gate: { lv: 9, games: 5 }, robot: 'chrono', line: '별들 사이 우주 정거장' },
+  { n: 9, name: '은하 우주', e: '🌌', days: 40, gate: { lv: 9, games: 5 }, robot: 'cosmos', line: '별들 사이 우주 정거장' },
   { n: 10, name: '빛의 성', e: '✨', days: 40, gate: { lv: 10, games: 4 }, robot: 'arclight', line: '구름 위 빛의 성 — 마지막 장' }
 ];
 J.CHAPTERS.forEach(function (c) { c.img = 'assets/grow/journey/ch' + c.n + '.jpg'; });
@@ -212,6 +212,8 @@ function dayTiles(st) {
   return '<div class="jr-days">' + h + '</div>';
 }
 function robotName(id) { var r = window.GR && GR.ROBOTS.filter(function (x) { return x.id === id; })[0]; return r ? r.name : ''; }
+/* 그 장에서 열리는 로봇들 (robots.js 의 chapter) */
+function chRobots(c) { var l = window.GR ? GR.ROBOTS.filter(function (x) { return x.chapter === c.n; }).map(function (x) { return x.name; }) : []; return l.length ? l.join(' · ') : robotName(c.robot); }
 
 /* 홈 카드 */
 J.renderHome = function () {
@@ -226,14 +228,14 @@ J.renderHome = function () {
 J.open = function () {
   var scr = G.$('#journey'); if (!scr) return;
   var st = J.state(), c = st.chapter, body = G.$('#jrBody', scr);
-  var h = '<div class="jr-ban"><img src="' + c.img + '" alt="' + G.esc(c.name) + '"><div class="cap"><small>1년 여정 · ' + c.n + ' / ' + J.CHAPTERS.length + '장</small><b>' + c.e + ' ' + G.esc(c.name) + '</b><small>' + G.esc(c.line) + ' · 이 장의 로봇: ' + G.esc(robotName(c.robot)) + '</small></div></div>';
+  var h = '<div class="jr-ban"><img src="' + c.img + '" alt="' + G.esc(c.name) + '"><div class="cap"><small>1년 여정 · ' + c.n + ' / ' + J.CHAPTERS.length + '장</small><b>' + c.e + ' ' + G.esc(c.name) + '</b><small>' + G.esc(c.line) + ' · 이 장의 로봇: ' + G.esc(chRobots(c)) + '</small></div></div>';
   h += '<div class="jr-box"><h3>📅 미션 달력 — ' + st.done + ' / ' + st.need + '일 · ⭐ ' + st.stars + '</h3><small>오늘의 놀이를 끝까지 하거나 놀이 세 가지를 끝까지 하면 하루 도장! ⭐ 했어요 · ⭐⭐ 정확하게 · ⭐⭐⭐ 실력이 오른 날</small>' +
     '<div class="jr-bar"><i style="width:' + Math.round(st.done / st.need * 100) + '%"></i></div>' + dayTiles(st) + '</div>';
   if (st.next) h += '<div class="jr-box"><h3>🔑 다음 장 「' + G.esc(st.next.name) + '」 열쇠</h3><small>미션 ' + st.need + '일 채우기 ' + (st.full ? '✅' : '(' + st.done + '/' + st.need + ')') + ' · ' + G.esc(st.gate.text) + ' ' + (st.gate.ok ? '✅' : '(' + st.gate.have + '/' + st.gate.need + ')') + '</small></div>';
   else h += '<div class="jr-box"><h3>' + (st.end ? '🏆 1년 여정 완주! 정말 대단해!' : '✨ 마지막 장이야! 끝까지 가 보자!') + '</h3></div>';
   h += '<div class="jr-box"><h3>🗺️ 여정 지도</h3><div class="jr-map">' + J.CHAPTERS.map(function (x) {
     var stt = x.n < st.ch ? 'done' : x.n === st.ch ? 'now' : 'lock';
-    return '<div class="jr-ch ' + stt + '"><img src="' + x.img + '" alt="" loading="lazy"><div><b>' + (stt === 'done' ? '✅ ' : stt === 'now' ? '📍 ' : '🔒 ') + x.n + '장 · ' + G.esc(x.name) + '</b><small>' + G.esc(x.line) + ' · 미션 ' + x.days + '일' + (x.gate ? ' · 열쇠: ' + G.esc(J.gateInfo(x.gate).text) : '') + '</small><small>🤖 ' + G.esc(robotName(x.robot)) + '</small></div></div>';
+    return '<div class="jr-ch ' + stt + '"><img src="' + x.img + '" alt="" loading="lazy"><div><b>' + (stt === 'done' ? '✅ ' : stt === 'now' ? '📍 ' : '🔒 ') + x.n + '장 · ' + G.esc(x.name) + '</b><small>' + G.esc(x.line) + ' · 미션 ' + x.days + '일' + (x.gate ? ' · 열쇠: ' + G.esc(J.gateInfo(x.gate).text) : '') + '</small><small>🤖 ' + G.esc(chRobots(x)) + '</small></div></div>';
   }).join('') + '</div></div>';
   var bs = G.badges.all().slice().reverse();
   h += '<div class="jr-box"><h3>🏅 상장 진열장 · ' + bs.length + '개</h3>' + (bs.length ? '<div class="jr-badges">' + bs.slice(0, 60).map(function (b) { return '<div><b>' + b.e + '</b>' + G.esc(b.name) + '<small>' + b.d + '</small></div>'; }).join('') + '</div>' : '<small>놀이가 3·5·7·10단계에 오르거나, 장을 마치거나, 미션 7일을 채우면 상장을 받아요!</small>') + '</div>';

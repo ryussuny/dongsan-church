@@ -542,13 +542,17 @@ function tSpeech(body) {
 }
 
 /* ===== 설정 ===== */
-/* ElevenLabs 한국어 남성 목소리 (라이브러리) — 자신 있는 젊은 형 느낌 순 */
+/* ElevenLabs 한국어 남성 목소리 (라이브러리) — 🎖️ 군인 느낌 → 형 느낌 순 */
 var EL_VOICES = [
-  ['nbrxrAz3eYm9NgojrmFK', 'Min-joon — 밝고 자신 있는 형 (기본)'],
+  ['30Pd6GTkNC4mWqXilyqW', '🎖️ DesertSsam — 힘차고 씩씩한 군인 (기본)'],
+  ['hjCvGtSCRPyjYwe2lDf1', '🎖️ Juan — 깊고 또렷한 사령관'],
+  ['QFEOldNoV2d2Bz0I3JNy', '🎖️ Jaewon — 단호하고 믿음직한 지휘관'],
+  ['nbrxrAz3eYm9NgojrmFK', 'Min-joon — 밝고 자신 있는 형'],
   ['GmxqVpFnArU87xslDhfo', 'Minjun — 또렷하고 차분한 자신감'],
   ['M7AHsCtFdpWTIL58I3ap', 'Dongjae — 다정한 선생님 형'],
   ['HvCQYI15cbdFVC9pSBfb', 'Mr.H — 친근한 유튜버 형']
 ];
+var SOLDIER_HI = '충성! 자비스 대장이다. 오늘도 멋진 작전, 같이 시작해 보자!';
 var THERAPIES = ['언어치료', '작업치료', '미술치료', '감각통합', '놀이치료', '인지치료', '물리치료', '음악치료', 'ABA'];
 function tSet(body) {
   var P = G.profile, St = G.settings;
@@ -569,7 +573,9 @@ function tSet(body) {
     '<label class="sw"><span>기기 목소리</span><select class="inp" id="sVoice" style="width:55%"><option value="">자동(남자 목소리 우선)</option>' + G.voice.list().map(function (v) { return '<option ' + (v.name === St.voice ? 'selected' : '') + ' value="' + G.esc(v.name) + '">' + G.esc(v.name) + (G.voice.isMale(v) ? ' 👦' : '') + '</option>'; }).join('') + '</select></label>' +
     '<label class="sw"><span>말 빠르기 <small class="muted" id="vRateV">' + St.rate + '</small></span><input type="range" id="sRate" min="0.6" max="1.2" step="0.02" value="' + St.rate + '"></label>' +
     '<label class="sw"><span>목소리 높이 <small class="muted" id="vPitchV">' + St.pitch + '</small></span><input type="range" id="sPitch" min="0.7" max="1.4" step="0.05" value="' + St.pitch + '"></label>' +
-    '<div class="row" style="margin-top:8px"><button class="btn soft" id="sTest">🔊 들어 보기</button><button class="btn soft" id="sHeroV">🦾 자신 있는 형 목소리로</button></div>' +
+    '<h4>목소리 느낌</h4><div class="wchips" id="sVStyle">' + Object.keys(G.VSTYLE).map(function (k) { return '<button class="chip ' + ((St.vstyle || 'soldier') === k ? 'on' : '') + '" data-vs="' + k + '">' + G.VSTYLE[k].name + '</button>'; }).join('') + '</div>' +
+    '<p class="muted">🎖️ 군인 목소리는 낮고 힘차게 말하고, 칭찬도 「좋아, 대원! 임무 성공!」처럼 씩씩하게 해요. 꾸짖거나 명령하지 않아요.</p>' +
+    '<div class="row" style="margin-top:8px"><button class="btn soft" id="sTest">🔊 들어 보기</button></div>' +
     '<p class="muted" style="margin-top:6px">갤럭시: 설정 → 일반 → 글자 읽어주기(TTS)에서 남성 목소리를 받을 수 있어요. 아이폰: 설정 → 손쉬운 사용 → 읽기 및 말하기 → 음성 → 한국어에서 목소리를 내려받을 수 있어요.</p>' +
     '<h4>✨ 고급 목소리 (ElevenLabs)</h4><p class="muted">사람처럼 자연스러운 형 목소리예요. ElevenLabs 계정의 API 키가 필요하고, 쓴 글자 수만큼 ElevenLabs 크레딧이 들어요. 한 번 만든 말은 기기에 저장돼 다시 받지 않아요. 키가 없거나 인터넷이 끊기면 기기 목소리로 말해요.</p>' +
     sw('elOn', '고급 목소리 쓰기') +
@@ -634,21 +640,24 @@ function tSet(body) {
   };
   /* 목소리 */
   G.$('#sVoice', body).onchange = function () { St.voice = this.value; G.saveSettings(); G.voice.load(); render(); };
-  G.$('#sHeroV', body).onclick = function () { St.rate = 0.98; St.pitch = 0.95; St.voice = ''; G.saveSettings(); G.voice.load(); G.say((G.profile.nick ? G.callName() + ', ' : '') + '좋아, 오늘도 멋지게 가 보자! 형이 같이 할게!'); render(); };
+  G.$$('[data-vs]', body).forEach(function (b) { b.onclick = function () {
+    var vs = G.VSTYLE[b.dataset.vs]; St.vstyle = b.dataset.vs; St.rate = vs.rate; St.pitch = vs.pitch; St.elVoice = vs.el; St.voice = '';
+    G.saveSettings(); G.voice.load(); G.voice.premium.reset();
+    G.say(b.dataset.vs === 'soldier' ? SOLDIER_HI : (G.profile.nick ? G.callName() + ', ' : '') + '좋아, 오늘도 멋지게 가 보자! 형이 같이 할게!'); render(); }; });
   G.$('#sElSave', body).onclick = function () { G.store.set('elKey', G.$('#sElKey', body).value.trim()); G.voice.premium.reset(); G.toast('저장했어요'); };
   G.$('#sElVoice', body).onchange = function () { St.elVoice = this.value; G.saveSettings(); G.voice.premium.reset(); };
   G.$('#sElTest', body).onclick = function () {
     var st = G.$('#sElState'); if (!G.store.get('elKey', '')) { st.textContent = '키를 먼저 저장해 주세요'; return; }
     if (!St.elOn) { St.elOn = true; G.saveSettings(); }
     st.textContent = '만드는 중…';
-    var line = (G.profile.nick ? G.callName() + ', ' : '') + '안녕! 자비스 형이야. 오늘도 멋지게 미션 해 보자!';
+    var line = St.vstyle === 'brother' ? (G.profile.nick ? G.callName() + ', ' : '') + '안녕! 자비스 형이야. 오늘도 멋지게 미션 해 보자!' : SOLDIER_HI;
     G.voice.premium.test(line).then(function () { st.textContent = '✅ 고급 목소리 준비 완료'; G.say(line);
-      G.voice.warm([].concat(D.PRAISE_HERO || [], D.TRY_HERO || [], D.DONE_HERO || [], D.PRAISE_LITTLE || [], D.TRY_LITTLE || [], D.DONE_LITTLE || []));
+      G.voice.warm([].concat(D.PRAISE_SOLDIER || [], D.TRY_SOLDIER || [], D.DONE_SOLDIER || [], D.PRAISE_HERO || [], D.TRY_HERO || [], D.DONE_HERO || [], D.PRAISE_LITTLE || [], D.TRY_LITTLE || [], D.DONE_LITTLE || []));
     }, function (e) { st.textContent = '❌ ' + (G.voice.premium.error() || (e && e.message) || '연결 실패') + ' — 기기 목소리로 말해요'; });
   };
   G.$('#sRate', body).oninput = function () { St.rate = +this.value; G.$('#vRateV').textContent = this.value; G.saveSettings(); };
   G.$('#sPitch', body).oninput = function () { St.pitch = +this.value; G.$('#vPitchV').textContent = this.value; G.saveSettings(); };
-  G.$('#sTest', body).onclick = function () { G.say((G.profile.nick ? G.callName() + ', ' : '') + '안녕! 나는 자비스야. 오늘도 같이 놀자!'); };
+  G.$('#sTest', body).onclick = function () { G.say(St.vstyle === 'brother' ? (G.profile.nick ? G.callName() + ', ' : '') + '안녕! 나는 자비스야. 오늘도 같이 놀자!' : SOLDIER_HI); };
   G.$$('[data-set]', body).forEach(function (c) { c.onchange = function () { St[c.dataset.set] = c.checked; G.saveSettings(); }; });
   G.$$('[data-sm]', body).forEach(function (b) { b.onclick = function () { St.sessionMin = +b.dataset.sm; G.saveSettings(); render(); }; });
   G.$$('[data-pace]', body).forEach(function (b) { b.onclick = function () { St.partPace = b.dataset.pace; G.saveSettings(); render(); }; });
