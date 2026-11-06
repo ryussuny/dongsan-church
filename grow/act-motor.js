@@ -632,6 +632,7 @@ G.act({
     ctx.on(board, 'pointermove', function (e) {
       if (e.pointerId !== pid || !P || !P.cur || P.done) return;
       idle.poke();
+      P.rect = board.getBoundingClientRect();   /* 말풍선 줄 수가 바뀌면 판이 위아래로 움직인다 — 손가락 자리를 늘 새로 잰다 */
       var evs = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
       if (!evs.length) evs = [e];
       evs.forEach(function (ev) { addPoint(ev.clientX - P.rect.left, ev.clientY - P.rect.top, pres(ev)); });
@@ -942,6 +943,7 @@ G.act({
     });
     ctx.on(board, 'pointermove', function (e) {
       if (e.pointerId !== pid || !P || P.locked) return;
+      P.rect = board.getBoundingClientRect();   /* 판이 움직여도 손가락 자리가 어긋나지 않게 */
       var q = pointAt(e); idle.poke();
       if (P.next < P.n && dist(q, P.pos[P.next]) <= P.hit) connect(P.next);
       if (!P.locked && P.cur >= 0) { finger = q; draw(); }
@@ -1835,7 +1837,7 @@ G.act({
       try { board.setPointerCapture(pid); } catch (er) {}
       drag = { x: x, y: y, rect: rr, b: pick };
     });
-    ctx.on(board, 'pointermove', function (e) { if (e.pointerId !== pid || !drag) return; drag.x = e.clientX - drag.rect.left; drag.y = e.clientY - drag.rect.top; });
+    ctx.on(board, 'pointermove', function (e) { if (e.pointerId !== pid || !drag) return; drag.rect = board.getBoundingClientRect(); drag.x = e.clientX - drag.rect.left; drag.y = e.clientY - drag.rect.top; });
     function up(e) { if (e.pointerId !== pid) return; pid = null; drag = null; }
     ctx.on(board, 'pointerup', up); ctx.on(board, 'pointercancel', up);
     readCols();
@@ -2049,7 +2051,7 @@ G.act({
     });
     ctx.on(card, 'pointermove', function (e) {
       if (e.pointerId !== pid || !cur || cur.done) return;
-      idle.poke();
+      idle.poke(); cur.rect = card.getBoundingClientRect();   /* 판이 움직여도 손가락 자리가 어긋나지 않게 */
       var evs = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
       if (!evs.length) evs = [e];
       evs.forEach(function (ev) { if (!cur.done) { var q = at(ev); rub(q.x, q.y, cur.br); } });

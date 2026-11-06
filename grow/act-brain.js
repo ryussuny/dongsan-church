@@ -902,7 +902,11 @@ G.act({
     function fontFit() {
       var r = field.getBoundingClientRect(), cols = Math.ceil(Math.sqrt(TOTAL * r.width / Math.max(r.height, 1))), rows = Math.ceil(TOTAL / cols);
       var cell = Math.min(r.width / cols, r.height / rows);
-      items.forEach(function (it) { it.el.style.fontSize = Math.max(26, Math.min(76, cell * 0.6)) * (it.k || 1) + 'px'; });
+      items.forEach(function (it) {
+        var fs = Math.max(26, Math.min(76, cell * 0.6)) * (it.k || 1);
+        it.el.style.fontSize = fs + 'px';
+        if (it.small) it.el.style.padding = Math.max(4, Math.round((44 - fs) / 2)) + 'px';   /* 작은 아기 친구도 누르는 칸은 손가락 크기 */
+      });
       return { cols: cols, rows: rows };
     }
     function board() {
@@ -1432,7 +1436,7 @@ G.act({
       }).then(function () {
         waiting = true; t0 = performance.now();
         if (h.cls === 'song' && !calm()) stopMel = G.sfx.melody([['C5', .5], ['E5', .5], ['G5', 1], ['E5', .5], ['C5', .5], ['D5', 1], [null, .5]], 96, true);
-        var lastSec = 0, starN = 0, TT = tm ? [0.3, 0.62] : [], ti = 0, offered = !of;
+        var lastSec = 0, starN = 0, TT = tm ? [0.25, 0.75] : [], ti = 0, offered = !of;
         ctx.loop(function () {
           var el = performance.now() - t0, p = Math.min(1, el / dur);
           fill.style.height = (p * 100) + '%';
