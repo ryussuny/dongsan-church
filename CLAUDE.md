@@ -26,7 +26,9 @@
 - 1년 여정: `grow/journey.js` (10장 360 미션 날, 장 그림 `assets/grow/journey/ch1~10.jpg`, 다음 장 = 미션 날 + 단계 열쇠), 🏅 상장 `G.badges`, 🏆 내 기록 `G.records`, 🧩 5대 인지 영역 `G.domainOf`/`G.domainStats`(새 놀이는 `domain` 을 단다).
 - 두뇌 트레이닝 새 놀이 5가지: `grow/act-rx.js` (다른 곳 찾기·방금 본 그림?·번개 찾기·숫자 탑 쌓기·주차장 탈출).
 - 그림·영상은 Higgsfield 로 만든다(부모님 요청). 로봇 변신 영상 `assets/grow/videos/<id>.mp4` (480×640, 소리 없음).
-- 로봇: 부품은 ⚡ 에너지로 만든다(`G.earnEnergy`·`GR.spend`, 놀이 하나에 부품 하나가 아니다). 시즌 4~최종 10대는 로봇의 `chapter`(1년 여정 장)로 열린다. 남는 에너지는 완성 로봇 강화 ★1~★5(`GR.upgrade`). 실사 그림 `assets/grow/robots/<id>.jpg` 480×640 (23대 모두), `HAS_IMG`·`HAS_VID`. 실존 작품(아이언맨·트랜스포머·건담 등) 색 배합·모양을 닮지 않게 만든다.
+- 로봇: 부품은 ⚡ 에너지로 만든다(`G.earnEnergy`·`GR.spend`, 놀이 하나에 부품 하나가 아니다). 시즌 1~10 · 34대, 시즌 4~10(21대)은 로봇의 `chapter`(1년 여정 장)로 열린다. 로봇 순서는 부품 수로 정해지므로 **이미 있는 로봇 앞에 끼워 넣지 않는다**(새 로봇은 아직 아무도 안 모은 자리부터). 남는 에너지는 완성 로봇 강화 ★1~★5(`GR.upgrade`). 실사 그림 `assets/grow/robots/<id>.jpg` 480×640 (34대 모두), `HAS_IMG`·`HAS_VID`. 실존 작품(아이언맨·트랜스포머·건담 등) 색 배합·모양을 닮지 않게 만든다(보라+연두 같은 유명 악당 색 배합도 피한다).
+- 🔗 합체: `GR.COMBINERS`(시즌마다 하나, 10대 · 시즌 3 오메가 카이저는 `needs` 로 1·2군단 합체 뒤). 시즌 로봇을 다 모으면 `GR.comboState().ready` → 격납고 합체 카드 → `G.comboCeremony`(「○○, 합체!」 외치기 = 말하기 연습, 못 알아들어도 두 번째엔 그냥 합체) → `GR.combine`. 그림·팀 사진·합체 영상 `assets/grow/combos/<id>.jpg · -team.jpg · .mp4`(Kling 시작·끝 프레임).
+- 자비스 목소리: 기본 🎖️ 멋진 군인 목소리(`G.settings.vstyle` 'soldier' · 높이 0.8 · ElevenLabs DesertSsam), 🦾 형 목소리('brother'). 값은 `G.VSTYLE`, 군인 말투 칭찬 `D.PRAISE_SOLDIER`·`TRY_SOLDIER`·`DONE_SOLDIER`(꾸짖거나 명령하지 않는다).
 - 고운 말·표준말: `grow/kind.js`(G.kind — 고운 말·유행어→표준말·거친 말→대신 쓸 말, 자비스 말 다듬기 polish, 기록은 기기에만), 놀이 `grow/act-kind.js`(🌷 고운 말 놀이). 자비스는 표준말·고운 말로만 말하고, 아이 말은 꾸짖지 않고 고쳐 들려준다(recast). 욕설은 저장·전송·따라 말하기 하지 않는다.
 - 고친 뒤 `node scripts/grow-check.js` 로 검증한다(치료 설계 규칙 + 모든 놀이·단계 실행). 설명서는 `함께-자라요-안내.md`.
 - 아이 정보·기록·사진·그림·**말소리 녹음**은 기기(localStorage·IndexedDB)에만. AI 로는 이름을 '아이'로 바꿔 보낸다. 말소리 녹음(`grow/speech-lab.js`)은 저절로 업로드하지 않고, 학습 데이터 ZIP 은 부모가 직접 내보낼 때만 만든다. 녹음 파일·내보낸 ZIP 은 절대 커밋하지 않는다.

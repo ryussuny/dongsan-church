@@ -88,11 +88,12 @@ G.db = (function () {
 
 /* ---------- 설정·아이 정보 ---------- */
 G.settings = Object.assign({
-  rate: 0.95,        // 자비스 말 빠르기 — 또렷하고 자신 있게
-  pitch: 1.0,        // 자비스 목소리 높이 — 형 목소리
+  rate: 1.0,         // 자비스 말 빠르기 — 또박또박 힘차게
+  pitch: 0.8,        // 자비스 목소리 높이 — 낮고 믿음직한 군인 목소리
+  vstyle: 'soldier', // 목소리 느낌: soldier(멋진 군인·대원 말투) · brother(자신 있는 형)
   voice: '',         // 고른 목소리 이름 (비우면 남자 목소리를 찾아 고른다)
   elOn: false,       // ElevenLabs 고급 목소리
-  elVoice: 'nbrxrAz3eYm9NgojrmFK',   // Min-joon — 밝고 자신 있는 젊은 남성(한국어)
+  elVoice: '30Pd6GTkNC4mWqXilyqW',   // DesertSsam — 힘차고 자신 있는 남성(한국어) · 군인 목소리
   elModel: 'eleven_multilingual_v2',
   elName: false,     // 고급 목소리에 아이 별명도 보내기 (기본: 안 보냄)
   recVoice: true,    // 아이가 한 말 자동 기록 (글)
@@ -112,6 +113,20 @@ if ((G.settings.v || 1) < 2) {
   G.settings.voice = ''; G.settings.v = 2;
   try { localStorage.setItem('grow_settings', JSON.stringify(G.settings)); } catch (e) {}
 }
+/* 3판: 멋진 군인 목소리 — 부모가 직접 바꾼 값은 그대로 둔다 */
+if ((G.settings.v || 1) < 3) {
+  if (G.settings.rate === 0.95 || G.settings.rate === 0.98) G.settings.rate = 1.0;
+  if (G.settings.pitch === 1.0 || G.settings.pitch === 0.95) G.settings.pitch = 0.8;
+  if (G.settings.elVoice === 'nbrxrAz3eYm9NgojrmFK') G.settings.elVoice = '30Pd6GTkNC4mWqXilyqW';
+  G.settings.vstyle = 'soldier'; G.settings.v = 3;
+  try { localStorage.setItem('grow_settings', JSON.stringify(G.settings)); } catch (e) {}
+}
+/* 목소리 느낌별 값 — 기기 목소리(빠르기·높이)와 고급 목소리(ElevenLabs voice_settings) */
+G.VSTYLE = {
+  soldier: { name: '🎖️ 멋진 군인 목소리', rate: 1.0, pitch: 0.8, el: '30Pd6GTkNC4mWqXilyqW', set: { stability: 0.62, similarity_boost: 0.85, style: 0.5, use_speaker_boost: true } },
+  brother: { name: '🦾 자신 있는 형 목소리', rate: 0.98, pitch: 0.95, el: 'nbrxrAz3eYm9NgojrmFK', set: { stability: 0.45, similarity_boost: 0.8, style: 0.35, use_speaker_boost: true } }
+};
+G.vstyle = function () { return G.VSTYLE[G.settings.vstyle] || G.VSTYLE.soldier; };
 G.saveSettings = function () { G.store.set('settings', G.settings); applyCalm(); };
 
 G.AREAS = {
@@ -150,7 +165,11 @@ G.older = function () {
   var little = D[k];
   if (!little) return;
   D[k + '_LITTLE'] = little;
-  Object.defineProperty(D, k, { configurable: true, get: function () { return G.older() && D[k + '_HERO'] ? D[k + '_HERO'] : D[k + '_LITTLE']; } });
+  Object.defineProperty(D, k, { configurable: true, get: function () {
+    if (!G.older() || !D[k + '_HERO']) return D[k + '_LITTLE'];
+    /* 🎖️ 군인 목소리일 때는 '대원' 말투를 섞는다 (고운 말·표준말, 꾸짖지 않는다) */
+    return G.settings.vstyle !== 'brother' && D[k + '_SOLDIER'] ? D[k + '_SOLDIER'].concat(D[k + '_HERO']) : D[k + '_HERO'];
+  } });
 });
 G.nick = function () { return (G.profile.nick || '').trim() || '친구'; };
 /* 부르는 말: 받침 따라 '민준아' / '서아야' */
@@ -296,7 +315,7 @@ G.voice = (function () {
     /* 별명은 보내지 않는다: "(별명)아, 오늘도" → "오늘도" */
     return t.split(G.callName()).join('').split(nick).join('').replace(/^[\s,!.]+/, '').replace(/\s+([,!.?])/g, '$1').trim() || t;
   }
-  function elId(t) { return [G.settings.elVoice, G.settings.elModel, Math.round(G.settings.rate * 100), t].join('|'); }
+  function elId(t) { return [G.settings.elVoice, G.settings.elModel, Math.round(G.settings.rate * 100), G.settings.vstyle === 'brother' ? '' : 'sd', t].join('|'); }
   function fetchClip(t) {
     var id = elId(t);
     if (inflight[id]) return inflight[id];
@@ -306,7 +325,7 @@ G.voice = (function () {
         method: 'POST',
         headers: { 'xi-api-key': elKey(), 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
         body: JSON.stringify({ text: t, model_id: G.settings.elModel,
-          voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.35, use_speaker_boost: true, speed: G.clamp(G.settings.rate, 0.7, 1.2) } })
+          voice_settings: Object.assign({}, G.vstyle().set, { speed: G.clamp(G.settings.rate, 0.7, 1.2) }) })
       }).then(function (r) {
         if (!r.ok) {
           return r.json().catch(function () { return {}; }).then(function (d) {
@@ -972,6 +991,8 @@ function finish(ctx, x) {
     jr.badges.forEach(function (b) { jrHTML += '<div class="rw-note badge">🏅 새 상장: ' + b.e + ' ' + G.esc(b.name) + '</div>'; });
     if (jr.record && !x.msg && !hard) msg += ' 새 기록이야!';
   }
+  /* 🔗 시즌 로봇이 다 모이면 합체 알림 (robots.js) */
+  if (part && part.combo) { jrHTML += '<div class="rw-note combo">🔗 시즌 로봇이 모두 모였어! 격납고에서 「' + G.esc(part.combo.name) + '」 합체!</div>'; if (!x.msg && !hard) msg += ' 합체 준비 완료!'; }
   var ov = G.el('<div class="reward' + (part || earn ? ' hero' : '') + '" role="dialog">' +
     '<div class="rw-card">' + (hard ? '<div class="rw-stars"><span>💗</span></div>' : '<div class="rw-stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>') +
     (part ? '' : '<div class="rw-jv">' + G.jarvisSVG('big') + '</div>') +

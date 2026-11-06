@@ -244,7 +244,7 @@ function safeReply(r) {
 function childContext(level) {
   var age = G.ageMonths(), likes = (G.profile.likes || '').trim();
   var acts = Object.keys(G.acts).filter(function (k) { return !G.acts[k].tool && k !== 'chat'; }).map(function (k) { return k + '=' + G.acts[k].title; }).join(', ');
-  return '[아이] ' + (age ? '나이 약 ' + Math.floor(age / 12) + '살(' + age + '개월). ' : '') + (G.older() ? '초등학생 — 형 말투로. ' : '어린아이. ') + '말 단계 ' + level + '/3 (1=한 낱말, 2=두 낱말, 3=짧은 문장).' +
+  return '[아이] ' + (age ? '나이 약 ' + Math.floor(age / 12) + '살(' + age + '개월). ' : '') + (G.older() ? (G.settings.vstyle === 'brother' ? '초등학생 — 형 말투로. ' : '초등학생 — 멋진 군인 대장 말투로(아이를 「대원」이라 부르고 「임무」「작전」 같은 말을 섞되, 다정하고 꾸짖거나 명령하지 않게). ') : '어린아이. ') + '말 단계 ' + level + '/3 (1=한 낱말, 2=두 낱말, 3=짧은 문장).' +
     (likes ? ' 좋아하는 것: ' + ((G.profile.nick || '').trim() ? likes.split(G.profile.nick.trim()).join('아이') : likes) + '.' : '') +
     '\n[놀이 목록] ' + acts;
 }
@@ -352,7 +352,7 @@ G.act({
     micB.onclick = function () { G.sfx.play('tap'); quiet = 0; listen(); };
 
     /* 시작 */
-    var hi = G.older() ? G.callName() + ', 왔구나! 자비스 형이야. 오늘은 무슨 이야기 해 볼까?' : G.callName() + ', 안녕! 나는 자비스야. 우리 이야기하자!';
+    var hi = !G.older() ? G.callName() + ', 안녕! 나는 자비스야. 우리 이야기하자!' : G.settings.vstyle === 'brother' ? G.callName() + ', 왔구나! 자비스 형이야. 오늘은 무슨 이야기 해 볼까?' : '충성! 대원, 왔구나! 자비스 대장이야. 오늘은 무슨 이야기 해 볼까?';
     if (useAI) {
       bubble(hi, 'jv');
       ctx.say(hi).then(function () { respond(null, 'start'); });
