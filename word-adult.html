@@ -889,7 +889,7 @@ function verseHtml(vs){
     var isKey=key&&(ch||ch0)===key.ch&&+num>=key.from&&+num<=key.to,t=String(v.t||'');
     /* 첫 절의 첫 글자는 크게 (절마다 줄 보기에서만 보인다) */
     var body=i===0&&t?'<span class="dc">'+wEsc(t.charAt(0))+'</span>'+wEsc(t.slice(1)):wEsc(t);
-    return head+'<span class="vv'+(isKey?' key':'')+'" data-i="'+i+'"><sup class="vn">'+num+'</sup><span class="vt">'+body+'</span></span>';
+    return head+'<span class="vv'+(isKey?' key':'')+'" data-i="'+i+'"><sup class="vn">'+(v.to?num+'-'+v.to:num)+'</sup><span class="vt">'+body+'</span></span>';
   }).join(' ');
 }
 function applyReadMode(){
