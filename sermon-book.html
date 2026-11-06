@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon.png" type="image/png">
 <title>설교 묵상집 — 동산감리교회</title>
-<meta name="description" content="동산교회 강단에서 전한 로마서·빌립보서·복음의 기초 설교를 하루 한 편 말씀 묵상으로 엮은 책. 책처럼 넘겨 보고 인쇄할 수 있습니다.">
+<meta name="description" content="동산교회 강단에서 전한 로마서·빌립보서·에베소서 설교를 하루 한 편 말씀 묵상으로 엮은 책. 책처럼 넘겨 보고 인쇄할 수 있습니다.">
 <meta name="theme-color" content="#8f4531">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -83,7 +83,7 @@ h2.dttl{font-family:'Gowun Batang',serif;font-size:17pt;line-height:1.3;margin:.
 .cover{background:linear-gradient(160deg,#3a2e22,#8f4531 70%,#b3593f);color:#fff}
 .cover .inner{justify-content:space-between;text-align:center;top:22mm;bottom:22mm}
 .cover .mk{font-size:30pt;color:#e9c77d}
-.cover h1{font-family:'Gowun Batang',serif;font-size:27pt;line-height:1.35;margin-top:4mm}
+.cover h1{font-family:'Gowun Batang',serif;font-size:27pt;line-height:1.35;margin-top:4mm;text-wrap:balance;word-break:keep-all}
 .cover .sub{font-size:10.5pt;color:#f4e6d3;margin-top:3mm}
 .cover .per{font-size:9.5pt;color:#e6d3b4;letter-spacing:.06em}
 .cover .ch{font-family:'Gowun Batang',serif;font-size:13pt;font-weight:700}
@@ -94,11 +94,13 @@ h2.dttl{font-family:'Gowun Batang',serif;font-size:17pt;line-height:1.3;margin:.
 .titlep .foot-logo{position:absolute;left:0;right:0;bottom:16mm}
 .cover .ed{display:inline-block;margin-top:3mm;border:1pt solid rgba(255,255,255,.5);border-radius:99px;padding:.6mm 4mm;font-size:9pt}
 .cover.kid{background:linear-gradient(160deg,#3d8fca,#7fc4f0 60%,#ffe08a)}
-/* 책마다 표지 색 — 로마서: 복음의 능력과 하나님의 의(깊은 남색·금빛) · 빌립보서: 감옥에서 피어난 기쁨(짙은 청록에서 새싹빛으로) */
+/* 책마다 표지 색 — 로마서: 복음의 능력과 하나님의 의(깊은 남색·금빛) · 빌립보서: 감옥에서 피어난 기쁨(짙은 청록에서 새싹빛으로) · 에베소서: 하늘에 앉힌 왕의 자녀, 그리스도의 신부(왕실 자줏빛·금빛) */
 .cover.c-romans{background:linear-gradient(160deg,#141c3a,#22336b 62%,#3b4f93)}
 .cover.c-romans .mk{color:#e7c873}
 .cover.c-philippians{background:linear-gradient(160deg,#0f3b3a,#1f6f62 60%,#7fae5a)}
 .cover.c-philippians .mk{color:#f6dd84}
+.cover.c-ephesians{background:linear-gradient(160deg,#2a1640,#56296b 60%,#9a5b8a)}
+.cover.c-ephesians .mk{color:#f0d389}
 .cover.kid h1{font-family:'Gowun Dodum',sans-serif;font-size:26pt}
 h3.st{font-family:'Gowun Batang',serif;font-size:15pt;margin-bottom:3mm;color:var(--ink)}
 .small{font-size:8.6pt;color:var(--ink2)}
@@ -163,7 +165,7 @@ h3.st{font-family:'Gowun Batang',serif;font-size:15pt;margin-bottom:3mm;color:va
    ?press=1 : 내지만. 사방 3mm 도련(재단 여백)을 둔 154×216mm, 1쪽은 표지 대신 속표지
    ?cover=1&spine=10 : 표지 펼침면(뒷표지·책등·앞표지, 사방 3mm 도련) */
 .titlep .inner{justify-content:center;text-align:center}
-.titlep h1{font-family:'Gowun Batang',serif;font-size:24pt;line-height:1.4;color:var(--ink)}
+.titlep h1{font-family:'Gowun Batang',serif;font-size:24pt;line-height:1.4;color:var(--ink);text-wrap:balance;word-break:keep-all}
 .titlep .sub{color:var(--ink2);margin-top:3mm}
 .titlep .ch{margin-top:30mm;font-family:'Gowun Batang',serif;font-weight:700;color:var(--brick)}
 .spread{position:relative;height:216mm;overflow:hidden;color:#fff;background:linear-gradient(160deg,#3a2e22,#8f4531 60%,#b3593f)}
@@ -226,7 +228,7 @@ h3.st{font-family:'Gowun Batang',serif;font-size:15pt;margin-bottom:3mm;color:va
 <script>
 /* 설교 묵상집 — 동산교회 강단에서 전한 설교를 하루 한 편 묵상으로 엮은 책들.
    데이터: sermon-book-data.js (SERMON_BOOKS) · 성경: sermon-book-bible.js (없으면 dongsan_bible.js)
-   주소: sermon-book.html?b=romans | philippians   (#12 → 12일째 쪽)
+   주소: sermon-book.html?b=romans | philippians | ephesians   (#12 → 12일째 쪽)
    글씨 크기는 모든 쪽이 같다(10pt). 본문·묵상이 한 쪽에 다 들어가지 않으면 줄이지 않고 다음 쪽으로 이어 싣는다.
    인쇄용: ?print=1&b=romans  (scripts/build-sermon-book.js 가 PDF 로 만든다) */
 var Q=new URLSearchParams(location.search);

@@ -15,7 +15,7 @@
 - 주간 암송: `word-extra.js` 의 MEMORY (월요일 날짜 → 구절)
 - 묵상집(인쇄·책 보기): `word-book.html` — 앱과 같은 데이터를 쓴다.
   묵상 글·본문을 고치면 `node scripts/build-book-bible.js`(묵상집 전용 작은 성경 `book-bible.js`) → `node scripts/build-book.js` 순서로 다시 만든다. `book-bible.js` 가 낡아도 묵상집은 전체 성경으로 열린다.
-- 설교 묵상집(로마서·빌립보서): `sermon-book.html` + `sermon-book-data.js`. 날마다 hk 여는 한마디(본문 앞 호기심을 여는 한두 줄), ex 묵상, dp 「알고 읽으면 더 깊은 이야기」(문단 앞 【궁금한 소제목】, 원어는 하루 한 단어 이하, 이야기 중심). 고친 뒤 `node scripts/build-sermon-book-bible.js` 로 인용 대조·작은 성경 다시 만들기. 글씨는 모든 쪽 10pt, 넘치면 다음 쪽으로 이어진다.
+- 설교 묵상집(로마서·빌립보서·에베소서): `sermon-book.html` + `sermon-book-data.js`. 날마다 hk 여는 한마디(본문 앞 호기심을 여는 한두 줄), ex 묵상, dp 「알고 읽으면 더 깊은 이야기」(문단 앞 【궁금한 소제목】, 원어는 하루 한 단어 이하, 이야기 중심). 고친 뒤 `node scripts/build-sermon-book-bible.js` 로 인용 대조·작은 성경 다시 만들기. 글씨는 모든 쪽 10pt, 넘치면 다음 쪽으로 이어진다.
 - 묵상 글에서 “ ” 안은 개역개정 원문 그대로, ‘ ’ 는 풀어 쓴 말이다. 인용을 고치면 `dongsan_bible.js` 원문과 글자를 대조한다.
 
 ## 함께 자라요 (발달 놀이 앱)
@@ -36,3 +36,12 @@
 - 디자인 시스템: 값은 `design-system.js`(테마·크기·AI 규칙), 설명은 `DESIGN.md`. 테마 값을 바꾸면 `DESIGN.md` 표도 같이 고친다.
 - 디자인은 색·글꼴을 CSS 변수(`--bg` `--ink` `--accent` …)로만 쓴다 — 그래야 테마만 바꿔도 전체가 바뀐다.
 - 코딩 에이전트에서는 `.claude/skills/dongsan-design` 스킬과 `node scripts/design-render.js` 를 쓴다. 결과물 `designs/` 는 커밋하지 않는다.
+
+## 동산 퀴즈 배틀 (누구나 함께하는 팀 퀴즈)
+- 화면 `quiz.html`(무대 디자인) + 엔진 `quiz-app.js` + 문제 `quiz-data.js`(QUIZ_PACKS). 혼자 도전은 `quiz.html?solo=1`. 설명서 `퀴즈배틀-안내.md`.
+- 팀 대항전은 인도자 한 화면(빔·TV) 진행: 모든 팀 동시(ox·mc·blank·order) / 먼저 외치기(cho·emoji·hint·open), 아이템·룰렛·2배 라운드·올인 베팅·시상식.
+- 문제를 고치면 `node scripts/quiz-check.js` (형식·성경 장절·말씀 빈칸과 “ ” 인용 원문 대조·브라우저로 끝까지 해 보기). 퀴즈 글에서도 “ ” 는 개역개정 원문 그대로, ‘ ’ 는 풀어 쓴 말. 곧은 따옴표 " 는 쓰지 않는다.
+- 게임·기록·만든 문제는 기기(localStorage `dongsan_quiz_*`)에만. AI 초안은 관리자 앱과 같은 키(`dongsan_apiKey`)로 주제만 보낸다.
+- 대상은 누구나(어린이~어른) — 「다 함께 · 누구나 참여」. 화면 글에 특정 부서 이름(중고등부·청년부 등)을 쓰지 않는다.
+- 🔑 인도자 모드: 「문제 만들기」·「휴대폰 참여 켜기」는 관리자 앱 PIN(`dongsan_adminPin`, 해시)으로 연 탭(sessionStorage `dongsan_adminOpen`/`dongsan_quizLeader`)에서만 보인다. 새 인도자 기능도 `leader()`·`needLeader()` 로 감싼다. 난이도는 준비 화면 「📶 쉽게·섞어서·어렵게」(lv 1~3).
+- 📱 휴대폰 참여(선택): 전송 `quiz-live.js`(공개 MQTT 방송국 · 방 코드 · QR, 라이브러리는 켤 때만 불러옴), 인도자·참가자 화면은 `quiz-app.js` 의 LIVE·J. 참가자는 `quiz.html?join=코드`. 오가는 것은 팀 이름·별명·답뿐 — 정답은 공개 뒤에만 보낸다. 고친 뒤 `node scripts/quiz-live-check.js`(시험용 방송국 + 휴대폰 셋으로 끝까지).
