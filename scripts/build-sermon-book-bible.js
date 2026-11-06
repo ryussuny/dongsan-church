@@ -33,6 +33,14 @@ const norm = s => s.replace(/[\s.,·?!:;'"‘’“”]/g, '');
 const ALL = norm(Object.keys(B).map(b => Object.keys(B[b].data).map(c => Object.keys(B[b].data[c]).map(v => clean(B[b].data[c][v])).join(' ')).join(' ')).join(' '));
 
 let bad = 0;
+/* 글 안의 “ ” 인용을 원문과 글자 그대로 대조한다 (… 로 줄인 곳은 나누어 대조) */
+function quotes(list, where) {
+  list.forEach(txt => (String(txt || '').match(/“[^”]+”/g) || []).forEach(q => {
+    q.slice(1, -1).split('…').map(norm).filter(Boolean).forEach(part => {
+      if (ALL.indexOf(part) < 0) { bad++; console.error('✗ 인용이 원문과 다름', where, q); }
+    });
+  }));
+}
 const need = {};
 const use = (ref, where) => {
   const v = verses(ref);
@@ -43,7 +51,21 @@ const use = (ref, where) => {
 Object.keys(SB).forEach(k => {
   const S = SB[k];
   use(S.key, k + ' 첫 말씀'); use(S.end, k + ' 마침 말씀');
-  S.parts.forEach((p, i) => use(p.mv, k + ' ' + (i + 1) + '마당 암송'));
+  if (S.bv) use(S.bv, k + ' 뒷표지 말씀');
+  /* 책 소개(편지 한눈에·뒷표지)의 “ ” 인용도 원문과 대조한다 */
+  const at = S.at || {};
+  quotes([S.blurb].concat(['who', 'to', 'where', 'why', 'word', 'one'].map(f => at[f]), at.fun || []), k + ' 책 소개');
+  S.parts.forEach((p, i) => {
+    const w = k + ' ' + (i + 1) + '마당';
+    const mv = use(p.mv, w + ' 암송');
+    /* 마당 돌아보기: 암송 빈칸 낱말은 그 구절에 있어야 하고, 문제의 ___ 에 답을 넣은 글이 원문과 맞아야 한다 */
+    const mvText = norm((mv || []).map(x => x.t).join(' '));
+    (p.bl || []).forEach(x => { if (mvText.indexOf(norm(x)) < 0) { bad++; console.error('✗ 암송 빈칸 낱말이 구절에 없음', w, x); } });
+    (p.qz || []).forEach(([qq, aa], j) => {
+      if (qq.includes('___') && !/^[^“—(]+/.test(aa)) { bad++; console.error('✗ 빈칸 문제의 답이 없음', w, j + 1); }
+      quotes([qq.replace('___', String(aa).split(/\s*[—(]/)[0].trim()), aa], w + ' 돌아보기 ' + (j + 1));
+    });
+  });
   const lens = [];
   S.days.forEach((d, i) => {
     const w = k + ' ' + (i + 1) + '일';

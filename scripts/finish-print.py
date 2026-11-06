@@ -5,6 +5,7 @@
 
     pip install pymupdf
     python3 scripts/finish-print.py        # book/print 아래 PDF 전부
+    python3 scripts/finish-print.py . 'sermon-*'   # 이름이 맞는 것만 (설교 묵상집)
 """
 import glob, os, re, sys
 import pymupdf
@@ -31,8 +32,8 @@ def fix(path, w_mm, h_mm):
     return len(d), round(r.width / MM, 2), round(r.height / MM, 2)
 
 
-def main(root):
-    for f in sorted(glob.glob(os.path.join(root, 'book', 'print', '**', '*.pdf'), recursive=True)):
+def main(root, pattern='*'):
+    for f in sorted(glob.glob(os.path.join(root, 'book', 'print', '**', pattern + '.pdf'), recursive=True)):
         name = os.path.basename(f)
         m = re.search(r'spine(\d+)(?:_(\d))?mm', name)
         if m:
@@ -47,4 +48,5 @@ def main(root):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), '..'))
+    main(sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), '..'),
+         sys.argv[2] if len(sys.argv) > 2 else '*')
