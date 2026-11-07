@@ -107,7 +107,7 @@ function card(b,c,it,i){
 }
 function chapHtml(b,c,items){
   var B=ILLUS[b];
-  return '<section class="chap" id="'+b+'-'+c.ch+'"><h2>'+esc(B.short)+' '+c.ch+'장<small>예화 '+items.length+'편</small></h2>'+
+  return '<section class="chap" id="sec-'+b+'-'+c.ch+'"><h2>'+esc(B.short)+' '+c.ch+'장<small>예화 '+items.length+'편</small></h2>'+
     '<div class="theme">'+hi(c.theme)+'</div>'+
     '<div class="key">'+c.key.map(function(k){var t=verseText(k);return '<div><b>'+esc(k)+'</b>'+(t?'<span class="vt">“'+esc(t)+'”</span>':'')+'</div>'}).join('')+'</div>'+
     items.map(function(it){return card(b,c,it,c.items.indexOf(it))}).join('')+'</section>';
