@@ -19,6 +19,8 @@
   배움 쪽: 책마다 `at`(편지 한눈에 — who·to·where·why·word·one·fun), `blurb`·`bv`(뒷표지 글·말씀), 마당마다 `bl`(암송 빈칸 낱말)·`qz`([문제, 답] — `[OX]` 는 ○✕, `___` 는 빈칸). 정답 쪽은 책 뒤에 저절로 생긴다. 점검 스크립트가 이 글들의 “ ” 인용과 빈칸 낱말도 대조한다.
   책으로 찍기: `node scripts/build-sermon-book.js`(화면용 PDF·인쇄소 내지 154×216mm·책등 두께별 표지 펼침면·확인용·인쇄 사양서) → `python3 scripts/finish-print.py . 'sermon-*'` → `python3 scripts/build-sermon-complete-pdf.py`(표지 포함 완성본). 결과는 `book/` 와 `book/print/`.
 - 묵상 글에서 “ ” 안은 개역개정 원문 그대로, ‘ ’ 는 풀어 쓴 말이다. 인용을 고치면 `dongsan_bible.js` 원문과 글자를 대조한다.
+- 설교 예화집: `illus.html` + `illus-data.js`(ILLUS — 로마서·빌립보서·에베소서 26장, 장마다 실화 1 · 생활 예화(만든 이야기) 1). 관리자 앱 홈 「📚 예화집」. 실화는 `check` 에 확인한 사실과 출처 주소를 적고, 확인되지 않는 부분은 ‘~라고 전해집니다’로 쓴다. 만든 이야기는 만든 이야기라고 밝힌다. 묵상집에 이미 쓴 이야기는 다시 쓰지 않는다. 고친 뒤 `node scripts/illus-check.js`.
+- 성경 파일의 묶인 절(개역개정이 두세 절을 한 문장으로 옮긴 곳, 예: 롬 9:1-2)은 묶음의 첫 절에 글이 있다. 목록은 `word-data.js` 의 `joined`, 화면 절 번호는 `WordBible.label`(「1-2」).
 
 ## 함께 자라요 (발달 놀이 앱)
 - 화면: `grow.html` (설치용 `grow-manifest.json`, 아이콘 `icons/grow-*.png`). 발달지연 아이의 집 놀이 — 말하기·손놀이·그리기·생각놀이·생각 힘(실행기능)·마음·몸놀이·쉬어가기.

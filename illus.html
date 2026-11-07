@@ -1,0 +1,150 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8">
+<script src="theme.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<link rel="icon" href="favicon.png" type="image/png">
+<title>설교 예화집 — 동산감리교회</title>
+<meta name="description" content="로마서·빌립보서·에베소서 26장, 장마다 확인된 실화 하나와 생활 예화 하나. 설교 준비용 예화집.">
+<meta name="theme-color" content="#f6f1e7">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Noto+Sans+KR:wght@400;500;700&family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* 설교 예화집 — 데이터 illus-data.js (ILLUS) · 본문은 sermon-book-bible.js (세 책 26장)
+   주소: illus.html#romans-8  (책-장) · 찾기 상자는 세 책 모두에서 찾는다 */
+:root{--bg:#f6f1e7;--paper:#fbf8f1;--warm:#ece3d1;--line:#d8cdb8;--rule:#cfc4b0;--ink:#1f1b16;--ink2:#3a332a;--ink3:#6b6052;
+  --acc:#1f2f5e;--brick:#8f4531;--gold:#b0812d;--true:#1f5e4a;--made:#8a5a1f;--mark:#f1dfa8}
+[data-theme="dark"]{color-scheme:dark;--bg:#15171c;--paper:#1c1f26;--warm:#262a33;--line:#353a45;--rule:#3d4350;--ink:#ece6da;--ink2:#d3ccbf;--ink3:#a59d90;
+  --acc:#a9bdf0;--brick:#e3a088;--gold:#e6c27a;--true:#8fd1b8;--made:#e8bf86;--mark:rgba(241,223,168,.24)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--ink);word-break:keep-all;overflow-wrap:anywhere;min-height:100vh}
+a{color:var(--acc)}
+.wrap{max-width:720px;margin:0 auto;padding:12px 16px calc(40px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;font-size:13px}
+.top a{text-decoration:none;color:var(--ink3);white-space:nowrap}
+.mast{border-top:3px solid var(--ink);border-bottom:1px solid var(--ink);padding:12px 0 10px;text-align:center;margin-top:4px}
+.mast h1{font-family:'Noto Serif KR','Gowun Batang',serif;font-size:28px;font-weight:900;line-height:1.25}
+.mast .sub{margin-top:5px;font-size:12.5px;color:var(--ink3);line-height:1.6}
+.tabs{display:flex;gap:6px;justify-content:center;margin:14px 0 10px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--rule);background:var(--paper);color:var(--ink2);font:inherit;font-size:14px;font-weight:700;padding:8px 16px;border-radius:999px;cursor:pointer;min-height:40px}
+.tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:12px}
+.chips button{min-width:44px;min-height:40px;border:1px solid var(--line);background:var(--paper);color:var(--ink2);font:inherit;font-size:14px;border-radius:10px;cursor:pointer}
+.chips button.on{border-color:var(--brick);color:var(--brick);font-weight:700;box-shadow:inset 0 0 0 1px var(--brick)}
+.find{display:flex;gap:6px;margin:4px 0 14px}
+.find input{flex:1;min-width:0;font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--rule);border-radius:10px;background:var(--paper);color:var(--ink)}
+.find button,.tool button{font:inherit;font-size:13px;border:1px solid var(--rule);background:var(--paper);color:var(--ink2);padding:8px 12px;border-radius:10px;cursor:pointer;min-height:40px;white-space:nowrap}
+.chap{margin-bottom:26px}
+.chap h2{font-family:'Noto Serif KR','Gowun Batang',serif;font-size:22px;font-weight:900;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.chap h2 small{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;color:var(--ink3)}
+.theme{margin:8px 0 10px;padding:10px 12px;border-left:3px solid var(--gold);background:var(--paper);font-family:'Gowun Batang',serif;font-size:15.5px;line-height:1.75;color:var(--ink2)}
+.key{font-size:13.5px;line-height:1.75;color:var(--ink2);margin-bottom:12px}
+.key b{color:var(--brick);font-size:12.5px;margin-right:4px}
+.key .vt{font-family:'Gowun Batang',serif}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.card .hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.badge{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.badge.t{color:var(--true)}.badge.m{color:var(--made)}
+.card h3{font-family:'Noto Serif KR','Gowun Batang',serif;font-size:18px;font-weight:700;line-height:1.4}
+.use{font-size:12.5px;color:var(--ink3);margin-bottom:8px}
+.story{font-family:'Gowun Batang',serif;font-size:16px;line-height:1.9;color:var(--ink)}
+.link{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--warm);font-size:14.5px;line-height:1.8;color:var(--ink2)}
+.link b,.check b{display:block;font-size:12px;color:var(--brick);margin-bottom:2px}
+.check{margin-top:8px;font-size:12.5px;line-height:1.7;color:var(--ink3)}
+.check summary{cursor:pointer;color:var(--ink3);font-weight:700;padding:4px 0;min-height:32px}
+.check a{word-break:break-all}
+.note{margin-top:6px;font-size:12.5px;color:var(--made)}
+.tool{display:flex;gap:6px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
+mark{background:var(--mark);color:inherit;border-radius:3px}
+.empty{text-align:center;color:var(--ink3);padding:30px 10px;line-height:1.8}
+.foot{margin-top:20px;border-top:1px solid var(--rule);padding-top:12px;font-size:12px;color:var(--ink3);line-height:1.8}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media print{
+  @page{size:A4;margin:14mm}
+  html,body{background:#fff;color:#000}
+  .top,.tabs,.chips,.find,.tool,#themeBtn,.toast{display:none!important}
+  .card{break-inside:avoid;border-color:#bbb}
+  .chap{break-before:page}.chap:first-of-type{break-before:auto}
+  .check[open] summary,.check summary{color:#555}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a href="admin.html">← 관리자 앱</a><a href="sermon-book.html">설교 묵상집 →</a></div>
+  <div class="mast"><h1>설교 예화집</h1>
+    <div class="sub">로마서 · 빌립보서 · 에베소서 26장 · 장마다 확인된 실화 하나와 생활 예화 하나</div></div>
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <div class="chips" id="chips"></div>
+  <div class="find"><input id="q" type="search" placeholder="찾기 — 예: 용서, 광부, 감옥, 기쁨" aria-label="예화 찾기"><button onclick="printNow()">🖨 인쇄</button></div>
+  <div id="list"><div class="empty">예화를 불러오는 중입니다…</div></div>
+  <div class="foot">
+    · <b>실화</b>는 날짜·장소·사람을 확인하고 출처를 적었습니다. 확인되지 않는 부분은 “~라고 전해집니다”로 썼습니다.<br>
+    · <b>생활 예화</b>는 만든 이야기입니다. 설교에서는 “이런 장면을 떠올려 보십시오”처럼 만든 이야기임을 밝히고 쓰십시오.<br>
+    · “ ” 안의 성경 말씀은 개역개정판 그대로이고, ‘ ’ 안은 풀어 쓴 말입니다.
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="word-data.js"></script>
+<script src="word-core.js"></script>
+<script src="illus-data.js"></script>
+<script>
+var ORDER=Object.keys(ILLUS),BK=ORDER[0],CH=0,Q='';
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+/* 찾는 말에 형광펜 — 글자를 먼저 감싼 뒤 표시 */
+function hi(s){s=esc(s);if(!Q)return s;var q=esc(Q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');return s.replace(new RegExp(q,'g'),'<mark>$&</mark>')}
+function links(s){return hi(s).replace(/https?:\/\/[^\s)<]+/g,function(u){return '<a href="'+u+'" target="_blank" rel="noopener">'+u+'</a>'})}
+function verseText(ref){try{return WordBible.verses(ref,true).map(function(v){return v.t}).join(' ')}catch(e){return ''}}
+function card(b,c,it,i){
+  var made=it.kind.indexOf('만든')>=0;
+  return '<div class="card"><div class="hd"><span class="badge '+(made?'m':'t')+'">'+(i+1)+' · '+esc(it.kind)+'</span><h3>'+hi(it.title)+'</h3></div>'+
+    '<div class="use">쓰는 자리: '+hi(it.use)+'</div>'+
+    '<div class="story">'+hi(it.story)+'</div>'+
+    '<div class="link"><b>본문과 잇기</b>'+hi(it.link)+'</div>'+
+    (it.note?'<div class="note">⚠ '+hi(it.note)+'</div>':'')+
+    '<details class="check"><summary>'+(made?'만든 이야기 안내':'확인한 사실 · 출처')+'</summary>'+links(it.check)+'</details>'+
+    '<div class="tool"><button onclick="copyIt(\''+b+'\','+c.ch+','+i+')">📋 예화 복사</button></div></div>';
+}
+function chapHtml(b,c,items){
+  var B=ILLUS[b];
+  return '<section class="chap" id="'+b+'-'+c.ch+'"><h2>'+esc(B.short)+' '+c.ch+'장<small>예화 '+items.length+'편</small></h2>'+
+    '<div class="theme">'+hi(c.theme)+'</div>'+
+    '<div class="key">'+c.key.map(function(k){var t=verseText(k);return '<div><b>'+esc(k)+'</b>'+(t?'<span class="vt">“'+esc(t)+'”</span>':'')+'</div>'}).join('')+'</div>'+
+    items.map(function(it){return card(b,c,it,c.items.indexOf(it))}).join('')+'</section>';
+}
+function render(){
+  document.getElementById('tabs').innerHTML=ORDER.map(function(b){return '<button role="tab" class="'+(b===BK&&!Q?'on':'')+'" onclick="go(\''+b+'\',0)">'+esc(ILLUS[b].short)+' <small>'+ILLUS[b].chapters.length+'장</small></button>'}).join('');
+  var B=ILLUS[BK];
+  document.getElementById('chips').innerHTML=Q?'':'<button class="'+(CH?'':'on')+'" onclick="go(BK,0)">전체</button>'+B.chapters.map(function(c){return '<button class="'+(c.ch===CH?'on':'')+'" onclick="go(BK,'+c.ch+')">'+c.ch+'장</button>'}).join('');
+  var out='';
+  if(Q){
+    var n=0;ORDER.forEach(function(b){ILLUS[b].chapters.forEach(function(c){
+      var hit=c.items.filter(function(it){return [it.title,it.story,it.link,it.use,it.kind,c.theme].join(' ').indexOf(Q)>=0});
+      if(hit.length){n+=hit.length;out+=chapHtml(b,c,hit)}})});
+    out=n?'<div class="use" style="text-align:center">‘'+esc(Q)+'’ — 예화 '+n+'편</div>'+out:'<div class="empty">‘'+esc(Q)+'’이(가) 들어간 예화가 없습니다.</div>';
+  }else{
+    B.chapters.forEach(function(c){if(!CH||c.ch===CH)out+=chapHtml(BK,c,c.items)});
+  }
+  document.getElementById('list').innerHTML=out;
+}
+function go(b,ch){BK=b;CH=ch;Q='';document.getElementById('q').value='';render();
+  try{history.replaceState(null,'','#'+b+(ch?'-'+ch:''))}catch(e){}
+  window.scrollTo(0,0)}
+function copyIt(b,ch,i){
+  var c=ILLUS[b].chapters.filter(function(x){return x.ch===ch})[0],it=c.items[i];
+  var t='['+ILLUS[b].short+' '+ch+'장] '+it.title+' ('+it.kind+')\n\n'+it.story+'\n\n'+it.link;
+  var done=function(){toast('복사했습니다')};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,function(){fallback(t);done()});else{fallback(t);done()}
+}
+function fallback(t){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove()}
+function toast(m){var e=document.getElementById('toast');e.textContent=m;e.classList.add('on');setTimeout(function(){e.classList.remove('on')},1400)}
+/* 인쇄: 열어 둔 장(또는 책 전체)을 출처까지 펼쳐서 */
+function printNow(){[].forEach.call(document.querySelectorAll('details.check'),function(d){d.open=true});window.print()}
+var qT=null;document.getElementById('q').addEventListener('input',function(e){clearTimeout(qT);qT=setTimeout(function(){Q=e.target.value.trim();render()},150)});
+(function(){var h=decodeURIComponent(location.hash.slice(1)).split('-');if(ILLUS[h[0]]){BK=h[0];CH=+h[1]||0}})();
+/* 핵심 구절 본문은 세 책 26장이 든 작은 성경(sermon-book-bible.js)에서 */
+var s=document.createElement('script');s.src='sermon-book-bible.js';
+s.onload=s.onerror=function(){(WordBible.load?WordBible.load():Promise.resolve()).then(render,render)};
+document.head.appendChild(s);render();
+</script>
+</body></html>
