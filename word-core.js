@@ -308,6 +308,9 @@ var WordBible=(function(){
       .replace(/[a-z]:(?=\d)/g,'')                // "창a:1" → "창1"
       .replace(/\s{2,}/g,' ').trim();
   }
+  /* 개역개정이 두세 절을 한 문장으로 옮긴 곳은 묶음의 첫 절에 글이 있다 (목록은 word-data.js 의 joined) */
+  function joined(book,ch){return WordData.joined?WordData.joined(book,ch):{}}
+  function joinStart(book,ch,v){return WordData.joinStart?WordData.joinStart(book,ch,v):0}
   function verses(passage,doClean){
     var r=WordData.parseRef(passage);
     if(!r||typeof BIBLE_DATA==='undefined')return [];
@@ -315,15 +318,21 @@ var WordBible=(function(){
     if(!bk||!bk.data)return [];
     var out=[],multi=String(r.chapter)!==String(r.toChapter||r.chapter);
     WordData.refSpans(r,bk).forEach(function(sp){
-      var ch=bk.data[sp.chapter];
-      for(var v=sp.from;v<=sp.to;v++){
+      var ch=bk.data[sp.chapter],j=joined(r.book,sp.chapter),from=sp.from;
+      /* 묶음 한가운데서 시작하는 본문(예: 9:2-5)은 묶음 첫 절부터 싣는다 */
+      var js=joinStart(r.book,sp.chapter,from);if(js&&!ch[String(from)])from=js;
+      for(var v=from;v<=sp.to;v++){
         if(!ch[String(v)])continue;
-        out.push({v:multi?sp.chapter+':'+v:v,t:doClean?clean(ch[String(v)]):ch[String(v)]});
+        var it={v:multi?sp.chapter+':'+v:v,t:doClean?clean(ch[String(v)]):ch[String(v)]};
+        if(j[v]){it.to=j[v];it.n=(multi?sp.chapter+':':'')+v+'-'+j[v]}   /* 보여 줄 절 번호 「1-2」 */
+        out.push(it);
       }
     });
     return out;
   }
-  /* 본문 데이터에 빠져 있는 절 번호 (이 성경 파일에는 일부 절이 누락돼 있다) */
+  /* 보여 줄 절 번호 — 묶인 절은 「1-2」, 아니면 그대로 */
+  function label(it){return it&&it.n?it.n:(it?it.v:'')}
+  /* 본문 데이터에 빠져 있는 절 번호 (묶인 절은 빠진 것이 아니다) */
   function missing(passage){
     var r=WordData.parseRef(passage);
     if(!r||typeof BIBLE_DATA==='undefined')return [];
@@ -332,7 +341,7 @@ var WordBible=(function(){
     var out=[],multi=String(r.chapter)!==String(r.toChapter||r.chapter);
     WordData.refSpans(r,bk).forEach(function(sp){
       var ch=bk.data[sp.chapter];
-      for(var v=sp.from;v<=sp.to;v++)if(!ch[String(v)])out.push(multi?sp.chapter+':'+v:v);
+      for(var v=sp.from;v<=sp.to;v++)if(!ch[String(v)]&&!joinStart(r.book,sp.chapter,v))out.push(multi?sp.chapter+':'+v:v);
     });
     return out;
   }
@@ -343,7 +352,7 @@ var WordBible=(function(){
   function plain(passage,doClean){
     return verses(passage,doClean).map(function(x){return x.t}).join(' ');
   }
-  return {load:load,verses:verses,one:one,plain:plain,clean:clean,missing:missing,get ready(){return ready}};
+  return {load:load,verses:verses,one:one,plain:plain,clean:clean,missing:missing,label:label,get ready(){return ready}};
 })();
 
 /* ---------- 공유 ---------- */

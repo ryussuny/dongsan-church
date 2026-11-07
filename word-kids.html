@@ -937,7 +937,7 @@ function kidVerses(vs){
   return vs.map(function(v,i){
     var s=String(v.v),ch=multi?s.split(':')[0]:null,n=multi?s.split(':')[1]:s,h='';
     if(ch&&ch!==last){h='<div class="kch">'+ch+'장</div>';last=ch}
-    return h+'<span class="kl" data-i="'+i+'"><span class="vn">'+n+'</span>'+wEsc(v.t)+'</span>';
+    return h+'<span class="kl" data-i="'+i+'"><span class="vn">'+(v.to?n+'-'+v.to:n)+'</span>'+wEsc(v.t)+'</span>';
   }).join('');
 }
 /* 오늘 말씀을 읽었다 — 전체 보기를 열거나 읽어 주기를 들으면 「오늘의 길」 첫 걸음이 켜진다 */

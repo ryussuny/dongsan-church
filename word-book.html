@@ -226,7 +226,7 @@ function weekOf(ds){var w=null,n=0;S.weeks.forEach(function(x,i){if(x.mon<=ds){w
 function weekDays(w){return days().filter(function(d){return weekOf(d).w===w})}
 function verseText(ref){return WordBible.one(ref,true)}
 function bibleHtml(passage){
-  return WordBible.verses(passage,true).map(function(v){return '<sup>'+v.v+'</sup>'+esc(v.t)}).join(' ');
+  return WordBible.verses(passage,true).map(function(v){return '<sup>'+WordBible.label(v)+'</sup>'+esc(v.t)}).join(' ');
 }
 function paras(t){return String(t).split(/\n\n+/).map(function(p){return '<p>'+esc(p)+'</p>'}).join('')}
 

@@ -41,11 +41,15 @@ function passageVerses(passage) {
   const multi = String(r.chapter) !== String(r.toChapter);
   const verses = [], missing = [];
   WordData.refSpans(r, bk).forEach(sp => {
-    const ch = bk.data[sp.chapter];
-    for (let v = sp.from; v <= sp.to; v++) {
+    const ch = bk.data[sp.chapter], j = WordData.joined(r.book, sp.chapter);
+    /* 두세 절을 한 문장으로 옮긴 곳(예: 롬 9:1-2)은 묶음 첫 절에 글이 있다. 묶음 한가운데서 시작하면 첫 절부터 */
+    let from = sp.from;
+    const js = WordData.joinStart(r.book, sp.chapter, from);
+    if (js && !ch[String(from)]) from = js;
+    for (let v = from; v <= sp.to; v++) {
       const label = multi ? sp.chapter + ':' + v : v;
-      if (ch[String(v)]) verses.push({ v: label, t: clean(ch[String(v)]) });
-      else missing.push(label);
+      if (ch[String(v)]) verses.push({ v: label, n: j[v] ? label + '-' + j[v] : label, t: clean(ch[String(v)]) });
+      else if (!WordData.joinStart(r.book, sp.chapter, v)) missing.push(label);
     }
   });
   return { verses, missing };
@@ -74,7 +78,7 @@ const shareText = [
   `📖 오늘의 말씀 (${today.replace(/-/g, '.')} ${weekday})`,
   `${day.passage} · ${day.title}`,
   '',
-  verses.map(v => `${v.v} ${v.t}`).join(' '),
+  verses.map(v => `${v.n} ${v.t}`).join(' '),
   '',
   ...(day.remember ? ['📌 오늘 기억할 한 줄', day.remember, ''] : []),
   '🌿 묵상',
@@ -102,7 +106,7 @@ const dateLong = `${dp[0]}년 ${+dp[1]}월 ${+dp[2]}일 ${weekday === '주일' ?
 const srcTxt = day.source === 'plan' ? '교회 읽기표' : (day.source === 'custom' ? '인도자 지정' : '매일 묵상표');
 const verseHtml = verses.map((v, i) => {
   const t = esc(v.t), body = i === 0 && v.t ? `<span class="dc">${esc(v.t.charAt(0))}</span>${esc(v.t.slice(1))}` : t;
-  return `<p class="vv${isKey(v.v) ? ' key' : ''}"><span class="vn">${v.v}</span><span class="vt">${body}</span></p>`;
+  return `<p class="vv${isKey(v.v) ? ' key' : ''}"><span class="vn">${v.n}</span><span class="vt">${body}</span></p>`;
 }).join('\n    ');
 
 /* ---------- today.html — A 새벽 종이 (주보 한 장처럼) ---------- */

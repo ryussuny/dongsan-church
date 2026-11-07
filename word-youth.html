@@ -244,7 +244,7 @@ function render(){
     document.getElementById('bible').innerHTML=vs.length?vs.map(function(v,i){
       var n=String(v.v),c=n.indexOf(':')>0?n.split(':')[0]:(key&&key.base),m=+(n.indexOf(':')>0?n.split(':')[1]:n);
       var k=key&&c===key.ch&&m>=key.from&&m<=key.to;
-      return '<span class="yl'+(k?' key':'')+'" data-i="'+i+'"><b>'+n+'</b>'+wEsc(v.t)+'</span>'}).join(''):'성경에서 '+wEsc(d.passage)+'을 찾아 읽어 보세요.';
+      return '<span class="yl'+(k?' key':'')+'" data-i="'+i+'"><b>'+WordBible.label(v)+'</b>'+wEsc(v.t)+'</span>'}).join(''):'성경에서 '+wEsc(d.passage)+'을 찾아 읽어 보세요.';
   });
   refreshChal();refreshRead();
 }

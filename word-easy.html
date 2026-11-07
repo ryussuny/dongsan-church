@@ -236,7 +236,7 @@ function render(){
     el.innerHTML=vs.length?vs.map(function(v){
       var n=String(v.v),c=n.indexOf(':')>0?n.split(':')[0]:key&&key.base,m=+(n.indexOf(':')>0?n.split(':')[1]:n);
       var isKey=key&&c===key.ch&&m>=key.from&&m<=key.to;
-      return '<span'+(isKey?' class="key"':'')+'><b>'+n+'</b>'+wEsc(v.t)+'</span>'}).join(''):'성경책에서 '+wEsc(d.passage)+'을 펴서 읽어 주세요.';
+      return '<span'+(isKey?' class="key"':'')+'><b>'+WordBible.label(v)+'</b>'+wEsc(v.t)+'</span>'}).join(''):'성경책에서 '+wEsc(d.passage)+'을 펴서 읽어 주세요.';
   });
   refreshRead();
   paintSteps();

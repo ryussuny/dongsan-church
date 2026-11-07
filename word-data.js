@@ -622,6 +622,14 @@ var WordData=(function(){
     return {book:m[1].trim(),chapter:String(c1),from:v1,toChapter:String(c2),to:v2};
   }
 
+  /* 개역개정이 두세 절을 한 문장으로 옮긴 곳(대한성서공회 본문의 「1-2」처럼).
+     성경 파일(dongsan_bible.js)에는 묶음의 첫 절에 글 전체가 있고 나머지 절 번호는 비어 있다. 책 → 장 → {첫 절: 끝 절} */
+  var JOINED={'신명기':{'6':{18:19},'15':{4:5},'30':{9:10}},'역대상':{'16':{12:13}},'시편':{'92':{1:3},'105':{5:6}},
+    '예레미야':{'32':{3:5},'33':{10:11}},'에스겔':{'24':{4:5}},'사도행전':{'15':{25:26}},'로마서':{'9':{1:2}}};
+  function joined(book,ch){return (JOINED[book]&&JOINED[book][String(ch)])||{}}
+  /* v 절이 어느 묶음의 뒤쪽 절이면 그 묶음의 첫 절, 아니면 0 */
+  function joinStart(book,ch,v){var j=joined(book,ch);for(var f in j)if(v>+f&&v<=j[f])return +f;return 0}
+
   /* 본문이 걸치는 (장, 시작절, 끝절) 을 차례로 돌려준다 */
   function refSpans(r,bk){
     var out=[],c1=parseInt(r.chapter,10),c2=parseInt(r.toChapter||r.chapter,10);
@@ -726,7 +734,7 @@ var WordData=(function(){
   }
 
   return {today:today,locked:locked,bookOpen:bookOpen,openHour:OPEN_HOUR,pad:pad,dayIndex:dayIndex,shift:shift,weekday:weekday,
-          parseRef:parseRef,refSpans:refSpans,forDate:forDate,monthList:monthList,recent:recent,series:series};
+          parseRef:parseRef,refSpans:refSpans,joined:joined,joinStart:joinStart,forDate:forDate,monthList:monthList,recent:recent,series:series};
 })();
 
 if(typeof module!=='undefined'&&module.exports)module.exports={WORD_CYCLE:WORD_CYCLE,WORD_PLAN:WORD_PLAN,WordData:WordData};
